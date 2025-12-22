@@ -52,7 +52,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
   };
 
   const monthlyTraditionalCost = calculateSavings();
-  const jetSuiteCost = 99;
+  const jetSuiteCost = 149;
   const monthlySavings = monthlyTraditionalCost - jetSuiteCost;
   const annualSavings = monthlySavings * 12;
   const roi = monthlyTraditionalCost > 0 ? Math.round((monthlySavings / jetSuiteCost) * 100) : 0;
@@ -168,9 +168,9 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
                   <p className="text-sm text-white/70 uppercase tracking-wide mb-2">JetSuite Monthly Cost</p>
                   <p className="text-4xl font-extrabold text-white">
-                    ${jetSuiteCost}
+                    ${jetSuiteCost}<span className="text-lg">/mo</span>
                   </p>
-                  <p className="text-xs text-white/60 mt-2">All tools included</p>
+                  <p className="text-xs text-white/60 mt-2">All 12+ tools included</p>
                 </div>
 
                 <div className="h-px bg-white/30"></div>
@@ -267,7 +267,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                       $11,000 - $35,000/mo
                     </td>
                     <td className="px-6 py-4 text-center text-accent-purple text-2xl">
-                      $99/mo
+                      $149/mo
                     </td>
                   </tr>
                 </tbody>
@@ -290,12 +290,12 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$99/mo</span>
+                  <span className="text-accent-purple font-semibold">$149/mo</span>
                 </div>
                 <div className="h-px bg-slate-700 my-2"></div>
                 <div className="flex justify-between text-lg">
                   <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$24,372/year</span>
+                  <span className="text-accent-cyan font-bold">$23,772/year</span>
                 </div>
               </div>
             </div>
@@ -310,12 +310,12 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$99/mo</span>
+                  <span className="text-accent-purple font-semibold">$149/mo</span>
                 </div>
                 <div className="h-px bg-slate-700 my-2"></div>
                 <div className="flex justify-between text-lg">
                   <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$61,212/year</span>
+                  <span className="text-accent-cyan font-bold">$60,612/year</span>
                 </div>
               </div>
             </div>
@@ -330,12 +330,12 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$99/mo</span>
+                  <span className="text-accent-purple font-semibold">$149/mo</span>
                 </div>
                 <div className="h-px bg-slate-700 my-2"></div>
                 <div className="flex justify-between text-lg">
                   <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$72,012/year</span>
+                  <span className="text-accent-cyan font-bold">$71,412/year</span>
                 </div>
               </div>
             </div>
@@ -354,7 +354,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
             onClick={() => navigate('/login')}
             className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-12 rounded-xl transition-opacity shadow-lg shadow-accent-purple/30 text-lg"
           >
-            Start Your Free Trial
+            Get Started Today
           </button>
         </div>
       </div>
