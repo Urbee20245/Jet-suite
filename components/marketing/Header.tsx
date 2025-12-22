@@ -24,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                             <button className="text-gray-300 hover:text-white transition-colors font-medium">Features</button>
                             <button className="text-gray-300 hover:text-white transition-colors font-medium">How It Works</button>
                             <button onClick={() => navigate('/pricing')} className="text-gray-300 hover:text-white transition-colors font-medium">Pricing</button>
+                            <button onClick={() => navigate('/savings')} className="text-accent-cyan hover:text-accent-purple transition-colors font-semibold">Calculate Savings 💰</button>
                             <button className="text-gray-300 hover:text-white transition-colors font-medium">FAQ</button>
                         </nav>
                     </div>

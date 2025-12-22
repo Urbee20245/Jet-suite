@@ -18,9 +18,42 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
           <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-300">
             One plan, all the tools. No hidden fees, no feature gates. Just pure growth potential, priced per business.
           </p>
+          
+          {/* Savings Calculator CTA */}
+          <div className="mt-8">
+            <button
+              onClick={() => navigate('/savings')}
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-accent-purple via-accent-pink to-accent-cyan hover:opacity-90 text-white font-bold py-3 px-8 rounded-full transition-opacity shadow-lg shadow-accent-purple/30 group"
+            >
+              <span className="text-lg">💰</span>
+              <span>Calculate Your Savings</span>
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <p className="mt-3 text-sm text-gray-400">
+              See how much you'll save vs. traditional agencies and tools
+            </p>
+          </div>
         </div>
         
-        <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Value Prop Banner */}
+        <div className="mt-12 bg-gradient-to-r from-accent-purple/10 via-accent-pink/10 to-accent-cyan/10 border border-accent-purple/30 rounded-2xl p-6 text-center">
+          <p className="text-xl text-white font-semibold mb-2">
+            Replace <span className="text-accent-cyan">$10,000-$35,000/month</span> in agency costs
+          </p>
+          <p className="text-gray-300">
+            Get the same results for a fraction of the price. 
+            <button 
+              onClick={() => navigate('/savings')}
+              className="ml-2 text-accent-purple hover:text-accent-pink font-semibold underline transition-colors"
+            >
+              See the breakdown →
+            </button>
+          </p>
+        </div>
+
+        <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Pricing Card */}
           <div className="lg:col-span-2 bg-gradient-to-br from-slate-800 to-brand-dark p-8 rounded-2xl border border-slate-700 shadow-2xl shadow-accent-purple/10 glow-card glow-card-rounded-2xl">
             <h2 className="text-3xl font-bold text-white">1 Business Plan</h2>
