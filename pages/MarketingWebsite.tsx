@@ -4,6 +4,7 @@ import { Header } from '../components/marketing/Header';
 import { Footer } from '../components/marketing/Footer';
 import { LandingPage } from './LandingPage';
 import { PricingPage } from './PricingPage';
+import { SavingsPage } from './SavingsPage';
 import { LoginPage } from './LoginPage';
 
 interface MarketingWebsiteProps {
@@ -20,6 +21,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <LandingPage navigate={navigate} />;
             case '/pricing':
                 return <PricingPage navigate={navigate} />;
+            case '/savings':
+                return <SavingsPage navigate={navigate} />;
             case '/login':
                 return <LoginPage navigate={navigate} onLoginSuccess={onLoginSuccess} />;
             default:
