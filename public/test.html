@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jet Suite - Deployment Test</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #020617;
+            color: #F1F5F9;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 { color: #3B82F6; }
+        .status { padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .success { background: #10B981; color: white; }
+        .info { background: #3B82F6; color: white; }
+        .warning { background: #F59E0B; color: white; }
+        ul { line-height: 1.8; }
+        code { background: #1E293B; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>✈️ Jet Suite Deployment Test</h1>
+    
+    <div class="status success">
+        <strong>✅ Static File Serving Works!</strong>
+        <p>If you can see this page, Vercel is serving static files correctly.</p>
+    </div>
+
+    <div class="status info">
+        <strong>ℹ️ Environment Check</strong>
+        <p>Current URL: <code id="url"></code></p>
+        <p>User Agent: <code id="ua"></code></p>
+        <p>JavaScript: <strong>✅ Enabled</strong></p>
+    </div>
+
+    <h2>Troubleshooting Steps</h2>
+    <ol>
+        <li><strong>Check Main App:</strong> Go to <a href="/" style="color: #3B82F6;">homepage</a></li>
+        <li><strong>Open DevTools:</strong> Press F12 and check Console tab</li>
+        <li><strong>Look for errors:</strong> Any red messages in console?</li>
+        <li><strong>Check Network tab:</strong> Are all files loading (200 OK)?</li>
+    </ol>
+
+    <h2>What to Check in Console</h2>
+    <ul>
+        <li>✅ <code>[App] Component module loaded</code> - App.tsx loaded</li>
+        <li>✅ <code>[App] Component rendering</code> - React rendering</li>
+        <li>✅ <code>React app mounted successfully</code> - Mount succeeded</li>
+        <li>❌ Any error messages - Share these with the developer</li>
+    </ul>
+
+    <h2>Expected Files</h2>
+    <div class="status warning">
+        <p>The following files should load with <strong>200 OK</strong> status:</p>
+        <ul>
+            <li><code>/index.html</code></li>
+            <li><code>/assets/index-*.js</code> (React bundle)</li>
+            <li><code>/assets/index-*.css</code> (Styles)</li>
+        </ul>
+        <p>Check Network tab in DevTools to verify.</p>
+    </div>
+
+    <h2>Quick Test</h2>
+    <button onclick="testLocalStorage()" style="background: #3B82F6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px;">
+        Test localStorage
+    </button>
+    <p id="testResult"></p>
+
+    <script>
+        document.getElementById('url').textContent = window.location.href;
+        document.getElementById('ua').textContent = navigator.userAgent;
+
+        function testLocalStorage() {
+            const result = document.getElementById('testResult');
+            try {
+                localStorage.setItem('test', 'value');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                result.innerHTML = '<span style="color: #10B981;">✅ localStorage works!</span>';
+            } catch (e) {
+                result.innerHTML = '<span style="color: #EF4444;">❌ localStorage failed: ' + e.message + '</span>';
+            }
+        }
+
+        // Auto-run diagnostics
+        console.log('=== JET SUITE DEPLOYMENT TEST ===');
+        console.log('URL:', window.location.href);
+        console.log('Protocol:', window.location.protocol);
+        console.log('Host:', window.location.host);
+        console.log('localStorage available:', typeof localStorage !== 'undefined');
+        console.log('React available:', typeof React !== 'undefined');
+        console.log('=================================');
+    </script>
+</body>
+</html>
