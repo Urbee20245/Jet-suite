@@ -5,7 +5,7 @@ export const PricingCalculator: React.FC = () => {
     const [businesses, setBusinesses] = useState(1);
     const [teamMembers, setTeamMembers] = useState(0);
 
-    const basePrice = 99;
+    const basePrice = 149;
     const additionalBusinessPrice = 49;
     const additionalTeamMemberPrice = 10;
     
@@ -27,7 +27,7 @@ export const PricingCalculator: React.FC = () => {
 
     return (
         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 glow-card glow-card-rounded-2xl">
-            <h3 className="font-bold text-white text-center">Calculate your monthly total</h3>
+            <h3 className="font-bold text-white text-center">Calculate Savings</h3>
             <div className="mt-6 space-y-4">
                 <div>
                     <label htmlFor="businesses" className="text-sm font-medium text-gray-300">Number of businesses</label>
