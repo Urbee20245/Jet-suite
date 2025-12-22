@@ -25,10 +25,8 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
           <div className="lg:col-span-2 bg-gradient-to-br from-slate-800 to-brand-dark p-8 rounded-2xl border border-slate-700 shadow-2xl shadow-accent-purple/10 glow-card glow-card-rounded-2xl">
             <h2 className="text-3xl font-bold text-white">1 Business Plan</h2>
             <div className="flex items-baseline gap-4 mt-4">
-              <span className="text-5xl font-extrabold text-white">$99<span className="text-lg font-medium text-gray-400">/mo</span></span>
-              <span className="text-2xl font-medium text-gray-500 line-through">$149</span>
+              <span className="text-5xl font-extrabold text-white">$149<span className="text-lg font-medium text-gray-400">/mo</span></span>
             </div>
-            <p className="mt-2 text-accent-purple font-semibold">Founding Price</p>
             <p className="mt-6 text-gray-300">
               Our core plan gives you everything you need to grow one business from foundation to conversion.
             </p>
