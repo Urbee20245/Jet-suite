@@ -592,12 +592,12 @@ const brandDnaProfileSchema = {
 };
 
 
+// FIX: Removed stray comment from within the template literal.
 export const extractBrandDnaProfile = async (business: BusinessProfile): Promise<BrandDnaProfile> => {
     const prompt = `You are an expert brand strategist analyzing a business website to extract its Brand and Business DNA. This is a one-time analysis to create an authoritative brand profile that will be reused across all marketing tools. Be accurate, neutral, and consistent. Do NOT generate any marketing content or ideas. Focus ONLY on brand identity extraction.
 
 Business Name: ${business.name}
 Business Category: ${business.category}
-// FIX: Corrected template literal for business location.
 Business Location: ${business.location}
 Business Website URL: ${business.websiteUrl}
 

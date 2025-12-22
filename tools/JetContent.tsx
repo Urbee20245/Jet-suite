@@ -11,7 +11,7 @@ interface JetContentProps {
   tool: Tool;
   initialProps: { keyword: KeywordData; type: string } | null;
   profileData: ProfileData;
-  setActiveTool: (tool: Tool) => void;
+  setActiveTool: (tool: Tool | null) => void;
 }
 
 export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, profileData, setActiveTool }) => {

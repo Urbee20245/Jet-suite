@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { Tool, ProfileData } from '../types';
 import { findLeads } from '../services/geminiService';
@@ -11,7 +10,7 @@ import { TOOLS } from '../constants';
 interface JetLeadsProps {
   tool: Tool;
   profileData: ProfileData;
-  setActiveTool: (tool: Tool) => void;
+  setActiveTool: (tool: Tool | null) => void;
 }
 
 export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActiveTool }) => {

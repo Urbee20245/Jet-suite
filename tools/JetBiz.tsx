@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, AuditReport, BusinessSearchResult, ConfirmedBusiness, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { searchGoogleBusiness, analyzeBusinessListing } from '../services/geminiService';
@@ -36,7 +35,7 @@ const BusinessResultCard: React.FC<{ business: BusinessSearchResult; onSelect: (
     </button>
 );
 
-const JetBizGuidanceMode: React.FC<{setActiveTool: (tool:Tool) => void}> = ({setActiveTool}) => (
+const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}> = ({setActiveTool}) => (
     <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -172,7 +171,7 @@ const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask
 };
 
 
-const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: GrowthPlanTask[], onRerun: (e: React.FormEvent) => Promise<void>, isRunning: boolean, onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void, setActiveTool: (tool: Tool) => void }> = ({ report, growthPlanTasks, onRerun, isRunning, onTaskStatusChange, setActiveTool }) => {
+const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: GrowthPlanTask[], onRerun: (e: React.FormEvent) => Promise<void>, isRunning: boolean, onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void, setActiveTool: (tool: Tool | null) => void }> = ({ report, growthPlanTasks, onRerun, isRunning, onTaskStatusChange, setActiveTool }) => {
   const [showCompleted, setShowCompleted] = useState(false);
 
   const weeklyActionTasks = report.weeklyActions.map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import type { GrowthPlanTask, Tool } from '../types';
 import { ALL_TOOLS } from '../constants';
@@ -8,7 +7,7 @@ import { GrowthPlanIcon } from '../components/icons/ToolIcons';
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
   setTasks: (tasks: GrowthPlanTask[]) => void;
-  setActiveTool: (tool: Tool) => void;
+  setActiveTool: (tool: Tool | null) => void;
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
   growthScore: number;
 }

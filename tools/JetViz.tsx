@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
@@ -158,7 +157,7 @@ const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask
 };
 
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool }) => {
+const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool | null) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool }) => {
     const [showCompleted, setShowCompleted] = useState(false);
     const weeklyActionTasks = report.weeklyActions.map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
@@ -192,8 +191,8 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
             <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
         </div>
     </div>
-);
-
+  );
+};
 
 export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSaveAnalysis, profileData, setActiveTool, growthPlanTasks, onTaskStatusChange }) => {
   const [urlToAnalyze, setUrlToAnalyze] = useState('');

@@ -9,7 +9,7 @@ import { TOOLS } from '../constants';
 interface JetKeywordsProps {
   tool: Tool;
   profileData: ProfileData;
-  setActiveTool: (tool: Tool) => void;
+  setActiveTool: (tool: Tool | null) => void;
 }
 
 const difficultyColor = (difficulty: string) => {

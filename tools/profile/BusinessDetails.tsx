@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { ProfileData, BusinessDna, Tool, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';
@@ -7,7 +6,7 @@ import { Loader } from '../../components/Loader';
 import { ALL_TOOLS } from '../../constants';
 
 // --- Types ---
-interface BusinessDetailsProps { profileData: ProfileData; onUpdate: (data: ProfileData) => void; setActiveTool: (tool: Tool) => void; }
+interface BusinessDetailsProps { profileData: ProfileData; onUpdate: (data: ProfileData) => void; setActiveTool: (tool: Tool | null) => void; }
 type ExtractionStage = 'idle' | 'extracting' | 'reviewing' | 'saving';
 
 // --- Helper Functions ---

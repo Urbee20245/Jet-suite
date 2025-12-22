@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, ReadinessState } from '../types';
 import { generateSocialPosts, generateImage } from '../services/geminiService';
@@ -10,7 +9,7 @@ import { TOOLS } from '../constants';
 interface JetPostProps {
   tool: Tool;
   profileData: ProfileData;
-  setActiveTool: (tool: Tool) => void;
+  setActiveTool: (tool: Tool | null) => void;
 }
 
 interface Post {
