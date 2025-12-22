@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.glow-card {
+  position: relative;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: conic-gradient(
+    from 180deg,
+    #EC4899,
+    #8B5CF6,
+    #3B82F6,
+    #EC4899
+  );
+  filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+}
+
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--glow-angle),
+    transparent 0,
+    white,
+    transparent 25%
+  );
+  opacity: 0;
+}
+
+.glow-card-rounded-lg::before, .glow-card-rounded-lg::after { border-radius: calc(0.5rem + 2px); }
+.glow-card-rounded-xl::before, .glow-card-rounded-xl::after { border-radius: calc(0.75rem + 2px); }
+.glow-card-rounded-2xl::before, .glow-card-rounded-2xl::after { border-radius: calc(1rem + 2px); }
+
+.glow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.15);
+}
+
+.glow-card:hover::before {
+  opacity: 0.2;
+}
+
+.glow-card:hover::after {
+  animation: glow-tracer 1.2s ease-out;
+}
+
+@keyframes glow-tracer {
+  0% {
+    --glow-angle: 0deg;
+    opacity: 1;
+  }
+  100% {
+    --glow-angle: 360deg;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-card:hover {
+    transform: none;
+  }
+  .glow-card:hover::before {
+    opacity: 0.2;
+  }
+  .glow-card:hover::after {
+    animation: none;
+    opacity: 0;
+  }
+}
