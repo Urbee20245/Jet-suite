@@ -170,7 +170,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
                 title="3. Engage & Convert"
                 description="Turn visibility into revenue by engaging leads and customers."
                 recommendedToolId="jetreply"
-                otherToolIds={['jetleads', 'jetevents', 'jetads']}
+                otherToolIds={['jetleads', 'jettrust', 'jetevents', 'jetads']}
                 kbArticleId="foundation/jetviz" // Placeholder, should be engage/convert article
                 setActiveTool={setActiveTool}
             />

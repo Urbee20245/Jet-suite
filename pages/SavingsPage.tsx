@@ -15,6 +15,7 @@ const traditionalCosts = {
   designer: { name: 'Graphic Designer', min: 1000, max: 3000 },
   marketingAgency: { name: 'Marketing Agency (Campaigns)', min: 2000, max: 10000 },
   reputationMgmt: { name: 'Reputation Management', min: 200, max: 800 },
+  reviewWidget: { name: 'Review Widget Service', min: 50, max: 200 },
   leadGen: { name: 'Lead Generation Service', min: 500, max: 2000 },
   adAgency: { name: 'Ad Management', min: 500, max: 2000 },
   businessConsultant: { name: 'Business Strategy Consultant', min: 600, max: 3200 },
@@ -201,11 +202,15 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
               <ul className="space-y-3 text-gray-300">
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">12+ AI-powered tools</strong> for every marketing need</span>
+                  <span><strong className="text-white">13+ AI-powered tools</strong> including review widgets</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
                   <span><strong className="text-white">Business DNA system</strong> ensures brand consistency</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-white">Embeddable review widgets</strong> for your website</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
@@ -264,7 +269,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                   <tr className="bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 font-bold">
                     <td className="px-6 py-4 text-white text-lg">TOTAL</td>
                     <td className="px-6 py-4 text-center text-white text-lg">
-                      $11,000 - $35,000/mo
+                      $11,100 - $35,200/mo
                     </td>
                     <td className="px-6 py-4 text-center text-accent-purple text-2xl">
                       $149/mo
