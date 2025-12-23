@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { 
     AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna, 
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
-    LiveWebsiteAnalysis
+    LiveWebsiteAnalysis, BusinessReview
 } from '../types';
 
 const API_KEY = process.env.API_KEY;
@@ -283,6 +283,51 @@ export const generateSocialPosts = async (businessType: string, topic: string, t
   return JSON.parse(jsonText);
 };
 
+
+export const fetchBusinessReviews = async (businessName: string, businessAddress: string): Promise<any[]> => {
+  const prompt = `You are a Google Business Profile review specialist. Use Google Search to find recent reviews for the business "${businessName}" located at "${businessAddress}". 
+  
+  Search for reviews on their Google Business Profile listing. Return the most recent 10 reviews you can find.
+  
+  For each review, provide:
+  - author: The reviewer's name
+  - rating: Star rating (1-5)
+  - text: The full review text
+  - date: When the review was posted (as readable format like "2 days ago" or "December 2024")
+  
+  Your entire output must be a single JSON object with a "reviews" array matching the provided schema. If no reviews are found, return an empty array.`;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-pro-preview',
+    contents: prompt,
+    config: {
+      tools: [{ googleSearch: {} }],
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          reviews: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                author: { type: Type.STRING },
+                rating: { type: Type.INTEGER },
+                text: { type: Type.STRING },
+                date: { type: Type.STRING }
+              },
+              required: ["author", "rating", "text", "date"]
+            }
+          }
+        }
+      }
+    },
+  });
+
+  const jsonText = response.text.trim();
+  const parsed = JSON.parse(jsonText);
+  return parsed.reviews || [];
+};
 
 export const generateReviewReply = async (review: string, isPositive: boolean, tone: string) => {
   const toneInstruction = tone ? `The tone of the reply should be ${tone}.` : 'The tone of the reply should be professional and empathetic.';

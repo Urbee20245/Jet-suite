@@ -115,6 +115,15 @@ export interface GoogleBusinessProfile {
   address?: string;
 }
 
+export interface BusinessReview {
+  id: string;
+  author: string;
+  rating: number;
+  text: string;
+  date: string;
+  isPositive: boolean;
+}
+
 // Brand DNA Profile
 export interface BrandTone {
   primary_tone: string;
