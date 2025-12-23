@@ -6,6 +6,7 @@ import { LandingPage } from './LandingPage';
 import { PricingPage } from './PricingPage';
 import { SavingsPage } from './SavingsPage';
 import { LoginPage } from './LoginPage';
+import { BillingSuccessPage } from './BillingSuccessPage';
 
 interface MarketingWebsiteProps {
     currentPath: string;
@@ -25,6 +26,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <SavingsPage navigate={navigate} />;
             case '/login':
                 return <LoginPage navigate={navigate} onLoginSuccess={onLoginSuccess} />;
+            case '/billing/success':
+                return <BillingSuccessPage navigate={navigate} />;
             default:
                 return <LandingPage navigate={navigate} />;
         }

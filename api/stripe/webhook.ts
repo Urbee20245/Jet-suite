@@ -68,9 +68,12 @@ export default async function handler(
           metadata: session.metadata,
         });
         
-        // Update billing account with customer ID
+        // Update billing account with customer ID and counts
         if (session.customer && session.metadata?.userId) {
           try {
+            const seatCount = parseInt(session.metadata.seatCount || '0', 10);
+            const businessCount = 1 + parseInt(session.metadata.additionalBusinessCount || '0', 10);
+            
             await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -78,6 +81,8 @@ export default async function handler(
                 userId: session.metadata.userId,
                 userEmail: session.customer_email,
                 stripeCustomerId: session.customer as string,
+                seatCount: seatCount,
+                businessCount: businessCount,
               }),
             });
           } catch (err) {

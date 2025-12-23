@@ -27,16 +27,48 @@ Creates a Stripe Checkout session for subscription or one-time payments.
 }
 ```
 
+**Request Body:**
+```json
+{
+  "userId": "user_12345",
+  "email": "user@example.com",
+  "seatCount": 2,
+  "additionalBusinessCount": 1,
+  "workspaceId": "workspace_abc"
+}
+```
+
+**Response:**
+```json
+{
+  "url": "https://checkout.stripe.com/pay/cs_test_xxxxx",
+  "sessionId": "cs_test_xxxxx"
+}
+```
+
+**Line Items:**
+- **Base Plan:** $149/month (quantity: 1)
+- **Additional Business Profiles:** $49/month each (quantity: `additionalBusinessCount`)
+- **Team Seats:** $15/month each (quantity: `seatCount`)
+
+**Behavior:**
+1. Checks if user already has a Stripe customer ID in `billing_accounts`
+2. Creates new customer if none exists
+3. Builds dynamic line items based on input
+4. Creates subscription checkout session
+5. Redirects to `/billing/success?session_id={CHECKOUT_SESSION_ID}` on completion
+6. Cancel redirects to `/pricing`
+
 **Usage Example:**
 ```javascript
 const response = await fetch('/api/stripe/create-checkout-session', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    priceId: process.env.STRIPE_PRICE_BASE_149,
+    userId: 'user_12345',
     email: 'user@example.com',
-    userId: 'user_123',
-    mode: 'subscription'
+    seatCount: 2,
+    additionalBusinessCount: 1
   })
 });
 
