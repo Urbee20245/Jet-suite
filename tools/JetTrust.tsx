@@ -140,11 +140,13 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('Connecting to your Google Business Profile...');
+  const [socialCopied, setSocialCopied] = useState(false);
 
   const reviewUrl = profileData.googleBusiness.mapsUrl || 
     `https://search.google.com/local/writereview?placeid=${profileData.googleBusiness.placeId}`;
 
-  // Fetch reviews on mount with progress animation
+  // Fetch reviews on mount with progress animation and dynamic messages
   useEffect(() => {
     const fetchReviews = async () => {
       if (profileData.googleBusiness.status === 'Verified' && 
@@ -154,11 +156,31 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         setError('');
         setLoadingProgress(0);
         
-        // Animate progress
+        const messages = [
+          'Connecting to your Google Business Profile...',
+          'Verifying your account credentials...',
+          'Scanning for customer reviews...',
+          'Analyzing review sentiment...',
+          'Organizing your feedback...',
+          'Preparing your widget...',
+          'Almost there! Finalizing data...'
+        ];
+        
+        let messageIndex = 0;
+        
+        // Animate progress and cycle messages
         const progressInterval = setInterval(() => {
           setLoadingProgress(prev => {
-            if (prev >= 90) return prev;
-            return prev + 10;
+            const newProgress = prev + 10;
+            if (newProgress >= 90) return prev;
+            
+            // Change message every 20%
+            if (newProgress % 20 === 0 && messageIndex < messages.length - 1) {
+              messageIndex++;
+              setLoadingMessage(messages[messageIndex]);
+            }
+            
+            return newProgress;
           });
         }, 200);
         
@@ -169,6 +191,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           );
           
           setLoadingProgress(100);
+          setLoadingMessage('Success! Your reviews are ready.');
           
           const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
             id: `review_${Date.now()}_${i}`,
@@ -315,11 +338,28 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     setLoading(true);
     setError('');
     setLoadingProgress(0);
+    setLoadingMessage('Refreshing your reviews...');
+    
+    const messages = [
+      'Refreshing your reviews...',
+      'Checking for new feedback...',
+      'Updating your data...',
+      'Almost done...'
+    ];
+    
+    let messageIndex = 0;
     
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (prev >= 90) return prev;
-        return prev + 10;
+        const newProgress = prev + 10;
+        if (newProgress >= 90) return prev;
+        
+        if (newProgress % 25 === 0 && messageIndex < messages.length - 1) {
+          messageIndex++;
+          setLoadingMessage(messages[messageIndex]);
+        }
+        
+        return newProgress;
       });
     }, 200);
     
@@ -330,6 +370,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       );
       
       setLoadingProgress(100);
+      setLoadingMessage('Reviews updated successfully!');
       
       const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
         id: `review_${Date.now()}_${i}`,
@@ -354,6 +395,25 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     navigator.clipboard.writeText(reviewUrl);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const handleExportForSocial = () => {
+    if (filteredReviews.length === 0) return;
+    
+    // Create formatted text for social media
+    let socialText = `⭐ What Our Customers Are Saying! ⭐\n\n`;
+    
+    filteredReviews.slice(0, 3).forEach((review, index) => {
+      const stars = '⭐'.repeat(review.rating);
+      socialText += `${stars}\n"${review.text}"\n- ${review.author}\n\n`;
+    });
+    
+    socialText += `See more reviews and leave yours: ${reviewUrl}\n\n`;
+    socialText += `#CustomerReviews #${profileData.business.name.replace(/\s+/g, '')}`;
+    
+    navigator.clipboard.writeText(socialText);
+    setSocialCopied(true);
+    setTimeout(() => setSocialCopied(false), 2000);
   };
 
   // Check if GBP is not connected
@@ -581,7 +641,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               <SparklesIcon className="w-6 h-6 text-accent-purple animate-pulse" />
               <h3 className="text-lg font-bold text-brand-text">Fetching Your Reviews</h3>
             </div>
-            <p className="text-sm text-brand-text-muted">Connecting to your Google Business Profile...</p>
+            <p className="text-sm text-brand-text-muted animate-pulse">{loadingMessage}</p>
           </div>
           
           {/* Progress Bar */}
@@ -698,27 +758,80 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         </div>
       )}
 
-      {/* Embed Code */}
+      {/* Embed Code & Social Media Export */}
       {showCode && widgetCode && (
-        <div className="bg-brand-card p-6 rounded-xl shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-brand-text">Embed Code</h3>
-            <button
-              onClick={handleCopyCode}
-              className="flex items-center gap-2 bg-accent-purple hover:bg-accent-purple/90 text-white font-semibold py-2 px-4 rounded-lg transition"
-            >
-              {copied ? '✓ Copied!' : 'Copy Code'}
-            </button>
+        <div className="space-y-6">
+          {/* Widget Embed Code */}
+          <div className="bg-brand-card p-6 rounded-xl shadow-lg border-2 border-accent-purple/20">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-brand-text flex items-center gap-2">
+                  <CodeBracketIcon className="w-6 h-6 text-accent-purple" />
+                  Widget Embed Code
+                </h3>
+                <p className="text-sm text-brand-text-muted mt-1">Add this to your website</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyCode}
+                  className="flex items-center gap-2 bg-accent-purple hover:bg-accent-purple/90 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  {copied ? '✓ Copied!' : 'Copy Code'}
+                </button>
+                <button
+                  onClick={handleDownloadWidget}
+                  className="flex items-center gap-2 bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  <ArrowDownTrayIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm"><code>{widgetCode}</code></pre>
+            </div>
+            <div className="mt-4 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
+              <p className="text-sm text-brand-text">
+                <strong className="text-accent-blue">How to Use:</strong> Copy the code above and paste it into your website's HTML where you want the reviews to appear. 
+                The widget is fully self-contained and will display automatically.
+              </p>
+            </div>
           </div>
-          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm"><code>{widgetCode}</code></pre>
-          </div>
-          <div className="mt-4 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
-            <p className="text-sm text-brand-text">
-              <strong className="text-accent-blue">How to Use:</strong> Copy the code above and paste it into your website's HTML where you want the reviews to appear. 
-              The widget is fully self-contained and will display automatically.
-            </p>
-          </div>
+
+          {/* Social Media Export */}
+          {filteredReviews.length > 0 && (
+            <div className="bg-gradient-to-br from-accent-pink/5 to-accent-purple/5 p-6 rounded-xl shadow-lg border-2 border-accent-pink/20">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-brand-text flex items-center gap-2">
+                    ✨ Social Media Post
+                  </h3>
+                  <p className="text-sm text-brand-text-muted mt-1">Share your best reviews on social</p>
+                </div>
+                <button
+                  onClick={handleExportForSocial}
+                  className="flex items-center gap-2 bg-gradient-to-r from-accent-pink to-accent-purple hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition"
+                >
+                  {socialCopied ? '✓ Copied!' : 'Copy for Social Media'}
+                </button>
+              </div>
+              <div className="bg-white p-4 rounded-lg border border-brand-border">
+                <div className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
+                  <p className="font-bold mb-2">⭐ What Our Customers Are Saying! ⭐</p>
+                  {filteredReviews.slice(0, 3).map((review, idx) => (
+                    <div key={idx} className="mb-3">
+                      <p className="text-yellow-500">{'⭐'.repeat(review.rating)}</p>
+                      <p className="italic">"{review.text.slice(0, 100)}{review.text.length > 100 ? '...' : ''}"</p>
+                      <p className="text-xs text-gray-500">- {review.author}</p>
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-500 mt-3">See more reviews: {reviewUrl}</p>
+                </div>
+              </div>
+              <p className="text-xs text-brand-text-muted mt-3">
+                💡 <strong>Pro Tip:</strong> Perfect for Instagram, Facebook, Twitter, or LinkedIn posts
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
