@@ -237,19 +237,30 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     html += '</div>';
     
     html += \`<div class="jetsuite-reviews-\${widgetData.layout}">\`;
-    widgetData.reviews.forEach(review => {
-      const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
-      html += '<div class="jetsuite-review">';
-      html += '<div class="jetsuite-review-header">';
-      html += '<div>';
-      html += \`<div class="jetsuite-author">\${review.author}</div>\`;
-      html += \`<div class="jetsuite-date">\${review.date}</div>\`;
+    
+    if (widgetData.reviews.length === 0) {
+      // Zero reviews state - encourage review collection
+      html += '<div style="text-align: center; padding: 3rem 2rem; background: white; border-radius: 12px; border: 2px dashed #E5E7EB;">';
+      html += '<div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>';
+      html += '<h3 style="font-size: 1.5rem; font-weight: bold; color: #1F2937; margin-bottom: 0.5rem;">Be Our First Reviewer!</h3>';
+      html += '<p style="color: #6B7280; margin-bottom: 1.5rem;">We\\'d love to hear about your experience with us.</p>';
+      html += \`<a href="\${widgetData.reviewUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: \${widgetData.colors.primary}; color: white; font-weight: 600; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; transition: background 0.2s;">Leave the First Review</a>\`;
       html += '</div>';
-      html += \`<div class="jetsuite-stars" style="color: #FBBF24;">\${stars}</div>\`;
-      html += '</div>';
-      html += \`<p class="jetsuite-text">\${review.text}</p>\`;
-      html += '</div>';
-    });
+    } else {
+      widgetData.reviews.forEach(review => {
+        const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+        html += '<div class="jetsuite-review">';
+        html += '<div class="jetsuite-review-header">';
+        html += '<div>';
+        html += \`<div class="jetsuite-author">\${review.author}</div>\`;
+        html += \`<div class="jetsuite-date">\${review.date}</div>\`;
+        html += '</div>';
+        html += \`<div class="jetsuite-stars" style="color: #FBBF24;">\${stars}</div>\`;
+        html += '</div>';
+        html += \`<p class="jetsuite-text">\${review.text}</p>\`;
+        html += '</div>';
+      });
+    }
     html += '</div>';
     
     html += '<div class="jetsuite-footer">';
@@ -353,11 +364,11 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       {showHowTo && (
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
+                <li>Works even with zero reviews - start collecting reviews today</li>
                 <li>Your reviews are automatically fetched from your Google Business Profile</li>
                 <li>Choose a layout style (Grid, Carousel, or List)</li>
-                <li>Filter by minimum star rating (3, 4, or 5 stars)</li>
-                <li>Preview how the widget will look</li>
-                <li>Generate embed code and copy to your website or download for sharing</li>
+                <li>Filter by minimum star rating (3, 4, or 5 stars) if you have reviews</li>
+                <li>Generate embed code and add to your website immediately</li>
             </ul>
         </HowToUse>
       )}
@@ -474,14 +485,23 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           </div>
         )}
 
+        {reviews.length === 0 && !loading && (
+          <div className="mb-6 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
+            <p className="text-sm text-brand-text">
+              <strong className="text-accent-blue">No reviews yet?</strong> No problem! Generate your widget now to start collecting reviews. 
+              The widget will display a call-to-action encouraging customers to leave their first review.
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             onClick={generateWidgetCode}
-            disabled={loading || filteredReviews.length === 0}
+            disabled={loading}
             className="flex-1 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
           >
             <CodeBracketIcon className="w-5 h-5" />
-            Generate Widget Code
+            {filteredReviews.length === 0 ? 'Generate Review Collection Widget' : 'Generate Widget Code'}
           </button>
           {widgetCode && (
             <button
@@ -510,19 +530,57 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       )}
 
       {/* Widget Preview */}
-      {!loading && filteredReviews.length > 0 && (
+      {!loading && (
         <div className="bg-brand-card p-6 rounded-xl shadow-lg">
           <h3 className="text-xl font-bold text-brand-text mb-2">Widget Preview</h3>
           <p className="text-sm text-brand-text-muted mb-4">
-            Showing {filteredReviews.length} review(s) with {minStars}+ stars in {layout} layout
+            {filteredReviews.length === 0 
+              ? `Preview: Call-to-action layout (will encourage first review)`
+              : `Showing ${filteredReviews.length} review(s) with ${minStars}+ stars in ${layout} layout`
+            }
           </p>
           <div className="border-2 border-dashed border-brand-border rounded-lg p-4">
-            <WidgetPreview
-              reviews={filteredReviews.slice(0, layout === 'list' ? 5 : 6)}
-              layout={layout}
-              businessName={profileData.business.name}
-              reviewUrl={reviewUrl}
-            />
+            {filteredReviews.length === 0 ? (
+              <div className="bg-gray-50 p-8 rounded-lg">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">What Our Customers Say</h2>
+                  <p className="text-gray-600">Real reviews from real customers</p>
+                </div>
+                <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-6xl mb-4">⭐</div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Be Our First Reviewer!</h3>
+                  <p className="text-gray-600 mb-6">We'd love to hear about your experience with us.</p>
+                  <a
+                    href={reviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
+                  >
+                    Leave the First Review
+                  </a>
+                </div>
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <a
+                    href={reviewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
+                  >
+                    Leave a Review
+                  </a>
+                  <p className="text-center text-xs text-gray-500">
+                    Powered by <span className="font-semibold text-blue-600">JetSuite</span>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <WidgetPreview
+                reviews={filteredReviews.slice(0, layout === 'list' ? 5 : 6)}
+                layout={layout}
+                businessName={profileData.business.name}
+                reviewUrl={reviewUrl}
+              />
+            )}
           </div>
         </div>
       )}
