@@ -87,6 +87,12 @@ export const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
+export const MinusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+    </svg>
+);
+
 export const GlobeAltIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c.504 0 1.002-.023 1.49-.067M12 21c-.504 0-1.002-.023-1.49-.067M3.284 14.251 2.24 14.25a1.002 1.002 0 0 0-.998 1.002v.004c0 .553.448 1.002 1 1.002h1.044M21.716 14.251 22.76 14.25a1 1 0 0 1 .998 1.002v.004a1 1 0 0 1-.998 1.002h-1.044M12 3a8.966 8.966 0 0 0-8.716 6.747M12 3c.504 0 1.002.023 1.49.067M12 3c-.504 0-1.002-.023-1.49-.067M5.885 5.885A8.966 8.966 0 0 1 12 3m6.115 2.885A8.966 8.966 0 0 0 12 3m0 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
