@@ -68,10 +68,22 @@ export default async function handler(
           metadata: session.metadata,
         });
         
-        // TODO: Update your database with successful subscription
-        // - Mark user as subscribed
-        // - Store customerId for future portal access
-        // - Record subscription details
+        // Update billing account with customer ID
+        if (session.customer && session.metadata?.userId) {
+          try {
+            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: session.metadata.userId,
+                userEmail: session.customer_email,
+                stripeCustomerId: session.customer as string,
+              }),
+            });
+          } catch (err) {
+            console.error('Failed to update billing account:', err);
+          }
+        }
         
         break;
       }
@@ -85,7 +97,35 @@ export default async function handler(
           priceId: subscription.items.data[0]?.price.id,
         });
         
-        // TODO: Update database with subscription details
+        // Get billing account by customer ID to find user ID
+        try {
+          const billingResponse = await fetch(
+            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
+            { method: 'GET' }
+          );
+          
+          if (billingResponse.ok) {
+            const { billingAccount } = await billingResponse.json();
+            
+            // Update with subscription details
+            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: billingAccount.user_id,
+                userEmail: billingAccount.user_email,
+                stripeSubscriptionId: subscription.id,
+                subscriptionStatus: subscription.status,
+                subscriptionPlan: subscription.items.data[0]?.price.id || '',
+                currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+                cancelAtPeriodEnd: subscription.cancel_at_period_end,
+              }),
+            });
+          }
+        } catch (err) {
+          console.error('Failed to update subscription in database:', err);
+        }
         
         break;
       }
@@ -98,7 +138,33 @@ export default async function handler(
           status: subscription.status,
         });
         
-        // TODO: Handle subscription changes (upgrade/downgrade)
+        // Get billing account and update
+        try {
+          const billingResponse = await fetch(
+            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
+            { method: 'GET' }
+          );
+          
+          if (billingResponse.ok) {
+            const { billingAccount } = await billingResponse.json();
+            
+            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: billingAccount.user_id,
+                userEmail: billingAccount.user_email,
+                subscriptionStatus: subscription.status,
+                subscriptionPlan: subscription.items.data[0]?.price.id || '',
+                currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+                cancelAtPeriodEnd: subscription.cancel_at_period_end,
+              }),
+            });
+          }
+        } catch (err) {
+          console.error('Failed to update subscription status:', err);
+        }
         
         break;
       }
@@ -110,9 +176,29 @@ export default async function handler(
           customerId: subscription.customer,
         });
         
-        // TODO: Handle subscription cancellation
-        // - Mark user as unsubscribed
-        // - Disable premium features
+        // Mark subscription as canceled in database
+        try {
+          const billingResponse = await fetch(
+            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
+            { method: 'GET' }
+          );
+          
+          if (billingResponse.ok) {
+            const { billingAccount } = await billingResponse.json();
+            
+            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: billingAccount.user_id,
+                userEmail: billingAccount.user_email,
+                subscriptionStatus: 'canceled',
+              }),
+            });
+          }
+        } catch (err) {
+          console.error('Failed to mark subscription as canceled:', err);
+        }
         
         break;
       }
