@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS billing_accounts (
   seat_count INTEGER DEFAULT 1 CHECK (seat_count >= 0),
   business_count INTEGER DEFAULT 1 CHECK (business_count >= 0),
   
+  -- Founder pricing (lifetime-locked, non-client-editable)
+  is_founder BOOLEAN DEFAULT FALSE NOT NULL,
+  
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -102,3 +105,4 @@ COMMENT ON COLUMN billing_accounts.subscription_status IS 'Current status of Str
 COMMENT ON COLUMN billing_accounts.current_period_end IS 'When the current billing period ends';
 COMMENT ON COLUMN billing_accounts.seat_count IS 'Number of team member seats';
 COMMENT ON COLUMN billing_accounts.business_count IS 'Number of business profiles allowed';
+COMMENT ON COLUMN billing_accounts.is_founder IS 'Founder pricing flag - lifetime-locked once set, not client-editable';

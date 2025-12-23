@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { BASE_PRICE_ID, BUSINESS_ADDON_PRICE_ID, SEAT_PRICE_ID, validateStripePrices } from '../../config/stripePrices';
+import { getPriceIds, validateStripePrices, areFounderPricesConfigured } from '../../config/stripePrices';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
@@ -56,26 +56,55 @@ export default async function handler(
       });
     }
 
-    // Use centralized price ID configuration
-    const basePriceId = BASE_PRICE_ID;
-    const businessPriceId = BUSINESS_ADDON_PRICE_ID;
-    const seatPriceId = SEAT_PRICE_ID;
-
-    // Check if user already has a Stripe customer ID
+    // Check if user already has a billing account and get founder status
     let customerId: string | null = null;
+    let isFounder: boolean = false;
+    let existingSubscription: boolean = false;
     
     try {
       const { data: billingAccount } = await supabase
         .from('billing_accounts')
-        .select('stripe_customer_id')
+        .select('stripe_customer_id, stripe_subscription_id, is_founder')
         .eq('user_id', userId)
         .single();
       
-      customerId = billingAccount?.stripe_customer_id || null;
+      if (billingAccount) {
+        customerId = billingAccount.stripe_customer_id || null;
+        isFounder = billingAccount.is_founder || false;
+        existingSubscription = !!billingAccount.stripe_subscription_id;
+        
+        console.log('Found existing billing account:', {
+          customerId,
+          isFounder,
+          hasSubscription: existingSubscription,
+        });
+      }
     } catch (error) {
       // No billing account yet, will create new customer
       console.log('No existing billing account found, will create new customer');
     }
+
+    // Prevent creating a second subscription if one already exists
+    if (existingSubscription) {
+      return res.status(400).json({
+        error: 'Active subscription already exists',
+        message: 'This account already has an active subscription. Please manage it from your account page.',
+      });
+    }
+
+    // Get appropriate price IDs based on founder status
+    // Founder pricing is lifetime-locked once set
+    const priceIds = getPriceIds(isFounder);
+    const basePriceId = priceIds.BASE_PRICE_ID;
+    const businessPriceId = priceIds.BUSINESS_ADDON_PRICE_ID;
+    const seatPriceId = priceIds.SEAT_PRICE_ID;
+
+    // Log pricing tier being used
+    console.log('Using pricing tier:', {
+      tier: isFounder ? 'founder' : 'standard',
+      founderPricesAvailable: areFounderPricesConfigured(),
+      basePriceId,
+    });
 
     // If no customer exists, create one
     if (!customerId) {
@@ -84,17 +113,19 @@ export default async function handler(
         metadata: {
           userId: userId,
           workspaceId: workspaceId || '',
+          isFounder: isFounder.toString(),
         },
       });
       customerId = customer.id;
 
-      // Store customer ID in billing_accounts
+      // Store customer ID in billing_accounts with founder flag
       await supabase
         .from('billing_accounts')
         .upsert({
           user_id: userId,
           user_email: email,
           stripe_customer_id: customerId,
+          is_founder: isFounder, // Lifetime-locked once set
         }, {
           onConflict: 'user_id',
         });
@@ -135,6 +166,8 @@ export default async function handler(
         workspaceId: workspaceId || '',
         seatCount: seatCount.toString(),
         additionalBusinessCount: additionalBusinessCount.toString(),
+        isFounder: isFounder.toString(), // Track pricing tier
+        pricingTier: isFounder ? 'founder' : 'standard',
       },
       success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/pricing`,
@@ -146,6 +179,8 @@ export default async function handler(
           workspaceId: workspaceId || '',
           seatCount: seatCount.toString(),
           additionalBusinessCount: additionalBusinessCount.toString(),
+          isFounder: isFounder.toString(),
+          pricingTier: isFounder ? 'founder' : 'standard',
         },
       },
     });
