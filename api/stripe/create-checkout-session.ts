@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { BASE_PRICE_ID, BUSINESS_ADDON_PRICE_ID, SEAT_PRICE_ID, validateStripePrices } from '../../config/stripePrices';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-02-24.acacia',
@@ -44,16 +45,21 @@ export default async function handler(
 
     const appUrl = process.env.APP_URL || 'http://localhost:5173';
 
-    // Get Stripe price IDs from environment
-    const basePriceId = process.env.STRIPE_PRICE_BASE_149;
-    const businessPriceId = process.env.STRIPE_PRICE_BUSINESS_49;
-    const seatPriceId = process.env.STRIPE_PRICE_SEAT_15;
-
-    if (!basePriceId || !businessPriceId || !seatPriceId) {
+    // Validate Stripe price IDs are configured
+    try {
+      validateStripePrices();
+    } catch (error: any) {
+      console.error('Stripe price configuration error:', error.message);
       return res.status(500).json({ 
-        error: 'Server configuration error: Missing Stripe price IDs' 
+        error: 'Server configuration error: Missing Stripe price IDs',
+        details: error.message,
       });
     }
+
+    // Use centralized price ID configuration
+    const basePriceId = BASE_PRICE_ID;
+    const businessPriceId = BUSINESS_ADDON_PRICE_ID;
+    const seatPriceId = SEAT_PRICE_ID;
 
     // Check if user already has a Stripe customer ID
     let customerId: string | null = null;

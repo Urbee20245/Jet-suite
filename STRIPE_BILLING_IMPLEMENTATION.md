@@ -279,6 +279,27 @@ See `/SUBSCRIPTION_TESTING_GUIDE.md` for comprehensive testing scenarios.
 
 ---
 
+## 🎯 Stripe Price Configuration
+
+**NEW: Centralized Price Management**
+
+All Stripe price IDs are now managed through `/config/stripePrices.ts`. This allows price changes via environment variables only, without code changes or subscription migration.
+
+**Configuration Layer:**
+```typescript
+import { BASE_PRICE_ID, BUSINESS_ADDON_PRICE_ID, SEAT_PRICE_ID } from './config/stripePrices';
+```
+
+**Benefits:**
+- ✅ Update prices by changing env vars only
+- ✅ No code deployment needed for price changes
+- ✅ No existing subscription migration required
+- ✅ Validation and error handling built-in
+
+See `/STRIPE_PRICE_MANAGEMENT.md` for complete guide.
+
+---
+
 ## 🔐 Environment Variables Required
 
 Add these to your `.env` file and Vercel dashboard:

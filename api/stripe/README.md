@@ -78,6 +78,33 @@ window.location.href = url; // Redirect to Stripe Checkout
 
 ---
 
+---
+
+## Stripe Price Configuration
+
+**IMPORTANT:** All Stripe price IDs are managed through a centralized configuration layer at `/config/stripePrices.ts`.
+
+**Never hard-code price IDs!** Always use the config:
+
+```typescript
+import { BASE_PRICE_ID, BUSINESS_ADDON_PRICE_ID, SEAT_PRICE_ID } from '../config/stripePrices';
+```
+
+**Environment Variables Required:**
+- `STRIPE_PRICE_BASE_149` - Base plan price ID ($149/mo)
+- `STRIPE_PRICE_BUSINESS_49` - Additional business price ID ($49/mo)
+- `STRIPE_PRICE_SEAT_15` - Team seat price ID ($15/mo)
+
+**Benefits:**
+- ✅ Change prices by updating env vars only (no code changes)
+- ✅ No subscription migration required
+- ✅ Centralized validation
+- ✅ Test and production prices isolated
+
+See `/STRIPE_PRICE_MANAGEMENT.md` for complete guide on managing price IDs.
+
+---
+
 ### 2. Create Customer Portal Session
 **POST** `/api/stripe/create-portal-session`
 
