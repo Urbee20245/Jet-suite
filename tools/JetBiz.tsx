@@ -337,6 +337,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     <div className="space-y-6">
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
             <p className="text-brand-text-muted">{tool.description}</p>
+            <p className="text-sm text-brand-text-muted mt-2">
+                Replaces: <span className="text-accent-purple font-semibold">Local SEO Consultant ($500-2,000/mo)</span>
+            </p>
             <button onClick={() => setActiveTool(ALL_TOOLS['knowledgebase'], 'foundation/jetbiz')} className="text-sm font-bold text-accent-purple hover:underline mt-2">Learn why Google Business Profile is critical &rarr;</button>
         </div>
         {profileData.googleBusiness.status === 'Not Verified' && step !== 'result' && ( <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg"><div className="flex"><ExclamationTriangleIcon className="w-6 h-6 mr-3"/><p>Your profile isn't verified, so some data may be unavailable.</p></div></div> )}

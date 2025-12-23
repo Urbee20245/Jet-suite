@@ -324,7 +324,9 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                     <div className="h-6 w-px bg-brand-border"></div>
                     <div>
                         <h1 className="text-xl font-bold text-brand-text">JetCreate</h1>
-                        <p className="text-xs text-brand-text-muted">AI-powered campaign creation</p>
+                        <p className="text-xs text-brand-text-muted">
+                            AI-powered campaign creation • Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-brand-text-muted">

@@ -73,7 +73,10 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
       )}
 
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Reputation Management ($200-800/mo)</span>
+        </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label htmlFor="review" className="block text-sm font-medium text-brand-text mb-2">Customer Review</label>

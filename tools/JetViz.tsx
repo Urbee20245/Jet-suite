@@ -240,6 +240,9 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     <div className="space-y-6">
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
             <p className="text-brand-text-muted">{tool.description}</p>
+            <p className="text-sm text-brand-text-muted mt-2">
+                Replaces: <span className="text-accent-purple font-semibold">SEO Tools (Ahrefs, SEMrush) ($99-399/mo)</span>
+            </p>
             <button onClick={() => setActiveTool(ALL_TOOLS['knowledgebase'], 'foundation/jetviz')} className="text-sm font-bold text-accent-purple hover:underline mt-2">Learn why your website is your digital storefront &rarr;</button>
         </div>
 

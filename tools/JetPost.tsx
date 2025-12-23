@@ -38,28 +38,10 @@ export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Facebook']);
-  const [apiKeySelected, setApiKeySelected] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<{ [platform: string]: string }>({});
   const [imageLoading, setImageLoading] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
-
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio) {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
-  
-  const handleSelectKey = async () => {
-    if (window.aistudio) {
-        await window.aistudio.openSelectKey();
-        setApiKeySelected(true);
-    }
-  };
 
   const handlePlatformChange = (platform: string) => {
     setSelectedPlatforms(prev =>
@@ -95,10 +77,6 @@ export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTo
   };
 
   const handleGenerateImage = async (platform: string, prompt: string) => {
-    if (!apiKeySelected) {
-        handleSelectKey();
-        return;
-    }
     setImageLoading(platform);
     setError('');
     try {
@@ -107,12 +85,7 @@ export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTo
         setGeneratedImages(prev => ({ ...prev, [platform]: `data:image/png;base64,${base64Data}` }));
     } catch (err: any) {
         console.error(err);
-        if (err.message?.includes('Requested entity was not found')) {
-            setError('API Key is invalid or missing. Please select a valid API Key.');
-            setApiKeySelected(false);
-        } else {
-            setError(`Failed to generate image for ${platform}. Please try again.`);
-        }
+        setError(`Failed to generate image for ${platform}. Please try again.`);
     } finally {
         setImageLoading(null);
     }
@@ -164,7 +137,10 @@ export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTo
         </HowToUse>
       )}
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Social Media Manager ($800-2,500/mo)</span>
+        </p>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">

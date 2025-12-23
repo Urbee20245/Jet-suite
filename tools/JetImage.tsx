@@ -11,15 +11,7 @@ interface JetImageProps {
 
 type ImageSize = '1K' | '2K' | '4K';
 
-declare global {
-    interface AIStudio {
-        hasSelectedApiKey: () => Promise<boolean>;
-        openSelectKey: () => Promise<void>;
-    }
-    interface Window {
-        aistudio?: AIStudio;
-    }
-}
+// Global declarations removed - using standard GEMINI_API_KEY from environment
 
 export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
   const [prompt, setPrompt] = useState('');
@@ -27,25 +19,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [apiKeySelected, setApiKeySelected] = useState(false);
   const [showHowTo, setShowHowTo] = useState(true);
-
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio) {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
-
-  const handleSelectKey = async () => {
-    if (window.aistudio) {
-        await window.aistudio.openSelectKey();
-        setApiKeySelected(true);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,54 +35,33 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
       setImageUrl(`data:image/png;base64,${base64Data}`);
     } catch (err: any) {
       console.error(err);
-      if (err.message?.includes('Requested entity was not found')) {
-        setError('API Key is invalid or missing. Please select a valid API Key from a paid GCP project.');
-        setApiKeySelected(false);
-      } else {
-        setError('Failed to generate image. Please try again.');
-      }
+      setError('Failed to generate image. Please try again or refine your prompt.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!apiKeySelected) {
-    return (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-            <h2 className="text-2xl font-bold text-brand-text mb-2">API Key Required</h2>
-            <p className="text-brand-text-muted mb-4">
-                The {tool.name} tool uses a powerful model that requires you to select your own paid API key from a Google Cloud project.
-            </p>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            <button
-                onClick={handleSelectKey}
-                className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-                Select API Key
-            </button>
-            <p className="text-xs text-brand-text-muted mt-4">
-                For more information on billing, visit{' '}
-                <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="underline hover:text-accent-purple">
-                    ai.google.dev/gemini-api/docs/billing
-                </a>.
-            </p>
-        </div>
-    );
-  }
+  // JetImage uses the existing GEMINI_API_KEY from environment
+  // No separate API key selection needed since we're already authenticated
 
   return (
     <div>
       {showHowTo && (
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li>Write a detailed description of the image you want to create.</li>
-                <li>Select the desired image resolution (1K is fastest).</li>
-                <li>Click 'Generate Image' to create a high-quality, unique image.</li>
+                <li>Describe the image you want to create (logo, social media graphic, banner, etc.)</li>
+                <li>Select a style (modern, minimalist, bold, playful, professional)</li>
+                <li>Choose dimensions based on your use case (1K is fastest, 4K for high quality)</li>
+                <li>Click 'Generate Image' and wait for AI to create your visual</li>
+                <li>Download the image or regenerate with adjusted prompts</li>
             </ul>
         </HowToUse>
       )}
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+        </p>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">Image Prompt</label>

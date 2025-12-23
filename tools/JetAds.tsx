@@ -32,27 +32,9 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
   
-  const [apiKeySelected, setApiKeySelected] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<{ [index: number]: string }>({});
   const [imageLoading, setImageLoading] = useState<number | null>(null);
   const [copySuccess, setCopySuccess] = useState('');
-
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio) {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
-
-  const handleSelectKey = async () => {
-    if (window.aistudio) {
-        await window.aistudio.openSelectKey();
-        setApiKeySelected(true);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,10 +59,6 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
   };
   
   const handleGenerateImage = async (index: number, prompt: string) => {
-    if (!apiKeySelected) {
-        handleSelectKey();
-        return;
-    }
     setImageLoading(index);
     setError('');
     try {
@@ -89,12 +67,7 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
         setGeneratedImages(prev => ({ ...prev, [index]: `data:image/png;base64,${base64Data}` }));
     } catch (err: any) {
         console.error(err);
-        if (err.message?.includes('Requested entity was not found')) {
-            setError('API Key is invalid or missing. Please select a valid API Key.');
-            setApiKeySelected(false);
-        } else {
-            setError(`Failed to generate image for Ad #${index + 1}. Please try again.`);
-        }
+        setError(`Failed to generate image for Ad #${index + 1}. Please try again.`);
     } finally {
         setImageLoading(null);
     }
@@ -122,7 +95,10 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
         </HowToUse>
       )}
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Marketing Agency (Campaigns) ($2,000-10,000/mo)</span>
+        </p>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <input type="text" value={product} onChange={(e) => setProduct(e.target.value)} placeholder="Product/Service/Offer" className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"/>

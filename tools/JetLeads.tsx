@@ -65,7 +65,10 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
         </HowToUse>
       )}
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Lead Generation Service ($500-2,000/mo)</span>
+        </p>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
