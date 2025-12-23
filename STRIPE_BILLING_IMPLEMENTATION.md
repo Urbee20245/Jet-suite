@@ -226,6 +226,59 @@ import { SubscriptionGuard } from './components/SubscriptionGuard';
 
 ---
 
+## 🛡️ Router-Level Access Control
+
+**Implementation:** Integrated into `App.tsx` main router
+
+**How It Works:**
+
+```tsx
+// App.tsx
+if (isLoggedIn && currentUserEmail) {
+  return (
+    <SubscriptionGuard 
+      userId={currentUserEmail}
+      onAccessDenied={(status, redirectTo) => {
+        navigate(redirectTo); // Navigate to /pricing or /account
+      }}
+    >
+      <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />
+    </SubscriptionGuard>
+  );
+}
+```
+
+**Flow:**
+1. User logs in → App.tsx sets `isLoggedIn = true`
+2. App renders `<SubscriptionGuard>` wrapper around `<InternalApp>`
+3. SubscriptionGuard calls `checkSubscriptionAccess(userId)`
+4. If access denied, shows professional lock screen
+5. Auto-redirects to `/pricing` or `/account` after 2.5 seconds
+6. If access granted, renders InternalApp (full dashboard)
+
+**Loading State:**
+- Shows spinner and "Verifying subscription..." message
+- Prevents flicker by not rendering InternalApp until verified
+- Typical verification time: 200-600ms
+
+**Access Denied Screen:**
+- Status badge (e.g., "⚠️ Payment Issue" or "🔒 Subscription Required")
+- Clear explanation of issue
+- CTA button ("Update Payment Method" or "View Pricing Plans")
+- Countdown timer before auto-redirect
+- Link to Knowledge Base
+
+**Routes:**
+- `/billing/success` - Post-checkout success page
+- `/billing/locked` - Manual billing lock page (if needed)
+- `/pricing` - Redirect destination for no subscription
+- `/account` - Redirect destination for payment issues
+
+**Testing:**
+See `/SUBSCRIPTION_TESTING_GUIDE.md` for comprehensive testing scenarios.
+
+---
+
 ## 🔐 Environment Variables Required
 
 Add these to your `.env` file and Vercel dashboard:

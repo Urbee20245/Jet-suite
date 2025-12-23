@@ -41,16 +41,32 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
         setReason(result.reason || '');
         setRedirectTo(result.redirectTo || '/pricing');
         
-        if (!result.hasAccess && onAccessDenied) {
-          // Give parent component a chance to handle the denial
-          setTimeout(() => {
-            onAccessDenied(result.status, result.redirectTo || '/pricing');
-          }, 2000); // 2 second delay to show the message
+        if (!result.hasAccess) {
+          console.log('[SubscriptionGuard] Access denied:', result);
+          
+          if (onAccessDenied) {
+            // Give parent component a chance to handle the denial
+            setTimeout(() => {
+              onAccessDenied(result.status, result.redirectTo || '/pricing');
+            }, 2500); // 2.5 second delay to show the message
+          } else {
+            // Fallback: direct navigation if no callback provided
+            setTimeout(() => {
+              window.location.href = result.redirectTo || '/pricing';
+            }, 2500);
+          }
         }
       } catch (error) {
         console.error('Subscription verification error:', error);
         setHasAccess(false);
-        setReason('Unable to verify subscription status.');
+        setReason('Unable to verify subscription status. Please try refreshing the page.');
+        
+        // On error, still attempt redirect after delay
+        if (onAccessDenied) {
+          setTimeout(() => {
+            onAccessDenied(null, '/pricing');
+          }, 3000);
+        }
       } finally {
         setIsChecking(false);
       }
@@ -117,7 +133,7 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
 
             {/* Help Text */}
             <p className="text-xs text-gray-500 mt-6">
-              Redirecting in 2 seconds...
+              Redirecting in 2.5 seconds...
             </p>
           </div>
         </div>

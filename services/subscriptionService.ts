@@ -32,13 +32,20 @@ export async function checkSubscriptionAccess(userId: string): Promise<{
     const billingAccount = await getBillingAccount(userId);
     
     if (!billingAccount) {
+      console.log('[subscriptionService] No billing account found for user:', userId);
       return {
         hasAccess: false,
         status: null,
-        reason: 'No active subscription found',
+        reason: 'No active subscription found. Subscribe to access JetSuite tools.',
         redirectTo: '/pricing',
       };
     }
+    
+    console.log('[subscriptionService] Billing account found:', {
+      userId,
+      status: billingAccount.subscription_status,
+      customerId: billingAccount.stripe_customer_id,
+    });
     
     const status = billingAccount.subscription_status as SubscriptionStatus;
     

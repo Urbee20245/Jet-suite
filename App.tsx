@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
+import { SubscriptionGuard } from './components/SubscriptionGuard';
 
 console.log('[App] Component module loaded');
 
@@ -86,7 +87,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isLoggedIn) {
       // If the user logs in, redirect them to the app.
-      if (!currentPath.startsWith('/app')) {
+      if (!currentPath.startsWith('/app') && !currentPath.startsWith('/billing')) {
         navigate('/app');
       }
     } else {
@@ -98,12 +99,30 @@ const App: React.FC = () => {
     }
   }, [isLoggedIn, currentPath]);
 
+  // Handle subscription access denial
+  const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
+    console.log('[App] Subscription access denied:', { status, redirectTo });
+    // Force navigation to pricing or billing page
+    navigate(redirectTo);
+    // After navigation completes, the user will see the marketing website
+    // since they're still logged in but without access
+  };
+
   // Render logic is now driven by the isLoggedIn state.
   console.log('[App] Rendering with state:', { isLoggedIn, currentPath, hasEmail: !!currentUserEmail });
   
   try {
     if (isLoggedIn && currentUserEmail) {
-      return <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />;
+      // User is logged in - wrap with SubscriptionGuard to enforce billing access
+      // SubscriptionGuard will check subscription status and block access if not active
+      return (
+        <SubscriptionGuard 
+          userId={currentUserEmail} // Use email as userId for now
+          onAccessDenied={handleSubscriptionAccessDenied}
+        >
+          <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />
+        </SubscriptionGuard>
+      );
     }
     
     return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
