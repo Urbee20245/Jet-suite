@@ -134,6 +134,59 @@ Handles Stripe webhook events (signature verified).
 
 ---
 
+## Access Control & Subscription Status
+
+### Subscription Status Flow
+
+```
+New User → Checkout → active → invoice.payment_succeeded (monthly) → active
+                         ↓
+                   past_due (payment failed)
+                         ↓
+                   unpaid (retries failed)
+                         ↓
+                   canceled (subscription ends)
+```
+
+### Access Rules
+
+**✅ ALLOWED (Full App Access):**
+- `active` - Subscription is active and paid
+- `trialing` - User is in trial period
+
+**❌ DENIED (No App Access):**
+- `past_due` - Payment failed, redirect to /account
+- `unpaid` - Payment failed multiple times, redirect to /account
+- `canceled` - Subscription canceled, redirect to /pricing
+- `incomplete` - Initial payment not completed, redirect to /pricing
+- `incomplete_expired` - Checkout expired, redirect to /pricing
+- `null` - No subscription, redirect to /pricing
+
+### Implementation
+
+**Client-Side Protection:**
+```tsx
+import { SubscriptionGuard } from './components/SubscriptionGuard';
+
+<SubscriptionGuard userId={user.id}>
+  <InternalApp />
+</SubscriptionGuard>
+```
+
+**Server-Side Validation:**
+```typescript
+import { checkSubscriptionAccess } from './services/subscriptionService';
+
+const { hasAccess, status } = await checkSubscriptionAccess(userId);
+if (!hasAccess) {
+  return res.status(403).json({ error: 'Subscription required' });
+}
+```
+
+See `/api/stripe/WEBHOOK_EVENTS.md` for detailed webhook documentation.
+
+---
+
 ## Environment Variables
 
 Add these to your Vercel project settings or `.env.local`:

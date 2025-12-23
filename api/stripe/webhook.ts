@@ -208,30 +208,92 @@ export default async function handler(
         break;
       }
 
-      case 'invoice.paid': {
+      case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice paid:', {
+        console.log('Invoice payment succeeded:', {
           invoiceId: invoice.id,
           customerId: invoice.customer,
           amount: invoice.amount_paid,
+          subscriptionId: invoice.subscription,
         });
         
-        // TODO: Record successful payment
+        // Payment successful - ensure subscription status is active
+        if (invoice.subscription) {
+          try {
+            // Fetch full subscription to get current_period_end
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+            
+            const billingResponse = await fetch(
+              `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${invoice.customer}`,
+              { method: 'GET' }
+            );
+            
+            if (billingResponse.ok) {
+              const { billingAccount } = await billingResponse.json();
+              
+              await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: billingAccount.user_id,
+                  userEmail: billingAccount.user_email,
+                  subscriptionStatus: subscription.status, // Should be 'active'
+                  currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+                  currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+                }),
+              });
+              
+              console.log('✅ Subscription marked as active after successful payment');
+            }
+          } catch (err) {
+            console.error('Failed to update subscription after payment:', err);
+          }
+        }
         
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice payment failed:', {
+        console.log('⚠️ Invoice payment failed:', {
           invoiceId: invoice.id,
           customerId: invoice.customer,
           attemptCount: invoice.attempt_count,
+          subscriptionId: invoice.subscription,
         });
         
-        // TODO: Handle failed payment
-        // - Notify user
-        // - Grace period before disabling access
+        // Payment failed - mark subscription as past_due
+        if (invoice.subscription) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+            
+            const billingResponse = await fetch(
+              `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${invoice.customer}`,
+              { method: 'GET' }
+            );
+            
+            if (billingResponse.ok) {
+              const { billingAccount } = await billingResponse.json();
+              
+              await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: billingAccount.user_id,
+                  userEmail: billingAccount.user_email,
+                  subscriptionStatus: subscription.status, // Will be 'past_due' or 'unpaid'
+                }),
+              });
+              
+              console.log('⚠️ Subscription marked as past_due after failed payment');
+              
+              // TODO: Send email notification to user about failed payment
+              // TODO: Consider grace period (Stripe handles retries automatically)
+            }
+          } catch (err) {
+            console.error('Failed to update subscription after payment failure:', err);
+          }
+        }
         
         break;
       }
