@@ -10,7 +10,8 @@ import {
   ArrowPathIcon,
   ArrowDownTrayIcon,
   CheckCircleIcon,
-  CodeBracketIcon
+  CodeBracketIcon,
+  SparklesIcon
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 
@@ -137,11 +138,13 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   const [widgetCode, setWidgetCode] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   const reviewUrl = profileData.googleBusiness.mapsUrl || 
     `https://search.google.com/local/writereview?placeid=${profileData.googleBusiness.placeId}`;
 
-  // Fetch reviews on mount
+  // Fetch reviews on mount with progress animation
   useEffect(() => {
     const fetchReviews = async () => {
       if (profileData.googleBusiness.status === 'Verified' && 
@@ -149,11 +152,23 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           profileData.googleBusiness.address) {
         setLoading(true);
         setError('');
+        setLoadingProgress(0);
+        
+        // Animate progress
+        const progressInterval = setInterval(() => {
+          setLoadingProgress(prev => {
+            if (prev >= 90) return prev;
+            return prev + 10;
+          });
+        }, 200);
+        
         try {
           const fetchedReviews = await fetchBusinessReviews(
             profileData.business.name,
             profileData.googleBusiness.address
           );
+          
+          setLoadingProgress(100);
           
           const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
             id: `review_${Date.now()}_${i}`,
@@ -169,7 +184,8 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           console.error('Failed to fetch reviews:', err);
           setError('Could not fetch reviews. Please try again or check your Google Business Profile connection.');
         } finally {
-          setLoading(false);
+          clearInterval(progressInterval);
+          setTimeout(() => setLoading(false), 300);
         }
       }
     };
@@ -298,11 +314,22 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   const handleRefetchReviews = async () => {
     setLoading(true);
     setError('');
+    setLoadingProgress(0);
+    
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 90) return prev;
+        return prev + 10;
+      });
+    }, 200);
+    
     try {
       const fetchedReviews = await fetchBusinessReviews(
         profileData.business.name,
         profileData.googleBusiness.address || ''
       );
+      
+      setLoadingProgress(100);
       
       const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
         id: `review_${Date.now()}_${i}`,
@@ -318,8 +345,15 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       console.error('Failed to fetch reviews:', err);
       setError('Could not fetch reviews. Please check your Google Business Profile connection.');
     } finally {
-      setLoading(false);
+      clearInterval(progressInterval);
+      setTimeout(() => setLoading(false), 300);
     }
+  };
+
+  const handleCopyQuickLink = () => {
+    navigator.clipboard.writeText(reviewUrl);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
   // Check if GBP is not connected
@@ -411,33 +445,51 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         <h2 className="text-2xl font-bold text-brand-text mb-6">Widget Configuration</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Layout Selection */}
+          {/* Layout Selection with Visual Previews */}
           <div>
             <label className="block text-sm font-medium text-brand-text mb-3">Layout Style</label>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {[
-                { value: 'grid' as WidgetLayout, label: 'Grid', description: 'Cards in responsive grid' },
-                { value: 'carousel' as WidgetLayout, label: 'Carousel', description: 'Horizontal scrolling' },
-                { value: 'list' as WidgetLayout, label: 'List', description: 'Stacked vertical list' }
+                { 
+                  value: 'grid' as WidgetLayout, 
+                  label: 'Grid Layout', 
+                  description: 'Modern card grid, perfect for landing pages',
+                  icon: '▦'
+                },
+                { 
+                  value: 'carousel' as WidgetLayout, 
+                  label: 'Carousel', 
+                  description: 'Sleek horizontal scroll, great for mobile',
+                  icon: '◫'
+                },
+                { 
+                  value: 'list' as WidgetLayout, 
+                  label: 'List Layout', 
+                  description: 'Clean vertical stack, ideal for sidebars',
+                  icon: '☰'
+                }
               ].map(option => (
                 <button
                   key={option.value}
                   onClick={() => setLayout(option.value)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
+                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                     layout === option.value
-                      ? 'bg-accent-purple/10 border-accent-purple'
-                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
+                      ? 'bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 border-accent-purple shadow-md'
+                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50 hover:shadow-sm'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className={`w-4 h-4 rounded-full border-2 ${
-                      layout === option.value ? 'bg-accent-purple border-accent-purple' : 'border-gray-300'
-                    }`}>
-                      {layout === option.value && <CheckCircleIcon className="w-4 h-4 text-white" />}
+                  <div className="flex items-start gap-3">
+                    <div className={`text-3xl ${layout === option.value ? 'text-accent-purple' : 'text-gray-400'}`}>
+                      {option.icon}
                     </div>
-                    <div>
-                      <p className="font-semibold text-brand-text">{option.label}</p>
-                      <p className="text-xs text-brand-text-muted">{option.description}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-bold text-brand-text">{option.label}</p>
+                        {layout === option.value && (
+                          <CheckCircleIcon className="w-5 h-5 text-accent-purple" />
+                        )}
+                      </div>
+                      <p className="text-xs text-brand-text-muted leading-relaxed">{option.description}</p>
                     </div>
                   </div>
                 </button>
@@ -521,11 +573,72 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         )}
       </div>
 
-      {/* Loading State */}
+      {/* Loading State with Progress */}
       {loading && (
-        <div className="bg-brand-card p-8 rounded-xl shadow-lg text-center">
-          <Loader />
-          <p className="text-brand-text-muted mt-4">Fetching your reviews...</p>
+        <div className="bg-brand-card p-8 rounded-xl shadow-lg">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <SparklesIcon className="w-6 h-6 text-accent-purple animate-pulse" />
+              <h3 className="text-lg font-bold text-brand-text">Fetching Your Reviews</h3>
+            </div>
+            <p className="text-sm text-brand-text-muted">Connecting to your Google Business Profile...</p>
+          </div>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-brand-light rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <p className="text-center text-xs text-brand-text-muted mt-3">{loadingProgress}% Complete</p>
+          
+          {/* Loading Steps */}
+          <div className="mt-6 space-y-2">
+            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 30 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+              {loadingProgress >= 30 ? '✓' : '○'} Authenticating connection
+            </div>
+            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 60 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+              {loadingProgress >= 60 ? '✓' : '○'} Retrieving reviews
+            </div>
+            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 90 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+              {loadingProgress >= 90 ? '✓' : '○'} Processing data
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Link Section */}
+      {!loading && (
+        <div className="bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 p-6 rounded-xl shadow-sm border border-accent-blue/20">
+          <div className="flex items-start gap-3 mb-4">
+            <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-bold text-brand-text mb-1">Quick Review Link</h3>
+              <p className="text-sm text-brand-text-muted">
+                Don't want to embed code? Share this direct link to your Google Business Profile review page via email, text, or social media.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={reviewUrl}
+              readOnly
+              className="flex-1 bg-white border border-brand-border rounded-lg px-4 py-2 text-sm text-brand-text font-mono"
+            />
+            <button
+              onClick={handleCopyQuickLink}
+              className="bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2 whitespace-nowrap"
+            >
+              {linkCopied ? '✓ Copied!' : 'Copy Link'}
+            </button>
+          </div>
+          
+          <p className="text-xs text-brand-text-muted mt-3">
+            💡 <strong>Pro Tip:</strong> Add this link to your email signature, receipts, or social media bio
+          </p>
         </div>
       )}
 
