@@ -123,11 +123,20 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
   },
    'getting-started/growth-score': {
     title: 'Understanding Your Growth Score',
-    what: 'Your Growth Score is a simple metric that measures your progress through the JetSuite system. It\'s not a vanity metric; it\'s an indicator of how well you\'re building a sustainable growth engine.',
-    why: 'It provides a clear, at-a-glance measure of your momentum. Watching your score increase is a powerful motivator and confirms you\'re taking the right actions to improve your online presence.',
-    when: 'Keep an eye on your Growth Score every week. It\'s located in the header of the app.',
-    skip: 'You can\'t skip it! But ignoring it means you miss out on a simple way to track your progress and stay motivated.',
-    how: 'Your score increases automatically as you complete key foundational steps (like verifying your Google Business Profile) and complete tasks in your weekly Growth Plan.',
+    what: 'Your Growth Score (0-95 points) measures your marketing effectiveness across three areas: Foundation (40 pts), Create & Publish (30 pts), and Engage & Convert (25 pts). It\'s designed to never reach 100% because marketing is continuous, not a one-time achievement.',
+    why: 'It provides real-time feedback on your marketing momentum. A score of 85+ means you\'re in the "Growth Optimized" zone—the sweet spot for sustainable business growth. The score fluctuates naturally as you engage with customers, which is healthy and expected.',
+    when: 'Check your Growth Score weekly in the header or visit the dedicated Growth Score page for detailed breakdowns. Your score will move up and down based on your activity—this is by design.',
+    skip: 'Ignoring your score means missing valuable feedback. Think of it like a fitness tracker—it shows you where you are and motivates consistent effort. A declining score signals you need to re-engage with customers or create content.',
+    how: 'Your score increases by: completing growth plan tasks, responding to reviews, publishing content, and maintaining weekly consistency. It decreases when: engagement stops, reviews go unanswered, or content creation pauses. Target 85+ for optimal performance.',
+    next: { text: 'Learn How Your Score is Calculated', articleId: 'getting-started/score-calculation' }
+  },
+  'getting-started/score-calculation': {
+    title: 'How Your Growth Score is Calculated',
+    what: 'Your score is calculated from three weighted categories: Foundation (40 points for one-time setup like Google Business Profile and Brand DNA), Create & Publish (30 points for ongoing content creation), and Engage & Convert (25 points for customer engagement like review responses).',
+    why: 'Understanding the calculation helps you prioritize actions. Foundation tasks provide the biggest initial boost. Once established, maintaining a high score requires consistent content creation and customer engagement—which is exactly what drives business growth.',
+    when: 'Review the calculation breakdown on your Growth Score page to see which areas need attention. If you\'re below 85, focus on the category with the most unclaimed points.',
+    skip: 'If you don\'t understand how your score works, you might focus on the wrong activities or feel frustrated by natural fluctuations. The score is designed to guide you toward high-impact actions.',
+    how: 'Foundation (40 pts): Google Business Profile verified (+15), Brand DNA set up (+10), initial audits run (+15). Create & Publish (30 pts): Weekly content (+10), campaigns (+10), consistency (+10). Engage & Convert (25 pts): Review responses (+10), lead follow-ups (+8), engagement (+7). Max possible: 95 points.',
     next: { text: 'Start with JetBiz: Google Business Profile', articleId: 'foundation/jetbiz' }
   },
   // Foundation
@@ -152,10 +161,56 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
   // Create & Publish
   'create-publish/jetcreate': {
     title: 'JetCreate: On-Brand Campaign Creation',
-    what: 'JetCreate is your AI-powered creative director. It uses your saved Brand DNA to brainstorm campaign ideas and then generates a full suite of on-brand marketing assets, including social media posts and ad copy.',
-    why: 'Consistency is key to building a memorable brand. JetCreate ensures that everything you publish—from a Facebook post to a Google Ad—looks and sounds like it comes from the same company. This builds trust and recognition.',
+    what: 'JetCreate is your AI-powered creative director. It uses your saved Brand DNA to brainstorm campaign ideas with preview images, then generates a full suite of on-brand marketing assets, including social media posts, images, and ad copy. Each asset can be edited, regenerated, downloaded, or deleted.',
+    why: 'Consistency is key to building a memorable brand. JetCreate ensures that everything you publish—from a Facebook post to a Google Ad—looks and sounds like it comes from the same company. This builds trust and recognition. It replaces hiring a graphic designer ($1,000-3,000/mo).',
     when: 'Once your Foundation is solid (your GBP and website are optimized), it\'s time to start creating content. Use JetCreate to turn your strategy into visible, on-brand marketing campaigns.',
     skip: 'Without a tool like JetCreate, your marketing can feel disjointed and off-brand. This confuses customers and weakens your brand identity over time.',
-    how: 'JetCreate automatically suggests campaign ideas based on your business profile. Simply choose an idea, and JetCreate generates all the copy you need, perfectly matching your brand\'s tone and style.',
+    how: 'JetCreate automatically suggests campaign ideas based on your business profile. Simply choose an idea, and JetCreate generates all the copy and images you need, perfectly matching your brand\'s colors, fonts, and tone. You can edit any asset inline or regenerate variations.',
+    next: { text: 'Learn about other content tools', articleId: 'create-publish/content-tools' }
+  },
+  'create-publish/content-tools': {
+    title: 'Content Creation Tools Overview',
+    what: 'JetSuite includes four content creation tools: JetPost (social media posts), JetContent (blog articles), JetImage (standalone images), and JetCreate (full campaigns). Each tool uses your Brand DNA to ensure consistency.',
+    why: 'Different content types serve different purposes. Social posts build engagement, blog articles drive SEO, images support visual branding, and campaigns coordinate everything. Using all four creates a cohesive marketing presence.',
+    when: 'Use JetPost for quick daily/weekly social content. Use JetContent for long-form SEO articles monthly. Use JetImage when you need a specific visual. Use JetCreate when launching a campaign or promotion.',
+    skip: 'Relying on only one content type limits your reach. Social posts alone won\'t improve SEO. Blog articles alone won\'t build social engagement. A balanced approach maximizes visibility.',
+    how: 'Start with JetCreate for your first campaign to get multiple asset types at once. Then use JetPost weekly for consistent social presence. Add JetContent monthly for SEO. Use JetImage as needed for specific visuals.',
+    next: { text: 'Learn about engaging customers with JetReply', articleId: 'engage-convert/jetreply' }
+  },
+  // Engage & Convert
+  'engage-convert/jetreply': {
+    title: 'JetReply: Smart Review Response',
+    what: 'JetReply automatically fetches reviews from your connected Google Business Profile and helps you craft professional, on-brand responses. It detects sentiment (positive/negative) and generates appropriate replies that match your business tone.',
+    why: 'Responding to reviews improves your local SEO ranking, builds trust with potential customers, and shows you care about feedback. Unanswered reviews signal neglect. JetReply makes consistent responses effortless, replacing reputation management services ($200-800/mo).',
+    when: 'Use JetReply weekly to respond to new reviews. Set aside 15-30 minutes each week to review and send responses. Consistent response rates signal to Google that you\'re an active, engaged business.',
+    skip: 'Ignoring reviews damages your reputation and SEO. Potential customers read reviews AND your responses. A single ignored negative review can cost you multiple customers. Your Growth Score decreases when reviews go unanswered.',
+    how: 'JetReply automatically loads your latest reviews when you open it. Click on a review to select it, review the AI-generated response, customize if needed, then copy and paste it to your Google Business Profile. Mark reviews as complete to track your progress.',
+    next: { text: 'Learn about JetTrust review widgets', articleId: 'engage-convert/jettrust' }
+  },
+  'engage-convert/jettrust': {
+    title: 'JetTrust: Review Widget Generator',
+    what: 'JetTrust creates embeddable review widgets that display your Google reviews on your website or social media. Choose from three modern layouts (Grid, Carousel, or List), filter by star rating (3+, 4+, or 5+), and generate code or social media posts. Works even with zero reviews.',
+    why: 'Displaying reviews on your website builds trust and increases conversions. Social proof is one of the most powerful marketing tools. JetTrust replaces paid review widget services ($50-200/mo) and gives you a shareable review link for easy customer feedback collection.',
+    when: 'Set up JetTrust as soon as your Google Business Profile is connected—even if you have zero reviews. The widget will encourage customers to leave your first review. Update the widget monthly as new reviews come in.',
+    skip: 'Without visible reviews on your website, you\'re missing easy conversions. Visitors want to see social proof before buying. The "Leave a Review" button in the widget also increases your review volume over time.',
+    how: 'Open JetTrust, choose your layout style, select minimum star rating, and preview the widget. Click "Generate Widget Code" for website embedding, or "Copy for Social Media" to share reviews on social platforms. You can also copy the quick review link to share via email, text, or QR codes.',
+    next: { text: 'Learn about lead generation with JetLeads', articleId: 'engage-convert/jetleads' }
+  },
+  'engage-convert/jetleads': {
+    title: 'JetLeads: Local Lead Discovery',
+    what: 'JetLeads helps you identify potential customers actively searching for your services in your local area. It provides strategies for reaching these high-intent prospects before your competitors do.',
+    why: 'Most businesses wait for customers to find them. JetLeads flips this by helping you proactively identify and reach potential customers. This replaces expensive lead generation services ($500-2,000/mo) with AI-powered research.',
+    when: 'Use JetLeads once you\'ve completed your Foundation phase and have consistent content publishing. You need a strong online presence before actively pursuing leads, or they won\'t convert.',
+    skip: 'Skipping proactive lead generation means relying entirely on inbound traffic. This works but grows slowly. JetLeads accelerates growth by adding outbound strategy to your inbound foundation.',
+    how: 'Open JetLeads, input your service and location details, and review the AI-generated lead strategies. Implement 1-2 strategies per week. Track which approaches work best for your business and double down on those.',
+    next: { text: 'Understand your cost savings', articleId: 'getting-started/cost-savings' }
+  },
+  'getting-started/cost-savings': {
+    title: 'Understanding Your Cost Savings with JetSuite',
+    what: 'JetSuite replaces 12+ traditional marketing services with a single $149/mo platform. Traditional costs range from $5,000-15,000/mo when hiring agencies, freelancers, and subscribing to multiple tools. You save 90-95% on marketing expenses.',
+    why: 'Small businesses often can\'t afford quality marketing, forcing them to choose between expensive agencies (out of budget) or DIY efforts (time-consuming and inconsistent). JetSuite provides agency-level capabilities at a fraction of the cost.',
+    when: 'Visit the Savings Calculator on the pricing page to input which services you currently use (or plan to use). The calculator shows your exact monthly and annual savings. Use this to justify the investment to yourself or stakeholders.',
+    skip: 'If you don\'t understand the value, you might underutilize the platform. Each tool replaces a specific expensive service. Using all tools maximizes your ROI. Ignoring tools means leaving money on the table.',
+    how: 'JetSuite replaces: Local SEO consultants, SEO tool subscriptions, social media managers, content writers, graphic designers, marketing agencies, reputation management, review widgets, lead generation, competitor research, and more. Every tool you use increases your effective savings.',
   }
 };
