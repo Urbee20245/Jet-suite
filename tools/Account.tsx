@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, TeamMember } from '../types';
-import { CheckCircleIcon, TrashIcon, XMarkIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, TrashIcon, XMarkIcon, CreditCardIcon } from '../components/icons/MiniIcons';
+import { createPortalSession, getBillingAccount } from '../services/stripeService';
+import { getSubscriptionStatusLabel, getSubscriptionStatusColor } from '../services/subscriptionService';
+import { Loader } from '../components/Loader';
 
 interface AccountProps {
     plan: { name: string, profileLimit: number };
@@ -88,6 +91,11 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    
+    // Billing state
+    const [billingAccount, setBillingAccount] = useState<any>(null);
+    const [isLoadingBilling, setIsLoadingBilling] = useState(true);
+    const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
     useEffect(() => {
         // Initialize or update team members list, ensuring owner is always first.
@@ -109,6 +117,24 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
             role: profileData.user.role,
         });
     }, [profileData.user]);
+
+    // Fetch billing information
+    useEffect(() => {
+        const loadBillingInfo = async () => {
+            try {
+                setIsLoadingBilling(true);
+                const account = await getBillingAccount(profileData.user.email);
+                setBillingAccount(account);
+            } catch (error) {
+                console.error('Failed to load billing info:', error);
+                setBillingAccount(null);
+            } finally {
+                setIsLoadingBilling(false);
+            }
+        };
+        
+        loadBillingInfo();
+    }, [profileData.user.email]);
 
     useEffect(() => {
         setIsDirty(
@@ -143,6 +169,26 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         }
     };
 
+    const handleManageSubscription = async () => {
+        if (!billingAccount?.stripe_customer_id) {
+            alert('No subscription found. Please subscribe first.');
+            return;
+        }
+
+        try {
+            setIsOpeningPortal(true);
+            const { url } = await createPortalSession(billingAccount.stripe_customer_id);
+            
+            // Redirect to Stripe Customer Portal
+            window.location.href = url;
+        } catch (error) {
+            console.error('Failed to open portal:', error);
+            alert('Failed to open billing portal. Please try again.');
+        } finally {
+            setIsOpeningPortal(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
             {showAddMemberModal && <AddTeamMemberModal onAdd={handleAddMember} onCancel={() => setShowAddMemberModal(false)} />}
@@ -157,12 +203,95 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 <div className="space-y-8">
                     <AccountSection title="Plan & Billing">
                         <div className="space-y-4">
-                            <h3 className="font-bold text-brand-text">Current Plan: {plan.name} {isAdmin && <span className="ml-2 text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-full">Admin</span>}</h3>
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-bold text-brand-text">
+                                    Current Plan: {plan.name} 
+                                    {isAdmin && <span className="ml-2 text-xs font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-full">Admin</span>}
+                                </h3>
+                                {!isLoadingBilling && billingAccount && (
+                                    <span className={`text-xs font-semibold ${getSubscriptionStatusColor(billingAccount.subscription_status)}`}>
+                                        {getSubscriptionStatusLabel(billingAccount.subscription_status)}
+                                    </span>
+                                )}
+                            </div>
+                            
                             <ul className="space-y-2 text-sm text-brand-text-muted">
-                                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-2"/>1 business profile</li>
-                                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-2"/>Full tool access</li>
+                                <li className="flex items-center">
+                                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2"/>
+                                    {billingAccount?.business_count || 1} business profile{billingAccount?.business_count !== 1 ? 's' : ''}
+                                </li>
+                                <li className="flex items-center">
+                                    <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2"/>
+                                    Full tool access
+                                </li>
+                                {billingAccount?.seat_count > 0 && (
+                                    <li className="flex items-center">
+                                        <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2"/>
+                                        {billingAccount.seat_count} additional team seat{billingAccount.seat_count !== 1 ? 's' : ''}
+                                    </li>
+                                )}
                             </ul>
-                            <a href="#" className="text-sm font-semibold text-accent-purple hover:underline mt-6 block">Manage subscription &rarr;</a>
+
+                            {isLoadingBilling ? (
+                                <div className="flex items-center justify-center py-4">
+                                    <Loader />
+                                </div>
+                            ) : billingAccount ? (
+                                <div className="space-y-3">
+                                    {/* Subscription Details */}
+                                    <div className="bg-brand-light p-4 rounded-lg border border-brand-border space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-brand-text-muted">Next billing date:</span>
+                                            <span className="font-semibold text-brand-text">
+                                                {billingAccount.current_period_end 
+                                                    ? new Date(billingAccount.current_period_end).toLocaleDateString()
+                                                    : 'N/A'}
+                                            </span>
+                                        </div>
+                                        {billingAccount.cancel_at_period_end && (
+                                            <div className="text-xs text-yellow-600 font-semibold">
+                                                ⚠️ Subscription will cancel at period end
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Manage Subscription Button */}
+                                    <button
+                                        onClick={handleManageSubscription}
+                                        disabled={isOpeningPortal}
+                                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-bold py-3 px-4 rounded-lg transition-opacity"
+                                    >
+                                        {isOpeningPortal ? (
+                                            <>
+                                                <Loader />
+                                                <span>Opening Portal...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CreditCardIcon className="w-5 h-5" />
+                                                <span>Manage Subscription</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Cancel Policy */}
+                                    <p className="text-xs text-center text-brand-text-muted">
+                                        Cancel anytime. No refunds.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <p className="text-sm text-brand-text-muted mb-3">
+                                        No active subscription found
+                                    </p>
+                                    <a 
+                                        href="/pricing"
+                                        className="inline-block bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity"
+                                    >
+                                        View Pricing Plans
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </AccountSection>
 

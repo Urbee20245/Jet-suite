@@ -73,6 +73,9 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
              <button onClick={() => navigate('/login')} className="w-full mt-10 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">
               Start Growing
             </button>
+            <p className="mt-4 text-center text-sm text-gray-400">
+              Cancel anytime. No refunds.
+            </p>
           </div>
 
           {/* Calculator and Add-ons */}

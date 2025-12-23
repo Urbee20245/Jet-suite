@@ -90,6 +90,11 @@ export const BillingSuccessPage: React.FC<BillingSuccessPageProps> = ({ navigate
               View Billing Details
             </button>
           </div>
+
+          {/* Cancellation Policy */}
+          <p className="mt-6 text-sm text-gray-400 text-center">
+            Cancel anytime from your account settings. No refunds.
+          </p>
         </div>
 
         {/* Help Section */}
