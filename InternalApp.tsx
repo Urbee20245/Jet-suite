@@ -104,14 +104,56 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
   }, [activeTool, impersonatedUserEmail, isAdmin]);
 
   useEffect(() => {
-    let score = 100;
+    // Growth Score Calculation (0-99 max, 100 is benchmark but unachievable)
+    let score = 0;
     const { business, googleBusiness } = profileData;
-    const completedTasksCount = growthPlanTasks.filter(t => t.status === 'completed').length;
-    if (business.name && business.location && business.websiteUrl) score += 50;
-    if (business.isDnaApproved) score += 50;
-    if (googleBusiness.status === 'Verified') score += 100;
-    else if (googleBusiness.status === 'Not Verified') score += 50;
-    score += completedTasksCount * 10;
+    const totalTasks = growthPlanTasks.length;
+    const completedTasks = growthPlanTasks.filter(t => t.status === 'completed').length;
+    const inProgressTasks = growthPlanTasks.filter(t => t.status === 'in_progress').length;
+    
+    // FOUNDATION SETUP (35 points max)
+    // Basic business info - 10 points
+    if (business.name && business.location && business.websiteUrl) {
+      score += 10;
+    } else if (business.name || business.location || business.websiteUrl) {
+      // Partial credit for incomplete setup
+      score += 3;
+    }
+    
+    // Brand DNA approved - 10 points
+    if (business.isDnaApproved) {
+      score += 10;
+    }
+    
+    // Google Business Profile - 15 points
+    if (googleBusiness.status === 'Verified') {
+      score += 15;
+    } else if (googleBusiness.status === 'Not Verified') {
+      score += 5; // Partial credit for connecting but not verified
+    }
+    
+    // TASK COMPLETION (65 points max - this is the main driver)
+    if (totalTasks > 0) {
+      // Completed tasks worth more
+      const completedPoints = Math.min(completedTasks * 5, 50); // Max 50 points from completed tasks
+      score += completedPoints;
+      
+      // In-progress tasks worth something but much less
+      const inProgressPoints = Math.min(inProgressTasks * 2, 10); // Max 10 points from in-progress tasks
+      score += inProgressPoints;
+      
+      // Consistency bonus: If they've completed at least 25% of their tasks
+      if (totalTasks >= 4 && completedTasks >= Math.ceil(totalTasks * 0.25)) {
+        score += 5; // Consistency bonus
+      }
+    } else {
+      // No tasks in growth plan at all = penalty (they haven't engaged with tools)
+      score = Math.max(0, score - 10);
+    }
+    
+    // Cap at 99 (100 is benchmark but never achievable)
+    score = Math.min(score, 99);
+    
     setGrowthScore(score);
   }, [profileData, growthPlanTasks]);
 

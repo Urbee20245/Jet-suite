@@ -123,20 +123,20 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
   },
    'getting-started/growth-score': {
     title: 'Understanding Your Growth Score',
-    what: 'Your Growth Score (0-95 points) measures your marketing effectiveness across three areas: Foundation (40 pts), Create & Publish (30 pts), and Engage & Convert (25 pts). It\'s designed to never reach 100% because marketing is continuous, not a one-time achievement.',
-    why: 'It provides real-time feedback on your marketing momentum. A score of 85+ means you\'re in the "Growth Optimized" zone—the sweet spot for sustainable business growth. The score fluctuates naturally as you engage with customers, which is healthy and expected.',
-    when: 'Check your Growth Score weekly in the header or visit the dedicated Growth Score page for detailed breakdowns. Your score will move up and down based on your activity—this is by design.',
-    skip: 'Ignoring your score means missing valuable feedback. Think of it like a fitness tracker—it shows you where you are and motivates consistent effort. A declining score signals you need to re-engage with customers or create content.',
-    how: 'Your score increases by: completing growth plan tasks, responding to reviews, publishing content, and maintaining weekly consistency. It decreases when: engagement stops, reviews go unanswered, or content creation pauses. Target 85+ for optimal performance.',
+    what: 'Your Growth Score (0-99 max) measures your actual progress by tracking completed tasks in your Growth Plan. Foundation setup (35 points) unlocks the platform, but Task Completion (65 points) is the main driver. 100 is the benchmark but is intentionally unachievable because marketing requires continuous effort.',
+    why: 'It provides honest, real-time feedback on your actual work, not just setup. A score of 80+ means you\'re consistently completing tasks and driving growth. If you haven\'t completed any tasks, your score stays low—even with perfect setup. This keeps you accountable and active.',
+    when: 'Check your score daily in the header. Low score? Open your Growth Plan and start completing tasks. High score dropping? You\'re becoming inactive—get back to completing weekly tasks to maintain momentum.',
+    skip: 'Ignoring your score means you\'re not completing tasks. The score is brutally honest: no tasks completed = low score, regardless of setup. This is intentional—it forces engagement with the system, which is what actually drives business growth.',
+    how: 'Start at 0. Earn points for: Business profile (+10), Brand DNA (+10), Google Business verified (+15). But the real points come from Growth Plan tasks: each completed task adds +5 points (up to 50 total), in-progress tasks add +2 (up to 10), and consistent completion earns a +5 bonus. Target 80+ for optimal performance.',
     next: { text: 'Learn How Your Score is Calculated', articleId: 'getting-started/score-calculation' }
   },
   'getting-started/score-calculation': {
     title: 'How Your Growth Score is Calculated',
-    what: 'Your score is calculated from three weighted categories: Foundation (40 points for one-time setup like Google Business Profile and Brand DNA), Create & Publish (30 points for ongoing content creation), and Engage & Convert (25 points for customer engagement like review responses).',
-    why: 'Understanding the calculation helps you prioritize actions. Foundation tasks provide the biggest initial boost. Once established, maintaining a high score requires consistent content creation and customer engagement—which is exactly what drives business growth.',
-    when: 'Review the calculation breakdown on your Growth Score page to see which areas need attention. If you\'re below 85, focus on the category with the most unclaimed points.',
-    skip: 'If you don\'t understand how your score works, you might focus on the wrong activities or feel frustrated by natural fluctuations. The score is designed to guide you toward high-impact actions.',
-    how: 'Foundation (40 pts): Google Business Profile verified (+15), Brand DNA set up (+10), initial audits run (+15). Create & Publish (30 pts): Weekly content (+10), campaigns (+10), consistency (+10). Engage & Convert (25 pts): Review responses (+10), lead follow-ups (+8), engagement (+7). Max possible: 95 points.',
+    what: 'Your score starts at 0 and is weighted heavily toward task completion. Foundation Setup (35 pts max): Business profile complete (+10), Brand DNA (+10), Google Business verified (+15). Task Completion (65 pts max): Completed tasks (+5 each, max 50), in-progress tasks (+2 each, max 10), consistency bonus (+5). Maximum possible: 99 points.',
+    why: 'This formula ensures low scores for inactive users and high scores for active users. You can\'t have a high score just by setting things up—you must complete tasks. This reflects reality: marketing success comes from doing the work, not just having tools available.',
+    when: 'Check the Growth Score page to see exactly where your points come from. If your score is low, the answer is simple: complete more tasks in your Growth Plan. Tools like JetBiz and JetViz add tasks automatically when you run audits.',
+    skip: 'Skipping this understanding means you might wonder why your score is low despite "having everything set up." The answer is always: you haven\'t completed enough tasks. The score is designed to push you to take action, not reward passive setup.',
+    how: 'Foundation (35 pts): One-time setup—do this first. Task Completion (65 pts): THE MAIN DRIVER. Use tools (JetBiz, JetViz, etc.) to generate tasks, then mark them complete. Each completed task = +5 points. Do 10 tasks = +50 points. Consistency bonus when you complete 25%+ of your total tasks. No tasks in your Growth Plan? You lose 10 points.',
     next: { text: 'Start with JetBiz: Google Business Profile', articleId: 'foundation/jetbiz' }
   },
   // Foundation

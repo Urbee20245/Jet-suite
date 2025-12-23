@@ -10,17 +10,17 @@ interface GrowthScoreHistoryProps {
 }
 
 const getScoreLevel = (score: number) => {
-  if (score >= 85) return { level: 'Growth Optimized', color: 'text-green-500', bgColor: 'bg-green-500' };
-  if (score >= 70) return { level: 'Strong Foundation', color: 'text-blue-500', bgColor: 'bg-blue-500' };
-  if (score >= 50) return { level: 'Building Momentum', color: 'text-yellow-500', bgColor: 'bg-yellow-500' };
-  if (score >= 30) return { level: 'Getting Started', color: 'text-orange-500', bgColor: 'bg-orange-500' };
+  if (score >= 80) return { level: 'Growth Optimized', color: 'text-green-500', bgColor: 'bg-green-500' };
+  if (score >= 60) return { level: 'Strong Foundation', color: 'text-blue-500', bgColor: 'bg-blue-500' };
+  if (score >= 40) return { level: 'Building Momentum', color: 'text-yellow-500', bgColor: 'bg-yellow-500' };
+  if (score >= 20) return { level: 'Getting Started', color: 'text-orange-500', bgColor: 'bg-orange-500' };
   return { level: 'Just Beginning', color: 'text-red-500', bgColor: 'bg-red-500' };
 };
 
 export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthScore, profileData }) => {
   const scoreLevel = getScoreLevel(growthScore);
-  const targetScore = 85; // "Growth Optimized" target
-  const maxScore = 95; // Theoretical max (never 100%)
+  const targetScore = 80; // "Growth Optimized" target
+  const maxScore = 100; // Benchmark (never actually achievable - real max is 99)
   const progressToTarget = Math.min((growthScore / targetScore) * 100, 100);
   
   return (
@@ -64,13 +64,13 @@ export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthSc
                             style={{ width: `${progressToTarget}%` }}
                         />
                     </div>
-                    <p className="text-xs text-brand-text-muted mt-2">
-                        {growthScore >= targetScore ? (
-                            <>🎉 Goal achieved! Keep engaging to maintain momentum</>
-                        ) : (
-                            <>{targetScore - growthScore} points to "Growth Optimized"</>
-                        )}
-                    </p>
+                <p className="text-xs text-brand-text-muted mt-2">
+                    {growthScore >= targetScore ? (
+                        <>🎉 Goal achieved! Keep completing tasks to maintain momentum</>
+                    ) : (
+                        <>{targetScore - growthScore} points to "Growth Optimized" (complete more tasks)</>
+                    )}
+                </p>
                 </div>
             </div>
 
@@ -81,43 +81,43 @@ export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthSc
                     Your Target: 85 Points
                 </h3>
                 <p className="text-sm text-brand-text-muted mb-4">
-                    A score of <strong className="text-brand-text">85 or above</strong> means your marketing foundation is strong and you're actively engaging customers. This is the optimal operating range for sustainable growth.
+                    A score of <strong className="text-brand-text">80 or above</strong> means your foundation is strong and you're actively completing tasks and engaging customers. This is the optimal operating range for sustainable growth.
                 </p>
                 
                 <div className="space-y-3 mb-6">
                     <div className="flex items-start gap-2">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore < 30 ? 'bg-red-500' : 'bg-gray-300'}`}></div>
+                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore < 20 ? 'bg-red-500' : 'bg-gray-300'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-brand-text">0-29: Just Beginning</p>
-                            <p className="text-xs text-brand-text-muted">Complete your profile and connect Google Business</p>
+                            <p className="text-sm font-semibold text-brand-text">0-19: Just Beginning</p>
+                            <p className="text-xs text-brand-text-muted">Complete your profile and start completing tasks</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-2">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 30 && growthScore < 50 ? 'bg-orange-500' : 'bg-gray-300'}`}></div>
+                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 20 && growthScore < 40 ? 'bg-orange-500' : 'bg-gray-300'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-brand-text">30-49: Getting Started</p>
-                            <p className="text-xs text-brand-text-muted">Run foundation audits (JetBiz, JetViz)</p>
+                            <p className="text-sm font-semibold text-brand-text">20-39: Getting Started</p>
+                            <p className="text-xs text-brand-text-muted">Foundation set up, now complete growth plan tasks</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-2">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 50 && growthScore < 70 ? 'bg-yellow-500' : 'bg-gray-300'}`}></div>
+                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 40 && growthScore < 60 ? 'bg-yellow-500' : 'bg-gray-300'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-brand-text">50-69: Building Momentum</p>
-                            <p className="text-xs text-brand-text-muted">Start creating content regularly</p>
+                            <p className="text-sm font-semibold text-brand-text">40-59: Building Momentum</p>
+                            <p className="text-xs text-brand-text-muted">Regularly complete tasks and create content</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-2">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 70 && growthScore < 85 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 60 && growthScore < 80 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-brand-text">70-84: Strong Foundation</p>
-                            <p className="text-xs text-brand-text-muted">Engage with reviews and leads consistently</p>
+                            <p className="text-sm font-semibold text-brand-text">60-79: Strong Foundation</p>
+                            <p className="text-xs text-brand-text-muted">Consistent task completion and engagement</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-2">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 85 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        <div className={`w-3 h-3 rounded-full mt-1 ${growthScore >= 80 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                         <div className="flex-1">
-                            <p className="text-sm font-semibold text-brand-text">85+: Growth Optimized ⭐</p>
-                            <p className="text-xs text-brand-text-muted">Maintain momentum with ongoing engagement</p>
+                            <p className="text-sm font-semibold text-brand-text">80-99: Growth Optimized ⭐</p>
+                            <p className="text-xs text-brand-text-muted">Excellent! Keep completing tasks to maintain momentum</p>
                         </div>
                     </div>
                 </div>
@@ -137,89 +137,73 @@ export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthSc
                 Your Growth Score is a weighted measure of three key areas. Each area contributes to your overall score based on completion and consistency.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Foundation (40 points max) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Foundation Setup (35 points max) */}
                 <div className="bg-brand-light p-6 rounded-lg">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-brand-text">Foundation</h4>
-                        <span className="text-sm font-semibold text-accent-purple">40 points</span>
+                        <h4 className="font-bold text-brand-text">Foundation Setup</h4>
+                        <span className="text-sm font-semibold text-accent-purple">35 points</span>
                     </div>
                     <p className="text-xs text-brand-text-muted mb-4">
-                        One-time setup tasks that establish your online presence
+                        One-time setup that unlocks the platform
                     </p>
                     <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className={`w-4 h-4 ${profileData.googleBusiness.status === 'Verified' ? 'text-green-500' : 'text-gray-300'}`} />
-                            <span className="text-brand-text-muted">Google Business Profile (+15)</span>
+                            <CheckCircleIcon className={`w-4 h-4 ${profileData.business.name && profileData.business.location && profileData.business.websiteUrl ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className="text-brand-text-muted">Business Profile Complete (+10)</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <CheckCircleIcon className={`w-4 h-4 ${profileData.business.isDnaApproved ? 'text-green-500' : 'text-gray-300'}`} />
-                            <span className="text-brand-text-muted">Business DNA Setup (+10)</span>
+                            <span className="text-brand-text-muted">Brand DNA Approved (+10)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Initial Audits Complete (+15)</span>
+                            <CheckCircleIcon className={`w-4 h-4 ${profileData.googleBusiness.status === 'Verified' ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className="text-brand-text-muted">Google Business Verified (+15)</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Create & Publish (30 points max) */}
-                <div className="bg-brand-light p-6 rounded-lg">
+                {/* Task Completion (65 points max) - THE MAIN DRIVER */}
+                <div className="bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 p-6 rounded-lg border-2 border-accent-purple/30">
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-brand-text">Create & Publish</h4>
-                        <span className="text-sm font-semibold text-accent-pink">30 points</span>
+                        <h4 className="font-bold text-brand-text">Task Completion</h4>
+                        <span className="text-sm font-semibold text-accent-pink">65 points</span>
                     </div>
                     <p className="text-xs text-brand-text-muted mb-4">
-                        Recurring content creation and publishing activities
+                        🎯 <strong>This is the main driver of your score!</strong>
                     </p>
                     <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Weekly content creation (+10)</span>
+                            <span className="text-brand-text-muted">✓ Each completed task: <strong>+5 points</strong> (max 50)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Campaign launches (+10)</span>
+                            <span className="text-brand-text-muted">⚡ In-progress tasks: <strong>+2 points</strong> (max 10)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Consistency bonus (+10)</span>
+                            <span className="text-brand-text-muted">🔥 Consistency bonus: <strong>+5 points</strong></span>
                         </div>
                     </div>
-                </div>
-
-                {/* Engage & Convert (25 points max) */}
-                <div className="bg-brand-light p-6 rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-bold text-brand-text">Engage & Convert</h4>
-                        <span className="text-sm font-semibold text-accent-blue">25 points</span>
-                    </div>
-                    <p className="text-xs text-brand-text-muted mb-4">
-                        Ongoing customer engagement and conversion activities
-                    </p>
-                    <div className="space-y-2 text-xs">
-                        <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Review responses (+10)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Lead follow-ups (+8)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <CheckCircleIcon className="w-4 h-4 text-gray-300" />
-                            <span className="text-brand-text-muted">Engagement activity (+7)</span>
-                        </div>
+                    <div className="mt-4 p-3 bg-white/60 rounded">
+                        <p className="text-xs text-brand-text-muted">
+                            Tasks are added to your Growth Plan when you use tools like JetBiz, JetViz, etc. Complete them to increase your score!
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div className="mt-6 p-4 bg-gradient-to-r from-accent-purple/5 to-accent-pink/5 rounded-lg border-l-4 border-accent-purple">
-                <p className="text-sm text-brand-text">
-                    <strong className="text-accent-purple">Total Possible:</strong> 95 points
+                <p className="text-sm text-brand-text mb-2">
+                    <strong className="text-accent-purple">Scoring System:</strong>
                 </p>
-                <p className="text-xs text-brand-text-muted mt-2">
-                    <strong>Why not 100?</strong> Marketing is never "complete." Customer engagement, review responses, and content creation are ongoing activities. Your score reflects active, sustained effort—not a finish line. A score of 85+ means you're in the optimal zone for growth.
+                <ul className="text-xs text-brand-text-muted space-y-1 list-disc list-inside">
+                    <li><strong>0-19 points:</strong> Just beginning - Focus on foundation setup</li>
+                    <li><strong>20-39 points:</strong> Foundation ready - Start completing growth plan tasks</li>
+                    <li><strong>40-59 points:</strong> Building momentum - Keep up the task completion</li>
+                    <li><strong>60-79 points:</strong> Strong foundation - Excellent consistency</li>
+                    <li><strong>80-99 points:</strong> Growth optimized - You're in the zone! 🎉</li>
+                </ul>
+                <p className="text-xs text-brand-text-muted mt-3">
+                    <strong>Why max 99 and not 100?</strong> Marketing requires continuous effort. Reaching 100 would imply "completion," but business growth is ongoing. The benchmark of 100 reminds you there's always more to do, keeping you engaged and your score responsive to your actual activity level.
                 </p>
             </div>
         </div>
