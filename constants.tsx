@@ -13,6 +13,7 @@ import {
   JetKeywordsIcon,
   JetImageIcon,
   JetCreateIcon,
+  JetTrustIcon,
   GrowthPlanIcon,
   GrowthScoreIcon,
   ActivityHistoryIcon,
@@ -49,6 +50,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
   
   // Engage & Convert Tools
   jetreply: { id: 'jetreply', name: 'JetReply', description: 'Craft professional AI-assisted responses to customer reviews.', icon: JetReplyIcon },
+  jettrust: { id: 'jettrust', name: 'JetTrust', description: 'Create embeddable review widgets for your website and social media.', icon: JetTrustIcon },
   jetleads: { id: 'jetleads', name: 'JetLeads', description: 'Find potential customers who are actively looking for your services.', icon: JetLeadsIcon },
   jetads: { id: 'jetads', name: 'JetAds', description: 'Generate compelling ad copy for Google and Facebook campaigns.', icon: JetAdsIcon },
   jetevents: { id: 'jetevents', name: 'JetEvents', description: 'Brainstorm creative local events and promotions to drive traffic.', icon: JetEventsIcon },
@@ -71,7 +73,7 @@ export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'growthscore
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
   { name: 'Create & Publish', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent'] },
-  { name: 'Engage & Convert', tools: ['jetreply', 'jetleads', 'jetevents', 'jetads'] }
+  { name: 'Engage & Convert', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
 export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase'];

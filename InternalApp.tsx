@@ -6,6 +6,7 @@ import { JetBiz } from './tools/JetBiz';
 import { JetViz } from './tools/JetViz';
 import { JetPost } from './tools/JetPost';
 import { JetReply } from './tools/JetReply';
+import { JetTrust } from './tools/JetTrust';
 import { JetLeads } from './tools/JetLeads';
 import { JetContent } from './tools/JetContent';
 import { JetAds } from './tools/JetAds';
@@ -165,6 +166,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
       case 'jetimage': return <JetImage tool={activeTool} />;
       case 'jetcreate': return <JetCreate tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} onUpdateProfile={handleUpdateProfileData} />;
       case 'jetreply': return <JetReply tool={activeTool} profileData={profileData} readinessState={readinessState} setActiveTool={setActiveTool} />;
+      case 'jettrust': return <JetTrust tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetleads': return <JetLeads tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetevents': return <JetEvents tool={activeTool} />;
       case 'jetads': return <JetAds tool={activeTool} />;
