@@ -26,7 +26,7 @@ const priorityStyles = {
   },
 };
 
-const TaskCard: React.FC<{ task: GrowthPlanTask, isWeeklyAction?: boolean }> = ({ task, isWeeklyAction = false }) => (
+const TaskCard: React.FC<{ task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>, isWeeklyAction?: boolean }> = ({ task, isWeeklyAction = false }) => (
   <div className={`flex items-start p-4 rounded-lg border ${isWeeklyAction ? 'bg-white shadow glow-card glow-card-rounded-lg' : 'bg-brand-light'}`}>
     <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
     <div className="ml-4">

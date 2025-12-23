@@ -191,18 +191,23 @@ export interface CampaignIdea {
   name: string;
   description: string;
   channels: string[];
+  imageUrl?: string; // Base64 or URL for campaign preview image
 }
 
 export interface SocialPostAsset {
+  id?: string;
   platform: string;
   copy: string;
   visual_suggestion: string;
+  imageUrl?: string; // Generated image for this post
 }
 
 export interface AdCopyAsset {
+  id?: string;
   headline: string;
   description: string;
   cta: string;
+  imageUrl?: string; // Generated image for this ad
 }
 
 export interface CreativeAssets {

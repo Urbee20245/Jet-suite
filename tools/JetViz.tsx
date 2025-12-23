@@ -223,7 +223,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     try {
       const analysis = await analyzeWebsiteWithLiveApis(url);
       setResult(analysis);
-      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => i.task)]);
+      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
       onSaveAnalysis(analysis);
     } catch (err) { setError('Failed to get analysis. Please try again.'); console.error(err); } 
     finally { setLoading(false); }

@@ -279,7 +279,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     try {
       const analysis = await analyzeBusinessListing(business);
       setAuditReport(analysis);
-      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => i.task)]);
+      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
       onSaveAnalysis(analysis);
     } catch (err) { setError('Failed to get analysis. Please try again.'); } 
     finally { setLoading(false); }

@@ -3,11 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 
+console.log('[App] Component module loaded');
+
 const App: React.FC = () => {
+  console.log('[App] Component rendering');
+  
   // Initialize state from localStorage for persistence, with error handling for security restrictions.
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     try {
-      return !!localStorage.getItem('jetsuite_isLoggedIn');
+      const value = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_isLoggedIn') : null;
+      return !!value;
     } catch (e) {
       console.warn('Could not read login status from localStorage:', e);
       return false;
@@ -15,15 +20,24 @@ const App: React.FC = () => {
   });
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('jetsuite_userEmail');
+      return typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userEmail') : null;
     } catch (e) {
       console.warn('Could not read user email from localStorage:', e);
       return null;
     }
   });
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentPath, setCurrentPath] = useState(() => {
+    try {
+      return typeof window !== 'undefined' ? window.location.pathname : '/';
+    } catch (e) {
+      console.warn('Could not read location pathname:', e);
+      return '/';
+    }
+  });
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const onLocationChange = () => {
       setCurrentPath(window.location.pathname);
     };
@@ -33,14 +47,21 @@ const App: React.FC = () => {
   }, []);
   
   const navigate = (path: string) => {
-      window.history.pushState({}, '', path);
-      setCurrentPath(path);
+      if (typeof window === 'undefined') return;
+      try {
+        window.history.pushState({}, '', path);
+        setCurrentPath(path);
+      } catch (e) {
+        console.warn('Could not navigate:', e);
+      }
   };
 
   const handleLoginSuccess = (email: string) => {
       try {
-        localStorage.setItem('jetsuite_isLoggedIn', 'true');
-        localStorage.setItem('jetsuite_userEmail', email);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('jetsuite_isLoggedIn', 'true');
+          localStorage.setItem('jetsuite_userEmail', email);
+        }
       } catch (e) {
         console.warn('Could not write to localStorage:', e);
       }
@@ -50,8 +71,10 @@ const App: React.FC = () => {
   
   const handleLogout = () => {
       try {
-        localStorage.removeItem('jetsuite_isLoggedIn');
-        localStorage.removeItem('jetsuite_userEmail');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('jetsuite_isLoggedIn');
+          localStorage.removeItem('jetsuite_userEmail');
+        }
       } catch (e) {
         console.warn('Could not remove from localStorage:', e);
       }
@@ -76,11 +99,26 @@ const App: React.FC = () => {
   }, [isLoggedIn, currentPath]);
 
   // Render logic is now driven by the isLoggedIn state.
-  if (isLoggedIn && currentUserEmail) {
-    return <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />;
-  }
+  console.log('[App] Rendering with state:', { isLoggedIn, currentPath, hasEmail: !!currentUserEmail });
   
-  return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+  try {
+    if (isLoggedIn && currentUserEmail) {
+      return <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />;
+    }
+    
+    return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+  } catch (error) {
+    console.error('[App] Render error:', error);
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+        <h1>Application Error</h1>
+        <p>Failed to render the application. Please check the console for details.</p>
+        <pre style={{ background: '#f5f5f5', padding: '10px', overflow: 'auto' }}>
+          {error instanceof Error ? error.message : String(error)}
+        </pre>
+      </div>
+    );
+  }
 };
 
 export default App;
