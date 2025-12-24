@@ -11,7 +11,7 @@ interface PricingPageProps {
 
 export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const [businesses, setBusinesses] = useState(1);
-  const [seats, setSeats] = useState(1);
+ const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -28,7 +28,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   };
 
   const handleSeatsChange = (delta: number) => {
-    setSeats(prev => Math.max(1, prev + delta));
+ setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
   };
 
   const handleCheckout = async () => {
@@ -51,7 +51,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
       const { url } = await createCheckoutSession({
         userId: userEmail,
         email: userEmail,
-        seatCount: seats - 1, // Subtract 1 because base plan includes 1 seat
+       seatCount: seats, // seats already represents additional seats beyond the 1 included
         additionalBusinessCount: additionalBusinessCount,
       });
 
@@ -170,7 +170,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => handleSeatsChange(-1)}
-                    disabled={seats <= 1}
+                    disabled={seats <= 0}
                     className="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors"
                   >
                     <MinusIcon className="w-5 h-5" />
@@ -208,22 +208,28 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                     <span>${additionalBusinessCost * additionalBusinessCount}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-300">
-                  <span>Team Seats ({seats === 1 ? '1 seat' : `${seats} seats`})</span>
-                  <span>${seatCost * seats}/mo</span>
-                </div>
-                {seats > 1 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Included (1 seat)</span>
-                    <span>$0</span>
-                  </div>
-                )}
-                {seats > 1 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Additional ({seats - 1} × ${seatCost})</span>
-                    <span>${seatCost * (seats - 1)}</span>
-                  </div>
-                )}
+               <div className="flex justify-between text-gray-300">
+  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
+  <span>${seatCost * seats}/mo</span>
+</div>
+{seats === 0 && (
+  <div className="flex justify-between text-gray-400 text-xs pl-4">
+    <span>• 1 seat included in base plan</span>
+    <span>$0</span>
+  </div>
+)}
+{seats > 0 && (
+  <div className="flex justify-between text-gray-400 text-xs pl-4">
+    <span>• Included (1 seat)</span>
+    <span>$0</span>
+  </div>
+)}
+{seats > 0 && (
+  <div className="flex justify-between text-gray-400 text-xs pl-4">
+    <span>• Additional ({seats} × ${seatCost})</span>
+    <span>${seatCost * seats}</span>
+  </div>
+)}
                 <div className="border-t border-slate-700 pt-2 mt-2">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-white text-lg">Monthly Total</span>
