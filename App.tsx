@@ -1,34 +1,23 @@
-
 import React, { useState, useEffect } from 'react';
 import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 console.log('[App] Component module loaded');
 
 const App: React.FC = () => {
   console.log('[App] Component rendering');
   
-  // Initialize state from localStorage for persistence, with error handling for security restrictions.
- const [isLoggedIn, setIsLoggedIn] = useState(() => {
-  try {
-    if (typeof localStorage === 'undefined') return false;
-    const value = localStorage.getItem('jetsuite_isLoggedIn');
-    // Only true if value is EXACTLY 'true' string
-    return value === 'true';
-  } catch (e) {
-    console.warn('Could not read login status from localStorage:', e);
-    return false;
-  }
-});
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => {
-    try {
-      return typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userEmail') : null;
-    } catch (e) {
-      console.warn('Could not read user email from localStorage:', e);
-      return null;
-    }
-  });
+  // Initialize state - don't rely on localStorage as source of truth
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [currentPath, setCurrentPath] = useState(() => {
     try {
       return typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -37,6 +26,75 @@ const App: React.FC = () => {
       return '/';
     }
   });
+
+  // Check Supabase session on mount
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('[App] Session check error:', error);
+          localStorage.removeItem('jetsuite_isLoggedIn');
+          localStorage.removeItem('jetsuite_userEmail');
+          localStorage.removeItem('jetsuite_userId');
+          setSessionChecked(true);
+          return;
+        }
+        
+        if (session?.user) {
+          console.log('[App] Valid session found:', session.user.email);
+          setIsLoggedIn(true);
+          setCurrentUserEmail(session.user.email || null);
+          setCurrentUserId(session.user.id);
+          localStorage.setItem('jetsuite_isLoggedIn', 'true');
+          localStorage.setItem('jetsuite_userEmail', session.user.email || '');
+          localStorage.setItem('jetsuite_userId', session.user.id);
+        } else {
+          console.log('[App] No valid session found');
+          setIsLoggedIn(false);
+          setCurrentUserEmail(null);
+          setCurrentUserId(null);
+          localStorage.removeItem('jetsuite_isLoggedIn');
+          localStorage.removeItem('jetsuite_userEmail');
+          localStorage.removeItem('jetsuite_userId');
+        }
+      } catch (error) {
+        console.error('[App] Session check failed:', error);
+      } finally {
+        setSessionChecked(true);
+      }
+    };
+    
+    checkSession();
+  }, []);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[App] Auth state changed:', event, session?.user?.email);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        setIsLoggedIn(true);
+        setCurrentUserEmail(session.user.email || null);
+        setCurrentUserId(session.user.id);
+        localStorage.setItem('jetsuite_isLoggedIn', 'true');
+        localStorage.setItem('jetsuite_userEmail', session.user.email || '');
+        localStorage.setItem('jetsuite_userId', session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false);
+        setCurrentUserEmail(null);
+        setCurrentUserId(null);
+        localStorage.removeItem('jetsuite_isLoggedIn');
+        localStorage.removeItem('jetsuite_userEmail');
+        localStorage.removeItem('jetsuite_userId');
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -59,30 +117,29 @@ const App: React.FC = () => {
       }
   };
 
-  const handleLoginSuccess = (email: string) => {
-      try {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('jetsuite_isLoggedIn', 'true');
-          localStorage.setItem('jetsuite_userEmail', email);
-        }
-      } catch (e) {
-        console.warn('Could not write to localStorage:', e);
-      }
+  const handleLoginSuccess = (email: string, userId: string) => {
+      console.log('[App] Login success:', { email, userId });
       setIsLoggedIn(true);
       setCurrentUserEmail(email);
+      setCurrentUserId(userId);
   };
   
-  const handleLogout = () => {
+  const handleLogout = async () => {
+      console.log('[App] Logging out...');
+      
       try {
-        if (typeof localStorage !== 'undefined') {
-          localStorage.removeItem('jetsuite_isLoggedIn');
-          localStorage.removeItem('jetsuite_userEmail');
-        }
-      } catch (e) {
-        console.warn('Could not remove from localStorage:', e);
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('[App] Logout error:', error);
       }
+      
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
+      setCurrentUserId(null);
+      localStorage.removeItem('jetsuite_isLoggedIn');
+      localStorage.removeItem('jetsuite_userEmail');
+      localStorage.removeItem('jetsuite_userId');
+      navigate('/');
   }
 
   // Effect to handle navigation based on login state changes.
@@ -111,17 +168,33 @@ const App: React.FC = () => {
   };
 
   // Render logic is now driven by the isLoggedIn state.
-  console.log('[App] Rendering with state:', { isLoggedIn, currentPath, hasEmail: !!currentUserEmail });
+  console.log('[App] Rendering with state:', { 
+    isLoggedIn, 
+    sessionChecked,
+    currentPath, 
+    hasEmail: !!currentUserEmail,
+    hasUserId: !!currentUserId 
+  });
   
   try {
-    // Strict check: must be explicitly true AND have email
-if (isLoggedIn === true && currentUserEmail) {
-  console.log('[App] ✅ User authenticated, loading app with subscription guard');
-      // User is logged in - wrap with SubscriptionGuard to enforce billing access
-      // SubscriptionGuard will check subscription status and block access if not active
+    // Show loading while checking session
+    if (!sessionChecked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-brand-dark">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // User is logged in with valid session
+    if (isLoggedIn && currentUserId && currentUserEmail) {
+      console.log('[App] ✅ User authenticated, loading app with subscription guard');
       return (
         <SubscriptionGuard 
-          userId={currentUserEmail} // Use email as userId for now
+          userId={currentUserId}
           onAccessDenied={handleSubscriptionAccessDenied}
         >
           <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />
@@ -130,8 +203,8 @@ if (isLoggedIn === true && currentUserEmail) {
     }
     
     // Default: public marketing website (no authentication required)
-console.log('[App] 🌐 Showing public marketing website');
-return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+    console.log('[App] 🌐 Showing public marketing website');
+    return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
   } catch (error) {
     console.error('[App] Render error:', error);
     return (
