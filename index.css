@@ -99,3 +99,8 @@
   border-radius: 8px !important;
   padding: 1rem !important;
 }
+
+@keyframes fill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
