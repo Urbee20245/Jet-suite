@@ -1,6 +1,10 @@
-
 import React, { useState } from 'react';
 import { JetSuiteLogo } from '../components/JetSuiteLogo';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface LoginPageProps {
     navigate: (path: string) => void;
@@ -13,21 +17,39 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        // Placeholder for authentication logic
-        setTimeout(() => {
-            if (email === 'theivsightcompany@gmail.com' && password === 'Takashi1*..') {
-                // In a real app, you would verify credentials here
-                onLoginSuccess(email);
+        try {
+            // Use Supabase authentication
+            const { data, error: authError } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (authError) {
+                console.error('Login error:', authError);
+                setError(authError.message || 'Invalid email or password.');
+                setLoading(false);
+                return;
+            }
+
+            if (data?.user) {
+                console.log('Login successful:', data.user.email);
+                // Auth state listener in App.tsx will handle the session
+                // Just call the callback to trigger navigation
+                onLoginSuccess(data.user.email || email);
             } else {
-                setError('Invalid email or password.');
+                setError('Login failed. Please try again.');
                 setLoading(false);
             }
-        }, 1000);
+        } catch (err: any) {
+            console.error('Login exception:', err);
+            setError('An error occurred. Please try again.');
+            setLoading(false);
+        }
     };
 
     return (
@@ -50,6 +72,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
                                 type="email"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
+                                required
                                 className="mt-2 block w-full bg-slate-900/50 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                                 placeholder="you@example.com"
                             />
@@ -64,11 +87,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
                                 type="password"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
+                                required
                                 className="mt-2 block w-full bg-slate-900/50 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                                 placeholder="••••••••"
                             />
                         </div>
-                        {error && <p className="text-red-400 text-sm">{error}</p>}
+                        {error && (
+                            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+                                <p className="text-red-400 text-sm">{error}</p>
+                            </div>
+                        )}
                         <div>
                            <button
                                 type="submit"
