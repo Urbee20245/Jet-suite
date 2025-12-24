@@ -255,3 +255,53 @@ export interface SavedKeyword extends KeywordData {
 
 
 export type ReadinessState = 'Setup Incomplete' | 'Foundation Weak' | 'Foundation Ready';
+
+// Analyzer Service Types
+export interface AnalysisRequest {
+  websiteUrl: string;
+  industry?: string;
+}
+
+export interface AnalysisRecommendation {
+  category: string;
+  priority: string;
+  issue: string;
+  fix: string;
+}
+
+export interface AnalysisResult {
+  websiteUrl: string;
+  overallScore: number;
+  coreWebVitals: {
+    lcp: number;
+    fid: number;
+    cls: number;
+    score: number;
+  };
+  mobileScore: {
+    touchTargets: boolean;
+    viewportScaling: boolean;
+    textReadability: boolean;
+    score: number;
+  };
+  seoStructure: {
+    hasH1: boolean;
+    metaDescription: boolean;
+    titleTag: boolean;
+    schemaMarkup: boolean;
+    altTags: number;
+    score: number;
+  };
+  localRelevance: {
+    napConsistency: boolean;
+    googleMyBusiness: boolean;
+    localKeywords: number;
+    score: number;
+  };
+  keywordGap: {
+    competitorKeywords: string[];
+    missingKeywords: string[];
+    score: number;
+  };
+  recommendations: AnalysisRecommendation[];
+}
