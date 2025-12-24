@@ -259,6 +259,7 @@ export type ReadinessState = 'Setup Incomplete' | 'Foundation Weak' | 'Foundatio
 // Analyzer Service Types
 export interface AnalysisRequest {
   websiteUrl: string;
+  businessName?: string;
   industry?: string;
 }
 
@@ -303,5 +304,10 @@ export interface AnalysisResult {
     missingKeywords: string[];
     score: number;
   };
-  recommendations: AnalysisRecommendation[];
+  recommendations: Array<{
+    category: string;
+    priority: string;
+    issue: string;
+    fix: string;
+  }>;
 }
