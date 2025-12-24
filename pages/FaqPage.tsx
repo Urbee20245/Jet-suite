@@ -89,8 +89,7 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
 
       // Pricing
       { category: 'pricing', q: "How much does JetSuite cost?", a: "We offer one simple plan: $149/month. This includes full access to all 20+ tools, unlimited AI content generation, and support. No hidden fees." },
-      { category: 'pricing', q: "Is there a free trial?", a: "Yes! We offer a 14-day free trial with full access to the entire platform. You can cancel anytime before the trial ends and you won't be charged." },
-      { category: 'pricing', q: "Can I really get a full refund?", a: "We offer a 30-day money-back guarantee. If you're not seeing value in the first month, just email us and we'll refund your subscription payment, no questions asked." },
+      { category: 'pricing', q: "When will I be charged?", a: "You'll be charged immediately when you subscribe. Your subscription renews monthly at the same rate." },
       { category: 'pricing', q: "Are there setup fees?", a: "None. You can set up your account in about 2 minutes completely free." },
       { category: 'pricing', q: "Do I have to sign a contract?", a: "No. JetSuite is a month-to-month service. You can cancel at any time without penalty." },
       { category: 'pricing', q: "Do you offer enterprise plans?", a: "Yes. If you manage more than 10 locations or are an agency, contact our sales team for custom volume pricing." },
@@ -263,10 +262,10 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
               <div className="flex-1 bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors">
                   <h3 className="text-xl font-bold text-white mb-2">Try It Yourself</h3>
                   <p className="text-gray-400 mb-6">The best way to understand JetSuite is to see it in action.</p>
-                  <button onClick={() => navigate('/login')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
-                      Start Free Trial
+                  <button onClick={() => navigate('/pricing')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
+                      Get Started
                   </button>
-                  <p className="text-xs text-gray-500 mt-3">14-day free trial • No credit card required</p>
+                  <p className="text-xs text-gray-500 mt-3">Get instant access to all 20 growth tools</p>
               </div>
           </div>
       </section>

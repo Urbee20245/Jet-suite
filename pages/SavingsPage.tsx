@@ -232,7 +232,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
               onClick={() => navigate('/pricing')}
               className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-opacity shadow-lg shadow-accent-purple/30 flex items-center justify-center gap-2 text-lg"
             >
-              Start Saving Today
+              Get Started
               <ArrowRightIcon className="w-5 h-5" />
             </button>
           </div>
@@ -356,7 +356,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
             Join hundreds of businesses saving thousands every month with JetSuite.
           </p>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/pricing')}
             className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-12 rounded-xl transition-opacity shadow-lg shadow-accent-purple/30 text-lg"
           >
             Get Started Today

@@ -32,8 +32,7 @@ const faqs = [
     { q: "How long to see results?", a: "Most businesses see initial ranking improvements within 30 days of completing their first Growth Plan tasks. Significant traffic growth typically accelerates around months 2-3." },
     { q: "Do I need marketing experience?", a: "None at all. JetSuite creates a simple weekly checklist for you. If a task requires technical skill, our system either does it for you or gives you copy-paste instructions." },
     { q: "Can I cancel anytime?", a: "Yes. There are no long-term contracts. You can cancel your subscription with two clicks in your dashboard settings at any time." },
-    { q: "How many businesses can I manage?", a: "Your base subscription includes one business profile. You can add additional locations or businesses for just $99/month each from your dashboard." },
-    { q: "What's included in the trial?", a: "You get full access to the entire platform—all 20+ tools, unlimited AI content generation, and full audits—for 14 days. No restricted features." }
+    { q: "How many businesses can I manage?", a: "Your base subscription includes one business profile. You can add additional locations or businesses for just $99/month each from your dashboard." }
 ];
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
@@ -67,8 +66,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1">
-                    Start Free 14-Day Trial
+                <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1">
+                    Get Started
                 </button>
                 <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
                     Watch 2-Min Demo <span>→</span>
@@ -449,13 +448,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
                         <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Unlimited Usage</li>
                         <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> No Contracts</li>
-                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> 30-Day Results Guarantee</li>
+                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Transparent Pricing</li>
                     </ul>
                     
-                    <button onClick={() => navigate('/login')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4">
-                        Start Free Trial →
+                    <button onClick={() => navigate('/pricing')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4">
+                        Get Started
                     </button>
-                    <p className="text-xs text-gray-500">14-day free trial • No credit card required</p>
+                    <p className="text-xs text-gray-500">Get instant access to all 20 growth tools</p>
                 </div>
             </div>
         </div>
@@ -523,11 +522,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           <div className="relative z-10 max-w-4xl mx-auto">
               <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
               <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-                  Join 360+ local businesses growing with JetSuite. Try it risk-free.
+                  Join 360+ local businesses growing with JetSuite. Start growing today.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
-                  Get Started Free for 14 Days
+                <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
+                  Get Started
                 </button>
                 <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
                   Schedule a Demo

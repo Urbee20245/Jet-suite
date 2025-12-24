@@ -52,31 +52,44 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   };
 
   const handleCheckout = async () => {
+    setIsCheckingOut(true);
     setCheckoutError(null);
     
-    // For demo purposes, use a placeholder email
-    // In production, this should come from login state or a form
+    // For demo purposes, use a placeholder email if not logged in
+    // In production, this should come from login state
     const userEmail = localStorage.getItem('jetsuite_userEmail') || 'user@example.com';
     
+    // Basic validation - in a real app, force login/signup first
     if (!userEmail || userEmail === 'user@example.com') {
-      // User not logged in, redirect to login first
-      alert('Please log in first to start your subscription.');
-      navigate('/login');
-      return;
+       // Ideally redirect to login with a return URL
+       // For now we'll allow it if the backend handles it or just alert
+       alert('Please log in or sign up to continue.');
+       navigate('/login');
+       setIsCheckingOut(false);
+       return;
     }
 
     try {
-      setIsCheckingOut(true);
-      
-      const { url } = await createCheckoutSession({
-        userId: userEmail,
-        email: userEmail,
-        seatCount: seats, // seats already represents additional seats beyond the 1 included
-        additionalBusinessCount: additionalBusinessCount,
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userEmail, // Using email as ID for demo/if simpler, but ideally actual User ID
+          email: userEmail,
+          seatCount: seats,
+          additionalBusinessCount: additionalBusinessCount,
+        }),
       });
 
-      // Redirect to Stripe Checkout
-      window.location.href = url;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create checkout session');
+      }
+
+      const data = await response.json();
+      window.location.href = data.url;
     } catch (error: any) {
       console.error('Checkout error:', error);
       setCheckoutError(error.message || 'Failed to start checkout. Please try again.');
@@ -260,6 +273,15 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               </div>
             </div>
 
+            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700">
+              <div className="text-sm text-gray-400 mb-2">Due Today</div>
+              <div className="text-4xl font-bold text-white mb-2">${monthlyTotal}</div>
+              <div className="text-sm text-gray-400">Then ${monthlyTotal}/month</div>
+              <div className="mt-4 text-xs text-gray-500">
+                All tools included. No hidden fees. Cancel anytime.
+              </div>
+            </div>
+
             {/* Checkout Button */}
             {checkoutError && (
               <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
@@ -274,18 +296,16 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             >
               {isCheckingOut ? (
                 <>
-                  <Loader />
-                  <span>Starting Checkout...</span>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Processing...
                 </>
               ) : (
-                <>
-                  <span>Start Subscription - ${monthlyTotal}/mo</span>
-                </>
+                'Get Started'
               )}
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">
-              30-day money-back guarantee • Cancel anytime
+              Transparent pricing • Cancel anytime
             </p>
           </div>
 
@@ -317,9 +337,8 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                     answer="Yes, you can add or remove businesses and team seats at any time from your dashboard. Changes are prorated automatically." 
                 />
                 <PricingFaqItem 
-                    id="refunds"
-                    question="What is your refund policy?" 
-                    answer="We offer a 30-day money-back guarantee. If you're not satisfied within the first month, contact support for a full refund. After 30 days, you can cancel anytime to stop future billing." 
+                    question="When will I be charged?" 
+                    answer="You'll be charged immediately when you subscribe. Your subscription renews monthly at the same rate." 
                 />
                 <PricingFaqItem 
                     question="Do I need to sign a long-term contract?" 
