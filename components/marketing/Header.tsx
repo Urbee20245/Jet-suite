@@ -33,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                         <button onClick={() => navigate('/login')} className="hidden sm:inline-block text-white font-medium hover:text-gray-200">
                             Login
                         </button>
-                        <button onClick={() => navigate('/pricing')} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-5 rounded-lg transition-opacity duration-300 shadow-md shadow-accent-purple/20">
+                        <button onClick={() => navigate('/pricing')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors duration-300 shadow-md shadow-blue-500/20">
                             Get Started
                         </button>
                     </div>

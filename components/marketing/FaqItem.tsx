@@ -5,20 +5,13 @@ import { PlusIcon, XMarkIcon } from '../icons/MiniIcons';
 interface FaqItemProps {
     question: string;
     answer: string;
+    variant?: 'dark' | 'light';
 }
 
-export const FaqItem: React.FC<FaqItemProps> = ({ question, answer }) => {
+export const FaqItem: React.FC<FaqItemProps> = ({ question, answer, variant = 'dark' }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    // Check if the component is rendered on a light or dark background
-    // This is a simple check; a more robust solution might use React Context
-    const parentBg = typeof window !== 'undefined' 
-        ? window.getComputedStyle(document.body).getPropertyValue('background-color') 
-        : 'rgb(2, 6, 23)'; // default to dark
-        
-    const isDarkBg = parentBg.includes('rgb(2, 6, 23)') || parentBg.includes('#020617');
-
-    if (isDarkBg) {
+    if (variant === 'dark') {
         return (
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg">
                 <button
@@ -40,7 +33,7 @@ export const FaqItem: React.FC<FaqItemProps> = ({ question, answer }) => {
         );
     }
 
-    // Light theme version for sections with a white background
+    // Light theme version
     return (
         <div className="bg-white border border-gray-200 rounded-lg">
             <button

@@ -1,300 +1,541 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { FaqItem } from '../components/marketing/FaqItem';
 import { TestimonialCard } from '../components/marketing/TestimonialCard';
-import { EyeSlashIcon, ExclamationTriangleIcon, CompetitorWinIcon, CheckCircleIcon, StarIcon, MapPinIcon } from '../components/icons/MiniIcons';
-import { JetVizIcon, JetBizIcon, GrowthScoreIcon } from '../components/icons/ToolIcons';
+import { 
+    EyeSlashIcon, 
+    ExclamationTriangleIcon, 
+    CreditCardIcon, 
+    CheckCircleIcon, 
+    StarIcon, 
+    MapPinIcon, 
+    RocketLaunchIcon, 
+    BoltIcon,
+    ChatBubbleLeftRightIcon
+} from '../components/icons/MiniIcons';
+import { 
+    JetVizIcon, 
+    JetBizIcon, 
+    JetKeywordsIcon, 
+    JetCreateIcon, 
+    JetImageIcon, 
+    JetReplyIcon, 
+    JetTrustIcon, 
+    GrowthPlanIcon,
+    GrowthScoreIcon
+} from '../components/icons/ToolIcons';
 
 interface LandingPageProps {
   navigate: (path: string) => void;
 }
 
 const faqs = [
-    { q: "What makes JetSuite different from other SEO tools?", a: "Most tools give you data dumps. JetSuite gives you a prioritized action plan. We tell you exactly what to fix this week, track your completion, and adjust your strategy based on results—not vanity metrics." },
-    { q: "Do I need technical skills to use JetSuite?", a: "No. Every recommendation comes with clear instructions. If something requires code changes, we flag it and can connect you with implementation help." },
-    { q: "How quickly will I see results?", a: "You'll see your Growth Score improve within weeks as you complete tasks. Ranking improvements typically take 2-3 months of consistent execution, which is why we focus on weekly progress." },
-    { q: "Can I try it before subscribing?", a: "Yes. JetViz and Jet Local Optimizer are free to try. You'll get a full audit and see exactly what you'd be working with before committing." },
-    { q: "What if I already have an SEO agency?", a: "JetSuite works alongside agencies or replaces them. Many customers use our tools to verify what their agency is telling them—or realize they can handle it themselves." },
-    { q: "Is this only for Georgia businesses?", a: "We're focused on Walton and Gwinnett County currently, but the tools work for any local business in the US." },
-    { q: "How does pricing work for multiple locations?", a: "Your base $149/month includes one business profile with full access to all tools. Each additional business location is just $49/month. Need your team involved? Add team members for $15/month each." }
+    { q: "How long to see results?", a: "Most businesses see initial ranking improvements within 30 days of completing their first Growth Plan tasks. Significant traffic growth typically accelerates around months 2-3." },
+    { q: "Do I need marketing experience?", a: "None at all. JetSuite creates a simple weekly checklist for you. If a task requires technical skill, our system either does it for you or gives you copy-paste instructions." },
+    { q: "Can I cancel anytime?", a: "Yes. There are no long-term contracts. You can cancel your subscription with two clicks in your dashboard settings at any time." },
+    { q: "How many businesses can I manage?", a: "Your base subscription includes one business profile. You can add additional locations or businesses for just $99/month each from your dashboard." },
+    { q: "What's included in the trial?", a: "You get full access to the entire platform—all 20+ tools, unlimited AI content generation, and full audits—for 14 days. No restricted features." }
 ];
 
-const PainPointCard: React.FC<{ icon: React.FC<any>, title: string, text: string }> = ({ icon: Icon, title, text }) => (
-    <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-        <Icon className="w-8 h-8 text-red-400 mb-4" />
-        <h3 className="text-lg font-bold text-white">{title}</h3>
-        <p className="text-gray-400 mt-2">{text}</p>
-    </div>
-);
-
-const SolutionToolCard: React.FC<{ icon: React.FC<any>, title: string, text: string }> = ({ icon: Icon, title, text }) => (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-md glow-card glow-card-rounded-xl text-left">
-        <Icon className="w-8 h-8 text-accent-purple mb-4" />
-        <h3 className="text-lg font-bold text-brand-text">{title}</h3>
-        <p className="text-brand-text-muted mt-2">{text}</p>
-    </div>
-);
-
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
-  const faqMidpoint = Math.ceil(faqs.length / 2);
-  const leftFaqs = faqs.slice(0, faqMidpoint);
-  const rightFaqs = faqs.slice(faqMidpoint);
-
   return (
-    <div className="bg-brand-darker text-gray-300 overflow-x-hidden">
-      {/* SECTION 1: HERO (Light) */}
-      <section className="relative py-24 sm:py-32 px-4 bg-white text-brand-text">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          {/* Left: Text Content */}
-          <div className="text-center md:text-left">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-brand-text tracking-tighter">
-              Most local businesses fail online before SEO even matters.
+    <div className="bg-brand-darker text-gray-300 overflow-x-hidden font-sans">
+      
+      {/* 1. HERO SECTION */}
+      <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-teal-500/10 rounded-full blur-[120px] -z-10 opacity-30"></div>
+
+        <div className="max-w-7xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-medium mb-8">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                Trusted by 360+ local businesses
+            </div>
+            
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+                Get Found First on Google. <br className="hidden md:block"/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
+                    Get More Local Customers.
+                </span>
             </h1>
-            <p className="mt-6 max-w-xl mx-auto md:mx-0 text-lg sm:text-xl text-brand-text-muted leading-relaxed">
-              JetSuite shows you exactly what's broken, what to fix first, and tracks your progress—so you stop wasting money and start getting customers.
+            
+            <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-400 leading-relaxed">
+                JetSuite is the AI-powered platform that manages your Google ranking, reputation, and marketing—all in one place. Stop being invisible to local searchers.
             </p>
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
-              <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">
-                See What's Holding You Back
-              </button>
-              <button className="w-full sm:w-auto border-2 border-brand-border hover:bg-gray-100 text-brand-text font-bold py-3 px-8 rounded-lg transition-colors duration-300 text-lg">
-                Watch How It Works
-              </button>
+            
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1">
+                    Start Free 14-Day Trial
+                </button>
+                <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
+                    Watch 2-Min Demo <span>→</span>
+                </button>
             </div>
-          </div>
-          {/* Right: Visuals */}
-          <div className="space-y-6">
-            {/* Google SERP Mockup */}
-            <div className="relative bg-white p-4 rounded-xl border border-gray-200 shadow-2xl shadow-gray-300/50">
-                <p className="text-xs text-gray-500 mb-2">Search: "plumber in Gwinnett County"</p>
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h3 className="font-semibold text-blue-700 text-lg">Gwinnett's Finest Plumbing</h3>
-                    <div className="flex items-center text-xs mt-1">
-                        <StarIcon className="w-4 h-4 text-yellow-500"/>
-                        <StarIcon className="w-4 h-4 text-yellow-500"/>
-                        <StarIcon className="w-4 h-4 text-yellow-500"/>
-                        <StarIcon className="w-4 h-4 text-yellow-500"/>
-                        <StarIcon className="w-4 h-4 text-yellow-500"/>
-                        <span className="text-gray-600 ml-2">5.0 (128 reviews)</span>
+
+            {/* Dashboard Visual */}
+            <div className="mt-16 relative mx-auto max-w-5xl">
+                <div className="relative bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-[16/9] md:aspect-[16/8]">
+                    {/* Mockup Header */}
+                    <div className="h-12 bg-slate-800 border-b border-slate-700 flex items-center px-4 gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/50"></div>
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/50"></div>
+                        <div className="w-3 h-3 rounded-full bg-green-500/50"></div>
+                        <div className="ml-4 h-6 w-64 bg-slate-900/50 rounded-md"></div>
                     </div>
-                    <p className="text-sm text-gray-700 mt-2 flex items-start"><MapPinIcon className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0"/>123 Main St, Lawrenceville, GA</p>
+                    {/* Mockup Content */}
+                    <div className="p-6 grid grid-cols-12 gap-6 h-full">
+                        {/* Sidebar */}
+                        <div className="hidden md:block col-span-2 space-y-4">
+                            <div className="h-8 w-full bg-slate-800 rounded-lg opacity-50"></div>
+                            <div className="h-8 w-full bg-blue-600/20 rounded-lg border border-blue-500/30"></div>
+                            <div className="h-8 w-full bg-slate-800 rounded-lg opacity-50"></div>
+                            <div className="h-8 w-full bg-slate-800 rounded-lg opacity-50"></div>
+                        </div>
+                        {/* Main Content */}
+                        <div className="col-span-12 md:col-span-10 grid grid-cols-3 gap-6">
+                            {/* Score Card */}
+                            <div className="col-span-3 md:col-span-1 bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors"></div>
+                                <h3 className="text-gray-400 font-medium mb-2">Growth Score</h3>
+                                <div className="text-5xl font-bold text-white mb-1">78<span className="text-lg text-green-400 ml-1">↑</span></div>
+                                <div className="text-xs text-gray-500">Top 10% in your area</div>
+                            </div>
+                            {/* Chart */}
+                            <div className="col-span-3 md:col-span-2 bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex items-end justify-between gap-2 h-40">
+                                {[30, 45, 35, 50, 60, 55, 70, 80, 75, 90].map((h, i) => (
+                                    <div key={i} className="w-full bg-gradient-to-t from-blue-600 to-teal-400 rounded-t-sm opacity-80 hover:opacity-100 transition-opacity" style={{height: `${h}%`}}></div>
+                                ))}
+                            </div>
+                            {/* Action Items */}
+                            <div className="col-span-3 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-white font-semibold">Weekly Action Plan</h3>
+                                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">2 Tasks Left</span>
+                                </div>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg border border-slate-700/50">
+                                        <div className="h-5 w-5 rounded-full border-2 border-slate-600"></div>
+                                        <div className="h-2 w-32 bg-slate-700 rounded"></div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-2 bg-slate-900/50 rounded-lg border border-slate-700/50">
+                                        <div className="h-5 w-5 rounded-full border-2 border-blue-500 bg-blue-500 flex items-center justify-center text-[10px] text-white">✓</div>
+                                        <div className="h-2 w-48 bg-slate-700 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div className="absolute -top-3 -right-3 bg-accent-pink text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg rotate-6">This could be you</div>
-            </div>
-            {/* JetViz Dashboard Card */}
-            <div className="bg-slate-900 border border-slate-700 p-6 flex items-center justify-between rounded-xl shadow-2xl shadow-accent-purple/10">
-                <div>
-                    <p className="text-xs font-semibold text-accent-purple mb-1">Powered by JetViz</p>
-                    <h3 className="text-white font-bold text-xl">Sunbeam Electric Website Audit</h3>
-                    <p className="text-gray-400 text-sm">www.sunbeamelectricga.com</p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <p className="text-gray-400 font-medium text-sm">Growth Score</p>
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
-                        <div className="w-[72px] h-[72px] rounded-full bg-slate-900 flex items-center justify-center">
-                            <span className="text-white text-2xl font-bold">72</span>
+                {/* Floating Elements */}
+                <div className="absolute -right-4 -bottom-4 md:right-[-20px] md:bottom-10 bg-white p-4 rounded-lg shadow-xl animate-bounce duration-[3000ms]">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-green-100 p-2 rounded-full"><StarIcon className="w-5 h-5 text-green-600"/></div>
+                        <div>
+                            <p className="text-xs text-gray-500 font-bold">New Review</p>
+                            <p className="text-sm font-bold text-gray-900">⭐⭐⭐⭐⭐ Great service!</p>
                         </div>
                     </div>
                 </div>
             </div>
-          </div>
         </div>
       </section>
 
-      {/* SECTION 2: PROBLEM AGITATION (Dark) */}
-      <section className="py-24 sm:py-32 px-4 bg-[#0a0a0f]">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-5xl font-bold text-white">Is your website costing you customers?</h2>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-400">
-            You paid for a website. Maybe you're even paying for SEO. But leads aren't coming in. You're not sure if it's your site, your Google listing, or your competition outranking you. Traditional agencies give you reports—not answers.
-          </p>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <PainPointCard icon={EyeSlashIcon} title="Invisible Issues" text="Your website has problems you can't see that kill your rankings and turn customers away." />
-            <PainPointCard icon={ExclamationTriangleIcon} title="Wasted Ad Spend" text="You're paying for traffic that bounces because your site isn't built to convert visitors into leads." />
-            <PainPointCard icon={CompetitorWinIcon} title="Competitors Winning" text="The business down the street is getting your customers because their online presence is stronger." />
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 3: SOLUTION INTRO (Light) */}
-      <section className="py-24 sm:py-32 px-4 bg-white text-brand-text">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-5xl font-bold">We don't just audit. We build your action plan.</h2>
-          <p className="mt-6 max-w-2xl mx-auto text-lg text-brand-text-muted">
-            JetSuite combines three powerful diagnostic tools into one growth system. You'll know exactly what's wrong, what to fix this week, and how to measure progress.
-          </p>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <SolutionToolCard icon={JetVizIcon} title="JetViz" text="Instant website analysis for speed, SEO, clarity, and conversion friction." />
-            <SolutionToolCard icon={JetBizIcon} title="Jet Local Optimizer" text="Google Business Profile audit with competitive gap analysis." />
-            <SolutionToolCard icon={GrowthScoreIcon} title="Growth Score" text="Track your 0-100 score across Visibility, Trust, and Activity." />
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: JETVIZ DEEP DIVE (Dark) */}
-      <section className="py-24 sm:py-32 px-4 bg-[#0a0a0f]">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="md:order-2">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white">See your website the way Google sees it.</h2>
-            <ul className="mt-8 space-y-4 text-lg text-gray-300">
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Real-time performance analysis</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Local SEO signals check</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Mobile responsiveness scoring</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Trust signal detection</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Actionable fixes—not vague suggestions</span></li>
-            </ul>
-            <button onClick={() => navigate('/login')} className="mt-8 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">Try JetViz Free</button>
-          </div>
-          <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-2xl">
-              <h3 className="text-white font-bold">JetViz Analysis</h3>
-              <div className="mt-4 bg-slate-900/80 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-sm"><span>Performance</span><span className="font-bold text-yellow-400">68/100</span></div>
-                  <div className="w-full bg-slate-700 h-2 rounded-full mt-1"><div className="w-[68%] bg-yellow-400 h-2 rounded-full"></div></div>
-              </div>
-              <div className="mt-2 bg-slate-900/80 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-sm"><span>Local SEO</span><span className="font-bold text-green-400">85/100</span></div>
-                  <div className="w-full bg-slate-700 h-2 rounded-full mt-1"><div className="w-[85%] bg-green-400 h-2 rounded-full"></div></div>
-              </div>
-              <div className="mt-2 bg-slate-900/80 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-sm"><span>Trust Signals</span><span className="font-bold text-red-400">42/100</span></div>
-                  <div className="w-full bg-slate-700 h-2 rounded-full mt-1"><div className="w-[42%] bg-red-400 h-2 rounded-full"></div></div>
-              </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 5: JET LOCAL OPTIMIZER (Dark) */}
-      <section className="py-24 sm:py-32 px-4 bg-brand-darker">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-white">Your Google listing is your first impression. Is it working?</h2>
-            <ul className="mt-8 space-y-4 text-lg text-gray-300">
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Pulls your real Google Business Profile data</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Compares you against top local competitors</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Shows exactly what's missing vs. who's ranking</span></li>
-              <li className="flex items-start"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 mt-1 flex-shrink-0" /><span>Generates fix-it tasks you can complete today</span></li>
-            </ul>
-            <button onClick={() => navigate('/login')} className="mt-8 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">Analyze Your Google Listing</button>
-          </div>
-           <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700 shadow-2xl">
-              <h3 className="text-white font-bold">Local Competitor Gap Analysis</h3>
-              <div className="mt-4 space-y-2">
-                <div className="bg-slate-900/80 p-3 rounded-lg flex justify-between items-center"><span className="text-white">Your Business</span><span className="text-yellow-400 font-bold">Missing 5 Key Categories</span></div>
-                <div className="bg-slate-900/80 p-3 rounded-lg flex justify-between items-center"><span className="text-gray-400">Competitor #1</span><span className="text-green-400 font-bold">Fully Optimized</span></div>
-                <div className="bg-slate-900/80 p-3 rounded-lg flex justify-between items-center"><span className="text-gray-400">Competitor #2</span><span className="text-green-400 font-bold">Fully Optimized</span></div>
-                <div className="bg-slate-900/80 p-3 rounded-lg flex justify-between items-center"><span className="text-gray-400">Competitor #3</span><span className="text-yellow-400 font-bold">Missing Services List</span></div>
-              </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 6: STATS BAR (Gradient) */}
-       <section className="py-20 bg-gradient-to-r from-accent-purple to-accent-pink">
-        <div className="max-w-5xl mx-auto text-center px-4">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">Built for local businesses. Trusted by local leaders.</h2>
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div><p className="text-4xl font-bold text-white">300+</p><p className="text-white/80 mt-2">Websites Analyzed</p></div>
-                <div><p className="text-4xl font-bold text-white">24/7</p><p className="text-white/80 mt-2">Monitoring</p></div>
-                <div><p className="text-4xl font-bold text-white">5.0</p><p className="text-white/80 mt-2">Average Rating</p></div>
-                <div><p className="text-4xl font-bold text-white">GA</p><p className="text-white/80 mt-2">Walton & Gwinnett Focused</p></div>
-            </div>
-        </div>
-      </section>
-
-      {/* SECTION 7: HOW IT WORKS (Light) */}
-      <section className="py-24 sm:py-32 px-4 bg-white text-brand-text">
+      {/* 2. THE PROBLEM SECTION */}
+      <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
-            <div className="text-center">
-                <h2 className="text-3xl sm:text-5xl font-bold">Your growth plan in 3 steps.</h2>
+            <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Is Your Online Presence Costing You Customers?</h2>
+                <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                    JetSuite replaces your entire marketing stack with one intelligent platform.
+                </p>
             </div>
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200"><div className="text-4xl font-bold text-accent-purple">1</div><h3 className="text-xl font-bold mt-4">Connect</h3><p className="text-brand-text-muted mt-2">Link your website and Google Business Profile in 60 seconds.</p></div>
-                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200"><div className="text-4xl font-bold text-accent-purple">2</div><h3 className="text-xl font-bold mt-4">Diagnose</h3><p className="text-brand-text-muted mt-2">Get your Growth Score and see what's holding you back.</p></div>
-                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200"><div className="text-4xl font-bold text-accent-purple">3</div><h3 className="text-xl font-bold mt-4">Execute</h3><p className="text-brand-text-muted mt-2">Follow your weekly action plan and watch your score climb.</p></div>
-            </div>
-        </div>
-      </section>
-      
-      {/* SECTION 8: GROWTH SCORE (Dark) */}
-      <section className="py-24 sm:py-32 px-4 bg-brand-darker">
-        <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-5xl font-bold text-white">Track your progress with one number.</h2>
-            <p className="mt-6 max-w-2xl mx-auto text-lg text-gray-400">
-            Your Growth Score (0-100) combines three critical metrics: Visibility (can customers find you?), Trust (do they believe you?), and Activity (are you showing up consistently?). Complete weekly tasks to improve your score and outrank competitors.
-            </p>
-            <div className="mt-12 inline-block relative">
-            <div style={{background: 'conic-gradient(#8B5CF6 0% 33%, #3B82F6 33% 66%, #06B6D4 66% 100%)'}} className="w-48 h-48 rounded-full flex items-center justify-center">
-                <div className="w-44 h-44 rounded-full bg-brand-darker flex items-center justify-center flex-col">
-                    <span className="text-5xl font-bold text-white">72</span>
-                    <span className="text-sm text-gray-400">Growth Score</span>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                    <div className="bg-red-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                        <EyeSlashIcon className="w-7 h-7 text-red-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Invisible to Searchers</h3>
+                    <p className="text-gray-400 leading-relaxed">
+                        88% of local searches visit a business within 24 hours. If you're not on page 1, you're missing out on ready-to-buy customers.
+                    </p>
+                </div>
+
+                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                    <div className="bg-yellow-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                        <ExclamationTriangleIcon className="w-7 h-7 text-yellow-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Tool Overload</h3>
+                    <p className="text-gray-400 leading-relaxed">
+                        Managing 10+ different tools for SEO, reviews, and content is overwhelming. You end up paying for tools you don't have time to use.
+                    </p>
+                </div>
+
+                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                    <div className="bg-blue-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                        <CreditCardIcon className="w-7 h-7 text-blue-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">Expensive Agencies</h3>
+                    <p className="text-gray-400 leading-relaxed">
+                        Hiring agencies costs $5,000+/month with no guaranteed results. You pay whether you grow or not.
+                    </p>
                 </div>
             </div>
-            </div>
-            <div className="mt-8"><button onClick={() => navigate('/login')} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">Get Your Growth Score</button></div>
         </div>
       </section>
-      
-      {/* SECTION 9: PRICING (Light) */}
-      <section className="py-24 sm:py-32 px-4 bg-white text-brand-text">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-5xl font-bold">One plan. Full access. No confusion.</h2>
-          <p className="mt-6 text-lg text-brand-text-muted">Everything you need to grow your local business—no feature gates, no tier confusion.</p>
-          <div className="mt-16 bg-white p-8 sm:p-12 rounded-2xl border-2 border-accent-purple shadow-2xl shadow-accent-purple/20 glow-card glow-card-rounded-2xl">
-            <h3 className="text-2xl font-bold text-brand-text">Full JetSuite Access</h3>
-            <p className="mt-4 text-6xl sm:text-7xl font-extrabold text-brand-text">$149<span className="text-2xl font-medium text-brand-text-muted">/month</span></p>
-            <ul className="mt-8 space-y-4 max-w-sm mx-auto text-left text-brand-text-muted">
-              <li className="flex items-center"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 flex-shrink-0" /> JetViz website analyzer</li>
-              <li className="flex items-center"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 flex-shrink-0" /> Jet Local Optimizer</li>
-              <li className="flex items-center"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 flex-shrink-0" /> Growth Score tracking</li>
-              <li className="flex items-center"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 flex-shrink-0" /> Weekly action plans</li>
-              <li className="flex items-center"><CheckCircleIcon className="w-6 h-6 text-accent-cyan mr-3 flex-shrink-0" /> 1 business profile & 1 team member</li>
-            </ul>
-            <button onClick={() => navigate('/pricing')} className="mt-10 w-full sm:w-auto bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-12 rounded-lg transition-opacity duration-300 text-xl shadow-2xl shadow-accent-purple/20">Start Your 1st Business Profile</button>
-            <p className="mt-4 text-sm text-gray-500">Free tools available—no credit card required to try</p>
-          </div>
-          <h3 className="mt-16 text-2xl font-bold text-brand-text">Scale as you grow</h3>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-gray-50 p-8 rounded-xl border border-gray-200 glow-card glow-card-rounded-xl"><h4 className="text-lg font-bold text-brand-text">Additional Businesses</h4><p className="text-4xl font-bold text-brand-text mt-2">+$49<span className="text-lg font-medium text-brand-text-muted">/mo</span></p><p className="text-brand-text-muted mt-2">Perfect for multi-location or agencies.</p></div>
-            <div className="bg-gray-50 p-8 rounded-xl border border-gray-200 glow-card glow-card-rounded-xl"><h4 className="text-lg font-bold text-brand-text">Additional Team Members</h4><p className="text-4xl font-bold text-brand-text mt-2">+$15<span className="text-lg font-medium text-brand-text-muted">/mo</span></p><p className="text-brand-text-muted mt-2">Give your team access to collaborate.</p></div>
+
+      {/* 3. VALUE PROPOSITION GRID */}
+      <section className="py-24 px-4 bg-slate-900">
+        <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-white">Everything You Need to Dominate Local Search</h2>
+            </div>
+            
+            <div className="grid md:grid-cols-4 gap-6">
+                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-blue-500 shadow-xl">
+                    <div className="mb-4"><JetVizIcon className="w-10 h-10 text-blue-500"/></div>
+                    <h3 className="text-xl font-bold text-white mb-2">Analyze & Diagnose</h3>
+                    <p className="text-gray-400 text-sm">Audit your Google Business Profile, website, and competitors instantly.</p>
+                </div>
+                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-teal-400 shadow-xl">
+                    <div className="mb-4"><JetCreateIcon className="w-10 h-10 text-teal-400"/></div>
+                    <h3 className="text-xl font-bold text-white mb-2">Create & Publish</h3>
+                    <p className="text-gray-400 text-sm">AI generates your marketing content, images, and ads in seconds.</p>
+                </div>
+                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-purple-500 shadow-xl">
+                    <div className="mb-4"><ChatBubbleLeftRightIcon className="w-10 h-10 text-purple-500"/></div>
+                    <h3 className="text-xl font-bold text-white mb-2">Engage & Convert</h3>
+                    <p className="text-gray-400 text-sm">Manage reviews, capture leads, and build trust automatically.</p>
+                </div>
+                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-pink-500 shadow-xl">
+                    <div className="mb-4"><RocketLaunchIcon className="w-10 h-10 text-pink-500"/></div>
+                    <h3 className="text-xl font-bold text-white mb-2">Execute & Grow</h3>
+                    <p className="text-gray-400 text-sm">Weekly prioritized action plan that actually gets done.</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* 4. FEATURES SHOWCASE */}
+      <section className="py-24 px-4 bg-[#0B1121]">
+        <div className="max-w-6xl mx-auto space-y-20">
+            {/* Foundation Tools */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="order-2 md:order-1">
+                    <span className="text-blue-500 font-bold uppercase tracking-wider text-sm">Foundation</span>
+                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Build a Rock-Solid Presence</h3>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetBizIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetBiz</h4>
+                                <p className="text-gray-400 text-sm">Optimize your Google Business Profile for higher ranking.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetVizIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetViz</h4>
+                                <p className="text-gray-400 text-sm">Deep-dive AI website audit with specific technical fixes.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetKeywordsIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetKeywords</h4>
+                                <p className="text-gray-400 text-sm">Find profitable local search terms your competitors missed.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
+                     <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full"></div>
+                     <div className="relative z-10 space-y-4">
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                            <span className="text-white font-medium">Google Profile Health</span>
+                            <span className="text-green-400 font-bold">94/100</span>
+                        </div>
+                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                            <span className="text-white font-medium">Website Performance</span>
+                            <span className="text-yellow-400 font-bold">72/100</span>
+                        </div>
+                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                            <span className="text-white font-medium">Keyword Opportunities</span>
+                            <span className="text-blue-400 font-bold">12 Found</span>
+                        </div>
+                     </div>
+                </div>
+            </div>
+
+            {/* Creation Tools */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
+                     <div className="absolute -right-20 -top-20 bg-teal-500/20 w-64 h-64 blur-3xl rounded-full"></div>
+                     <div className="relative z-10 grid grid-cols-2 gap-4">
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center">
+                            <div className="text-center">
+                                <JetCreateIcon className="w-8 h-8 text-teal-400 mx-auto mb-2"/>
+                                <span className="text-xs text-gray-400 block">Social Post</span>
+                            </div>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center">
+                             <div className="text-center">
+                                <JetImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2"/>
+                                <span className="text-xs text-gray-400 block">Ad Creative</span>
+                            </div>
+                        </div>
+                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center col-span-2">
+                             <div className="text-center w-full">
+                                <div className="h-2 w-3/4 bg-slate-800 rounded mx-auto mb-2"></div>
+                                <div className="h-2 w-1/2 bg-slate-800 rounded mx-auto"></div>
+                                <span className="text-xs text-gray-500 block mt-2">AI Generating...</span>
+                            </div>
+                        </div>
+                     </div>
+                </div>
+                <div>
+                    <span className="text-teal-400 font-bold uppercase tracking-wider text-sm">Creation</span>
+                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Never Run Out of Content</h3>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetCreateIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetCreate ⭐</h4>
+                                <p className="text-gray-400 text-sm">AI creative director that writes your posts, emails, and ads.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetImageIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetImage</h4>
+                                <p className="text-gray-400 text-sm">Generate custom, on-brand images instantly.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Engagement Tools */}
+             <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="order-2 md:order-1">
+                    <span className="text-purple-500 font-bold uppercase tracking-wider text-sm">Engagement</span>
+                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Turn Visitors into Loyal Customers</h3>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetReplyIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetReply</h4>
+                                <p className="text-gray-400 text-sm">AI-crafted responses to all your reviews in one click.</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetTrustIcon className="w-6 h-6 text-white"/></div>
+                            <div>
+                                <h4 className="font-bold text-white">JetTrust</h4>
+                                <p className="text-gray-400 text-sm">Showcase your best reviews on your website to build trust.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
+                     <div className="space-y-4">
+                        <div className="bg-white text-slate-900 p-4 rounded-xl rounded-tl-none shadow-lg max-w-[90%]">
+                            <p className="text-sm font-semibold mb-1">Five Star Review!</p>
+                            <p className="text-xs text-slate-600">"The service was incredible. Highly recommend to everyone in the area!"</p>
+                        </div>
+                         <div className="bg-blue-600 text-white p-4 rounded-xl rounded-tr-none shadow-lg max-w-[90%] ml-auto">
+                            <p className="text-xs text-blue-100 mb-1">AI Suggested Reply:</p>
+                            <p className="text-sm">"Thank you so much! We love serving our local community. Hope to see you again soon!"</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* 5. HOW IT WORKS */}
+      <section className="py-24 px-4 bg-slate-900">
+         <div className="max-w-6xl mx-auto text-center">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-16">Your Path to More Customers in 10 Minutes/Day</h2>
+            
+            <div className="grid md:grid-cols-3 gap-8 relative">
+                 {/* Connecting Line (Desktop) */}
+                <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 -z-10"></div>
+                
+                <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                    <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-blue-600/30 text-2xl font-bold ring-8 ring-brand-darker">
+                        <BoltIcon className="w-8 h-8"/>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">1. Connect & Analyze</h3>
+                    <p className="text-gray-400">Connect your business. Our AI audits everything in minutes.</p>
+                </div>
+                
+                 <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                    <div className="bg-teal-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-teal-500/30 text-2xl font-bold ring-8 ring-brand-darker">
+                        <CheckCircleIcon className="w-8 h-8"/>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">2. Execute Tasks</h3>
+                    <p className="text-gray-400">Complete 3-5 simple weekly actions from your Growth Plan.</p>
+                </div>
+                
+                 <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                    <div className="bg-purple-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-purple-500/30 text-2xl font-bold ring-8 ring-brand-darker">
+                        <GrowthScoreIcon className="w-8 h-8"/>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-3">3. Track Growth</h3>
+                    <p className="text-gray-400">Watch your Google ranking, reviews, and leads increase.</p>
+                </div>
+            </div>
+         </div>
+      </section>
+
+      {/* 6. PRICING & VALUE SHOCK */}
+      <section className="py-24 px-4 bg-[#0B1121]">
+        <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Replace $15,000/Month in Services</h2>
+                <p className="text-xl text-gray-400">Get the power of an entire agency for less than the cost of lunch.</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+                {/* Comparison Table */}
+                <div className="bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
+                    <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+                        <h3 className="text-lg font-bold text-white">The Old Way (Hiring Pros)</h3>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span className="text-gray-400">Web Design Agency</span>
+                            <span className="text-white font-mono">$2,000-5,000/mo</span>
+                        </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span className="text-gray-400">Graphic Designer</span>
+                            <span className="text-white font-mono">$1,000-3,000/mo</span>
+                        </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span className="text-gray-400">SEO Consultant</span>
+                            <span className="text-white font-mono">$1,000-3,000/mo</span>
+                        </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                            <span className="text-gray-400">Content Writer</span>
+                            <span className="text-white font-mono">$500-2,000/mo</span>
+                        </div>
+                         <div className="flex justify-between items-center py-2">
+                            <span className="text-gray-400">Review Management</span>
+                            <span className="text-white font-mono">$200-800/mo</span>
+                        </div>
+                        <div className="bg-red-900/20 p-4 rounded-lg flex justify-between items-center mt-4">
+                            <span className="text-red-200 font-bold">Total Cost</span>
+                            <span className="text-red-300 font-bold font-mono text-xl">$5,000 - $16,000/mo</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* JetSuite Pricing Card */}
+                <div className="relative bg-gradient-to-b from-blue-900 to-slate-900 rounded-2xl border border-blue-500 shadow-2xl shadow-blue-900/50 p-8 text-center overflow-hidden transform md:scale-105">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-teal-400"></div>
+                    <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">BEST VALUE</div>
+                    
+                    <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
+                    <div className="flex items-baseline justify-center my-8">
+                        <span className="text-6xl font-extrabold text-white">$149</span>
+                        <span className="text-xl text-gray-400 ml-2">/month</span>
+                    </div>
+                    
+                    <ul className="text-left space-y-4 mb-8 max-w-xs mx-auto text-gray-300">
+                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
+                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Unlimited Usage</li>
+                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> No Contracts</li>
+                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> 30-Day Results Guarantee</li>
+                    </ul>
+                    
+                    <button onClick={() => navigate('/login')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4">
+                        Start Free Trial →
+                    </button>
+                    <p className="text-xs text-gray-500">14-day free trial • No credit card required</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
+      {/* 7. SOCIAL PROOF */}
+      <section className="py-24 px-4 bg-brand-darker">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl sm:text-5xl font-bold text-white text-center mb-16">What Local Business Owners Are Saying</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <TestimonialCard 
+                quote="JetSuite found issues three other agencies missed. Finally have a clear path forward." 
+                author="Mark P." 
+                role="Plumbing Contractor" 
+            />
+            <TestimonialCard 
+                quote="The weekly tasks keep me focused. My Google ranking has already jumped from page 3 to page 1." 
+                author="Dr. Sarah K." 
+                role="Dentist" 
+            />
+            <TestimonialCard 
+                quote="I love being able to track my own progress with the Growth Score. It's motivating and simple." 
+                author="David L." 
+                role="Real Estate Agent" 
+            />
           </div>
         </div>
       </section>
 
-      {/* SECTION 10: TESTIMONIALS (Dark) */}
-      <section className="py-24 sm:py-32 px-4 bg-brand-darker">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl sm:text-5xl font-bold text-white text-center">What local business owners are saying</h2>
-          <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <TestimonialCard quote="JetSuite found issues three other agencies missed. Finally have a clear path forward." author="Mark P." role="Plumbing Contractor, Loganville, GA" />
-            <TestimonialCard quote="The weekly tasks keep me focused. My Google ranking has already jumped from page 3 to page 1." author="Dr. Sarah K." role="Dentist, Monroe, GA" />
-            <TestimonialCard quote="I love being able to track my own progress with the Growth Score. It's motivating and simple." author="David L." role="Real Estate Agent, Winder, GA" />
-          </div>
+      {/* 8. GROWTH SCORE */}
+      <section className="py-24 px-4 bg-slate-900 border-y border-slate-800">
+        <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Track Your Progress With One Number</h2>
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+                Your Growth Score (0-99) measures your online presence strength and shows exactly what to improve next.
+            </p>
+            
+            <div className="relative inline-block">
+                 <div className="w-64 h-64 rounded-full border-[12px] border-slate-800 flex items-center justify-center relative">
+                    <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-l-transparent rotate-45"></div>
+                    <div className="text-center">
+                        <span className="block text-7xl font-bold text-white">82</span>
+                        <span className="block text-sm text-gray-400 uppercase tracking-widest mt-2">Excellent</span>
+                    </div>
+                 </div>
+            </div>
         </div>
       </section>
-      
-      {/* SECTION 11: FAQ (Light) */}
-      <section className="py-24 sm:py-32 bg-white text-brand-text">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-3xl sm:text-5xl font-bold text-center">Frequently Asked Questions</h2>
-          <div className="mt-16 space-y-4">
+
+      {/* 9. FAQ */}
+      <section className="py-24 px-4 bg-brand-darker">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-5xl font-bold text-center text-white mb-16">Frequently Asked Questions</h2>
+          <div className="space-y-4">
             {faqs.map((faq, i) => <FaqItem key={i} question={faq.q} answer={faq.a} />)}
           </div>
         </div>
       </section>
 
-      {/* SECTION 12: FINAL CTA (Dark) */}
-      <section className="py-24 sm:py-32 px-4 text-center bg-brand-darker">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white">Ready to stop guessing and start growing?</h2>
-          <p className="mt-6 max-w-xl mx-auto text-lg text-gray-400">Get your free website and Google listing analysis in under 2 minutes.</p>
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20">
-              Start Free Analysis
-            </button>
-            <button className="w-full sm:w-auto border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-300 text-lg">
-              Talk to Our Team
-            </button>
+      {/* 10. FINAL CTA */}
+      <section className="py-24 sm:py-32 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker relative overflow-hidden">
+          {/* Background Effects */}
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+          
+          <div className="relative z-10 max-w-4xl mx-auto">
+              <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
+              <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+                  Join 360+ local businesses growing with JetSuite. Try it risk-free.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
+                  Get Started Free for 14 Days
+                </button>
+                <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
+                  Schedule a Demo
+                </button>
+              </div>
           </div>
       </section>
+      
     </div>
   );
 };
