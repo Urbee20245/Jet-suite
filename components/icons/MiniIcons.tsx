@@ -275,3 +275,22 @@ export const HandThumbDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props
     <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25a3 3 0 003-3v-3.75a3 3 0 00-3-3H7.5a3 3 0 00-3 3v3.75a3 3 0 003 3zM15.75 3a4.5 4.5 0 00-1.41 5.64l4.37 4.17-.659 1.583a2.25 2.25 0 01-2.25 2.25v2.183c0 1.321.966 2.433 2.322 2.433h.25s-.75-2.433-1.875-2.433V15a2.25 2.25 0 012.25 2.25h3.75a3 3 0 003-3V7.38a2.25 2.25 0 00-2.25-2.25h-3.75z" />
   </svg>
 );
+
+export const LayoutIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h18v18H3V3z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v18M3 9h18" />
+  </svg>
+);
+
+export const SmartphoneIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+  </svg>
+);
+
+export const PaletteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.435-.435 1.133-.435 1.568 0l3.72 3.72a1.105 1.105 0 001.568 0l2.88-2.88c.435-.435.435-1.133 0-1.568l-3.72-3.72a1.105 1.105 0 00-1.568 0l-2.88 2.88c-.435.435-1.133.435-1.568 0l-3.72-3.72a1.105 1.105 0 00-1.568 0l-2.88 2.88c-.435.435-.435 1.133 0 1.568l3.72 3.72a1.105 1.105 0 001.568 0z" />
+  </svg>
+);
