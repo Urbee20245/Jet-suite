@@ -168,7 +168,8 @@ const App: React.FC = () => {
       if (!currentPath.startsWith('/app') && 
           !currentPath.startsWith('/billing') && 
           !currentPath.startsWith('/pricing') &&
-          !currentPath.startsWith('/account')) {
+          !currentPath.startsWith('/account') &&
+          !currentPath.startsWith('/demo')) {
         navigate('/app');
       }
     } else {
