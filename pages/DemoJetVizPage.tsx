@@ -10,7 +10,6 @@ interface DemoJetVizPageProps {
 export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const handleAnalyze = async (e: React.FormEvent) => {
@@ -19,14 +18,6 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
     
     setIsAnalyzing(true);
     setResult(null);
-    setProgress(0);
-
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 99) return 99;
-        return prev + 1;
-      });
-    }, 100);
     
     try {
       const [data] = await Promise.all([
@@ -37,12 +28,10 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
         new Promise(resolve => setTimeout(resolve, 10000))
       ]);
       setResult(data);
-      setProgress(100);
     } catch (err) {
       console.error("Analysis failed", err);
       alert("Analysis failed. Please check the URL and try again.");
     } finally {
-      clearInterval(timer);
       setIsAnalyzing(false);
     }
   };
@@ -50,7 +39,6 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
   const resetAnalysis = () => {
     setResult(null);
     setUrl('');
-    setProgress(0);
   };
 
   const getScoreColor = (score: number) => {
@@ -62,23 +50,13 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
   if (isAnalyzing) {
     return (
       <div className="min-h-screen bg-brand-dark flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center">
-          <div className="mb-8 relative">
-            <div className="w-24 h-24 bg-accent-purple/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
-              <EyeIcon className="w-12 h-12 text-accent-purple" />
-            </div>
-            <div className="absolute inset-0 border-4 border-accent-purple/30 rounded-full animate-[spin_3s_linear_infinite] border-t-accent-purple"></div>
+        <div className="w-full text-center py-12 px-4">
+          <div className="w-[60px] h-[60px] border-4 border-slate-700 border-t-blue-600 rounded-full mx-auto mb-8 animate-spin"></div>
+          <h3 className="text-white mb-4 text-xl font-bold">Analyzing Your Website...</h3>
+          <p className="text-slate-300 mb-8">Scanning performance, SEO, and design elements</p>
+          <div className="w-full max-w-[300px] h-1 bg-slate-700 rounded-sm mx-auto">
+            <div className="h-full bg-blue-600 rounded-sm animate-[fill_10s_linear_forwards]"></div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Analyzing Visual Experience...</h2>
-          <p className="text-gray-400 mb-8">Checking aesthetics, layout structure, and mobile responsiveness.</p>
-          
-          <div className="bg-slate-800 rounded-full h-4 overflow-hidden border border-slate-700">
-            <div 
-              className="bg-gradient-to-r from-accent-purple to-accent-pink h-full transition-all duration-100 ease-linear"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <p className="text-accent-purple font-mono mt-4">{progress}% Complete</p>
         </div>
       </div>
     );
