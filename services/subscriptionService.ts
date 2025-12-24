@@ -48,7 +48,14 @@ export async function checkSubscriptionAccess(userId: string): Promise<{
     });
     
     const status = billingAccount.subscription_status as SubscriptionStatus;
-    
+        // ✅ ADMIN CHECK: Admins bypass ALL subscription checks
+if (billingAccount.is_admin === true) {
+  console.log('[subscriptionService] 🔑 ADMIN ACCESS GRANTED:', userId);
+  return {
+    hasAccess: true,
+    status: 'active',
+  };
+}
     // Only 'active' and 'trialing' statuses grant access
     if (status === 'active' || status === 'trialing') {
       return {
