@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { PricingCalculator } from '../components/marketing/PricingCalculator';
-import { CheckCircleIcon, MinusIcon, PlusIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, MinusIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { createCheckoutSession } from '../services/stripeService';
 import { Loader } from '../components/Loader';
 
@@ -9,9 +8,30 @@ interface PricingPageProps {
   navigate: (path: string) => void;
 }
 
+const PricingFaqItem = ({ question, answer, id }: { question: string, answer: string, id?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div id={id} className="border-b border-slate-700 last:border-0">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center py-4 text-left focus:outline-none"
+            >
+                <span className="font-semibold text-white">{question}</span>
+                {isOpen 
+                    ? <ChevronUpIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    : <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                }
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-48 opacity-100 pb-4' : 'max-h-0 opacity-0'}`}>
+                <p className="text-gray-400 text-sm leading-relaxed">{answer}</p>
+            </div>
+        </div>
+    );
+};
+
 export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const [businesses, setBusinesses] = useState(1);
- const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
+  const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -28,7 +48,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   };
 
   const handleSeatsChange = (delta: number) => {
- setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
+    setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
   };
 
   const handleCheckout = async () => {
@@ -51,7 +71,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
       const { url } = await createCheckoutSession({
         userId: userEmail,
         email: userEmail,
-       seatCount: seats, // seats already represents additional seats beyond the 1 included
+        seatCount: seats, // seats already represents additional seats beyond the 1 included
         additionalBusinessCount: additionalBusinessCount,
       });
 
@@ -63,6 +83,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
       setIsCheckingOut(false);
     }
   };
+
   return (
     <div className="py-20 sm:py-28 px-4">
       <div className="max-w-5xl mx-auto">
@@ -209,27 +230,27 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                   </div>
                 )}
                <div className="flex justify-between text-gray-300">
-  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
-  <span>${seatCost * seats}/mo</span>
-</div>
-{seats === 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• 1 seat included in base plan</span>
-    <span>$0</span>
-  </div>
-)}
-{seats > 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• Included (1 seat)</span>
-    <span>$0</span>
-  </div>
-)}
-{seats > 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• Additional ({seats} × ${seatCost})</span>
-    <span>${seatCost * seats}</span>
-  </div>
-)}
+                  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
+                  <span>${seatCost * seats}/mo</span>
+                </div>
+                {seats === 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• 1 seat included in base plan</span>
+                    <span>$0</span>
+                  </div>
+                )}
+                {seats > 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• Included (1 seat)</span>
+                    <span>$0</span>
+                  </div>
+                )}
+                {seats > 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• Additional ({seats} × ${seatCost})</span>
+                    <span>${seatCost * seats}</span>
+                  </div>
+                )}
                 <div className="border-t border-slate-700 pt-2 mt-2">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-white text-lg">Monthly Total</span>
@@ -264,7 +285,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">
-              Cancel anytime. No refunds.
+              30-day money-back guarantee • Cancel anytime
             </p>
           </div>
 
@@ -286,6 +307,30 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             <PricingCalculator />
           </div>
         </div>
+
+        {/* 3 Strategic FAQ Additions */}
+        <div className="mt-20 max-w-2xl mx-auto">
+            <h3 className="text-2xl font-bold text-white text-center mb-8">Common Questions</h3>
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
+                <PricingFaqItem 
+                    question="Can I upgrade or downgrade my plan later?" 
+                    answer="Yes, you can add or remove businesses and team seats at any time from your dashboard. Changes are prorated automatically." 
+                />
+                <PricingFaqItem 
+                    id="refunds"
+                    question="What is your refund policy?" 
+                    answer="We offer a 30-day money-back guarantee. If you're not satisfied within the first month, contact support for a full refund. After 30 days, you can cancel anytime to stop future billing." 
+                />
+                <PricingFaqItem 
+                    question="Do I need to sign a long-term contract?" 
+                    answer="No contracts. JetSuite is a month-to-month subscription. We believe you should stay because you love the product, not because you're locked in." 
+                />
+            </div>
+            <p className="text-center text-gray-500 mt-6 text-sm">
+                Have more questions? <button onClick={() => navigate('/faq')} className="text-blue-400 hover:text-blue-300 underline">Visit our full FAQ page</button>
+            </p>
+        </div>
+
       </div>
     </div>
   );
