@@ -244,3 +244,34 @@ export const CreditCardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
   </svg>
 );
+
+export const TerminalIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />
+  </svg>
+);
+
+export const ZapIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+  </svg>
+);
+
+export const TrendingUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+  </svg>
+);
+
+export const HandThumbUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6.633 10.5c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a2.25 2.25 0 012.25 2.25V7.38a2.25 2.25 0 114.5 0v2.183c0 1.321-.966 2.433-2.322 2.433h-.25s.75-2.433 1.875-2.433V15a2.25 2.25 0 01-2.25 2.25h-3.75a4.5 4.5 0 00-1.41-5.64l4.37-4.17z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.125 21.75v-3.75a3 3 0 00-3-3H4.125a3 3 0 00-3 3v3.75a3 3 0 003 3h3a3 3 0 003-3z" />
+  </svg>
+);
+
+export const HandThumbDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25a3 3 0 003-3v-3.75a3 3 0 00-3-3H7.5a3 3 0 00-3 3v3.75a3 3 0 003 3zM15.75 3a4.5 4.5 0 00-1.41 5.64l4.37 4.17-.659 1.583a2.25 2.25 0 01-2.25 2.25v2.183c0 1.321.966 2.433 2.322 2.433h.25s-.75-2.433-1.875-2.433V15a2.25 2.25 0 012.25 2.25h3.75a3 3 0 003-3V7.38a2.25 2.25 0 00-2.25-2.25h-3.75z" />
+  </svg>
+);
