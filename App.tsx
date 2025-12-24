@@ -164,7 +164,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isLoggedIn) {
       // If the user logs in, redirect them to the app.
-      if (!currentPath.startsWith('/app') && !currentPath.startsWith('/billing')) {
+      // Allow /pricing and /account so users can manage subscriptions
+      if (!currentPath.startsWith('/app') && 
+          !currentPath.startsWith('/billing') && 
+          !currentPath.startsWith('/pricing') &&
+          !currentPath.startsWith('/account')) {
         navigate('/app');
       }
     } else {
