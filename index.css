@@ -84,3 +84,18 @@
     opacity: 0;
   }
 }
+
+/* Force all text in audit results to be visible */
+.score-number, .score-label, .metric-value, .metric-target, 
+.vital-item, .issue-item, .audit-result, .analysis-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Ensure score cards have dark backgrounds */
+.score-card, .result-box, .metric-container {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+}

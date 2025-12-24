@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, EyeIcon, LayoutIcon, SmartphoneIcon, PaletteIcon } from '../components/icons/MiniIcons';
 import { AnalyzerService } from '../services/analyzerService';
 import type { AnalysisResult } from '../types';
@@ -10,6 +10,7 @@ interface DemoJetVizPageProps {
 export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
   const [url, setUrl] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const handleAnalyze = async (e: React.FormEvent) => {
@@ -18,17 +19,30 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
     
     setIsAnalyzing(true);
     setResult(null);
+    setProgress(0);
+
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 99) return 99;
+        return prev + 1;
+      });
+    }, 100);
     
     try {
-      const data = await AnalyzerService.analyzeWebsite({
-        websiteUrl: url,
-        industry: 'general'
-      });
+      const [data] = await Promise.all([
+        AnalyzerService.analyzeWebsite({
+          websiteUrl: url,
+          industry: 'general'
+        }),
+        new Promise(resolve => setTimeout(resolve, 10000))
+      ]);
       setResult(data);
+      setProgress(100);
     } catch (err) {
       console.error("Analysis failed", err);
       alert("Analysis failed. Please check the URL and try again.");
     } finally {
+      clearInterval(timer);
       setIsAnalyzing(false);
     }
   };
@@ -36,6 +50,7 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
   const resetAnalysis = () => {
     setResult(null);
     setUrl('');
+    setProgress(0);
   };
 
   const getScoreColor = (score: number) => {
@@ -43,6 +58,31 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
     if (score >= 60) return 'text-yellow-400';
     return 'text-red-400';
   };
+
+  if (isAnalyzing) {
+    return (
+      <div className="min-h-screen bg-brand-dark flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center">
+          <div className="mb-8 relative">
+            <div className="w-24 h-24 bg-accent-purple/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+              <EyeIcon className="w-12 h-12 text-accent-purple" />
+            </div>
+            <div className="absolute inset-0 border-4 border-accent-purple/30 rounded-full animate-[spin_3s_linear_infinite] border-t-accent-purple"></div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Analyzing Visual Experience...</h2>
+          <p className="text-gray-400 mb-8">Checking aesthetics, layout structure, and mobile responsiveness.</p>
+          
+          <div className="bg-slate-800 rounded-full h-4 overflow-hidden border border-slate-700">
+            <div 
+              className="bg-gradient-to-r from-accent-purple to-accent-pink h-full transition-all duration-100 ease-linear"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="text-accent-purple font-mono mt-4">{progress}% Complete</p>
+        </div>
+      </div>
+    );
+  }
 
   if (result) {
     const aesthetic = Math.round((100 - (result.coreWebVitals.cls * 100)) * 0.6 + result.mobileScore.score * 0.4);
@@ -52,7 +92,7 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
     const overall = Math.round((aesthetic + structure + mobile + credibility) / 4);
 
     return (
-      <div className="min-h-screen bg-brand-dark py-20">
+      <div className="min-h-screen bg-brand-dark py-20 audit-result">
         <div className="max-w-7xl mx-auto px-6">
           <button 
             onClick={resetAnalysis}
@@ -67,98 +107,98 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
               <EyeIcon className="w-4 h-4" />
               Analysis Complete
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4">
+            <h1 className="text-4xl font-bold text-white mb-4 score-number">
               Visual Analysis for <span className="text-accent-purple">{new URL(result.websiteUrl).hostname}</span>
             </h1>
-            <p className="text-gray-400 max-w-2xl mx-auto">
+            <p className="text-gray-400 max-w-2xl mx-auto score-label">
               Here's how your website looks to visitors. Unlock detailed recommendations with JetSuite.
             </p>
           </div>
 
           {/* Score Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
-            <div className="bg-brand-card border border-slate-700 rounded-xl p-6">
+            <div className="bg-brand-card border border-slate-700 rounded-xl p-6 score-card">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm font-semibold">Overall</span>
+                <span className="text-gray-400 text-sm font-semibold score-label">Overall</span>
                 <EyeIcon className="w-5 h-5 text-accent-cyan" />
               </div>
-              <div className={`text-4xl font-bold ${getScoreColor(overall)} mb-2`}>{overall}</div>
-              <div className="text-xs text-gray-500">Design Score</div>
+              <div className={`text-4xl font-bold ${getScoreColor(overall)} mb-2 score-number`}>{overall}</div>
+              <div className="text-xs text-gray-500 metric-target">Design Score</div>
             </div>
 
-            <div className="bg-brand-card border border-slate-700 rounded-xl p-6">
+            <div className="bg-brand-card border border-slate-700 rounded-xl p-6 score-card">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm font-semibold">Aesthetic</span>
+                <span className="text-gray-400 text-sm font-semibold score-label">Aesthetic</span>
                 <PaletteIcon className="w-5 h-5 text-accent-purple" />
               </div>
-              <div className={`text-4xl font-bold ${getScoreColor(aesthetic)} mb-2`}>{aesthetic}</div>
-              <div className="text-xs text-gray-500">Visual Appeal</div>
+              <div className={`text-4xl font-bold ${getScoreColor(aesthetic)} mb-2 score-number`}>{aesthetic}</div>
+              <div className="text-xs text-gray-500 metric-target">Visual Appeal</div>
             </div>
 
-            <div className="bg-brand-card border border-slate-700 rounded-xl p-6">
+            <div className="bg-brand-card border border-slate-700 rounded-xl p-6 score-card">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm font-semibold">Structure</span>
+                <span className="text-gray-400 text-sm font-semibold score-label">Structure</span>
                 <LayoutIcon className="w-5 h-5 text-accent-pink" />
               </div>
-              <div className={`text-4xl font-bold ${getScoreColor(structure)} mb-2`}>{structure}</div>
-              <div className="text-xs text-gray-500">SEO Structure</div>
+              <div className={`text-4xl font-bold ${getScoreColor(structure)} mb-2 score-number`}>{structure}</div>
+              <div className="text-xs text-gray-500 metric-target">SEO Structure</div>
             </div>
 
-            <div className="bg-brand-card border border-slate-700 rounded-xl p-6">
+            <div className="bg-brand-card border border-slate-700 rounded-xl p-6 score-card">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm font-semibold">Mobile</span>
+                <span className="text-gray-400 text-sm font-semibold score-label">Mobile</span>
                 <SmartphoneIcon className="w-5 h-5 text-green-400" />
               </div>
-              <div className={`text-4xl font-bold ${getScoreColor(mobile)} mb-2`}>{mobile}</div>
-              <div className="text-xs text-gray-500">Mobile Ready</div>
+              <div className={`text-4xl font-bold ${getScoreColor(mobile)} mb-2 score-number`}>{mobile}</div>
+              <div className="text-xs text-gray-500 metric-target">Mobile Ready</div>
             </div>
 
-            <div className="bg-brand-card border border-slate-700 rounded-xl p-6">
+            <div className="bg-brand-card border border-slate-700 rounded-xl p-6 score-card">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-400 text-sm font-semibold">Trust</span>
+                <span className="text-gray-400 text-sm font-semibold score-label">Trust</span>
                 <EyeIcon className="w-5 h-5 text-blue-400" />
               </div>
-              <div className={`text-4xl font-bold ${getScoreColor(credibility)} mb-2`}>{credibility}</div>
-              <div className="text-xs text-gray-500">Credibility</div>
+              <div className={`text-4xl font-bold ${getScoreColor(credibility)} mb-2 score-number`}>{credibility}</div>
+              <div className="text-xs text-gray-500 metric-target">Credibility</div>
             </div>
           </div>
 
           {/* Core Web Vitals */}
-          <div className="bg-brand-card border border-slate-700 rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Core Web Vitals</h2>
+          <div className="bg-brand-card border border-slate-700 rounded-xl p-8 mb-8 score-card">
+            <h2 className="text-2xl font-bold text-white mb-6 score-number">Core Web Vitals</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <div className="text-sm text-gray-400 mb-2">Largest Contentful Paint</div>
-                <div className="text-3xl font-bold text-white">{result.coreWebVitals.lcp.toFixed(2)}s</div>
-                <div className="text-xs text-gray-500 mt-1">Target: &lt; 2.5s</div>
+              <div className="vital-item">
+                <div className="text-sm text-gray-400 mb-2 score-label">Largest Contentful Paint</div>
+                <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.lcp.toFixed(2)}s</div>
+                <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 2.5s</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-400 mb-2">First Input Delay</div>
-                <div className="text-3xl font-bold text-white">{result.coreWebVitals.fid.toFixed(0)}ms</div>
-                <div className="text-xs text-gray-500 mt-1">Target: &lt; 100ms</div>
+              <div className="vital-item">
+                <div className="text-sm text-gray-400 mb-2 score-label">First Input Delay</div>
+                <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.fid.toFixed(0)}ms</div>
+                <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 100ms</div>
               </div>
-              <div>
-                <div className="text-sm text-gray-400 mb-2">Cumulative Layout Shift</div>
-                <div className="text-3xl font-bold text-white">{result.coreWebVitals.cls.toFixed(3)}</div>
-                <div className="text-xs text-gray-500 mt-1">Target: &lt; 0.1</div>
+              <div className="vital-item">
+                <div className="text-sm text-gray-400 mb-2 score-label">Cumulative Layout Shift</div>
+                <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.cls.toFixed(3)}</div>
+                <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 0.1</div>
               </div>
             </div>
           </div>
 
           {/* Top Issues */}
-          <div className="bg-brand-card border border-slate-700 rounded-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Top Issues to Fix</h2>
+          <div className="bg-brand-card border border-slate-700 rounded-xl p-8 mb-8 score-card">
+            <h2 className="text-2xl font-bold text-white mb-6 score-number">Top Issues to Fix</h2>
             <div className="space-y-4">
               {result.recommendations.slice(0, 5).map((rec, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 bg-brand-darker rounded-lg border border-slate-700">
+                <div key={i} className="flex items-start gap-4 p-4 bg-brand-darker rounded-lg border border-slate-700 issue-item">
                   <div className={`px-2 py-1 rounded text-xs font-semibold ${
                     rec.priority === 'High' ? 'bg-red-500/10 text-red-400' : 'bg-yellow-500/10 text-yellow-400'
                   }`}>
                     {rec.priority}
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-white mb-1">{rec.issue}</div>
-                    <div className="text-sm text-gray-400">{rec.fix}</div>
+                    <div className="font-semibold text-white mb-1 analysis-text">{rec.issue}</div>
+                    <div className="text-sm text-gray-400 analysis-text">{rec.fix}</div>
                   </div>
                 </div>
               ))}
@@ -167,8 +207,8 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
 
           {/* CTA */}
           <div className="bg-gradient-to-r from-accent-purple/10 via-accent-pink/10 to-accent-cyan/10 border border-accent-purple/30 rounded-xl p-8 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">Get the Complete Picture</h2>
-            <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-4 score-number">Get the Complete Picture</h2>
+            <p className="text-gray-300 mb-6 max-w-2xl mx-auto score-label">
               This free tool shows you what's wrong. JetSuite shows you what's wrong AND generates weekly tasks to fix it—automatically.
             </p>
             <button
@@ -198,8 +238,8 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
           </p>
         </div>
 
-        <form onSubmit={handleAnalyze} className="bg-brand-card border border-slate-700 rounded-xl p-8 shadow-2xl">
-          <label className="block text-sm font-semibold text-gray-300 mb-3">
+        <form onSubmit={handleAnalyze} className="bg-brand-card border border-slate-700 rounded-xl p-8 shadow-2xl score-card">
+          <label className="block text-sm font-semibold text-gray-300 mb-3 score-label">
             Enter Your Website URL
           </label>
           <div className="flex gap-4">
@@ -216,20 +256,11 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
               disabled={isAnalyzing}
               className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-lg transition-opacity shadow-lg flex items-center gap-2"
             >
-              {isAnalyzing ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <EyeIcon className="w-5 h-5" />
-                  Analyze Now
-                </>
-              )}
+              <EyeIcon className="w-5 h-5" />
+              Analyze Now
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-3">
+          <p className="text-sm text-gray-500 mt-3 metric-target">
             This demo shows basic design and SEO metrics. Full JetSuite includes detailed recommendations and automated task generation.
           </p>
         </form>
@@ -239,22 +270,22 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
             <div className="w-12 h-12 bg-accent-purple/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <EyeIcon className="w-6 h-6 text-accent-purple" />
             </div>
-            <h3 className="font-semibold text-white mb-2">Visual Analysis</h3>
-            <p className="text-sm text-gray-400">See your site through visitor eyes</p>
+            <h3 className="font-semibold text-white mb-2 score-label">Visual Analysis</h3>
+            <p className="text-sm text-gray-400 metric-target">See your site through visitor eyes</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-accent-pink/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <LayoutIcon className="w-6 h-6 text-accent-pink" />
             </div>
-            <h3 className="font-semibold text-white mb-2">Technical Metrics</h3>
-            <p className="text-sm text-gray-400">Core Web Vitals and SEO scores</p>
+            <h3 className="font-semibold text-white mb-2 score-label">Technical Metrics</h3>
+            <p className="text-sm text-gray-400 metric-target">Core Web Vitals and SEO scores</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-accent-cyan/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <SmartphoneIcon className="w-6 h-6 text-accent-cyan" />
             </div>
-            <h3 className="font-semibold text-white mb-2">Mobile Check</h3>
-            <p className="text-sm text-gray-400">Ensure mobile-friendliness</p>
+            <h3 className="font-semibold text-white mb-2 score-label">Mobile Check</h3>
+            <p className="text-sm text-gray-400 metric-target">Ensure mobile-friendliness</p>
           </div>
         </div>
       </div>
