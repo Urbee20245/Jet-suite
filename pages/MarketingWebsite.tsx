@@ -3,6 +3,7 @@ import React from 'react';
 import { Header } from '../components/marketing/Header';
 import { Footer } from '../components/marketing/Footer';
 import { LandingPage } from './LandingPage';
+import { HowItWorksPage } from './HowItWorksPage';
 import { PricingPage } from './PricingPage';
 import { SavingsPage } from './SavingsPage';
 import { LoginPage } from './LoginPage';
@@ -21,6 +22,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
         switch (currentPath) {
             case '/':
                 return <LandingPage navigate={navigate} />;
+            case '/how-it-works':
+                return <HowItWorksPage navigate={navigate} />;
             case '/pricing':
                 return <PricingPage navigate={navigate} />;
             case '/savings':
