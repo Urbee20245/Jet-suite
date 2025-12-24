@@ -145,17 +145,17 @@ export const DemoJetVizPage: React.FC<DemoJetVizPageProps> = ({ navigate }) => {
           <div className="bg-brand-card border border-slate-700 rounded-xl p-8 mb-8 score-card">
             <h2 className="text-2xl font-bold text-white mb-6 score-number">Core Web Vitals</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="vital-item">
+              <div className="vital-item bg-brand-darker p-4 rounded-lg border border-slate-700">
                 <div className="text-sm text-gray-400 mb-2 score-label">Largest Contentful Paint</div>
                 <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.lcp.toFixed(2)}s</div>
                 <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 2.5s</div>
               </div>
-              <div className="vital-item">
+              <div className="vital-item bg-brand-darker p-4 rounded-lg border border-slate-700">
                 <div className="text-sm text-gray-400 mb-2 score-label">First Input Delay</div>
                 <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.fid.toFixed(0)}ms</div>
                 <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 100ms</div>
               </div>
-              <div className="vital-item">
+              <div className="vital-item bg-brand-darker p-4 rounded-lg border border-slate-700">
                 <div className="text-sm text-gray-400 mb-2 score-label">Cumulative Layout Shift</div>
                 <div className="text-3xl font-bold text-white metric-value">{result.coreWebVitals.cls.toFixed(3)}</div>
                 <div className="text-xs text-gray-500 mt-1 metric-target">Target: &lt; 0.1</div>
