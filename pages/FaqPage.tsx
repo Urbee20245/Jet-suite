@@ -25,34 +25,34 @@ const FaqAccordion = ({ question, answer }: { question: string, answer: string }
     const [feedback, setFeedback] = useState<'yes' | 'no' | null>(null);
 
     return (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-blue-500/50">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-300 hover:border-blue-500/50 shadow-sm">
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full flex justify-between items-center text-left p-6 focus:outline-none"
             >
-                <h3 className="text-lg font-semibold text-white pr-4">{question}</h3>
+                <h3 className="text-lg font-semibold text-slate-900 pr-4">{question}</h3>
                 {isOpen 
-                    ? <ChevronUpIcon className="w-5 h-5 text-blue-400 flex-shrink-0"/> 
-                    : <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0"/>
+                    ? <ChevronUpIcon className="w-5 h-5 text-blue-600 flex-shrink-0"/> 
+                    : <ChevronDownIcon className="w-5 h-5 text-slate-400 flex-shrink-0"/>
                 }
             </button>
             <div 
                 className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
             >
-                <div className="px-6 pb-6 text-gray-300 leading-relaxed border-t border-slate-700 pt-4">
+                <div className="px-6 pb-6 text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
                    <p>{answer}</p>
                    
-                   <div className="mt-4 pt-4 border-t border-slate-700/50 flex items-center gap-4 text-xs text-gray-500">
+                   <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-500">
                        <span>Was this helpful?</span>
                        <button 
                             onClick={(e) => { e.stopPropagation(); setFeedback('yes'); }}
-                            className={`flex items-center gap-1 hover:text-white transition-colors ${feedback === 'yes' ? 'text-green-400' : ''}`}
+                            className={`flex items-center gap-1 hover:text-slate-900 transition-colors ${feedback === 'yes' ? 'text-green-600' : ''}`}
                         >
                            <HandThumbUpIcon className="w-4 h-4"/> Yes
                        </button>
                        <button 
                             onClick={(e) => { e.stopPropagation(); setFeedback('no'); }}
-                            className={`flex items-center gap-1 hover:text-white transition-colors ${feedback === 'no' ? 'text-red-400' : ''}`}
+                            className={`flex items-center gap-1 hover:text-slate-900 transition-colors ${feedback === 'no' ? 'text-red-600' : ''}`}
                         >
                            <HandThumbDownIcon className="w-4 h-4"/> No
                        </button>
@@ -155,36 +155,36 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
   );
 
   return (
-    <div className="bg-brand-darker text-gray-300 font-sans min-h-screen">
+    <div className="bg-white text-slate-600 font-sans min-h-screen">
       
       {/* 1. HERO SECTION */}
-      <section className="relative py-20 px-4 text-center border-b border-slate-800 bg-slate-900/50">
+      <section className="relative py-20 px-4 text-center border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
           <div className="max-w-3xl mx-auto">
-              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-6">Frequently Asked Questions</h1>
-              <p className="text-xl text-gray-400 mb-10">Everything you need to know about JetSuite. Can't find your answer? Contact our support team.</p>
+              <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-6">Frequently Asked Questions</h1>
+              <p className="text-xl text-slate-600 mb-10">Everything you need to know about JetSuite. Can't find your answer? Contact our support team.</p>
               
               {/* Search Bar */}
               <div className="relative max-w-xl mx-auto mb-8">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                      <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" />
                   </div>
                   <input
                       type="text"
                       placeholder="Search questions..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="block w-full pl-11 pr-4 py-4 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg"
+                      className="block w-full pl-11 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg shadow-slate-200/50"
                   />
               </div>
 
               {/* Quick Links */}
               <div className="flex flex-wrap justify-center gap-2 text-sm">
-                  <button onClick={() => setActiveCategory('all')} className={`px-4 py-2 rounded-full transition-colors ${activeCategory === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400 hover:text-white'}`}>All</button>
+                  <button onClick={() => setActiveCategory('all')} className={`px-4 py-2 rounded-full transition-colors ${activeCategory === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`}>All</button>
                   {categories.map(cat => (
                       <button 
                         key={cat.id} 
                         onClick={() => setActiveCategory(cat.id)}
-                        className={`px-4 py-2 rounded-full transition-colors ${activeCategory === cat.id ? 'bg-blue-600 text-white' : 'bg-slate-800 text-gray-400 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-full transition-colors ${activeCategory === cat.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`}
                       >
                           {cat.name}
                       </button>
@@ -202,10 +202,10 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
               return (
                   <div key={cat.id} className="mb-16">
                       <div className="flex items-center gap-3 mb-6">
-                          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                          <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
                               <cat.icon className="w-6 h-6" />
                           </div>
-                          <h2 className="text-2xl font-bold text-white">{cat.name}</h2>
+                          <h2 className="text-2xl font-bold text-slate-900">{cat.name}</h2>
                       </div>
                       <div className="space-y-4">
                           {categoryFaqs.map((faq, index) => (
@@ -218,31 +218,31 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
 
           {filteredFaqs.length === 0 && (
               <div className="text-center py-12">
-                  <p className="text-gray-400 text-lg">No questions found matching "{searchQuery}".</p>
-                  <button onClick={() => setSearchQuery('')} className="mt-4 text-blue-400 hover:text-blue-300 underline">Clear search</button>
+                  <p className="text-slate-500 text-lg">No questions found matching "{searchQuery}".</p>
+                  <button onClick={() => setSearchQuery('')} className="mt-4 text-blue-600 hover:text-blue-500 underline">Clear search</button>
               </div>
           )}
       </section>
 
       {/* 3. POPULAR QUESTIONS HIGHLIGHT */}
-      <section className="py-16 px-4 bg-slate-900 border-y border-slate-800">
+      <section className="py-16 px-4 bg-slate-50 border-y border-slate-200">
           <div className="max-w-5xl mx-auto">
-              <h2 className="text-2xl font-bold text-white text-center mb-10">Most Popular Questions</h2>
+              <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">Most Popular Questions</h2>
               <div className="grid md:grid-cols-3 gap-6">
-                  <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                      <h3 className="font-bold text-white mb-2">How much does it cost?</h3>
-                      <p className="text-blue-400 font-bold text-xl mb-2">$149/month</p>
-                      <p className="text-gray-400 text-sm">Includes everything. No hidden fees or tiered upgrades.</p>
+                  <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <h3 className="font-bold text-slate-900 mb-2">How much does it cost?</h3>
+                      <p className="text-blue-600 font-bold text-xl mb-2">$149/month</p>
+                      <p className="text-slate-500 text-sm">Includes everything. No hidden fees or tiered upgrades.</p>
                   </div>
-                   <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                      <h3 className="font-bold text-white mb-2">How long until I see results?</h3>
-                      <p className="text-green-400 font-bold text-xl mb-2">30-60 Days</p>
-                      <p className="text-gray-400 text-sm">Most users see initial ranking improvements in the first month.</p>
+                   <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <h3 className="font-bold text-slate-900 mb-2">How long until I see results?</h3>
+                      <p className="text-green-600 font-bold text-xl mb-2">30-60 Days</p>
+                      <p className="text-slate-500 text-sm">Most users see initial ranking improvements in the first month.</p>
                   </div>
-                   <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                      <h3 className="font-bold text-white mb-2">Do I need marketing experience?</h3>
-                      <p className="text-purple-400 font-bold text-xl mb-2">No Experience Needed</p>
-                      <p className="text-gray-400 text-sm">Our Growth Plan guides you step-by-step through every task.</p>
+                   <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                      <h3 className="font-bold text-slate-900 mb-2">Do I need marketing experience?</h3>
+                      <p className="text-purple-600 font-bold text-xl mb-2">No Experience Needed</p>
+                      <p className="text-slate-500 text-sm">Our Growth Plan guides you step-by-step through every task.</p>
                   </div>
               </div>
           </div>
@@ -250,37 +250,37 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
 
       {/* 4. STILL HAVE QUESTIONS CTA */}
       <section className="py-24 px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Still have questions?</h2>
+          <h2 className="text-3xl font-bold text-slate-900 mb-6">Still have questions?</h2>
           <div className="flex flex-col md:flex-row justify-center gap-8 max-w-4xl mx-auto">
-              <div className="flex-1 bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors">
-                  <h3 className="text-xl font-bold text-white mb-2">Contact Support</h3>
-                  <p className="text-gray-400 mb-6">Can't find the answer you're looking for? Our team is here to help.</p>
-                  <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+              <div className="flex-1 bg-white p-8 rounded-2xl border border-slate-200 hover:border-blue-500/50 transition-colors shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Contact Support</h3>
+                  <p className="text-slate-600 mb-6">Can't find the answer you're looking for? Our team is here to help.</p>
+                  <button className="w-full bg-slate-100 hover:bg-slate-200 text-slate-900 font-bold py-3 px-6 rounded-lg transition-colors">
                       Email Support
                   </button>
-                  <p className="text-xs text-gray-500 mt-3">Response within 24 hours</p>
+                  <p className="text-xs text-slate-500 mt-3">Response within 24 hours</p>
               </div>
-              <div className="flex-1 bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors">
-                  <h3 className="text-xl font-bold text-white mb-2">Try It Yourself</h3>
-                  <p className="text-gray-400 mb-6">The best way to understand JetSuite is to see it in action.</p>
-                  <button onClick={() => navigate('/login')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
+              <div className="flex-1 bg-white p-8 rounded-2xl border border-slate-200 hover:border-blue-500/50 transition-colors shadow-sm">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Try It Yourself</h3>
+                  <p className="text-slate-600 mb-6">The best way to understand JetSuite is to see it in action.</p>
+                  <button onClick={() => navigate('/login')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
                       Start Free Trial
                   </button>
-                  <p className="text-xs text-gray-500 mt-3">14-day free trial • No credit card required</p>
+                  <p className="text-xs text-slate-500 mt-3">14-day free trial • No credit card required</p>
               </div>
           </div>
       </section>
 
       {/* 5. RELATED RESOURCES */}
-      <section className="py-16 px-4 border-t border-slate-800 bg-slate-900/30">
+      <section className="py-16 px-4 border-t border-slate-200 bg-slate-50">
           <div className="max-w-4xl mx-auto text-center">
-              <p className="text-gray-400 mb-6 font-medium">Explore More Resources</p>
+              <p className="text-slate-500 mb-6 font-medium">Explore More Resources</p>
               <div className="flex flex-wrap justify-center gap-6">
-                  <button onClick={() => navigate('/how-it-works')} className="text-blue-400 hover:text-white transition-colors">How It Works</button>
-                  <span className="text-slate-700">•</span>
-                  <button onClick={() => navigate('/features')} className="text-blue-400 hover:text-white transition-colors">Features & Tools</button>
-                  <span className="text-slate-700">•</span>
-                  <button onClick={() => navigate('/pricing')} className="text-blue-400 hover:text-white transition-colors">Pricing</button>
+                  <button onClick={() => navigate('/how-it-works')} className="text-blue-600 hover:text-blue-800 transition-colors">How It Works</button>
+                  <span className="text-slate-400">•</span>
+                  <button onClick={() => navigate('/features')} className="text-blue-600 hover:text-blue-800 transition-colors">Features & Tools</button>
+                  <span className="text-slate-400">•</span>
+                  <button onClick={() => navigate('/pricing')} className="text-blue-600 hover:text-blue-800 transition-colors">Pricing</button>
               </div>
           </div>
       </section>

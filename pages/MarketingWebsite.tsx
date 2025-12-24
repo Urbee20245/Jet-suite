@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '../components/marketing/Header';
 import { Footer } from '../components/marketing/Footer';
@@ -19,6 +18,7 @@ interface MarketingWebsiteProps {
 }
 
 export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath, navigate, onLoginSuccess }) => {
+    const isPricingPage = currentPath === '/pricing';
 
     const renderPage = () => {
         switch (currentPath) {
@@ -46,10 +46,10 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
     };
 
     return (
-        <div className="bg-brand-darker text-gray-200 font-sans">
-            <Header navigate={navigate} />
+        <div className={`font-sans min-h-screen ${isPricingPage ? 'bg-brand-darker text-gray-200' : 'bg-white text-slate-600'}`}>
+            <Header navigate={navigate} isDarkMode={isPricingPage} />
             <main>{renderPage()}</main>
-            <Footer navigate={navigate} />
+            <Footer navigate={navigate} isDarkMode={isPricingPage} />
         </div>
     );
 };

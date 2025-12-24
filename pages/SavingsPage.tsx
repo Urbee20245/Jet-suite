@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { CheckCircleIcon, SparklesIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 
@@ -80,18 +79,18 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-darker py-20 sm:py-28 px-4">
+    <div className="min-h-screen bg-slate-50 py-20 sm:py-28 px-4 text-slate-600">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-accent-purple/10 border border-accent-purple/30 px-4 py-2 rounded-full mb-6">
-            <SparklesIcon className="w-5 h-5 text-accent-purple" />
-            <span className="text-accent-purple font-semibold text-sm">ROI Calculator</span>
+          <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-full mb-6">
+            <SparklesIcon className="w-5 h-5 text-blue-600" />
+            <span className="text-blue-600 font-semibold text-sm">ROI Calculator</span>
           </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight mb-6">
             See Your Potential Savings
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
             JetSuite replaces expensive agencies, multiple tool subscriptions, and freelancer fees 
             with one AI-powered platform. Calculate your savings below.
           </p>
@@ -99,7 +98,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
 
         {/* Business Size Selector */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white text-center mb-6">What describes your business?</h2>
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-6">What describes your business?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {Object.entries(businessSizeExamples).map(([key, example]) => (
               <button
@@ -110,13 +109,13 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 }}
                 className={`p-6 rounded-xl border-2 transition-all text-left ${
                   businessSize === key
-                    ? 'bg-gradient-to-br from-accent-purple/20 to-accent-pink/20 border-accent-purple shadow-lg shadow-accent-purple/20'
-                    : 'bg-slate-800 border-slate-700 hover:border-accent-purple/50'
+                    ? 'bg-blue-50 border-blue-500 shadow-md'
+                    : 'bg-white border-slate-200 hover:border-blue-300'
                 }`}
               >
-                <h3 className="text-xl font-bold text-white mb-2">{example.title}</h3>
-                <p className="text-sm text-gray-300 mb-3">{example.description}</p>
-                <p className="text-xs text-accent-purple font-semibold">Typically: {example.typical}</p>
+                <h3 className={`text-xl font-bold mb-2 ${businessSize === key ? 'text-blue-900' : 'text-slate-900'}`}>{example.title}</h3>
+                <p className={`text-sm mb-3 ${businessSize === key ? 'text-blue-700' : 'text-slate-500'}`}>{example.description}</p>
+                <p className={`text-xs font-semibold ${businessSize === key ? 'text-blue-600' : 'text-slate-400'}`}>Typically: {example.typical}</p>
               </button>
             ))}
           </div>
@@ -124,23 +123,23 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: Service Selector */}
-          <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-            <h2 className="text-2xl font-bold text-white mb-6">Select Services You Currently Use</h2>
+          <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Select Services You Currently Use</h2>
             <div className="space-y-3">
               {Object.entries(traditionalCosts).map(([key, service]) => (
                 <label
                   key={key}
-                  className="flex items-start gap-3 p-4 rounded-lg bg-brand-dark hover:bg-slate-700 cursor-pointer transition-colors"
+                  className="flex items-start gap-3 p-4 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors border border-transparent hover:border-slate-200"
                 >
                   <input
                     type="checkbox"
                     checked={selectedServices.includes(key)}
                     onChange={() => toggleService(key)}
-                    className="mt-1 h-5 w-5 rounded border-slate-600 text-accent-purple focus:ring-accent-purple cursor-pointer"
+                    className="mt-1 h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <div className="flex-1">
-                    <p className="font-semibold text-white">{service.name}</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="font-semibold text-slate-900">{service.name}</p>
+                    <p className="text-sm text-slate-500">
                       ${service.min.toLocaleString()} - ${service.max.toLocaleString()}/month
                     </p>
                   </div>
@@ -152,12 +151,12 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
           {/* Right: Savings Calculator */}
           <div className="space-y-6">
             {/* Results Card */}
-            <div className="bg-gradient-to-br from-accent-purple via-accent-pink to-accent-blue p-8 rounded-2xl shadow-2xl">
+            <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 rounded-2xl shadow-xl text-white">
               <h2 className="text-2xl font-bold text-white mb-8 text-center">Your Potential Savings</h2>
               
               <div className="space-y-6">
                 {/* Monthly Traditional Cost */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                   <p className="text-sm text-white/70 uppercase tracking-wide mb-2">Traditional Monthly Cost</p>
                   <p className="text-4xl font-extrabold text-white">
                     ${monthlyTraditionalCost.toLocaleString()}
@@ -166,7 +165,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                 </div>
 
                 {/* JetSuite Cost */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/10">
                   <p className="text-sm text-white/70 uppercase tracking-wide mb-2">JetSuite Monthly Cost</p>
                   <p className="text-4xl font-extrabold text-white">
                     ${jetSuiteCost}<span className="text-lg">/mo</span>
@@ -174,7 +173,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                   <p className="text-xs text-white/60 mt-2">All 12+ tools included</p>
                 </div>
 
-                <div className="h-px bg-white/30"></div>
+                <div className="h-px bg-white/20"></div>
 
                 {/* Monthly Savings */}
                 <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 border-2 border-white/40">
@@ -197,32 +196,32 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
             </div>
 
             {/* What You Get */}
-            <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-              <h3 className="text-lg font-bold text-white mb-4">What You Get with JetSuite</h3>
-              <ul className="space-y-3 text-gray-300">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">What You Get with JetSuite</h3>
+              <ul className="space-y-3 text-slate-600">
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">13+ AI-powered tools</strong> including review widgets</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">13+ AI-powered tools</strong> including review widgets</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Business DNA system</strong> ensures brand consistency</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">Business DNA system</strong> ensures brand consistency</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Embeddable review widgets</strong> for your website</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">Embeddable review widgets</strong> for your website</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Unlimited usage</strong> - no per-project fees</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">Unlimited usage</strong> - no per-project fees</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Instant generation</strong> - no waiting weeks</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">Instant generation</strong> - no waiting weeks</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircleIcon className="w-5 h-5 text-accent-cyan flex-shrink-0 mt-0.5" />
-                  <span><strong className="text-white">Integrated platform</strong> - no vendor juggling</span>
+                  <CheckCircleIcon className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
+                  <span><strong className="text-slate-900">Integrated platform</strong> - no vendor juggling</span>
                 </li>
               </ul>
             </div>
@@ -230,7 +229,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
             {/* CTA */}
             <button
               onClick={() => navigate('/pricing')}
-              className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-opacity shadow-lg shadow-accent-purple/30 flex items-center justify-center gap-2 text-lg"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-lg"
             >
               Start Saving Today
               <ArrowRightIcon className="w-5 h-5" />
@@ -240,38 +239,38 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
 
         {/* Comparison Table */}
         <div className="mt-20">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Traditional vs. JetSuite</h2>
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+          <h2 className="text-3xl font-bold text-slate-900 text-center mb-12">Traditional vs. JetSuite</h2>
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-brand-dark">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-400">Service</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-400">Traditional Cost</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-accent-purple">JetSuite</th>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-500">Service</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-slate-500">Traditional Cost</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-blue-600">JetSuite</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700">
+                <tbody className="divide-y divide-slate-100">
                   {Object.entries(traditionalCosts).map(([key, service]) => (
-                    <tr key={key} className="hover:bg-slate-700/50 transition-colors">
-                      <td className="px-6 py-4 text-white font-medium">{service.name}</td>
-                      <td className="px-6 py-4 text-center text-gray-300">
+                    <tr key={key} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-slate-900 font-medium">{service.name}</td>
+                      <td className="px-6 py-4 text-center text-slate-600">
                         ${service.min.toLocaleString()} - ${service.max.toLocaleString()}/mo
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 text-accent-cyan font-semibold">
+                        <span className="inline-flex items-center gap-1 text-teal-600 font-semibold">
                           <CheckCircleIcon className="w-5 h-5" />
                           Included
                         </span>
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-gradient-to-r from-accent-purple/10 to-accent-pink/10 font-bold">
-                    <td className="px-6 py-4 text-white text-lg">TOTAL</td>
-                    <td className="px-6 py-4 text-center text-white text-lg">
+                  <tr className="bg-blue-50 font-bold border-t border-blue-100">
+                    <td className="px-6 py-4 text-slate-900 text-lg">TOTAL</td>
+                    <td className="px-6 py-4 text-center text-slate-900 text-lg">
                       $11,100 - $35,200/mo
                     </td>
-                    <td className="px-6 py-4 text-center text-accent-purple text-2xl">
+                    <td className="px-6 py-4 text-center text-blue-600 text-2xl">
                       $149/mo
                     </td>
                   </tr>
@@ -283,64 +282,64 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
 
         {/* Real Examples */}
         <div className="mt-20">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Real Business Examples</h2>
+          <h2 className="text-3xl font-bold text-slate-900 text-center mb-12">Real Business Examples</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-xl font-bold text-white mb-2">🍕 Restaurant Owner</h3>
-              <p className="text-sm text-gray-400 mb-4">Local marketing agency + social media</p>
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">🍕 Restaurant Owner</h3>
+              <p className="text-sm text-slate-500 mb-4">Local marketing agency + social media</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Before:</span>
-                  <span className="text-white font-semibold">$2,130/mo</span>
+                  <span className="text-slate-500">Before:</span>
+                  <span className="text-slate-900 font-semibold">$2,130/mo</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$149/mo</span>
+                  <span className="text-slate-500">After:</span>
+                  <span className="text-blue-600 font-semibold">$149/mo</span>
                 </div>
-                <div className="h-px bg-slate-700 my-2"></div>
+                <div className="h-px bg-slate-100 my-2"></div>
                 <div className="flex justify-between text-lg">
-                  <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$23,772/year</span>
+                  <span className="text-slate-900 font-bold">Saves:</span>
+                  <span className="text-green-600 font-bold">$23,772/year</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-xl font-bold text-white mb-2">⚖️ Law Firm</h3>
-              <p className="text-sm text-gray-400 mb-4">SEO agency + content + ads + reputation</p>
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">⚖️ Law Firm</h3>
+              <p className="text-sm text-slate-500 mb-4">SEO agency + content + ads + reputation</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Before:</span>
-                  <span className="text-white font-semibold">$5,200/mo</span>
+                  <span className="text-slate-500">Before:</span>
+                  <span className="text-slate-900 font-semibold">$5,200/mo</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$149/mo</span>
+                  <span className="text-slate-500">After:</span>
+                  <span className="text-blue-600 font-semibold">$149/mo</span>
                 </div>
-                <div className="h-px bg-slate-700 my-2"></div>
+                <div className="h-px bg-slate-100 my-2"></div>
                 <div className="flex justify-between text-lg">
-                  <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$60,612/year</span>
+                  <span className="text-slate-900 font-bold">Saves:</span>
+                  <span className="text-green-600 font-bold">$60,612/year</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <h3 className="text-xl font-bold text-white mb-2">🏠 Home Services</h3>
-              <p className="text-sm text-gray-400 mb-4">Full-service agency + design + tools</p>
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">🏠 Home Services</h3>
+              <p className="text-sm text-slate-500 mb-4">Full-service agency + design + tools</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Before:</span>
-                  <span className="text-white font-semibold">$6,100/mo</span>
+                  <span className="text-slate-500">Before:</span>
+                  <span className="text-slate-900 font-semibold">$6,100/mo</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">After:</span>
-                  <span className="text-accent-purple font-semibold">$149/mo</span>
+                  <span className="text-slate-500">After:</span>
+                  <span className="text-blue-600 font-semibold">$149/mo</span>
                 </div>
-                <div className="h-px bg-slate-700 my-2"></div>
+                <div className="h-px bg-slate-100 my-2"></div>
                 <div className="flex justify-between text-lg">
-                  <span className="text-white font-bold">Saves:</span>
-                  <span className="text-accent-cyan font-bold">$71,412/year</span>
+                  <span className="text-slate-900 font-bold">Saves:</span>
+                  <span className="text-green-600 font-bold">$71,412/year</span>
                 </div>
               </div>
             </div>
@@ -348,16 +347,16 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
         </div>
 
         {/* Final CTA */}
-        <div className="mt-20 text-center bg-gradient-to-br from-accent-purple/20 to-accent-pink/20 border border-accent-purple/40 rounded-2xl p-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+        <div className="mt-20 text-center bg-gradient-to-br from-blue-100 to-indigo-100 border border-blue-200 rounded-2xl p-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
             Ready to Cut Your Marketing Costs by 90%?
           </h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
             Join hundreds of businesses saving thousands every month with JetSuite.
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-12 rounded-xl transition-opacity shadow-lg shadow-accent-purple/30 text-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-xl transition-all shadow-lg shadow-blue-600/20 text-lg"
           >
             Get Started Today
           </button>
