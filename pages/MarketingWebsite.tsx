@@ -8,6 +8,7 @@ import { FeaturesPage } from './FeaturesPage';
 import { PricingPage } from './PricingPage';
 import { SavingsPage } from './SavingsPage';
 import { LoginPage } from './LoginPage';
+import { FaqPage } from './FaqPage';
 import { BillingSuccessPage } from './BillingSuccessPage';
 import { BillingLockedPage } from './BillingLockedPage';
 
@@ -31,6 +32,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <PricingPage navigate={navigate} />;
             case '/savings':
                 return <SavingsPage navigate={navigate} />;
+            case '/faq':
+                return <FaqPage navigate={navigate} />;
             case '/login':
                 return <LoginPage navigate={navigate} onLoginSuccess={onLoginSuccess} />;
             case '/billing/success':
