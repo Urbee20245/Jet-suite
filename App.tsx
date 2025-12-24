@@ -114,7 +114,9 @@ const App: React.FC = () => {
   console.log('[App] Rendering with state:', { isLoggedIn, currentPath, hasEmail: !!currentUserEmail });
   
   try {
-    if (isLoggedIn && currentUserEmail) {
+    // Strict check: must be explicitly true AND have email
+if (isLoggedIn === true && currentUserEmail) {
+  console.log('[App] ✅ User authenticated, loading app with subscription guard');
       // User is logged in - wrap with SubscriptionGuard to enforce billing access
       // SubscriptionGuard will check subscription status and block access if not active
       return (
@@ -127,7 +129,9 @@ const App: React.FC = () => {
       );
     }
     
-    return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+    // Default: public marketing website (no authentication required)
+console.log('[App] 🌐 Showing public marketing website');
+return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
   } catch (error) {
     console.error('[App] Render error:', error);
     return (
