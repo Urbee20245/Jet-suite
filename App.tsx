@@ -4,8 +4,9 @@ import { MarketingWebsite } from './pages/MarketingWebsite';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Access Vite environment variables with proper fallbacks
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 console.log('[App] Component module loaded');
@@ -117,11 +118,28 @@ const App: React.FC = () => {
       }
   };
 
-  const handleLoginSuccess = (email: string, userId: string) => {
-      console.log('[App] Login success:', { email, userId });
-      setIsLoggedIn(true);
-      setCurrentUserEmail(email);
-      setCurrentUserId(userId);
+  // Handle login success - session listener will update state automatically
+  const handleLoginSuccess = async (email: string) => {
+      console.log('[App] Login callback received:', { email });
+      
+      // Trigger a fresh session check to get the userId
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setIsLoggedIn(true);
+          setCurrentUserEmail(session.user.email || null);
+          setCurrentUserId(session.user.id);
+          localStorage.setItem('jetsuite_isLoggedIn', 'true');
+          localStorage.setItem('jetsuite_userEmail', session.user.email || '');
+          localStorage.setItem('jetsuite_userId', session.user.id);
+        }
+      } catch (error) {
+        console.error('[App] Failed to get session after login:', error);
+        // Fallback to basic email storage
+        setIsLoggedIn(true);
+        setCurrentUserEmail(email);
+      }
   };
   
   const handleLogout = async () => {
