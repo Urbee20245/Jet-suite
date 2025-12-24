@@ -11,6 +11,7 @@ import { LoginPage } from './LoginPage';
 import { FaqPage } from './FaqPage';
 import { DemoJetBizPage } from './DemoJetBizPage';
 import { DemoJetVizPage } from './DemoJetVizPage';
+import { GetStartedPage } from './GetStartedPage';
 import { BillingSuccessPage } from './BillingSuccessPage';
 import { BillingLockedPage } from './BillingLockedPage';
 
@@ -34,6 +35,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <PricingPage navigate={navigate} />;
             case '/savings':
                 return <SavingsPage navigate={navigate} />;
+            case '/get-started':
+                return <GetStartedPage navigate={navigate} />;
             case '/faq':
                 return <FaqPage navigate={navigate} />;
             case '/demo/jetbiz':

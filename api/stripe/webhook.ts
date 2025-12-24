@@ -1,314 +1,182 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-02-24.acacia',
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const config = {
   api: {
-    bodyParser: false, // Disable body parsing, need raw body for webhook signature verification
+    bodyParser: false,
   },
 };
 
-// Helper to get raw body as buffer
-async function getRawBody(req: VercelRequest): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk: Buffer) => {
-      chunks.push(chunk);
-    });
-    req.on('end', () => {
-      resolve(Buffer.concat(chunks));
-    });
-    req.on('error', reject);
-  });
+async function buffer(readable: any) {
+  const chunks = [];
+  for await (const chunk of readable) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+  }
+  return Buffer.concat(chunks);
 }
 
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  // Only allow POST requests
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const buf = await buffer(req);
+  const sig = req.headers['stripe-signature']!;
+
+  let event: Stripe.Event;
+
   try {
-    const rawBody = await getRawBody(req);
-    const signature = req.headers['stripe-signature'];
-
-    if (!signature) {
-      return res.status(400).json({ error: 'Missing stripe-signature header' });
-    }
-
-    // Verify webhook signature
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(
-        rawBody,
-        signature as string,
-        webhookSecret
-      );
-    } catch (err: any) {
-      console.error('Webhook signature verification failed:', err.message);
-      return res.status(400).json({ error: 'Webhook signature verification failed' });
-    }
-
-    // Handle different event types
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Checkout session completed:', {
-          sessionId: session.id,
-          customerId: session.customer,
-          email: session.customer_email,
-          metadata: session.metadata,
-        });
-        
-        // Update billing account with customer ID and counts
-        if (session.customer && session.metadata?.userId) {
-          try {
-            const seatCount = parseInt(session.metadata.seatCount || '0', 10);
-            const businessCount = 1 + parseInt(session.metadata.additionalBusinessCount || '0', 10);
-            
-            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: session.metadata.userId,
-                userEmail: session.customer_email,
-                stripeCustomerId: session.customer as string,
-                seatCount: seatCount,
-                businessCount: businessCount,
-              }),
-            });
-          } catch (err) {
-            console.error('Failed to update billing account:', err);
-          }
-        }
-        
-        break;
-      }
-
-      case 'customer.subscription.created': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription created:', {
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-          status: subscription.status,
-          priceId: subscription.items.data[0]?.price.id,
-        });
-        
-        // Get billing account by customer ID to find user ID
-        try {
-          const billingResponse = await fetch(
-            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
-            { method: 'GET' }
-          );
-          
-          if (billingResponse.ok) {
-            const { billingAccount } = await billingResponse.json();
-            
-            // Update with subscription details
-            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: billingAccount.user_id,
-                userEmail: billingAccount.user_email,
-                stripeSubscriptionId: subscription.id,
-                subscriptionStatus: subscription.status,
-                subscriptionPlan: subscription.items.data[0]?.price.id || '',
-                currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              }),
-            });
-          }
-        } catch (err) {
-          console.error('Failed to update subscription in database:', err);
-        }
-        
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription updated:', {
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-          status: subscription.status,
-        });
-        
-        // Get billing account and update
-        try {
-          const billingResponse = await fetch(
-            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
-            { method: 'GET' }
-          );
-          
-          if (billingResponse.ok) {
-            const { billingAccount } = await billingResponse.json();
-            
-            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: billingAccount.user_id,
-                userEmail: billingAccount.user_email,
-                subscriptionStatus: subscription.status,
-                subscriptionPlan: subscription.items.data[0]?.price.id || '',
-                currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              }),
-            });
-          }
-        } catch (err) {
-          console.error('Failed to update subscription status:', err);
-        }
-        
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription canceled:', {
-          subscriptionId: subscription.id,
-          customerId: subscription.customer,
-        });
-        
-        // Mark subscription as canceled in database
-        try {
-          const billingResponse = await fetch(
-            `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${subscription.customer}`,
-            { method: 'GET' }
-          );
-          
-          if (billingResponse.ok) {
-            const { billingAccount } = await billingResponse.json();
-            
-            await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: billingAccount.user_id,
-                userEmail: billingAccount.user_email,
-                subscriptionStatus: 'canceled',
-              }),
-            });
-          }
-        } catch (err) {
-          console.error('Failed to mark subscription as canceled:', err);
-        }
-        
-        break;
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice payment succeeded:', {
-          invoiceId: invoice.id,
-          customerId: invoice.customer,
-          amount: invoice.amount_paid,
-          subscriptionId: invoice.subscription,
-        });
-        
-        // Payment successful - ensure subscription status is active
-        if (invoice.subscription) {
-          try {
-            // Fetch full subscription to get current_period_end
-            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-            
-            const billingResponse = await fetch(
-              `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${invoice.customer}`,
-              { method: 'GET' }
-            );
-            
-            if (billingResponse.ok) {
-              const { billingAccount } = await billingResponse.json();
-              
-              await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId: billingAccount.user_id,
-                  userEmail: billingAccount.user_email,
-                  subscriptionStatus: subscription.status, // Should be 'active'
-                  currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-                  currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-                }),
-              });
-              
-              console.log('✅ Subscription marked as active after successful payment');
-            }
-          } catch (err) {
-            console.error('Failed to update subscription after payment:', err);
-          }
-        }
-        
-        break;
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log('⚠️ Invoice payment failed:', {
-          invoiceId: invoice.id,
-          customerId: invoice.customer,
-          attemptCount: invoice.attempt_count,
-          subscriptionId: invoice.subscription,
-        });
-        
-        // Payment failed - mark subscription as past_due
-        if (invoice.subscription) {
-          try {
-            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-            
-            const billingResponse = await fetch(
-              `${process.env.APP_URL}/api/billing/get-by-customer?customerId=${invoice.customer}`,
-              { method: 'GET' }
-            );
-            
-            if (billingResponse.ok) {
-              const { billingAccount } = await billingResponse.json();
-              
-              await fetch(`${process.env.APP_URL}/api/billing/upsert-account`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId: billingAccount.user_id,
-                  userEmail: billingAccount.user_email,
-                  subscriptionStatus: subscription.status, // Will be 'past_due' or 'unpaid'
-                }),
-              });
-              
-              console.log('⚠️ Subscription marked as past_due after failed payment');
-              
-              // TODO: Send email notification to user about failed payment
-              // TODO: Consider grace period (Stripe handles retries automatically)
-            }
-          } catch (err) {
-            console.error('Failed to update subscription after payment failure:', err);
-          }
-        }
-        
-        break;
-      }
-
-      default:
-        console.log(`Unhandled event type: ${event.type}`);
-    }
-
-    // Return success response
-    return res.status(200).json({ received: true });
-  } catch (error: any) {
-    console.error('Webhook error:', error);
-    return res.status(500).json({
-      error: 'Webhook handler failed',
-      message: error.message,
-    });
+    event = stripe.webhooks.constructEvent(
+      buf,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (err: any) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
+
+  // Handle checkout.session.completed event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    
+    try {
+      // Get subscription metadata
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      const metadata = subscription.metadata;
+      
+      const email = session.customer_email!;
+      const firstName = metadata.first_name || '';
+      const lastName = metadata.last_name || '';
+      const businessName = metadata.business_name || '';
+      const phone = metadata.phone || '';
+      const website = metadata.website || '';
+      const seatCount = parseInt(metadata.seat_count || '0');
+      const businessCount = parseInt(metadata.business_count || '1');
+
+      // 1. Create auth user in Supabase
+      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'; // Random temp password
+      
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: email,
+        password: tempPassword,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          business_name: businessName,
+        }
+      });
+
+      if (authError) {
+        console.error('Failed to create auth user:', authError);
+        throw authError;
+      }
+
+      const userId = authData.user.id;
+
+      // 2. Create billing account record
+      const { error: billingError } = await supabase
+        .from('billing_accounts')
+        .insert({
+          user_id: userId,
+          user_email: email,
+          subscription_status: 'active',
+          stripe_customer_id: session.customer as string,
+          stripe_subscription_id: session.subscription as string,
+          seat_count: seatCount,
+          business_count: businessCount,
+          is_admin: false, // Regular customer
+        });
+
+      if (billingError) {
+        console.error('Failed to create billing account:', billingError);
+        throw billingError;
+      }
+
+      // 3. Create business profile
+      const { error: profileError } = await supabase
+        .from('business_profiles')
+        .insert({
+          user_id: userId,
+          business_name: businessName,
+          website_url: website,
+          phone: phone,
+          // Other fields can be filled in by user later
+        });
+
+      if (profileError) {
+        console.error('Failed to create business profile:', profileError);
+        // Don't throw - this is less critical
+      }
+
+      // 4. Send welcome email with login link (optional)
+      // TODO: Implement email sending via SendGrid, Resend, etc.
+      // Should include:
+      // - Welcome message
+      // - Login link: ${process.env.APP_URL}/login
+      // - Instructions to reset password
+      
+      console.log(`Account created for ${email} (User ID: ${userId})`);
+      
+    } catch (error: any) {
+      console.error('Error processing checkout.session.completed:', error);
+      // Don't return error to Stripe - we already have their payment
+      // Instead, log for manual intervention
+    }
+  }
+
+  // Handle subscription updates
+  if (event.type === 'customer.subscription.updated') {
+    const subscription = event.data.object as Stripe.Subscription;
+    
+    try {
+      const { error } = await supabase
+        .from('billing_accounts')
+        .update({
+          subscription_status: subscription.status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
+      if (error) {
+        console.error('Failed to update subscription status:', error);
+      }
+    } catch (error) {
+      console.error('Error processing customer.subscription.updated:', error);
+    }
+  }
+
+  // Handle subscription cancellation
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object as Stripe.Subscription;
+    
+    try {
+      const { error } = await supabase
+        .from('billing_accounts')
+        .update({
+          subscription_status: 'canceled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', subscription.id);
+
+      if (error) {
+        console.error('Failed to update subscription to canceled:', error);
+      }
+    } catch (error) {
+      console.error('Error processing customer.subscription.deleted:', error);
+    }
+  }
+
+  return res.status(200).json({ received: true });
 }

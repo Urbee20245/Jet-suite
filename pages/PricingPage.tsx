@@ -32,8 +32,6 @@ const PricingFaqItem = ({ question, answer, id }: { question: string, answer: st
 export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const [businesses, setBusinesses] = useState(1);
   const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   // Calculate pricing
   const basePlan = 149;
@@ -51,51 +49,6 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
     setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
   };
 
-  const handleCheckout = async () => {
-    setIsCheckingOut(true);
-    setCheckoutError(null);
-    
-    // For demo purposes, use a placeholder email if not logged in
-    // In production, this should come from login state
-    const userEmail = localStorage.getItem('jetsuite_userEmail') || 'user@example.com';
-    
-    // Basic validation - in a real app, force login/signup first
-    if (!userEmail || userEmail === 'user@example.com') {
-       // Ideally redirect to login with a return URL
-       // For now we'll allow it if the backend handles it or just alert
-       alert('Please log in or sign up to continue.');
-       navigate('/login');
-       setIsCheckingOut(false);
-       return;
-    }
-
-    try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userEmail, // Using email as ID for demo/if simpler, but ideally actual User ID
-          email: userEmail,
-          seatCount: seats,
-          additionalBusinessCount: additionalBusinessCount,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create checkout session');
-      }
-
-      const data = await response.json();
-      window.location.href = data.url;
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      setCheckoutError(error.message || 'Failed to start checkout. Please try again.');
-      setIsCheckingOut(false);
-    }
-  };
 
   return (
     <div className="py-20 sm:py-28 px-4">
@@ -283,25 +236,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             </div>
 
             {/* Checkout Button */}
-            {checkoutError && (
-              <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
-                {checkoutError}
-              </div>
-            )}
-            
             <button 
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
-              className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
+              onClick={() => navigate('/get-started')}
+              className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
             >
-              {isCheckingOut ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Processing...
-                </>
-              ) : (
-                'Get Started'
-              )}
+              Get Started
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">

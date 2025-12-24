@@ -489,7 +489,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to Access All 20 Growth Tools?</h2>
             <p className="text-xl text-gray-300 mb-10">Join 360+ local businesses growing with JetSuite.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
+                <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
                     Get Started
                     <span className="block text-xs font-normal opacity-80 mt-1">Get instant access to all 20 growth tools</span>
                 </button>

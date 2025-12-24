@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                         <button onClick={() => navigate('/login')} className="hidden sm:inline-block text-white font-medium hover:text-gray-200">
                             Login
                         </button>
-                        <button onClick={() => navigate('/pricing')} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity shadow-lg">
+                        <button onClick={() => navigate('/get-started')} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity shadow-lg">
                             Get Started
                         </button>
                     </div>

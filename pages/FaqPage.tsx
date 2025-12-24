@@ -262,7 +262,7 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
               <div className="flex-1 bg-slate-800/50 p-8 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors">
                   <h3 className="text-xl font-bold text-white mb-2">Try It Yourself</h3>
                   <p className="text-gray-400 mb-6">The best way to understand JetSuite is to see it in action.</p>
-                  <button onClick={() => navigate('/pricing')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
+                  <button onClick={() => navigate('/get-started')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg shadow-blue-600/20">
                       Get Started
                   </button>
                   <p className="text-xs text-gray-500 mt-3">Get instant access to all 20 growth tools</p>
