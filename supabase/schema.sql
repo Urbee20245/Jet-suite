@@ -106,3 +106,40 @@ COMMENT ON COLUMN billing_accounts.current_period_end IS 'When the current billi
 COMMENT ON COLUMN billing_accounts.seat_count IS 'Number of team member seats';
 COMMENT ON COLUMN billing_accounts.business_count IS 'Number of business profiles allowed';
 COMMENT ON COLUMN billing_accounts.is_founder IS 'Founder pricing flag - lifetime-locked once set, not client-editable';
+
+-- Business Profiles Table
+CREATE TABLE IF NOT EXISTS business_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id),
+  business_name TEXT NOT NULL,
+  website_url TEXT,
+  phone VARCHAR(50),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- RLS for business_profiles
+ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own business profile"
+  ON business_profiles FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own business profile"
+  ON business_profiles FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own business profile"
+  ON business_profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Add missing columns if table exists
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'business_profiles' AND column_name = 'phone') THEN
+        ALTER TABLE business_profiles ADD COLUMN phone VARCHAR(50);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'business_profiles' AND column_name = 'website_url') THEN
+        ALTER TABLE business_profiles ADD COLUMN website_url TEXT;
+    END IF;
+END $$;

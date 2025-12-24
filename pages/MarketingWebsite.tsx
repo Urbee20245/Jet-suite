@@ -3,9 +3,15 @@ import React from 'react';
 import { Header } from '../components/marketing/Header';
 import { Footer } from '../components/marketing/Footer';
 import { LandingPage } from './LandingPage';
+import { HowItWorksPage } from './HowItWorksPage';
+import { FeaturesPage } from './FeaturesPage';
 import { PricingPage } from './PricingPage';
 import { SavingsPage } from './SavingsPage';
 import { LoginPage } from './LoginPage';
+import { FaqPage } from './FaqPage';
+import { DemoJetBizPage } from './DemoJetBizPage';
+import { DemoJetVizPage } from './DemoJetVizPage';
+import { GetStartedPage } from './GetStartedPage';
 import { BillingSuccessPage } from './BillingSuccessPage';
 import { BillingLockedPage } from './BillingLockedPage';
 
@@ -21,10 +27,22 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
         switch (currentPath) {
             case '/':
                 return <LandingPage navigate={navigate} />;
+            case '/how-it-works':
+                return <HowItWorksPage navigate={navigate} />;
+            case '/features':
+                return <FeaturesPage navigate={navigate} />;
             case '/pricing':
                 return <PricingPage navigate={navigate} />;
             case '/savings':
                 return <SavingsPage navigate={navigate} />;
+            case '/get-started':
+                return <GetStartedPage navigate={navigate} />;
+            case '/faq':
+                return <FaqPage navigate={navigate} />;
+            case '/demo/jetbiz':
+                return <DemoJetBizPage navigate={navigate} />;
+            case '/demo/jetviz':
+                return <DemoJetVizPage navigate={navigate} />;
             case '/login':
                 return <LoginPage navigate={navigate} onLoginSuccess={onLoginSuccess} />;
             case '/billing/success':

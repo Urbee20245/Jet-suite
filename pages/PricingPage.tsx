@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { PricingCalculator } from '../components/marketing/PricingCalculator';
-import { CheckCircleIcon, MinusIcon, PlusIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, MinusIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { createCheckoutSession } from '../services/stripeService';
 import { Loader } from '../components/Loader';
 
@@ -9,11 +8,30 @@ interface PricingPageProps {
   navigate: (path: string) => void;
 }
 
+const PricingFaqItem = ({ question, answer, id }: { question: string, answer: string, id?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div id={id} className="border-b border-slate-700 last:border-0">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center py-4 text-left focus:outline-none"
+            >
+                <span className="font-semibold text-white">{question}</span>
+                {isOpen 
+                    ? <ChevronUpIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    : <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                }
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-48 opacity-100 pb-4' : 'max-h-0 opacity-0'}`}>
+                <p className="text-gray-400 text-sm leading-relaxed">{answer}</p>
+            </div>
+        </div>
+    );
+};
+
 export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const [businesses, setBusinesses] = useState(1);
- const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
 
   // Calculate pricing
   const basePlan = 149;
@@ -28,41 +46,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   };
 
   const handleSeatsChange = (delta: number) => {
- setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
+    setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
   };
 
-  const handleCheckout = async () => {
-    setCheckoutError(null);
-    
-    // For demo purposes, use a placeholder email
-    // In production, this should come from login state or a form
-    const userEmail = localStorage.getItem('jetsuite_userEmail') || 'user@example.com';
-    
-    if (!userEmail || userEmail === 'user@example.com') {
-      // User not logged in, redirect to login first
-      alert('Please log in first to start your subscription.');
-      navigate('/login');
-      return;
-    }
 
-    try {
-      setIsCheckingOut(true);
-      
-      const { url } = await createCheckoutSession({
-        userId: userEmail,
-        email: userEmail,
-       seatCount: seats, // seats already represents additional seats beyond the 1 included
-        additionalBusinessCount: additionalBusinessCount,
-      });
-
-      // Redirect to Stripe Checkout
-      window.location.href = url;
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-      setCheckoutError(error.message || 'Failed to start checkout. Please try again.');
-      setIsCheckingOut(false);
-    }
-  };
   return (
     <div className="py-20 sm:py-28 px-4">
       <div className="max-w-5xl mx-auto">
@@ -209,27 +196,27 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                   </div>
                 )}
                <div className="flex justify-between text-gray-300">
-  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
-  <span>${seatCost * seats}/mo</span>
-</div>
-{seats === 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• 1 seat included in base plan</span>
-    <span>$0</span>
-  </div>
-)}
-{seats > 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• Included (1 seat)</span>
-    <span>$0</span>
-  </div>
-)}
-{seats > 0 && (
-  <div className="flex justify-between text-gray-400 text-xs pl-4">
-    <span>• Additional ({seats} × ${seatCost})</span>
-    <span>${seatCost * seats}</span>
-  </div>
-)}
+                  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
+                  <span>${seatCost * seats}/mo</span>
+                </div>
+                {seats === 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• 1 seat included in base plan</span>
+                    <span>$0</span>
+                  </div>
+                )}
+                {seats > 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• Included (1 seat)</span>
+                    <span>$0</span>
+                  </div>
+                )}
+                {seats > 0 && (
+                  <div className="flex justify-between text-gray-400 text-xs pl-4">
+                    <span>• Additional ({seats} × ${seatCost})</span>
+                    <span>${seatCost * seats}</span>
+                  </div>
+                )}
                 <div className="border-t border-slate-700 pt-2 mt-2">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-white text-lg">Monthly Total</span>
@@ -239,32 +226,25 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               </div>
             </div>
 
-            {/* Checkout Button */}
-            {checkoutError && (
-              <div className="mt-6 bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400 text-sm">
-                {checkoutError}
+            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700">
+              <div className="text-sm text-gray-400 mb-2">Due Today</div>
+              <div className="text-4xl font-bold text-white mb-2">${monthlyTotal}</div>
+              <div className="text-sm text-gray-400">Then ${monthlyTotal}/month</div>
+              <div className="mt-4 text-xs text-gray-500">
+                All tools included. No hidden fees. Cancel anytime.
               </div>
-            )}
-            
+            </div>
+
+            {/* Checkout Button */}
             <button 
-              onClick={handleCheckout}
-              disabled={isCheckingOut}
-              className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
+              onClick={() => navigate('/get-started')}
+              className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
             >
-              {isCheckingOut ? (
-                <>
-                  <Loader />
-                  <span>Starting Checkout...</span>
-                </>
-              ) : (
-                <>
-                  <span>Start Subscription - ${monthlyTotal}/mo</span>
-                </>
-              )}
+              Get Started
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">
-              Cancel anytime. No refunds.
+              Transparent pricing • Cancel anytime
             </p>
           </div>
 
@@ -286,6 +266,29 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             <PricingCalculator />
           </div>
         </div>
+
+        {/* 3 Strategic FAQ Additions */}
+        <div className="mt-20 max-w-2xl mx-auto">
+            <h3 className="text-2xl font-bold text-white text-center mb-8">Common Questions</h3>
+            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
+                <PricingFaqItem 
+                    question="Can I upgrade or downgrade my plan later?" 
+                    answer="Yes, you can add or remove businesses and team seats at any time from your dashboard. Changes are prorated automatically." 
+                />
+                <PricingFaqItem 
+                    question="When will I be charged?" 
+                    answer="You'll be charged immediately when you subscribe. Your subscription renews monthly at the same rate." 
+                />
+                <PricingFaqItem 
+                    question="Do I need to sign a long-term contract?" 
+                    answer="No contracts. JetSuite is a month-to-month subscription. We believe you should stay because you love the product, not because you're locked in." 
+                />
+            </div>
+            <p className="text-center text-gray-500 mt-6 text-sm">
+                Have more questions? <button onClick={() => navigate('/faq')} className="text-blue-400 hover:text-blue-300 underline">Visit our full FAQ page</button>
+            </p>
+        </div>
+
       </div>
     </div>
   );
