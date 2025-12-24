@@ -10,15 +10,17 @@ const App: React.FC = () => {
   console.log('[App] Component rendering');
   
   // Initialize state from localStorage for persistence, with error handling for security restrictions.
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    try {
-      const value = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_isLoggedIn') : null;
-      return !!value;
-    } catch (e) {
-      console.warn('Could not read login status from localStorage:', e);
-      return false;
-    }
-  });
+ const [isLoggedIn, setIsLoggedIn] = useState(() => {
+  try {
+    if (typeof localStorage === 'undefined') return false;
+    const value = localStorage.getItem('jetsuite_isLoggedIn');
+    // Only true if value is EXACTLY 'true' string
+    return value === 'true';
+  } catch (e) {
+    console.warn('Could not read login status from localStorage:', e);
+    return false;
+  }
+});
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => {
     try {
       return typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userEmail') : null;
