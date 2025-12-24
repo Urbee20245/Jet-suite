@@ -39,7 +39,7 @@ export default async function handler(
       throw error;
     }
 
-    return res.status(200).json({ billingAccount: data });
+   return res.status(200).json({ account: data });
   } catch (error: any) {
     console.error('Get billing account error:', error);
     return res.status(500).json({
