@@ -13,7 +13,7 @@ import type {
 } from '../Types/supportTypes';
 import { supportService } from './supportService';
 
-const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = (import.meta as any).env?.VITE_GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
 // =====================================================
