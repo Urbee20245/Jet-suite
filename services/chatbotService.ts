@@ -166,34 +166,32 @@ Your response MUST be a valid JSON object matching this schema:
       throw new Error('Gemini API key not configured');
     }
 
-    const model = ai.getGenerativeModel({ 
+    // Use generateContent (single turn) which is more stable with the current SDK.
+    // We construct the full conversation history manually.
+    
+    let fullPrompt = systemPrompt + "\n\n**Conversation History:**\n";
+    
+    // Add history (limit to last 10 turns to save context)
+    // Note: 'history' here contains previous messages, not including the current user message
+    const recentHistory = history.slice(-10);
+    recentHistory.forEach(msg => {
+        const role = msg.role === 'user' ? 'User' : 'JetBot';
+        fullPrompt += `${role}: ${msg.content}\n`;
+    });
+
+    // Add the current user message
+    fullPrompt += `\nUser: ${userMessage}\nJetBot:`;
+
+    const response = await ai.models.generateContent({
         model: "gemini-2.0-flash-exp",
-        generationConfig: {
+        contents: fullPrompt,
+        config: {
             responseMimeType: "application/json" 
         }
     });
 
-    // Convert history to Gemini format
-    // Note: We are not passing the system prompt as a "system" role message 
-    // because some older models or SDK versions treat it differently.
-    // Instead, we prepend it to the conversation or the first message.
-    // For simplicity and robustness with the simple chat method, we'll just include it in the generation request
-    // or use the 'systemInstruction' if supported, but let's stick to a robust prompt injection.
-    
-    const chatHistory = history.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }]
-    }));
-
-    // Start chat with history
-    const chat = model.startChat({
-        history: chatHistory,
-        systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] }
-    });
-
-    const result = await chat.sendMessage(userMessage);
-    const response = await result.response;
-    return response.text();
+    // Handle potential null/undefined response.text
+    return response.text ? response.text.trim() : '{}';
   },
 
   /**
