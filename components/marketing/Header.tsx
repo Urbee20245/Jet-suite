@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                     {/* Logo and Nav Links */}
                     <div className="flex items-center space-x-8">
                         <button onClick={() => navigate('/')} className="flex items-center space-x-2">
-                           <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-10 h-10 object-contain" />
+                           <JetSuiteLogo className="w-10 h-10"/>
                            <div>
                                 <span className="text-xl font-bold text-white">JetSuite</span>
                                 <span className="block text-xs text-gray-400 -mt-1">by Jet Automations</span>
