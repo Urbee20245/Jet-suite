@@ -4,7 +4,7 @@
 // =====================================================
 
 import type {
-  ChatMessage,
+  ChatbotMessage,
   ChatbotResponse,
   ChatbotContext,
   SuggestedAction,
@@ -112,7 +112,7 @@ export const chatbotService = {
    */
   async chat(
     userMessage: string,
-    conversationHistory: ChatMessage[],
+    conversationHistory: ChatbotMessage[],
     context?: ChatbotContext
   ): Promise<ChatbotResponse> {
     try {
@@ -212,7 +212,7 @@ export const chatbotService = {
    * Build conversation messages for Gemini
    */
   buildConversationMessages(
-    history: ChatMessage[],
+    history: ChatbotMessage[],
     newMessage: string,
     contextInfo: string
   ): string {
@@ -382,7 +382,7 @@ export const chatbotService = {
    * Create a support ticket from chatbot conversation
    */
   async escalateToTicket(
-    conversationHistory: ChatMessage[],
+    conversationHistory: ChatbotMessage[],
     category: string = 'general',
     context?: ChatbotContext
   ): Promise<string | null> {
@@ -419,7 +419,7 @@ export const chatbotService = {
   /**
    * Generate a subject line from conversation
    */
-  generateTicketSubject(history: ChatMessage[]): string {
+  generateTicketSubject(history: ChatbotMessage[]): string {
     // Use first user message or a default
     const firstUserMessage = history.find(msg => msg.role === 'user');
     
@@ -437,7 +437,7 @@ export const chatbotService = {
   /**
    * Generate ticket description from conversation
    */
-  generateTicketDescription(history: ChatMessage[]): string {
+  generateTicketDescription(history: ChatbotMessage[]): string {
     let description = '**Conversation History from AI Chatbot:**\n\n';
     
     history.forEach((msg, index) => {
