@@ -256,6 +256,19 @@ export default function UserSupportTickets() {
         </button>
 
         <div className="bg-white p-8 rounded-lg border border-gray-200">
+          <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start gap-3">
+            <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+              <MessageSquare size={24} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-blue-900">Have you tried asking JetBot?</h3>
+              <p className="text-sm text-blue-800 mt-1">
+                Our AI assistant can instantly answer most questions about features, billing, and troubleshooting. 
+                Look for the chat icon in the bottom right corner!
+              </p>
+            </div>
+          </div>
+
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Support Ticket</h1>
 
           <div className="space-y-6">
@@ -305,12 +318,14 @@ export default function UserSupportTickets() {
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setView('list')}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleCreateTicket}
                 className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >

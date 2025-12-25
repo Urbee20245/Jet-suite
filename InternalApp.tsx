@@ -25,6 +25,7 @@ import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
 import { AdminPanel } from './tools/AdminPanel';
 import UserSupportTickets from './tools/UserSupportTickets';
+import SupportChatbot from './components/SupportChatbot';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 
@@ -231,6 +232,16 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
         <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>
           {renderActiveTool()}
         </main>
+        
+        {/* Support Chatbot - Available on all internal pages */}
+        <SupportChatbot context={{ 
+          user_email: currentUser || undefined,
+          business_name: profileData.business.name,
+          current_page: activeTool?.id || 'home',
+          subscription_status: 'active',
+          conversation_turns: 0,
+          mentioned_topics: []
+        }} />
       </div>
     </div>
   );

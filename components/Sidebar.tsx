@@ -140,11 +140,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool, isA
                 })}
             </div>
         )}
-        {!isCollapsed && (
-            <div className="pt-4 text-center text-xs text-gray-500 hidden md:block">
-                <p>JetSuite Growth OS</p>
-            </div>
-        )}
         <button
             onClick={onLogout}
             className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-brand-darker/50 hover:text-white mt-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}
