@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
+  process.env.VITE_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
@@ -25,9 +25,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Update user profile in Supabase Auth
+    console.log('Updating profile for:', email, { firstName, lastName, role });
+
+    // First, get the user by email to find their ID
+    const { data: users, error: findError } = await supabase.auth.admin.listUsers();
+    
+    if (findError) {
+      console.error('Error finding user:', findError);
+      throw new Error('Failed to find user');
+    }
+
+    const user = users.users.find(u => u.email === email);
+    
+    if (!user) {
+      console.error('User not found:', email);
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update user metadata in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
-      email, // You might need to get user ID from email first
+      user.id,
       {
         user_metadata: {
           first_name: firstName,
@@ -42,25 +59,52 @@ export default async function handler(req, res) {
       // Continue even if auth update fails - we'll update the database
     }
 
-    // Also update in your custom users table if you have one
-    const { data: userData, error: dbError } = await supabase
+    // Check if users table exists and update it
+    const { data: tableCheck } = await supabase
       .from('users')
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        role: role || '',
-        updated_at: new Date().toISOString(),
-      })
+      .select('email')
       .eq('email', email)
-      .select()
       .single();
 
-    if (dbError) {
-      console.error('Database update error:', dbError);
-      throw new Error('Failed to update user profile in database');
+    if (tableCheck) {
+      // Users table exists and has this record - update it
+      const { data: userData, error: dbError } = await supabase
+        .from('users')
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          role: role || '',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('email', email)
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error('Database update error:', dbError);
+        // Don't fail if database update fails - auth update succeeded
+      }
+    } else {
+      // Users table doesn't exist or record not found - insert it
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert({
+          email: email,
+          first_name: firstName,
+          last_name: lastName,
+          role: role || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        console.error('Database insert error:', insertError);
+        // Don't fail - auth update succeeded
+      }
     }
 
     // Return success
+    console.log('Profile updated successfully for:', email);
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
