@@ -233,15 +233,17 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
           {renderActiveTool()}
         </main>
         
-        {/* Support Chatbot - Available on all internal pages */}
-        <SupportChatbot context={{ 
-          user_email: currentUser || undefined,
-          business_name: profileData.business.name,
-          current_page: activeTool?.id || 'home',
-          subscription_status: 'active',
-          conversation_turns: 0,
-          mentioned_topics: []
-        }} />
+        {/* Support Chatbot - Available ONLY on Support page */}
+        {activeTool?.id === 'support' && (
+          <SupportChatbot context={{ 
+            user_email: currentUser || undefined,
+            business_name: profileData.business.name,
+            current_page: activeTool?.id || 'home',
+            subscription_status: 'active',
+            conversation_turns: 0,
+            mentioned_topics: []
+          }} />
+        )}
       </div>
     </div>
   );
