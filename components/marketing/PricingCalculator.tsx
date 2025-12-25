@@ -7,7 +7,7 @@ export const PricingCalculator: React.FC = () => {
 
     const basePrice = 149;
     const additionalBusinessPrice = 49;
-    const additionalTeamMemberPrice = 10;
+    const additionalTeamMemberPrice = 15;
     
     const totalCost = useMemo(() => {
         const businessCost = businesses > 1 ? (businesses - 1) * additionalBusinessPrice : 0;
