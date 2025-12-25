@@ -17,12 +17,15 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ navigate }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const basePlan = 149;
-  const additionalBusinessCost = 49;
-  const seatCost = 15;
-  const additionalBusinessCount = Math.max(0, businesses - 1);
-  const total = basePlan + (additionalBusinessCost * additionalBusinessCount) + (seatCost * seats);
+ const basePlan = 149;
+const additionalBusinessCost = 49;
+const seatCost = 15;
 
+// Calculate additional businesses (businesses beyond the first one)
+const additionalBusinessCount = Math.max(0, businesses - 1);
+
+// Calculate total: Base plan ($149) + Additional businesses + Additional seats
+const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (seats * seatCost);
   const handleBusinessChange = (delta: number) => {
     setBusinesses(prev => Math.max(1, prev + delta));
   };
@@ -261,17 +264,35 @@ export const GetStartedPage: React.FC<GetStartedPageProps> = ({ navigate }) => {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/80 rounded-lg p-6 space-y-3 border border-slate-700">
-                  <div className="flex justify-between text-gray-300 text-sm">
-                    <span>Base Plan (1 business, 1 seat)</span>
-                    <span className="font-semibold">${basePlan}/mo</span>
-                  </div>
-                  {additionalBusinessCount > 0 && (
-                    <div className="flex justify-between text-gray-300 text-sm">
-                      <span>Additional Businesses ({additionalBusinessCount} × ${additionalBusinessCost})</span>
-                      <span className="font-semibold">${additionalBusinessCost * additionalBusinessCount}/mo</span>
-                    </div>
-                  )}
+               <div className="bg-slate-900/80 rounded-lg p-6 space-y-3 border border-slate-700">
+  <div className="flex justify-between text-gray-300 text-sm">
+    <span>Base Plan (includes 1 business, 1 seat)</span>
+    <span className="font-semibold">${basePlan}/mo</span>
+  </div>
+  
+  {additionalBusinessCount > 0 && (
+    <div className="flex justify-between text-gray-300 text-sm">
+      <span>
+        {additionalBusinessCount === 1 
+          ? `1 Additional Business` 
+          : `${additionalBusinessCount} Additional Businesses`}
+      </span>
+      <span className="font-semibold">
+        ${additionalBusinessCount * additionalBusinessCost}/mo
+      </span>
+    </div>
+  )}
+  
+  {seats > 0 && (
+    <div className="flex justify-between text-gray-300 text-sm">
+      <span>
+        {seats === 1 
+          ? `1 Additional Seat` 
+          : `${seats} Additional Seats`}
+      </span>
+      <span className="font-semibold">${seats * seatCost}/mo</span>
+    </div>
+  )}
                   {seats > 0 && (
                     <div className="flex justify-between text-gray-300 text-sm">
                       <span>Additional Seats ({seats} × ${seatCost})</span>
