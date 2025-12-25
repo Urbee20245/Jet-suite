@@ -114,6 +114,8 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     const newAdditionalBusinessCount = Math.max(0, newBusinesses - 1);
     const newTotal = basePlan + (newAdditionalBusinessCount * additionalBusinessCost) + (newSeats * seatCost);
 
+    const hasActiveSubscription = billingAccount && billingAccount.subscription_status === 'active';
+
     useEffect(() => {
         // Initialize or update team members list, ensuring owner is always first.
         const owner = {
@@ -159,7 +161,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         loadBillingInfo();
     }, [profileData.user.email]);
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormState(prev => ({ ...prev, [name]: value }));
         setIsDirty(true);
@@ -259,42 +261,62 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         setIsUpdatingPlan(true);
         
         try {
-            const response = await fetch('/api/stripe/update-subscription', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: profileData.user.email,
-                    businessCount: newBusinesses,
-                    seatCount: newSeats,
-                }),
-            });
+            if (hasActiveSubscription) {
+                // Existing subscription - update it
+                const response = await fetch('/api/stripe/update-subscription', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: profileData.user.email,
+                        businessCount: newBusinesses,
+                        seatCount: newSeats,
+                    }),
+                });
 
-            if (!response.ok) {
-                throw new Error('Failed to update subscription');
-            }
+                if (!response.ok) {
+                    throw new Error('Failed to update subscription');
+                }
 
-            const data = await response.json();
-            
-            if (data.url) {
-                // Redirect to Stripe Checkout for payment
-                window.location.href = data.url;
+                const data = await response.json();
+                
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    setCurrentBusinesses(newBusinesses);
+                    setCurrentSeats(newSeats);
+                    setShowPlanEditor(false);
+                    const account = await getBillingAccount(profileData.user.email);
+                    setBillingAccount(account);
+                    alert('Plan updated successfully!');
+                }
             } else {
-                // Update was successful
-                setCurrentBusinesses(newBusinesses);
-                setCurrentSeats(newSeats);
-                setShowPlanEditor(false);
-                
-                // Refresh billing info
-                const account = await getBillingAccount(profileData.user.email);
-                setBillingAccount(account);
-                
-                alert('Plan updated successfully!');
+                // No subscription - create new checkout session
+                const response = await fetch('/api/stripe/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: profileData.user.email,
+                        businessCount: newBusinesses,
+                        seatCount: newSeats,
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create checkout session');
+                }
+
+                const data = await response.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                }
             }
         } catch (error) {
             console.error('Update error:', error);
-            alert('Failed to update plan. Please try again.');
+            alert('Failed to process request. Please try again.');
         } finally {
             setIsUpdatingPlan(false);
         }
@@ -344,11 +366,11 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                 <div className="flex items-center justify-center py-4">
                                     <Loader />
                                 </div>
-                            ) : billingAccount ? (
-                                <div className="space-y-3">
-                                    {!showPlanEditor ? (
+                            ) : !showPlanEditor ? (
+                                <div>
+                                    {hasActiveSubscription ? (
                                         <div>
-                                            {/* Subscription Status */}
+                                            {/* Active Subscription */}
                                             <div className="bg-brand-light p-4 rounded-lg border border-brand-border mb-3">
                                                 <div className="flex justify-between items-center mb-2">
                                                     <span className="text-sm text-brand-text-muted">Status:</span>
@@ -362,7 +384,6 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                                 </div>
                                             </div>
 
-                                            {/* Manage Plan Button */}
                                             <button
                                                 onClick={handleOpenPlanEditor}
                                                 className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-opacity mb-2"
@@ -370,7 +391,6 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                                 Manage Plan
                                             </button>
 
-                                            {/* Subscription Details */}
                                             <div className="bg-brand-light p-4 rounded-lg border border-brand-border space-y-2">
                                                 <div className="flex justify-between text-sm">
                                                     <span className="text-brand-text-muted">Next billing date:</span>
@@ -387,7 +407,6 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                                 )}
                                             </div>
 
-                                            {/* Manage Subscription Button */}
                                             <button
                                                 onClick={handleManageSubscription}
                                                 disabled={isOpeningPortal}
@@ -406,177 +425,194 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                                 )}
                                             </button>
 
-                                            {/* Cancel Policy */}
                                             <p className="text-xs text-center text-brand-text-muted mt-2">
                                                 Cancel anytime. No refunds.
                                             </p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-4">
-                                            {/* Plan Editor with +/- Buttons */}
-                                            <div className="bg-brand-light rounded-lg p-4 border border-brand-border">
-                                                <h3 className="font-semibold text-brand-text mb-4">Adjust Your Plan</h3>
-                                                
-                                                {/* Businesses Selector */}
-                                                <div className="mb-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <label className="text-sm font-semibold text-brand-text">Number of Businesses</label>
-                                                        <span className="text-xs text-brand-text-muted">
-                                                            ${basePlan} base + ${additionalBusinessCost}/mo additional
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-4">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleBusinessChange(-1)}
-                                                            disabled={newBusinesses <= 1}
-                                                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors"
-                                                        >
-                                                            <MinusIcon className="w-5 h-5" />
-                                                        </button>
-                                                        <div className="flex-1 text-center">
-                                                            <div className="text-4xl font-bold text-brand-text">{newBusinesses}</div>
-                                                            <div className="text-xs text-brand-text-muted">
-                                                                {newBusinesses === 1 ? 'Business' : 'Businesses'}
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleBusinessChange(1)}
-                                                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
-                                                        >
-                                                            <PlusIcon className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Seats Selector */}
-                                                <div className="mb-4">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <label className="text-sm font-semibold text-brand-text">Team Seats</label>
-                                                        <span className="text-xs text-brand-text-muted">
-                                                            1 included + ${seatCost}/mo additional
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-4">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleSeatsChange(-1)}
-                                                            disabled={newSeats <= 0}
-                                                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors"
-                                                        >
-                                                            <MinusIcon className="w-5 h-5" />
-                                                        </button>
-                                                        <div className="flex-1 text-center">
-                                                            <div className="text-4xl font-bold text-brand-text">{newSeats}</div>
-                                                            <div className="text-xs text-brand-text-muted">
-                                                                Additional {newSeats === 1 ? 'Seat' : 'Seats'}
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleSeatsChange(1)}
-                                                            className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
-                                                        >
-                                                            <PlusIcon className="w-5 h-5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                {/* Pricing Breakdown */}
-                                                <div className="bg-white rounded-lg p-4 space-y-2 text-sm border border-slate-200">
-                                                    <div className="flex justify-between text-gray-700">
-                                                        <span>Base Plan (includes 1 business, 1 seat)</span>
-                                                        <span className="font-semibold">${basePlan}/mo</span>
-                                                    </div>
-                                                    
-                                                    {newAdditionalBusinessCount > 0 && (
-                                                        <div className="flex justify-between text-gray-700">
-                                                            <span>
-                                                                {newAdditionalBusinessCount === 1 
-                                                                    ? '1 Additional Business' 
-                                                                    : `${newAdditionalBusinessCount} Additional Businesses`}
-                                                            </span>
-                                                            <span className="font-semibold">${newAdditionalBusinessCount * additionalBusinessCost}/mo</span>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {newSeats > 0 && (
-                                                        <div className="flex justify-between text-gray-700">
-                                                            <span>
-                                                                {newSeats === 1 
-                                                                    ? '1 Additional Seat' 
-                                                                    : `${newSeats} Additional Seats`}
-                                                            </span>
-                                                            <span className="font-semibold">${newSeats * seatCost}/mo</span>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                                        <div className="flex justify-between items-baseline">
-                                                            <span className="font-bold text-gray-900">New Monthly Total</span>
-                                                            <span className="text-2xl font-extrabold text-gray-900">
-                                                                ${newTotal}<span className="text-sm font-normal text-gray-500">/mo</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {newTotal !== currentTotal && (
-                                                        <div className="pt-2 border-t border-gray-200">
-                                                            <div className="flex justify-between text-sm">
-                                                                <span className="text-gray-600">Change</span>
-                                                                <span className={newTotal > currentTotal ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
-                                                                    {newTotal > currentTotal ? '+' : ''}{newTotal - currentTotal}/mo
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                        <div>
+                                            {/* No Active Subscription */}
+                                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-3">
+                                                <p className="text-sm text-yellow-800 mb-3">No active subscription found</p>
                                             </div>
+                                            
+                                            <button
+                                                onClick={handleOpenPlanEditor}
+                                                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-opacity mb-2"
+                                            >
+                                                Get Started - Configure Plan
+                                            </button>
 
-                                            {/* Action Buttons */}
-                                            <div className="flex gap-3">
-                                                <button
-                                                    onClick={handleCancelPlanEdit}
-                                                    disabled={isUpdatingPlan}
-                                                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    onClick={handleUpdatePlan}
-                                                    disabled={isUpdatingPlan || (newBusinesses === currentBusinesses && newSeats === currentSeats)}
-                                                    className="flex-1 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
-                                                >
-                                                    {isUpdatingPlan ? (
-                                                        <>
-                                                            <Loader />
-                                                            Processing...
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {newTotal > currentTotal ? 'Upgrade Plan' : newTotal < currentTotal ? 'Downgrade Plan' : 'Update Plan'}
-                                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
+                                            <a 
+                                                href="/pricing"
+                                                className="block text-center text-accent-blue hover:underline text-sm"
+                                            >
+                                                View Pricing Plans
+                                            </a>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center py-4">
-                                    <p className="text-sm text-brand-text-muted mb-3">
-                                        No active subscription found
-                                    </p>
-                                    <a 
-                                        href="/pricing"
-                                        className="inline-block bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity"
-                                    >
-                                        View Pricing Plans
-                                    </a>
+                                <div className="space-y-4">
+                                    {/* Plan Editor with +/- Buttons */}
+                                    <div className="bg-brand-light rounded-lg p-4 border border-brand-border">
+                                        <h3 className="font-semibold text-brand-text mb-4">
+                                            {hasActiveSubscription ? 'Adjust Your Plan' : 'Configure Your Plan'}
+                                        </h3>
+                                        
+                                        {/* Businesses Selector */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-sm font-semibold text-brand-text">Number of Businesses</label>
+                                                <span className="text-xs text-brand-text-muted">
+                                                    ${basePlan} base + ${additionalBusinessCost}/mo additional
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBusinessChange(-1)}
+                                                    disabled={newBusinesses <= 1}
+                                                    className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors"
+                                                >
+                                                    <MinusIcon className="w-5 h-5" />
+                                                </button>
+                                                <div className="flex-1 text-center">
+                                                    <div className="text-4xl font-bold text-brand-text">{newBusinesses}</div>
+                                                    <div className="text-xs text-brand-text-muted">
+                                                        {newBusinesses === 1 ? 'Business' : 'Businesses'}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBusinessChange(1)}
+                                                    className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                                                >
+                                                    <PlusIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Seats Selector */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="text-sm font-semibold text-brand-text">Team Seats</label>
+                                                <span className="text-xs text-brand-text-muted">
+                                                    1 included + ${seatCost}/mo additional
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSeatsChange(-1)}
+                                                    disabled={newSeats <= 0}
+                                                    className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors"
+                                                >
+                                                    <MinusIcon className="w-5 h-5" />
+                                                </button>
+                                                <div className="flex-1 text-center">
+                                                    <div className="text-4xl font-bold text-brand-text">{newSeats}</div>
+                                                    <div className="text-xs text-brand-text-muted">
+                                                        Additional {newSeats === 1 ? 'Seat' : 'Seats'}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSeatsChange(1)}
+                                                    className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                                                >
+                                                    <PlusIcon className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Pricing Breakdown */}
+                                        <div className="bg-white rounded-lg p-4 space-y-2 text-sm border border-slate-200">
+                                            <div className="flex justify-between text-gray-700">
+                                                <span>Base Plan (includes 1 business, 1 seat)</span>
+                                                <span className="font-semibold">${basePlan}/mo</span>
+                                            </div>
+                                            
+                                            {newAdditionalBusinessCount > 0 && (
+                                                <div className="flex justify-between text-gray-700">
+                                                    <span>
+                                                        {newAdditionalBusinessCount === 1 
+                                                            ? '1 Additional Business' 
+                                                            : `${newAdditionalBusinessCount} Additional Businesses`}
+                                                    </span>
+                                                    <span className="font-semibold">${newAdditionalBusinessCount * additionalBusinessCost}/mo</span>
+                                                </div>
+                                            )}
+                                            
+                                            {newSeats > 0 && (
+                                                <div className="flex justify-between text-gray-700">
+                                                    <span>
+                                                        {newSeats === 1 
+                                                            ? '1 Additional Seat' 
+                                                            : `${newSeats} Additional Seats`}
+                                                    </span>
+                                                    <span className="font-semibold">${newSeats * seatCost}/mo</span>
+                                                </div>
+                                            )}
+                                            
+                                            <div className="border-t border-gray-200 pt-2 mt-2">
+                                                <div className="flex justify-between items-baseline">
+                                                    <span className="font-bold text-gray-900">Monthly Total</span>
+                                                    <span className="text-2xl font-extrabold text-gray-900">
+                                                        ${newTotal}<span className="text-sm font-normal text-gray-500">/mo</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {hasActiveSubscription && newTotal !== currentTotal && (
+                                                <div className="pt-2 border-t border-gray-200">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-gray-600">Change</span>
+                                                        <span className={newTotal > currentTotal ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>
+                                                            {newTotal > currentTotal ? '+' : ''}{newTotal - currentTotal}/mo
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={handleCancelPlanEdit}
+                                            disabled={isUpdatingPlan}
+                                            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleUpdatePlan}
+                                            disabled={isUpdatingPlan || (hasActiveSubscription && newBusinesses === currentBusinesses && newSeats === currentSeats)}
+                                            className="flex-1 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {isUpdatingPlan ? (
+                                                <>
+                                                    <Loader />
+                                                    Processing...
+                                                </>
+                                            ) : hasActiveSubscription ? (
+                                                <>
+                                                    {newTotal > currentTotal ? 'Upgrade Plan' : newTotal < currentTotal ? 'Downgrade Plan' : 'Update Plan'}
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Continue to Payment
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -641,7 +677,60 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-brand-text-muted mb-1">Title/Role (Optional)</label>
-                                <input type="text" name="role" value={formState.role} onChange={handleFormChange} placeholder="e.g., Owner, Manager, Marketing Director" className="w-full bg-brand-light border border-brand-border rounded-lg p-2" />
+                                <select 
+                                    name="role" 
+                                    value={formState.role} 
+                                    onChange={handleFormChange} 
+                                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2"
+                                >
+                                    <option value="">Select a role...</option>
+                                    <optgroup label="Leadership">
+                                        <option value="Owner">Owner</option>
+                                        <option value="Founder">Founder</option>
+                                        <option value="Co-Founder">Co-Founder</option>
+                                        <option value="CEO">CEO</option>
+                                        <option value="President">President</option>
+                                        <option value="Vice President">Vice President</option>
+                                        <option value="Director">Director</option>
+                                        <option value="Partner">Partner</option>
+                                    </optgroup>
+                                    <optgroup label="Management">
+                                        <option value="General Manager">General Manager</option>
+                                        <option value="Operations Manager">Operations Manager</option>
+                                        <option value="Office Manager">Office Manager</option>
+                                        <option value="Store Manager">Store Manager</option>
+                                        <option value="Manager">Manager</option>
+                                        <option value="Assistant Manager">Assistant Manager</option>
+                                        <option value="Team Lead">Team Lead</option>
+                                        <option value="Supervisor">Supervisor</option>
+                                    </optgroup>
+                                    <optgroup label="Marketing & Sales">
+                                        <option value="Marketing Director">Marketing Director</option>
+                                        <option value="Marketing Manager">Marketing Manager</option>
+                                        <option value="Marketing Coordinator">Marketing Coordinator</option>
+                                        <option value="Social Media Manager">Social Media Manager</option>
+                                        <option value="Sales Director">Sales Director</option>
+                                        <option value="Sales Manager">Sales Manager</option>
+                                        <option value="Sales Representative">Sales Representative</option>
+                                        <option value="Account Manager">Account Manager</option>
+                                    </optgroup>
+                                    <optgroup label="Operations">
+                                        <option value="Administrator">Administrator</option>
+                                        <option value="Office Administrator">Office Administrator</option>
+                                        <option value="Executive Assistant">Executive Assistant</option>
+                                        <option value="Administrative Assistant">Administrative Assistant</option>
+                                        <option value="Receptionist">Receptionist</option>
+                                        <option value="Coordinator">Coordinator</option>
+                                    </optgroup>
+                                    <optgroup label="Staff">
+                                        <option value="Employee">Employee</option>
+                                        <option value="Team Member">Team Member</option>
+                                        <option value="Associate">Associate</option>
+                                        <option value="Specialist">Specialist</option>
+                                        <option value="Consultant">Consultant</option>
+                                        <option value="Contractor">Contractor</option>
+                                    </optgroup>
+                                </select>
                             </div>
                             <div>
                                 <p className="font-semibold text-brand-text-muted">Account Email</p>
