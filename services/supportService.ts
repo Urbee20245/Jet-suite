@@ -17,7 +17,7 @@ import type {
   TicketFilters,
   ApiResponse,
   PaginatedResponse,
-} from '../types';
+} from '../Types/supportTypes';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.VITE_SUPABASE_URL;

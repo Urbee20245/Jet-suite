@@ -26,7 +26,7 @@ import type {
   TicketStatus,
   TicketCategory,
   TicketPriority 
-} from '../supportTypes';
+} from '../Types/supportTypes';
 
 export default function SupportDashboard() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);

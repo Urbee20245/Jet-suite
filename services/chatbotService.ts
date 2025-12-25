@@ -4,13 +4,13 @@
 // =====================================================
 
 import type {
-  ChatbotMessage,
+  ChatMessage,
   ChatbotResponse,
   ChatbotContext,
   SuggestedAction,
   KnowledgeBaseArticle,
   CreateTicketRequest,
-} from '../types';
+} from '../Types/supportTypes';
 import { supportService } from './supportService';
 
 const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY;
@@ -112,7 +112,7 @@ export const chatbotService = {
    */
   async chat(
     userMessage: string,
-    conversationHistory: ChatbotMessage[],
+    conversationHistory: ChatMessage[],
     context?: ChatbotContext
   ): Promise<ChatbotResponse> {
     try {
@@ -212,7 +212,7 @@ export const chatbotService = {
    * Build conversation messages for Gemini
    */
   buildConversationMessages(
-    history: ChatbotMessage[],
+    history: ChatMessage[],
     newMessage: string,
     contextInfo: string
   ): string {
@@ -382,7 +382,7 @@ export const chatbotService = {
    * Create a support ticket from chatbot conversation
    */
   async escalateToTicket(
-    conversationHistory: ChatbotMessage[],
+    conversationHistory: ChatMessage[],
     category: string = 'general',
     context?: ChatbotContext
   ): Promise<string | null> {
@@ -419,7 +419,7 @@ export const chatbotService = {
   /**
    * Generate a subject line from conversation
    */
-  generateTicketSubject(history: ChatbotMessage[]): string {
+  generateTicketSubject(history: ChatMessage[]): string {
     // Use first user message or a default
     const firstUserMessage = history.find(msg => msg.role === 'user');
     
@@ -437,7 +437,7 @@ export const chatbotService = {
   /**
    * Generate ticket description from conversation
    */
-  generateTicketDescription(history: ChatbotMessage[]): string {
+  generateTicketDescription(history: ChatMessage[]): string {
     let description = '**Conversation History from AI Chatbot:**\n\n';
     
     history.forEach((msg, index) => {

@@ -21,7 +21,7 @@ import type {
   CreateTicketRequest,
   TicketCategory,
   TicketStatus 
-} from '../types';
+} from '../Types/supportTypes';
 
 export default function UserSupportTickets() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
