@@ -311,3 +311,100 @@ export interface AnalysisResult {
     fix: string;
   }>;
 }
+// =====================================================
+// ADD THIS TO YOUR EXISTING types.ts FILE
+// Copy and paste at the bottom of types.ts
+// =====================================================
+
+// Support System Types
+export type TicketStatus = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed';
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TicketCategory = 'billing' | 'technical' | 'feature_request' | 'bug_report' | 'account' | 'general';
+export type MessageSenderType = 'user' | 'agent' | 'bot';
+export type MessageType = 'text' | 'system' | 'note';
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  user_email: string;
+  business_name?: string;
+  subject: string;
+  description: string;
+  category: TicketCategory;
+  priority: TicketPriority;
+  status: TicketStatus;
+  assigned_to?: string;
+  tags?: string[];
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string;
+  first_response_at?: string;
+  satisfaction_rating?: number;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticket_id: string;
+  sender_type: MessageSenderType;
+  sender_id?: string;
+  sender_name?: string;
+  message: string;
+  message_type: MessageType;
+  metadata?: Record<string, any>;
+  is_internal?: boolean;
+  read_at?: string;
+  created_at: string;
+}
+
+export interface ChatbotMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export interface ChatbotContext {
+  user_email?: string;
+  business_name?: string;
+  current_page?: string;
+  subscription_status?: string;
+}
+
+export interface KnowledgeBaseArticle {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  keywords?: string[];
+  is_public: boolean;
+  view_count: number;
+  helpful_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CannedResponse {
+  id: string;
+  category: string;
+  shortcut: string;
+  title: string;
+  content: string;
+  created_at: string;
+}
+
+export interface CreateTicketData {
+  subject: string;
+  description: string;
+  category: TicketCategory;
+  priority?: TicketPriority;
+  business_name?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CreateMessageData {
+  ticket_id: string;
+  message: string;
+  sender_type: MessageSenderType;
+  message_type?: MessageType;
+  is_internal?: boolean;
+}
