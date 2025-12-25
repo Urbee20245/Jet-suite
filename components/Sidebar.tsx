@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import type { Tool } from '../types';
 import { JetSuiteLogo } from './JetSuiteLogo';
 import { ALL_TOOLS, SIDEBAR_STATIC_TOP_TOOLS, SIDEBAR_COLLAPSIBLE_CATEGORIES, SIDEBAR_STATIC_BOTTOM_TOOLS, ADMIN_SIDEBAR_TOOLS } from '../constants';
-import { ChevronDownIcon } from './icons/MiniIcons';
+import { ChevronDownIcon, ArrowRightStartOnRectangleIcon } from './icons/MiniIcons';
 
 interface SidebarProps {
   activeTool: Tool | null;
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   isAdmin: boolean;
+  onLogout: () => void;
 }
 
 const ToolButton: React.FC<{ tool: Tool, isActive: boolean, onClick: () => void, isCollapsed: boolean, isAdmin?: boolean }> = ({ tool, isActive, onClick, isCollapsed, isAdmin = false }) => {
@@ -80,7 +81,7 @@ const CollapsibleCategory: React.FC<{
 };
 
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool, isAdmin }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool, isAdmin, onLogout }) => {
   const isCollapsed = false; // Control collapsed state here if needed in future
 
   return (
@@ -144,6 +145,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTool, setActiveTool, isA
                 <p>JetSuite Growth OS</p>
             </div>
         )}
+        <button
+            onClick={onLogout}
+            className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-brand-darker/50 hover:text-white mt-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}
+            title="Log Out"
+        >
+            <ArrowRightStartOnRectangleIcon className="w-6 h-6 flex-shrink-0 text-gray-400" />
+            {!isCollapsed && <span className="ml-4 font-medium">Log Out</span>}
+        </button>
       </div>
     </div>
   );

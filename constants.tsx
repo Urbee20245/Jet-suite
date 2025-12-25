@@ -26,6 +26,7 @@ import {
   AccountIcon,
   AdminPanelIcon,
 } from './components/icons/ToolIcons';
+import { TicketIcon } from './components/SupportIcons';
 
 export const ALL_TOOLS: { [key: string]: Tool } = {
   // Special Home Tool
@@ -61,6 +62,9 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
   // Knowledge Base
   knowledgebase: { id: 'knowledgebase', name: 'Knowledge Base', description: 'Learn growth strategies and how to use JetSuite.', icon: KnowledgeBaseIcon },
 
+  // Support
+  support: { id: 'support', name: 'Support', description: 'Get help and manage your support tickets.', icon: TicketIcon },
+
   // Admin Panel
   adminpanel: { id: 'adminpanel', name: 'Admin Panel', description: 'Manage all businesses, users, and system settings.', icon: AdminPanelIcon },
 };
@@ -76,7 +80,7 @@ export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Engage & Convert', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
-export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase'];
+export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase', 'support'];
 
 export const ADMIN_SIDEBAR_TOOLS = ['adminpanel'];
 

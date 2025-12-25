@@ -24,6 +24,7 @@ import { WeeklyProgress } from './tools/WeeklyProgress';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
 import { AdminPanel } from './tools/AdminPanel';
+import UserSupportTickets from './tools/UserSupportTickets';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 
@@ -214,6 +215,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
       case 'jetads': return <JetAds tool={activeTool} />;
       
       case 'growthplan': return <GrowthPlan tasks={growthPlanTasks} setTasks={setGrowthPlanTasks} setActiveTool={setActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={growthScore} />;
+      case 'support': return <UserSupportTickets />;
       default: return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
     }
   };
@@ -222,7 +224,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail })
 
   return (
     <div className="flex h-screen text-brand-text font-sans bg-brand-light">
-      {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} />}
+      {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} onLogout={onLogout} />}
       <div className="flex-1 flex flex-col overflow-hidden">
         {impersonatedUserEmail && ( <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> <EyeIcon className="w-5 h-5"/> Viewing as {impersonatedUserEmail}. <button onClick={() => setImpersonatedUserEmail(null)} className="underline ml-2">Return to Admin</button> </div> )}
         {!isJetCreateActive && <Header activeTool={activeTool} growthScore={growthScore} />}
