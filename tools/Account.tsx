@@ -212,7 +212,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         const member: TeamMember = {
             ...newMember,
             id: `member_${Date.now()}`,
-            role: 'Member',
+            role: 'Team Member',
         };
         setTeamMembers(prev => [...prev, member]);
         setShowAddMemberModal(false);
@@ -225,8 +225,8 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     const handleManageSubscription = async () => {
         try {
             setIsOpeningPortal(true);
-            const url = await createPortalSession(profileData.user.email);
-            window.location.href = url;
+            const response = await createPortalSession(profileData.user.email);
+            window.location.href = response.url;
         } catch (error) {
             console.error('Error opening portal:', error);
             alert('Failed to open billing portal. Please try again.');
