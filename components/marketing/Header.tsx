@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                     {/* Logo and Nav Links */}
                     <div className="flex items-center space-x-8">
                         <button onClick={() => navigate('/')} className="flex items-center space-x-2">
-                           <JetSuiteLogo className="w-10 h-10"/>
+                           <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-10 h-10" />
                            <div>
                                 <span className="text-xl font-bold text-white">JetSuite</span>
                                 <span className="block text-xs text-gray-400 -mt-1">by Jet Automations</span>
@@ -32,7 +32,10 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                     <div className="flex items-center space-x-4">
                         {/* Try Free Tools Dropdown */}
                         <div className="relative group">
-                            <button className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1">
+                            <button className="bg-gradient-to-r from-accent-cyan to-accent-purple hover:opacity-90 text-white font-bold px-4 py-2 rounded-lg shadow-lg shadow-accent-cyan/30 flex items-center gap-2 transition-all">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
                                 Try Free Tools
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
