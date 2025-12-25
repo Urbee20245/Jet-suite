@@ -312,16 +312,23 @@ export interface AnalysisResult {
   }>;
 }
 // =====================================================
-// ADD THIS TO YOUR EXISTING types.ts FILE
-// Copy and paste at the bottom of types.ts
+// COMPLETE SUPPORT TYPES - ADD TO YOUR types.ts
+// Copy and paste ALL of this at the bottom of types.ts
 // =====================================================
 
-// Support System Types
+// ====================
+// BASIC ENUMS & TYPES
+// ====================
+
 export type TicketStatus = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed';
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TicketCategory = 'billing' | 'technical' | 'feature_request' | 'bug_report' | 'account' | 'general';
 export type MessageSenderType = 'user' | 'agent' | 'bot';
 export type MessageType = 'text' | 'system' | 'note';
+
+// ====================
+// CORE DATA MODELS
+// ====================
 
 export interface SupportTicket {
   id: string;
@@ -357,19 +364,6 @@ export interface SupportMessage {
   created_at: string;
 }
 
-export interface ChatbotMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-export interface ChatbotContext {
-  user_email?: string;
-  business_name?: string;
-  current_page?: string;
-  subscription_status?: string;
-}
-
 export interface KnowledgeBaseArticle {
   id: string;
   title: string;
@@ -392,6 +386,53 @@ export interface CannedResponse {
   created_at: string;
 }
 
+export interface ChatbotConversation {
+  id: string;
+  user_id: string;
+  session_id: string;
+  messages: any[];
+  context?: Record<string, any>;
+  created_at: string;
+  last_activity_at: string;
+  escalated_to_ticket?: string;
+}
+
+// ====================
+// CHATBOT TYPES
+// ====================
+
+export interface ChatbotMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export interface ChatbotContext {
+  user_email?: string;
+  business_name?: string;
+  current_page?: string;
+  subscription_status?: string;
+}
+
+export interface ChatbotResponse {
+  message: string;
+  suggestedActions?: SuggestedAction[];
+  suggestedArticles?: KnowledgeBaseArticle[];
+  requiresEscalation?: boolean;
+  ticketCreated?: SupportTicket;
+}
+
+export interface SuggestedAction {
+  id: string;
+  label: string;
+  action: 'search_kb' | 'create_ticket' | 'open_article' | 'contact_support';
+  metadata?: Record<string, any>;
+}
+
+// ====================
+// REQUEST TYPES
+// ====================
+
 export interface CreateTicketData {
   subject: string;
   description: string;
@@ -401,10 +442,73 @@ export interface CreateTicketData {
   metadata?: Record<string, any>;
 }
 
+export interface CreateTicketRequest {
+  subject: string;
+  description: string;
+  category: TicketCategory;
+  priority?: TicketPriority;
+  business_name?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateTicketRequest {
+  subject?: string;
+  description?: string;
+  category?: TicketCategory;
+  priority?: TicketPriority;
+  status?: TicketStatus;
+  assigned_to?: string;
+  tags?: string[];
+  metadata?: Record<string, any>;
+  satisfaction_rating?: number;
+}
+
 export interface CreateMessageData {
   ticket_id: string;
   message: string;
   sender_type: MessageSenderType;
   message_type?: MessageType;
   is_internal?: boolean;
+}
+
+export interface CreateMessageRequest {
+  ticket_id: string;
+  message: string;
+  sender_type: MessageSenderType;
+  message_type?: MessageType;
+  is_internal?: boolean;
+}
+
+export interface SearchKnowledgeBaseRequest {
+  query: string;
+  category?: string;
+  limit?: number;
+}
+
+export interface TicketFilters {
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  category?: TicketCategory;
+  assigned_to?: string;
+  user_id?: string;
+  search?: string;
+}
+
+// ====================
+// RESPONSE TYPES
+// ====================
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface PaginatedResponse<T = any> {
+  data: T[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
 }
