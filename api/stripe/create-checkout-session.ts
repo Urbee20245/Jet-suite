@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email,
       seatCount = 0,
       additionalBusinessCount = 0,
-      isFounder = false, // ← TEMP: trusted for now
+      isFounder = true, // ← TEMP: trusted for now
       metadata = {},
     } = req.body;
 
