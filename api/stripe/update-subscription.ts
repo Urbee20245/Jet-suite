@@ -59,6 +59,10 @@ export default async function handler(req, res) {
 
     if (isUpgrade) {
       // Create a new checkout session for the upgrade
+      const productId = typeof subscription.items.data[0].price.product === 'string' 
+        ? subscription.items.data[0].price.product 
+        : subscription.items.data[0].price.product.id;
+
       const session = await stripe.checkout.sessions.create({
         customer: billingAccount.stripe_customer_id,
         payment_method_types: ['card'],
@@ -67,7 +71,7 @@ export default async function handler(req, res) {
           {
             price_data: {
               currency: 'usd',
-              product: subscription.items.data[0].price.product,
+              product: productId,
               recurring: {
                 interval: 'month',
               },
