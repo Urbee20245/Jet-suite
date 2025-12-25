@@ -148,13 +148,13 @@ export const supportService = {
       // Apply filters
       if (filters) {
         if (filters.status && filters.status.length > 0) {
-          query = query.in('status', filters.status);
+          query = query.in('status', filters.status as any[]);
         }
         if (filters.category && filters.category.length > 0) {
-          query = query.in('category', filters.category);
+          query = query.in('category', filters.category as any[]);
         }
         if (filters.priority && filters.priority.length > 0) {
-          query = query.in('priority', filters.priority);
+          query = query.in('priority', filters.priority as any[]);
         }
         if (filters.search) {
           query = query.or(`subject.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
@@ -207,13 +207,13 @@ export const supportService = {
       // Apply filters
       if (filters) {
         if (filters.status && filters.status.length > 0) {
-          query = query.in('status', filters.status);
+          query = query.in('status', filters.status as any[]);
         }
         if (filters.category && filters.category.length > 0) {
-          query = query.in('category', filters.category);
+          query = query.in('category', filters.category as any[]);
         }
         if (filters.priority && filters.priority.length > 0) {
-          query = query.in('priority', filters.priority);
+          query = query.in('priority', filters.priority as any[]);
         }
         if (filters.search) {
           query = query.or(`subject.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);

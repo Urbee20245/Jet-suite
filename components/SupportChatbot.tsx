@@ -20,7 +20,6 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [suggestedArticles, setSuggestedArticles] = useState<KnowledgeBaseArticle[]>([]);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

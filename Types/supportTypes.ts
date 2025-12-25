@@ -287,8 +287,8 @@ export interface ChatbotContext {
   current_page?: string;
   subscription_status?: string;
   recent_tickets?: number;
-  conversation_turns: number;
-  mentioned_topics: string[];
+  conversation_turns?: number;
+  mentioned_topics?: string[];
 }
 
 // =====================================================
