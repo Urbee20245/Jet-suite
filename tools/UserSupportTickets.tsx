@@ -13,7 +13,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Star
-} from 'lucide-react';
+} from '../components/SupportIcons';
 import supportService from '../services/supportService';
 import type { 
   SupportTicket, 
@@ -21,7 +21,7 @@ import type {
   CreateTicketRequest,
   TicketCategory,
   TicketStatus 
-} from '../supportTypes';
+} from '../types';
 
 export default function UserSupportTickets() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
