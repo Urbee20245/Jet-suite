@@ -4,10 +4,10 @@
 // =====================================================
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Loader2, ChevronDown, ExternalLink } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, ChevronDown, ExternalLink } from './SupportIcons';
 import chatbotService from '../services/chatbotService';
 import supportService from '../services/supportService';
-import type { ChatMessage, ChatbotContext, KnowledgeBaseArticle } from '../supportTypes';
+import type { ChatMessage, ChatbotContext, KnowledgeBaseArticle } from '../types';
 
 interface SupportChatbotProps {
   context?: ChatbotContext;
