@@ -9,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -27,15 +27,16 @@ export default async function handler(req, res) {
   try {
     console.log('Updating profile for:', email, { firstName, lastName, role });
 
-    // First, get the user by email to find their ID
-    const { data: users, error: findError } = await supabase.auth.admin.listUsers();
+    // Get all users and find by email
+    const { data: usersData, error: findError } = await supabase.auth.admin.listUsers();
     
     if (findError) {
       console.error('Error finding user:', findError);
       throw new Error('Failed to find user');
     }
 
-    const user = users.users.find(u => u.email === email);
+    // Find user by email (with proper type handling)
+    const user = usersData?.users?.find((u: any) => u.email === email);
     
     if (!user) {
       console.error('User not found:', email);
@@ -64,7 +65,7 @@ export default async function handler(req, res) {
       .from('users')
       .select('email')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
     if (tableCheck) {
       // Users table exists and has this record - update it
@@ -78,7 +79,7 @@ export default async function handler(req, res) {
         })
         .eq('email', email)
         .select()
-        .single();
+        .maybeSingle();
 
       if (dbError) {
         console.error('Database update error:', dbError);
@@ -116,7 +117,7 @@ export default async function handler(req, res) {
       },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating profile:', error);
     return res.status(500).json({ 
       message: 'Failed to update profile',
