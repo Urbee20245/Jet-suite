@@ -38,15 +38,18 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const additionalBusinessCost = 49;
   const seatCost = 15;
   
+  // Calculate additional businesses (businesses beyond the first one)
   const additionalBusinessCount = Math.max(0, businesses - 1);
-  const monthlyTotal = basePlan + (additionalBusinessCost * additionalBusinessCount) + (seatCost * seats);
+  
+  // Calculate total: Base plan ($149) + Additional businesses + Additional seats
+  const monthlyTotal = basePlan + (additionalBusinessCount * additionalBusinessCost) + (seats * seatCost);
 
   const handleBusinessChange = (delta: number) => {
     setBusinesses(prev => Math.max(1, prev + delta));
   };
 
   const handleSeatsChange = (delta: number) => {
-    setSeats(prev => Math.max(0, prev + delta));  // Allow 0 additional seats
+    setSeats(prev => Math.max(0, prev + delta));
   };
 
 
@@ -165,7 +168,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                   <div className="flex-1 text-center">
                     <div className="text-3xl font-bold text-white">{seats}</div>
                     <div className="text-xs text-gray-400">
-                      {seats === 1 ? 'Seat' : 'Seats'}
+                      Additional {seats === 1 ? 'Seat' : 'Seats'}
                     </div>
                   </div>
                   <button
@@ -179,48 +182,44 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
 
               {/* Pricing Breakdown */}
               <div className="bg-slate-900/50 p-4 rounded-lg space-y-2 text-sm">
+                {/* Base Plan - Always $149 */}
                 <div className="flex justify-between text-gray-300">
-                  <span>Base Plan ({businesses === 1 ? '1 business' : `${businesses} businesses`})</span>
-                  <span>${basePlan + (additionalBusinessCost * additionalBusinessCount)}/mo</span>
+                  <span>Base Plan (includes 1 business, 1 seat)</span>
+                  <span className="font-semibold">${basePlan}/mo</span>
                 </div>
+                
+                {/* Additional Businesses */}
                 {additionalBusinessCount > 0 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Base (1 business)</span>
-                    <span>${basePlan}</span>
+                  <div className="flex justify-between text-gray-300">
+                    <span>
+                      {additionalBusinessCount === 1 
+                        ? '1 Additional Business' 
+                        : `${additionalBusinessCount} Additional Businesses`}
+                    </span>
+                    <span className="font-semibold">${additionalBusinessCount * additionalBusinessCost}/mo</span>
                   </div>
                 )}
-                {additionalBusinessCount > 0 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Additional ({additionalBusinessCount} × ${additionalBusinessCost})</span>
-                    <span>${additionalBusinessCost * additionalBusinessCount}</span>
-                  </div>
-                )}
-               <div className="flex justify-between text-gray-300">
-                  <span>Team Seats ({seats === 0 ? '1 included' : `${seats + 1} total`})</span>
-                  <span>${seatCost * seats}/mo</span>
-                </div>
-                {seats === 0 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• 1 seat included in base plan</span>
-                    <span>$0</span>
-                  </div>
-                )}
+                
+                {/* Additional Seats */}
                 {seats > 0 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Included (1 seat)</span>
-                    <span>$0</span>
+                  <div className="flex justify-between text-gray-300">
+                    <span>
+                      {seats === 1 
+                        ? '1 Additional Seat' 
+                        : `${seats} Additional Seats`}
+                    </span>
+                    <span className="font-semibold">${seats * seatCost}/mo</span>
                   </div>
                 )}
-                {seats > 0 && (
-                  <div className="flex justify-between text-gray-400 text-xs pl-4">
-                    <span>• Additional ({seats} × ${seatCost})</span>
-                    <span>${seatCost * seats}</span>
-                  </div>
-                )}
+                
+                {/* Total */}
                 <div className="border-t border-slate-700 pt-2 mt-2">
                   <div className="flex justify-between items-baseline">
                     <span className="font-bold text-white text-lg">Monthly Total</span>
-                    <span className="text-3xl font-extrabold text-white">${monthlyTotal}<span className="text-lg font-normal text-gray-400">/mo</span></span>
+                    <span className="text-3xl font-extrabold text-white">
+                      ${monthlyTotal}
+                      <span className="text-lg font-normal text-gray-400">/mo</span>
+                    </span>
                   </div>
                 </div>
               </div>
