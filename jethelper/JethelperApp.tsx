@@ -289,89 +289,233 @@ const App: React.FC = () => {
     const turns = groupMessagesIntoTurns(messages);
     const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking';
 
+    // Check if mobile
+    const isMobile = window.innerWidth <= 768;
 
     return (
         <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
             {/* Chat Window - only shows when open */}
             <div 
-                className="bg-[#10182A] border border-[#28334E] rounded-2xl flex flex-col"
                 style={{
                     display: isChatOpen ? 'flex' : 'none',
-                    width: '400px',
-                    height: '600px',
-                    maxWidth: '90vw',
-                    maxHeight: '80vh',
-                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                    flexDirection: 'column',
+                    backgroundColor: '#0F172A',
+                    border: '1px solid #1E293B',
+                    borderRadius: isMobile ? '0' : '16px',
+                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                     position: 'fixed',
-                    bottom: '20px',
-                    right: '20px'
+                    bottom: isMobile ? '0' : '20px',
+                    right: isMobile ? '0' : '20px',
+                    width: isMobile ? '100vw' : '400px',
+                    height: isMobile ? '100vh' : '600px',
+                    maxWidth: '100vw',
+                    maxHeight: '100vh',
+                    zIndex: 10000,
                 }}
             >
-                <header className="flex items-center justify-between p-4 border-b border-[#28334E] bg-[#10182A]/80 backdrop-blur-sm rounded-t-2xl">
-                    <div className="flex items-center">
+                {/* Header */}
+                <header style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px',
+                    borderBottom: '1px solid #1E293B',
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderTopLeftRadius: isMobile ? '0' : '16px',
+                    borderTopRightRadius: isMobile ? '0' : '16px',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
                         <GrowthIcon className="w-6 h-6" />
-                        <div className="ml-3">
-                            <h1 className="text-md font-bold text-white">JetSuite Helper</h1>
-                            <div className="flex items-center mt-1">
-                                <span className="relative flex h-2 w-2 mr-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                </span>
-                                <p className="text-xs text-gray-400">Online and ready to help</p>
+                        <div style={{ marginLeft: '12px' }}>
+                            <h1 style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', margin: 0 }}>JetSuite Helper</h1>
+                            <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                                <span style={{ 
+                                    width: '8px', 
+                                    height: '8px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: '#10B981',
+                                    marginRight: '8px',
+                                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                                }} />
+                                <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>Online and ready to help</p>
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setIsChatOpen(false)} className="text-gray-400 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button 
+                        onClick={() => setIsChatOpen(false)} 
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#9CA3AF',
+                            cursor: 'pointer',
+                            padding: '8px',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </header>
 
-                <div ref={chatContainerRef} className="flex-1 p-4 overflow-y-auto space-y-6">
-                    {turns.map((turn) => <SearchResultCard key={turn.id} userQuery={turn.userQuery} aiResponse={turn.aiResponse} />)}
-                    {currentTranscription && <SearchResultCard userQuery={currentTranscription} />}
+                {/* Messages Container */}
+                <div 
+                    ref={chatContainerRef} 
+                    style={{
+                        flex: 1,
+                        padding: '16px',
+                        overflowY: 'auto',
+                        backgroundColor: '#0F172A',
+                    }}
+                >
+                    {/* Messages */}
+                    {messages.map((msg, index) => (
+                        <div 
+                            key={index} 
+                            style={{
+                                display: 'flex',
+                                justifyContent: msg.role === Role.USER ? 'flex-end' : 'flex-start',
+                                marginBottom: '12px'
+                            }}
+                        >
+                            <div 
+                                style={{
+                                    maxWidth: '80%',
+                                    padding: '12px 16px',
+                                    borderRadius: '16px',
+                                    backgroundColor: msg.role === Role.USER ? '#3B82F6' : '#1E293B',
+                                    color: 'white',
+                                    fontSize: '14px',
+                                    lineHeight: '1.5',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+                                }}
+                            >
+                                {msg.text}
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Current transcription */}
+                    {currentTranscription && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                            <div style={{
+                                maxWidth: '80%',
+                                padding: '12px 16px',
+                                borderRadius: '16px',
+                                backgroundColor: '#3B82F6',
+                                color: 'white',
+                                fontSize: '14px',
+                                opacity: 0.7
+                            }}>
+                                {currentTranscription}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Conversation Starters */}
                     {showStarters && <ConversationStarters onSelect={handleStarterClick} />}
+
+                    {/* Loading indicator */}
                     {isLoading && <TypingIndicator />}
+
+                    {/* Form */}
                     {showForm && <SignUpForm onSubmit={handleFormSubmit} />}
+
+                    {/* Coupon */}
                     {showCoupon && <CouponDisplay code="TAKE20OFF" />}
+
+                    {/* AI Status */}
                     <AIStatusIndicator state={appState} />
                 </div>
 
-                <footer className="p-4 border-t border-[#28334E]">
+                {/* Footer/Input Area */}
+                <footer style={{
+                    padding: '16px',
+                    borderTop: '1px solid #1E293B',
+                    backgroundColor: '#0F172A',
+                    borderBottomLeftRadius: isMobile ? '0' : '16px',
+                    borderBottomRightRadius: isMobile ? '0' : '16px',
+                }}>
                     {isVoiceMode ? (
-                        <div className="flex items-center justify-center h-20 relative">
-                            <div className="flex-1 flex justify-center">
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', position: 'relative' }}>
+                            <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                                 <VoiceVisualizer state={appState as 'listening' | 'thinking' | 'speaking'} onClick={handleMicClick} />
                             </div>
                             <button 
                                 onClick={stopRecording} 
-                                className="absolute right-0 p-2 bg-[#1E293B] rounded-full text-white hover:bg-[#28334E]" 
+                                style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    padding: '8px',
+                                    backgroundColor: '#1E293B',
+                                    borderRadius: '50%',
+                                    border: 'none',
+                                    color: 'white',
+                                    cursor: 'pointer'
+                                }}
                                 aria-label="Switch to text input"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
                             </button>
                         </div>
                     ) : (
                         !showForm && !showCoupon && (
-                            <div className="flex items-center space-x-2">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <input
                                     type="text"
                                     value={userInput}
                                     onChange={(e) => setUserInput(e.target.value)}
                                     onKeyPress={(e) => e.key === 'Enter' && handleTextSend()}
                                     placeholder="Ask a question..."
-                                    className="flex-1 px-4 py-2 bg-[#1E293B] border border-[#28334E] rounded-full focus:outline-none focus:ring-2 focus:ring-[#4A69FF] text-white placeholder-gray-500"
+                                    style={{
+                                        flex: 1,
+                                        padding: '12px 16px',
+                                        backgroundColor: '#1E293B',
+                                        border: '1px solid #334155',
+                                        borderRadius: '24px',
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        outline: 'none'
+                                    }}
                                 />
-                                <button onClick={handleTextSend} className="p-2 bg-[#4A69FF] rounded-full text-white hover:bg-[#3A56D5]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <button 
+                                    onClick={handleTextSend} 
+                                    style={{
+                                        padding: '12px',
+                                        backgroundColor: '#3B82F6',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                                     </svg>
                                 </button>
-                                <button onClick={handleMicClick} className="p-2 bg-[#1E293B] rounded-full text-white hover:bg-[#28334E]" aria-label="Start voice interaction">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <button 
+                                    onClick={handleMicClick} 
+                                    style={{
+                                        padding: '12px',
+                                        backgroundColor: '#1E293B',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        color: 'white',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                    aria-label="Start voice interaction"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                                     </svg>
                                 </button>
