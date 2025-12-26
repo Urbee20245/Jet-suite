@@ -54,7 +54,9 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ onCl
                         animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite'
                     }} />
                     {/* Icon */}
-                    <GrowthIcon className="w-7 h-7" style={{ position: 'relative', zIndex: 1 }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <GrowthIcon className="w-7 h-7" />
+                    </div>
                 </div>
             </button>
         );
