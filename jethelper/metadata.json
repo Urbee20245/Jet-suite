@@ -1,0 +1,7 @@
+{
+  "name": "JetSuite Helper",
+  "description": "An AI-powered assistant chat for JetSuite's website to answer questions and offer a discount coupon to visitors.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
