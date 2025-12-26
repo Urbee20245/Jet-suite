@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { JetSuiteLogo } from '../components/JetSuiteLogo';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
@@ -57,7 +56,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
              <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <button onClick={() => navigate('/')} className="inline-block">
-                       <JetSuiteLogo className="w-16 h-16 mx-auto"/>
+                       <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-16 h-16 mx-auto" />
                     </button>
                     <h1 className="mt-4 text-3xl font-bold text-white">Welcome Back</h1>
                     <p className="text-gray-400">Sign in to your JetSuite account.</p>

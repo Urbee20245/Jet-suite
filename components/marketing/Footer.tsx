@@ -9,7 +9,10 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
   return (
     <footer className="bg-brand-darker border-t border-slate-800">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
-        <h3 className="text-lg font-semibold text-white">JetSuite Growth OS</h3>
+        <div className="flex items-center justify-center space-x-2 mb-4">
+          <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-8 h-8" />
+          <span className="text-xl font-bold text-white">JetSuite</span>
+        </div>
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
           <button className="hover:text-white">Privacy</button>
           <button className="hover:text-white">Terms</button>
