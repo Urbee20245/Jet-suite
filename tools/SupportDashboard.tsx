@@ -10,14 +10,12 @@ import {
   Clock, 
   CheckCircle2, 
   AlertCircle,
-  Mail,
+  Loader2,
   User,
-  Tag,
-  Calendar,
-  TrendingUp,
-  Inbox,
-  RefreshCw
-} from 'lucide-react';
+  TicketIcon,
+  ChevronDown
+} from '../components/SupportIcons';
+import { EyeIcon } from '../components/icons/MiniIcons';
 import supportService from '../services/supportService';
 import type { 
   SupportTicket, 
@@ -26,7 +24,7 @@ import type {
   TicketStatus,
   TicketCategory,
   TicketPriority 
-} from '../supportTypes';
+} from '../Types/supportTypes';
 
 export default function SupportDashboard() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -74,7 +72,7 @@ export default function SupportDashboard() {
     try {
       const result = await supportService.getAllTickets();
       if (result.success) {
-        setTickets(result.data);
+        setTickets(result.data || []);
       }
     } catch (error) {
       console.error('Error loading tickets:', error);
@@ -227,7 +225,7 @@ export default function SupportDashboard() {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               title="Refresh"
             >
-              <RefreshCw size={18} />
+              <Loader2 size={18} className={isLoading ? 'animate-spin' : ''} />
             </button>
           </div>
 
@@ -290,7 +288,7 @@ export default function SupportDashboard() {
             <div className="p-8 text-center text-gray-500">Loading tickets...</div>
           ) : filteredTickets.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <Inbox size={48} className="mx-auto mb-4 text-gray-300" />
+              <TicketIcon size={48} className="mx-auto mb-4 text-gray-300" />
               <p>No tickets found</p>
             </div>
           ) : (
@@ -349,12 +347,12 @@ export default function SupportDashboard() {
                     </div>
                     {selectedTicket.business_name && (
                       <div className="flex items-center gap-1">
-                        <Tag size={16} />
+                        <TicketIcon size={16} />
                         <span>{selectedTicket.business_name}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1">
-                      <Calendar size={16} />
+                      <Clock size={16} />
                       <span>{new Date(selectedTicket.created_at).toLocaleString()}</span>
                     </div>
                   </div>

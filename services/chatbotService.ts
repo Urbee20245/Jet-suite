@@ -3,104 +3,27 @@
 // Powered by Google Gemini API
 // =====================================================
 
+import { GoogleGenAI, Type } from "@google/genai";
 import type {
-  ChatbotMessage,
+  ChatMessage,
   ChatbotResponse,
   ChatbotContext,
   SuggestedAction,
   KnowledgeBaseArticle,
   CreateTicketRequest,
-} from '../types';
+} from '../Types/supportTypes';
 import { supportService } from './supportService';
+// @ts-ignore
+import jetbotKnowledgeBase from '../jetbot-knowledge/JETBOT_KNOWLEDGE_BASE.md?raw';
 
-const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+// Use the environment variable as configured in vite.config.ts
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// =====================================================
-// SYSTEM PROMPTS
-// =====================================================
+if (!GEMINI_API_KEY) {
+  console.warn("GEMINI_API_KEY environment variable not set. Chatbot will not function.");
+}
 
-const CHATBOT_SYSTEM_PROMPT = `You are JetBot, an AI-powered customer support assistant for JetSuite, a comprehensive business growth platform for local businesses.
-
-**Your Role:**
-- Provide friendly, helpful, and accurate support to JetSuite users
-- Help users understand features, troubleshoot issues, and navigate the platform
-- Determine when issues need human support and escalate appropriately
-- Search the knowledge base to provide accurate, helpful answers
-- Stay professional, empathetic, and solution-focused
-
-**JetSuite Overview:**
-JetSuite is a decision and execution engine (not just a reporting dashboard) that helps local businesses grow their online presence through:
-
-**FOUNDATION TOOLS:**
-- JetBiz: Analyzes & optimizes Google Business Profiles for higher local ranking
-- JetViz: AI-powered website audits for design, speed, and SEO
-- JetKeywords: Discovers best local keywords to attract customers
-- JetCompete: Analyzes local competitors and finds opportunities
-
-**CREATE & PUBLISH TOOLS:**
-- JetCreate: Creates on-brand marketing campaigns and assets
-- JetPost: Generates engaging social media posts
-- JetImage: Creates high-quality marketing images
-- JetContent: Creates SEO-friendly blog posts and articles
-
-**ENGAGE & CONVERT TOOLS:**
-- JetReply: Crafts AI-assisted responses to customer reviews
-- JetTrust: Creates embeddable review widgets with AI auto-reply
-- JetLeads: Finds potential customers actively looking for services
-- JetEvents: Brainstorms local events and promotions
-- JetAds: Generates compelling ad copy for Google and Facebook
-
-**GROWTH TRACKING:**
-- Growth Plan: Weekly personalized action plan from audit results
-- Growth Score: 0-100 score tracking Visibility, Trust, and Activity
-
-**Pricing:**
-- Base subscription: $149/month
-- Additional businesses: $49/business/month
-- Team seats: $15/seat/month
-- Founder pricing: Special locked-in rates for early customers
-
-**Core Principles:**
-1. Progress is earned through execution, not just usage
-2. Accuracy and trust are mandatory
-3. Every audit results in clear, executable tasks
-4. Social and content tools are always available
-5. Strategy progression is earned by completing weekly tasks
-
-**When to Escalate:**
-Escalate to human support when:
-- User reports a critical bug or system outage
-- Billing disputes or refund requests
-- Account access issues you cannot resolve
-- Repeated failed attempts to solve an issue
-- User explicitly requests to speak with a human
-- Complex technical issues requiring code-level debugging
-- Feature requests requiring product team review
-
-**Response Guidelines:**
-- Keep responses concise (2-3 paragraphs max)
-- Use bullet points for lists of steps
-- Link to relevant knowledge base articles when helpful
-- Always confirm understanding before escalating
-- Show empathy for user frustrations
-- Provide specific, actionable next steps
-
-**Response Format:**
-Your response should be in JSON format:
-{
-  "message": "Your helpful response to the user",
-  "confidence": 0.85,
-  "suggested_actions": [
-    {"type": "view_article", "label": "View Help Article", "data": {"article_id": "123"}},
-    {"type": "create_ticket", "label": "Contact Support", "data": {"category": "technical"}}
-  ],
-  "should_escalate": false,
-  "escalation_reason": null,
-  "knowledge_base_articles": [
-    {"id": "123", "title": "Article Title", "content": "Brief excerpt..."}
-  ]
-}`;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY || '' });
 
 // =====================================================
 // CHATBOT SERVICE
@@ -112,28 +35,28 @@ export const chatbotService = {
    */
   async chat(
     userMessage: string,
-    conversationHistory: ChatbotMessage[],
+    conversationHistory: ChatMessage[],
     context?: ChatbotContext
   ): Promise<ChatbotResponse> {
+    // 1. Artificial "Thinking" Delay (2-4 seconds)
+    const delay = Math.floor(Math.random() * 2000) + 2000;
+    await new Promise(resolve => setTimeout(resolve, delay));
+
     try {
-      // Search knowledge base for relevant articles
+      // 2. Search knowledge base for relevant articles (Dynamic RAG)
       const kbArticles = await this.searchRelevantArticles(userMessage);
       
-      // Build context for Gemini
+      // 3. Build context for Gemini
       const contextInfo = this.buildContextPrompt(context, kbArticles);
       
-      // Build conversation messages
-      const messages = this.buildConversationMessages(
-        conversationHistory,
-        userMessage,
-        contextInfo
-      );
-
-      // Call Gemini API
-      const response = await this.callGeminiAPI(messages);
+      // 4. Build conversation messages
+      const systemPrompt = this.buildSystemPrompt(contextInfo);
       
-      // Parse and validate response
-      const chatbotResponse = this.parseGeminiResponse(response, kbArticles);
+      // 5. Call Gemini API
+      const responseText = await this.callGeminiAPI(userMessage, conversationHistory, systemPrompt);
+      
+      // 6. Parse and validate response
+      const chatbotResponse = this.parseGeminiResponse(responseText, kbArticles);
       
       return chatbotResponse;
     } catch (error) {
@@ -198,10 +121,10 @@ export const chatbotService = {
     }
     
     if (articles.length > 0) {
-      prompt += '\n**Relevant Knowledge Base Articles:**\n';
+      prompt += '\n**Relevant Database Articles:**\n';
       articles.forEach((article, index) => {
         prompt += `${index + 1}. "${article.title}"\n`;
-        prompt += `   ${article.content.substring(0, 200)}...\n\n`;
+        prompt += `   ${article.content.substring(0, 300)}...\n\n`;
       });
     }
     
@@ -209,90 +132,66 @@ export const chatbotService = {
   },
 
   /**
-   * Build conversation messages for Gemini
+   * Build the full system prompt including the static Knowledge Base
    */
-  buildConversationMessages(
-    history: ChatbotMessage[],
-    newMessage: string,
-    contextInfo: string
-  ): string {
-    let conversation = CHATBOT_SYSTEM_PROMPT;
-    
-    // Add context
-    conversation += contextInfo;
-    
-    // Add conversation history (last 10 messages)
-    conversation += '\n\n**Conversation History:**\n';
-    const recentHistory = history.slice(-10);
-    
-    recentHistory.forEach(msg => {
-      const role = msg.role === 'user' ? 'User' : 'JetBot';
-      conversation += `${role}: ${msg.content}\n`;
-    });
-    
-    // Add new user message
-    conversation += `\nUser: ${newMessage}\n\nJetBot:`;
-    
-    return conversation;
+  buildSystemPrompt(contextInfo: string): string {
+    return `
+${jetbotKnowledgeBase}
+
+${contextInfo}
+
+**Response Format:**
+Your response MUST be a valid JSON object matching this schema:
+{
+  "message": "Your helpful response to the user (markdown supported)",
+  "confidence": number (0-1),
+  "suggested_actions": [
+    {"type": "view_article" | "create_ticket" | "contact_support", "label": "Button Label", "data": { ... }}
+  ],
+  "should_escalate": boolean,
+  "escalation_reason": string | null
+}
+`;
   },
 
   /**
-   * Call Gemini API
+   * Call Gemini API using GoogleGenAI SDK
    */
-  async callGeminiAPI(prompt: string): Promise<string> {
+  async callGeminiAPI(
+    userMessage: string,
+    history: ChatMessage[],
+    systemPrompt: string
+  ): Promise<string> {
     if (!GEMINI_API_KEY) {
       throw new Error('Gemini API key not configured');
     }
 
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-        safetySettings: [
-          {
-            category: 'HARM_CATEGORY_HARASSMENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_HATE_SPEECH',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          },
-          {
-            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-            threshold: 'BLOCK_MEDIUM_AND_ABOVE'
-          }
-        ]
-      })
+    // Use generateContent (single turn) which is more stable with the current SDK.
+    // We construct the full conversation history manually.
+    
+    let fullPrompt = systemPrompt + "\n\n**Conversation History:**\n";
+    
+    // Add history (limit to last 10 turns to save context)
+    // Note: 'history' here contains previous messages, not including the current user message
+    const recentHistory = history.slice(-10);
+    recentHistory.forEach(msg => {
+        const role = msg.role === 'user' ? 'User' : 'JetBot';
+        fullPrompt += `${role}: ${msg.content}\n`;
     });
 
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
+    // Add the current user message
+    fullPrompt += `\nUser: ${userMessage}\nJetBot:`;
 
-    const data = await response.json();
-    
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Invalid response from Gemini API');
-    }
+    const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash-exp",
+        contents: fullPrompt,
+        config: {
+            responseMimeType: "application/json" 
+        }
+    });
 
-    return data.candidates[0].content.parts[0].text;
+    // Handle potential null/undefined response.text
+    return response.text ? response.text.trim() : '{}';
   },
 
   /**
@@ -303,34 +202,22 @@ export const chatbotService = {
     kbArticles: KnowledgeBaseArticle[]
   ): ChatbotResponse {
     try {
-      // Try to parse as JSON first
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      // Clean up markdown code blocks if present
+      const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleanJson);
       
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        
-        return {
-          message: parsed.message || response,
-          confidence: parsed.confidence || 0.7,
-          suggested_actions: parsed.suggested_actions || [],
-          should_escalate: parsed.should_escalate || false,
-          escalation_reason: parsed.escalation_reason,
-          knowledge_base_articles: kbArticles.slice(0, 2) // Top 2 articles
-        };
-      }
-      
-      // Fallback: treat entire response as message
       return {
-        message: response,
-        confidence: 0.7,
-        suggested_actions: this.generateDefaultActions(response),
-        should_escalate: this.shouldEscalateBasedOnContent(response),
-        knowledge_base_articles: kbArticles.slice(0, 2)
+        message: parsed.message || "I'm not sure how to respond to that.",
+        confidence: parsed.confidence || 0.7,
+        suggested_actions: parsed.suggested_actions || [],
+        should_escalate: parsed.should_escalate || false,
+        escalation_reason: parsed.escalation_reason,
+        knowledge_base_articles: kbArticles.slice(0, 2) // Attach relevant articles found earlier
       };
     } catch (error) {
       console.error('Error parsing Gemini response:', error);
       
-      // Return raw response as fallback
+      // Fallback: treat entire response as message if JSON parsing fails
       return {
         message: response,
         confidence: 0.5,
@@ -342,47 +229,10 @@ export const chatbotService = {
   },
 
   /**
-   * Generate default actions based on response content
-   */
-  generateDefaultActions(response: string): SuggestedAction[] {
-    const actions: SuggestedAction[] = [];
-    
-    // Check if response mentions creating a ticket
-    if (response.toLowerCase().includes('ticket') || 
-        response.toLowerCase().includes('contact support')) {
-      actions.push({
-        type: 'create_ticket',
-        label: 'Create Support Ticket',
-        data: { category: 'general' }
-      });
-    }
-    
-    return actions;
-  },
-
-  /**
-   * Determine if content indicates escalation needed
-   */
-  shouldEscalateBasedOnContent(response: string): boolean {
-    const escalationKeywords = [
-      'contact support',
-      'create a ticket',
-      'speak with a human',
-      'escalate',
-      'technical team',
-      'cannot help',
-      "can't help"
-    ];
-    
-    const lowerResponse = response.toLowerCase();
-    return escalationKeywords.some(keyword => lowerResponse.includes(keyword));
-  },
-
-  /**
    * Create a support ticket from chatbot conversation
    */
   async escalateToTicket(
-    conversationHistory: ChatbotMessage[],
+    conversationHistory: ChatMessage[],
     category: string = 'general',
     context?: ChatbotContext
   ): Promise<string | null> {
@@ -419,7 +269,7 @@ export const chatbotService = {
   /**
    * Generate a subject line from conversation
    */
-  generateTicketSubject(history: ChatbotMessage[]): string {
+  generateTicketSubject(history: ChatMessage[]): string {
     // Use first user message or a default
     const firstUserMessage = history.find(msg => msg.role === 'user');
     
@@ -437,7 +287,7 @@ export const chatbotService = {
   /**
    * Generate ticket description from conversation
    */
-  generateTicketDescription(history: ChatbotMessage[]): string {
+  generateTicketDescription(history: ChatMessage[]): string {
     let description = '**Conversation History from AI Chatbot:**\n\n';
     
     history.forEach((msg, index) => {

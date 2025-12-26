@@ -17,17 +17,53 @@ import type {
   TicketFilters,
   ApiResponse,
   PaginatedResponse,
-} from '../types';
+} from '../Types/supportTypes';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+let supabase: any;
+
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('Missing Supabase environment variables. Support service will be disabled.');
+    // Mock client to prevent top-level crash
+    supabase = {
+      from: () => ({
+        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
+        rpc: async () => ({ error: null })
+      }),
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
+      },
+      channel: () => ({
+        on: () => ({
+          subscribe: () => ({ unsubscribe: () => {} })
+        })
+      })
+    };
+  }
+} catch (error) {
+  console.error('Failed to initialize Supabase client in supportService:', error);
+  // Fallback mock
+   supabase = {
+      from: () => ({
+        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
+        rpc: async () => ({ error: null })
+      }),
+      auth: {
+        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
+      },
+      channel: () => ({
+        on: () => ({
+          subscribe: () => ({ unsubscribe: () => {} })
+        })
+      })
+    };
 }
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // =====================================================
 // TICKET MANAGEMENT
@@ -112,13 +148,13 @@ export const supportService = {
       // Apply filters
       if (filters) {
         if (filters.status && filters.status.length > 0) {
-          query = query.in('status', filters.status);
+          query = query.in('status', filters.status as any[]);
         }
         if (filters.category && filters.category.length > 0) {
-          query = query.in('category', filters.category);
+          query = query.in('category', filters.category as any[]);
         }
         if (filters.priority && filters.priority.length > 0) {
-          query = query.in('priority', filters.priority);
+          query = query.in('priority', filters.priority as any[]);
         }
         if (filters.search) {
           query = query.or(`subject.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
@@ -171,13 +207,13 @@ export const supportService = {
       // Apply filters
       if (filters) {
         if (filters.status && filters.status.length > 0) {
-          query = query.in('status', filters.status);
+          query = query.in('status', filters.status as any[]);
         }
         if (filters.category && filters.category.length > 0) {
-          query = query.in('category', filters.category);
+          query = query.in('category', filters.category as any[]);
         }
         if (filters.priority && filters.priority.length > 0) {
-          query = query.in('priority', filters.priority);
+          query = query.in('priority', filters.priority as any[]);
         }
         if (filters.search) {
           query = query.or(`subject.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);

@@ -5,9 +5,36 @@ import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { createClient } from '@supabase/supabase-js';
 
 // Access Vite environment variables with proper fallbacks
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+
+// Create a dummy client or the real one to prevent top-level crashes
+let supabase: any;
+try {
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.warn('[App] Missing Supabase credentials. Authentication will be disabled.');
+    // Mock client to prevent crashes
+    supabase = {
+      auth: {
+        getSession: async () => ({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signOut: async () => {},
+      }
+    };
+  }
+} catch (error) {
+  console.error('[App] Failed to initialize Supabase client:', error);
+  // Fallback mock
+  supabase = {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signOut: async () => {},
+    }
+  };
+}
 
 console.log('[App] Component module loaded');
 
@@ -31,8 +58,19 @@ const App: React.FC = () => {
   // Check Supabase session on mount
   useEffect(() => {
     const checkSession = async () => {
+      // Timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Session check timeout')), 5000)
+      );
+
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // Race between session check and timeout
+        const result: any = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
+        
+        const { data: { session }, error } = result;
         
         if (error) {
           console.error('[App] Session check error:', error);
@@ -61,7 +99,10 @@ const App: React.FC = () => {
           localStorage.removeItem('jetsuite_userId');
         }
       } catch (error) {
-        console.error('[App] Session check failed:', error);
+        console.error('[App] Session check failed or timed out:', error);
+        // On error/timeout, assume logged out so app loads
+        setIsLoggedIn(false);
+        setSessionChecked(true);
       } finally {
         setSessionChecked(true);
       }

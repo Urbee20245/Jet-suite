@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Loader2, ChevronDown, ExternalLink } from './SupportIcons';
 import chatbotService from '../services/chatbotService';
 import supportService from '../services/supportService';
-import type { ChatbotMessage, ChatbotContext, KnowledgeBaseArticle } from '../types';
+import type { ChatMessage, ChatbotContext, KnowledgeBaseArticle } from '../Types/supportTypes';
 
 interface SupportChatbotProps {
   context?: ChatbotContext;
@@ -15,12 +15,11 @@ interface SupportChatbotProps {
 
 export default function SupportChatbot({ context }: SupportChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatbotMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(true);
   const [suggestedArticles, setSuggestedArticles] = useState<KnowledgeBaseArticle[]>([]);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random()}`);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +39,7 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
   // Initialize with welcome message
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const welcomeMessage: ChatbotMessage = {
+      const welcomeMessage: ChatMessage = {
         role: 'assistant',
         content: "👋 Hi! I'm JetBot, your AI support assistant. I'm here to help you with JetSuite. What can I help you with today?",
         timestamp: new Date().toISOString()
@@ -54,7 +53,7 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
     if (!text || isLoading) return;
 
     // Add user message
-    const userMessage: ChatbotMessage = {
+    const userMessage: ChatMessage = {
       role: 'user',
       content: text,
       timestamp: new Date().toISOString()
@@ -70,7 +69,7 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
       const response = await chatbotService.chat(text, messages, context);
 
       // Add assistant message
-      const assistantMessage: ChatbotMessage = {
+      const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: response.message,
         timestamp: new Date().toISOString()
@@ -98,7 +97,7 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
           );
 
           if (ticketId) {
-            const confirmationMessage: ChatbotMessage = {
+            const confirmationMessage: ChatMessage = {
               role: 'assistant',
               content: `✅ I've created a support ticket for you (ID: ${ticketId}). Our support team will get back to you shortly via email. You can also view your ticket in the Support section.`,
               timestamp: new Date().toISOString()
@@ -110,7 +109,7 @@ export default function SupportChatbot({ context }: SupportChatbotProps) {
     } catch (error) {
       console.error('Error sending message:', error);
       
-      const errorMessage: ChatbotMessage = {
+      const errorMessage: ChatMessage = {
         role: 'assistant',
         content: "I'm sorry, I encountered an error. Please try again or contact support directly.",
         timestamp: new Date().toISOString()

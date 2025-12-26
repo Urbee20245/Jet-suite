@@ -738,7 +738,6 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             </div>
                             {isDirty && <button type="submit" className="w-full bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors">Save Changes</button>}
                              <div className="pt-4 border-t border-brand-border flex flex-col items-start space-y-2">
-                                <button type="button" onClick={onLogout} className="text-accent-blue hover:underline">Log Out</button>
                                 <button type="button" className="text-red-500 hover:underline">Delete Account</button>
                             </div>
                         </form>
