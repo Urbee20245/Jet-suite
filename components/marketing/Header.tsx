@@ -1,73 +1,100 @@
-
-import React from 'react';
-import { JetSuiteLogo } from '../JetSuiteLogo';
+import React, { useState } from 'react';
 
 interface HeaderProps {
-    navigate: (path: string) => void;
+  navigate: (path: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ navigate }) => {
-    return (
-        <header className="sticky top-0 z-50 bg-brand-darker/80 backdrop-blur-lg border-b border-slate-800">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-20">
-                    {/* Logo and Nav Links */}
-                    <div className="flex items-center space-x-8">
-                        <button onClick={() => navigate('/')} className="flex items-center space-x-2">
-                           <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-10 h-10" />
-                           <div>
-                                <span className="text-xl font-bold text-white">JetSuite</span>
-                                <span className="block text-xs text-gray-400 -mt-1">by Jet Automations</span>
-                           </div>
-                        </button>
-                        <nav className="hidden md:flex items-center space-x-6">
-                            <button onClick={() => navigate('/features')} className="text-gray-300 hover:text-white transition-colors font-medium">Features</button>
-                            <button onClick={() => navigate('/how-it-works')} className="text-gray-300 hover:text-white transition-colors font-medium">How It Works</button>
-                            <button onClick={() => navigate('/pricing')} className="text-gray-300 hover:text-white transition-colors font-medium">Pricing</button>
-                            <button onClick={() => navigate('/savings')} className="text-accent-cyan hover:text-accent-purple transition-colors font-semibold">Calculate Savings 💰</button>
-                            <button onClick={() => navigate('/faq')} className="text-gray-300 hover:text-white transition-colors font-medium">FAQ</button>
-                        </nav>
-                    </div>
-                    {/* CTAs */}
-                    <div className="flex items-center space-x-4">
-                        {/* Try Free Tools Dropdown */}
-                        <div className="relative group">
-                            <button className="bg-gradient-to-r from-accent-cyan to-accent-purple hover:opacity-90 text-white font-bold px-4 py-2 rounded-lg shadow-lg shadow-accent-cyan/30 flex items-center gap-2 transition-all">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                Try Free Tools
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                <button 
-                                onClick={() => navigate('/demo/jetbiz')}
-                                className="block w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors rounded-t-lg"
-                                >
-                                <div className="font-semibold">JetBiz Demo</div>
-                                <div className="text-xs text-gray-500">Google Business Analyzer</div>
-                                </button>
-                                <button 
-                                onClick={() => navigate('/demo/jetviz')}
-                                className="block w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700 rounded-b-lg"
-                                >
-                                <div className="font-semibold">JetViz Demo</div>
-                                <div className="text-xs text-gray-500">Website Visual Analyzer</div>
-                                </button>
-                            </div>
-                        </div>
+  const [open, setOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
 
-                        <button onClick={() => navigate('/login')} className="hidden sm:inline-block text-white font-medium hover:text-gray-200">
-                            Login
-                        </button>
-                        <button onClick={() => navigate('/get-started')} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity shadow-lg">
-                            Get Started
-                        </button>
-                    </div>
-                </div>
+  return (
+    <header className="sticky top-0 z-50 bg-brand-darker/90 backdrop-blur border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+
+          {/* Logo */}
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2"
+          >
+            <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
+            <span className="text-lg font-bold text-white">JetSuite</span>
+          </button>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-6">
+            <button onClick={() => navigate('/features')} className="nav-link">Features</button>
+            <button onClick={() => navigate('/how-it-works')} className="nav-link">How It Works</button>
+            <button onClick={() => navigate('/pricing')} className="nav-link">Pricing</button>
+            <button onClick={() => navigate('/faq')} className="nav-link">FAQ</button>
+          </nav>
+
+          {/* Desktop CTAs */}
+          <div className="hidden md:flex items-center gap-4">
+            <button onClick={() => navigate('/login')} className="text-white/80 hover:text-white">
+              Login
+            </button>
+            <button
+              onClick={() => navigate('/get-started')}
+              className="bg-gradient-to-r from-accent-purple to-accent-pink px-5 py-2.5 rounded-lg font-bold text-white"
+            >
+              Get Started
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-white"
+            onClick={() => setOpen(!open)}
+          >
+            ☰
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {open && (
+        <div className="md:hidden bg-brand-darker border-t border-slate-800 px-4 py-4 space-y-4">
+
+          <button onClick={() => navigate('/features')} className="mobile-link">Features</button>
+          <button onClick={() => navigate('/how-it-works')} className="mobile-link">How It Works</button>
+          <button onClick={() => navigate('/pricing')} className="mobile-link">Pricing</button>
+          <button onClick={() => navigate('/faq')} className="mobile-link">FAQ</button>
+
+          {/* Free Tools Accordion */}
+          <button
+            onClick={() => setToolsOpen(!toolsOpen)}
+            className="w-full flex justify-between items-center bg-slate-800 px-4 py-3 rounded-lg font-semibold text-white"
+          >
+            Try Free Tools
+            <span>{toolsOpen ? '−' : '+'}</span>
+          </button>
+
+          {toolsOpen && (
+            <div className="pl-4 space-y-2">
+              <button onClick={() => navigate('/demo/jetbiz')} className="mobile-sub">
+                JetBiz Demo
+              </button>
+              <button onClick={() => navigate('/demo/jetviz')} className="mobile-sub">
+                JetViz Demo
+              </button>
             </div>
-        </header>
-    );
+          )}
+
+          <button onClick={() => navigate('/login')} className="mobile-link">
+            Login
+          </button>
+
+          <button
+            onClick={() => navigate('/get-started')}
+            className="w-full bg-gradient-to-r from-accent-purple to-accent-pink py-3 rounded-lg font-bold text-white"
+          >
+            Get Started
+          </button>
+        </div>
+      )}
+    </header>
+  );
 };
+
