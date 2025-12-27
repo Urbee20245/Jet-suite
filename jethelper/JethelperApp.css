@@ -1,452 +1,572 @@
-/* Original styles from screenshot with right-side chat modifications */
-.jethelper-app {
-  font-family: Arial, sans-serif;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  position: relative;
-  min-height: 100vh;
-}
+// @ts-nocheck
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Message, Role } from './JethelperTypes';
+import { SignUpForm } from './components/JethelperSignUpForm';
+import { CouponDisplay } from './components/JethelperCouponDisplay';
+import { VoiceVisualizer } from './components/JethelperVoiceVisualizer';
+import { SearchResultCard } from './components/JethelperSearchResultCard';
+import { FloatingActionButton } from './components/JethelperFloatingActionButton';
+import { AIStatusIndicator } from './components/JethelperAIStatusIndicator';
+import { ConversationStarters } from './components/JethelperConversationStarters';
+import { TypingIndicator } from './components/JethelperTypingIndicator';
+import { GoogleGenAI, LiveServerMessage, Modality, Blob, LiveSession, Chat } from '@google/genai';
+import { SYSTEM_INSTRUCTION, SYSTEM_INSTRUCTION_VOICE } from './JethelperConstants';
+import { decode, encode, decodeAudioData, resampleBuffer } from './utils/JethelperAudio';
+import { sendMessageToAI as sendTextMessageToAI } from './services/JethelperGeminiService';
+import { GrowthIcon } from './components/JethelperGrowthIcon';
 
-/* Header styles matching screenshot */
-.app-header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding: 20px 0;
-  border-bottom: 2px solid #e0e0e0;
+if (!process.env.API_KEY) {
+  throw new Error("API_KEY environment variable not set");
 }
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-.app-header h1 {
-  font-size: 2.5em;
-  color: #2c3e50;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
+// IMPORTANT: Replace this with your own Formspree endpoint URL.
+const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mbdjloja';
 
-.header-subtitle {
-  color: #7f8c8d;
-  line-height: 1.6;
-  max-width: 800px;
-  margin: 0 auto;
-}
+type AppState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'text_input';
+type Turn = { id: number; userQuery?: string; aiResponse: string; };
 
-/* Original content sections */
-.app-main {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
+const groupMessagesIntoTurns = (messages: Message[]): Turn[] => {
+    const turns: Turn[] = [];
+    let userMessage: string | undefined = undefined;
+    
+    messages.forEach((msg, index) => {
+        if (msg.role === Role.USER) {
+            userMessage = msg.text;
+        } else if (msg.role === Role.ASSISTANT) {
+            turns.push({
+                id: index,
+                userQuery: userMessage,
+                aiResponse: msg.text
+            });
+            userMessage = undefined;
+        }
+    });
 
-.content-section {
-  background: #f8f9fa;
-  padding: 25px;
-  border-radius: 8px;
-  text-align: center;
-}
+    return turns;
+};
 
-.content-card h2 {
-  color: #34495e;
-  margin-bottom: 10px;
-}
 
-.email-link {
-  color: #3498db;
-  text-decoration: none;
-  font-size: 1.1em;
-  display: inline-block;
-  padding: 8px 16px;
-  border: 1px solid #3498db;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
+const App: React.FC = () => {
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [appState, setAppState] = useState<AppState>('text_input');
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [userInput, setUserInput] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [showCoupon, setShowCoupon] = useState(false);
+    const [currentTranscription, setCurrentTranscription] = useState('');
+    const [showStarters, setShowStarters] = useState(true);
 
-.email-link:hover {
-  background: #3498db;
-  color: white;
-}
+    const chatRef = useRef<Chat | null>(null);
+    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const userSpeakingTimeoutRef = useRef<number | null>(null);
+    
+    // Audio refs
+    const inputAudioContextRef = useRef<AudioContext | null>(null);
+    const outputAudioContextRef = useRef<AudioContext | null>(null);
+    const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+    const mediaStreamSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
 
-/* Original feature cards grid */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 25px;
-  margin: 30px 0;
-}
+    const initChat = useCallback(() => {
+        if (messages.length > 0) return;
 
-.feature-card.original {
-  background: white;
-  border-left: 4px solid #3498db;
-  padding: 25px;
-  border-radius: 6px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  transition: transform 0.3s ease;
-}
+        const welcomeMessage = "Welcome to JetSuite. I'm your AI guide. Feel free to ask me anything by typing or using your voice. How can I help you today?";
+        setMessages([{ role: Role.ASSISTANT, text: welcomeMessage, timestamp: new Date() }]);
+        setShowStarters(true);
 
-.feature-card.original:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
+        chatRef.current = ai.chats.create({
+            model: 'gemini-3-flash-preview',
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+            },
+        });
+    }, [messages.length]);
 
-.feature-card.original h3 {
-  color: #2c3e50;
-  font-size: 1.2em;
-  line-height: 1.5;
-  margin: 0;
-}
+    useEffect(() => {
+        if (isChatOpen) {
+            initChat();
+        }
+    }, [isChatOpen, initChat]);
 
-/* Mobile Chat Toggle (Bottom Bar) */
-.mobile-chat-toggle {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(135deg, #3498db, #2c3e50);
-  color: white;
-  padding: 15px 20px;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-}
+    useEffect(() => {
+        chatContainerRef.current?.scrollTo(0, chatContainerRef.current.scrollHeight);
+    }, [messages, isLoading, showForm, showCoupon, currentTranscription, appState, showStarters]);
 
-.mobile-toggle-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+    const sendMessage = async (messageText: string) => {
+        setIsLoading(true);
+        setShowStarters(false);
+        try {
+            if (!chatRef.current) {
+                chatRef.current = ai.chats.create({
+                    model: 'gemini-3-flash-preview',
+                    config: { systemInstruction: SYSTEM_INSTRUCTION },
+                });
+            }
 
-.chat-icon {
-  font-size: 1.5em;
-  margin-right: 10px;
-}
+            const { responseText } = await sendTextMessageToAI(chatRef.current, messageText);
+            const aiMessage: Message = { role: Role.ASSISTANT, text: responseText, timestamp: new Date() };
+            setMessages(prev => [...prev, aiMessage]);
+            
+            const showFormTriggers = [
+                "form below to unlock your code", 
+            ];
+            if (showFormTriggers.some(trigger => responseText.toLowerCase().includes(trigger))) {
+                setShowForm(true);
+            }
+        } catch (error) {
+            console.error(error);
+            const errorMsg: Message = { role: Role.ASSISTANT, text: "Sorry, something went wrong. Please try again.", timestamp: new Date() };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
-.toggle-text {
-  flex: 1;
-  font-weight: 500;
-}
+    const handleTextSend = async () => {
+        if (!userInput.trim()) return;
+        const currentInput = userInput;
+        const newUserMessage: Message = { role: Role.USER, text: currentInput, timestamp: new Date() };
+        setMessages(prev => [...prev, newUserMessage]);
+        setUserInput('');
+        await sendMessage(currentInput);
+    };
+    
+    const handleStarterClick = async (starterText: string) => {
+        const newUserMessage: Message = { role: Role.USER, text: starterText, timestamp: new Date() };
+        setMessages(prev => [...prev, newUserMessage]);
+        await sendMessage(starterText);
+    };
 
-.toggle-arrow {
-  font-size: 1.2em;
-}
+    const stopRecording = useCallback(async () => {
+        if (userSpeakingTimeoutRef.current) {
+            clearTimeout(userSpeakingTimeoutRef.current);
+            userSpeakingTimeoutRef.current = null;
+        }
+        setAppState('text_input');
+        setCurrentTranscription('');
+        if (sessionPromiseRef.current) {
+            const session = await sessionPromiseRef.current;
+            session.close();
+        }
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        scriptProcessorRef.current?.disconnect();
+        mediaStreamSourceRef.current?.disconnect();
+        if (inputAudioContextRef.current?.state !== 'closed') inputAudioContextRef.current?.close();
+        if (outputAudioContextRef.current?.state !== 'closed') outputAudioContextRef.current?.close();
+    }, []);
 
-/* Desktop Chat Toggle (Right Side Floating Button) */
-.desktop-chat-toggle {
-  position: fixed;
-  right: 30px;
-  bottom: 30px;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #3498db, #2c3e50);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.8em;
-  z-index: 1001;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-  transition: all 0.3s ease;
-}
+    const handleMicClick = async () => {
+        const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking';
+        if (isVoiceMode) {
+            await stopRecording();
+            return;
+        }
 
-.desktop-chat-toggle:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-}
+        setShowStarters(false);
+        setAppState('listening');
+        let accumulatedInput = '';
+        let accumulatedOutput = '';
+        let hasOutputStarted = false;
 
-.desktop-chat-toggle.active {
-  background: #e74c3c;
-}
 
-.toggle-badge {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: #e74c3c;
-  color: white;
-  font-size: 12px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+        try {
+            mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+            inputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+            
+            sessionPromiseRef.current = ai.live.connect({
+                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                callbacks: {
+                    onopen: () => {
+                        if (!mediaStreamRef.current || !inputAudioContextRef.current) return;
+                        mediaStreamSourceRef.current = inputAudioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+                        scriptProcessorRef.current = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
+                        scriptProcessorRef.current.onaudioprocess = (e) => {
+                            if (!inputAudioContextRef.current) return;
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            const resampledData = resampleBuffer(inputData, inputAudioContextRef.current.sampleRate, 16000);
+                            const pcmBlob: Blob = { data: encode(new Uint8Array(new Int16Array(resampledData.map(v => v * 32768)).buffer)), mimeType: 'audio/pcm;rate=16000' };
+                            sessionPromiseRef.current?.then((session) => session.sendRealtimeInput({ media: pcmBlob }));
+                        };
+                        mediaStreamSourceRef.current.connect(scriptProcessorRef.current);
+                        scriptProcessorRef.current.connect(inputAudioContextRef.current.destination);
+                    },
+                    onmessage: async (message) => {
+                        if (userSpeakingTimeoutRef.current) {
+                            clearTimeout(userSpeakingTimeoutRef.current);
+                        }
 
-/* Chat Widget - Now on Right Side */
-.chat-widget {
-  position: fixed;
-  width: 380px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  z-index: 1002;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
+                        const isOutputting = message.serverContent?.outputTranscription || message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
 
-/* Desktop positioning (right side) */
-.chat-widget.desktop {
-  right: 30px;
-  bottom: 100px;
-  height: 500px;
-}
+                        if (isOutputting && !hasOutputStarted) {
+                            hasOutputStarted = true;
+                            setAppState('speaking');
+                        }
 
-/* Mobile positioning (bottom sheet) */
-.chat-widget.mobile {
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 70vh;
-  border-radius: 12px 12px 0 0;
-}
+                        if (message.serverContent?.inputTranscription) {
+                             if (!hasOutputStarted) {
+                                setAppState('listening');
+                                userSpeakingTimeoutRef.current = window.setTimeout(() => {
+                                    if (!hasOutputStarted) setAppState('thinking');
+                                }, 1500);
+                            }
+                            accumulatedInput += message.serverContent.inputTranscription.text;
+                            setCurrentTranscription(accumulatedInput);
+                        }
+                       
+                        if (message.serverContent?.outputTranscription) {
+                            accumulatedOutput += message.serverContent.outputTranscription.text;
+                        }
 
-.chat-widget.closed {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(20px);
-}
+                        if (message.serverContent?.turnComplete) {
+                            setMessages(prev => [
+                                ...prev,
+                                { role: Role.USER, text: accumulatedInput, timestamp: new Date() },
+                                { role: Role.ASSISTANT, text: accumulatedOutput, timestamp: new Date() },
+                            ]);
 
-.chat-widget.open {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
+                            const showFormTriggers = [
+                                "form for you now" 
+                            ];
+                            if (showFormTriggers.some(trigger => accumulatedOutput.toLowerCase().includes(trigger))) {
+                                setShowForm(true);
+                            }
+                            stopRecording();
+                        }
+                        const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+                        if (base64Audio && outputAudioContextRef.current) {
+                            const audioBuffer = await decodeAudioData(decode(base64Audio), outputAudioContextRef.current, 24000, 1);
+                            const source = outputAudioContextRef.current.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(outputAudioContextRef.current.destination);
+                            source.start();
+                        }
+                    },
+                    onerror: (e) => { console.error(e); stopRecording(); },
+                    onclose: () => {},
+                },
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    inputAudioTranscription: {}, outputAudioTranscription: {},
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
+                    systemInstruction: SYSTEM_INSTRUCTION_VOICE,
+                },
+            });
+        } catch (error) {
+            alert("Could not start recording. Please ensure microphone permissions are granted.");
+            stopRecording();
+        }
+    };
+    
+    const handleFormSubmit = async (name: string, email: string) => {
+        try {
+            const response = await fetch(FORMSPREE_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, email }),
+            });
 
-/* Chat Header */
-.chat-header {
-  background: linear-gradient(135deg, #3498db, #2c3e50);
-  color: white;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+            if (!response.ok) {
+                throw new Error('Form submission failed');
+            }
 
-.header-content h3 {
-  margin: 0;
-  font-size: 1.3em;
-  font-weight: 600;
-}
+            setShowForm(false);
+            setShowCoupon(true);
+            const couponMessage: Message = { role: Role.ASSISTANT, text: "Excellent! Here is your coupon code. You can use it at checkout.", timestamp: new Date() };
+            setMessages(prev => [...prev, couponMessage]);
 
-.header-sub {
-  margin: 5px 0 0;
-  font-size: 0.9em;
-  opacity: 0.9;
-}
+        } catch (error) {
+            console.error('Failed to submit form:', error);
+            alert('Sorry, there was an issue submitting your information. Please try again.');
+        }
+    };
 
-.close-chat {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 1.5em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease;
-}
+    const turns = groupMessagesIntoTurns(messages);
+    const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking';
 
-.close-chat:hover {
-  background: rgba(255,255,255,0.3);
-}
+    // Check if mobile
+    const isMobile = window.innerWidth <= 768;
 
-/* Chat Messages */
-.chat-messages {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: #f8f9fa;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
+    return (
+        <>
+            {/* Chat Window - Positioned on RIGHT side */}
+            {isChatOpen && (
+                <div 
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        backgroundColor: '#0F172A',
+                        border: '1px solid #1E293B',
+                        borderRadius: isMobile ? '20px' : '16px',
+                        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
+                        position: 'fixed',
+                        bottom: isMobile ? '90px' : '20px',
+                        right: isMobile ? '20px' : '20px', // Changed from left to right
+                        width: isMobile ? 'calc(100vw - 40px)' : '400px',
+                        height: isMobile ? '75vh' : '600px',
+                        maxWidth: '400px',
+                        maxHeight: '600px',
+                        zIndex: 10000,
+                        overflow: 'hidden',
+                    }}
+                >
+                    {/* Header with Powered by */}
+                    <header style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '16px',
+                        borderBottom: '1px solid #1E293B',
+                        backgroundColor: '#0F172A',
+                        borderTopLeftRadius: isMobile ? '20px' : '16px',
+                        borderTopRightRadius: isMobile ? '20px' : '16px',
+                        position: 'relative',
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <GrowthIcon className="w-6 h-6" />
+                            <div style={{ marginLeft: '12px' }}>
+                                <h1 style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', margin: 0 }}>JetSuite Helper</h1>
+                                <div style={{ display: 'flex', alignItems: 'center', marginTop: '4px' }}>
+                                    <span style={{ 
+                                        width: '8px', 
+                                        height: '8px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: '#10B981',
+                                        marginRight: '8px',
+                                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                                    }} />
+                                    <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>Online and ready to help</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Powered by JetAutomations.ai */}
+                        <div style={{
+                            position: 'absolute',
+                            bottom: '-25px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            backgroundColor: '#1E293B',
+                            padding: '4px 12px',
+                            borderRadius: '12px',
+                            fontSize: '10px',
+                            color: '#9CA3AF',
+                            border: '1px solid #334155',
+                            whiteSpace: 'nowrap',
+                        }}>
+                            Powered by <a 
+                                href="https://jetautomations.ai" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                    color: '#60A5FA', 
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    marginLeft: '2px'
+                                }}
+                            >
+                                JetAutomations.ai
+                            </a>
+                        </div>
+                        
+                        <button 
+                            onClick={() => setIsChatOpen(false)} 
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#9CA3AF',
+                                cursor: 'pointer',
+                                padding: '8px',
+                                zIndex: 1,
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+                            onMouseLeave={(e) => e.currentTarget.style.color = '#9CA3AF'}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </header>
 
-.message {
-  max-width: 80%;
-  animation: fadeIn 0.3s ease;
-}
+                    {/* Messages Container */}
+                    <div 
+                        ref={chatContainerRef} 
+                        style={{
+                            flex: 1,
+                            padding: '16px',
+                            overflowY: 'auto',
+                            backgroundColor: '#0F172A',
+                        }}
+                    >
+                        {/* Messages - ALL ORIGINAL LOGIC PRESERVED */}
+                        {messages.map((msg, index) => (
+                            <div 
+                                key={index} 
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: msg.role === Role.USER ? 'flex-end' : 'flex-start',
+                                    marginBottom: '12px'
+                                }}
+                            >
+                                <div 
+                                    style={{
+                                        maxWidth: '80%',
+                                        padding: '12px 16px',
+                                        borderRadius: '16px',
+                                        backgroundColor: msg.role === Role.USER ? '#3B82F6' : '#1E293B',
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        lineHeight: '1.5',
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+                                    }}
+                                >
+                                    {msg.text}
+                                </div>
+                            </div>
+                        ))}
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+                        {/* Current transcription - ORIGINAL */}
+                        {currentTranscription && (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                                <div style={{
+                                    maxWidth: '80%',
+                                    padding: '12px 16px',
+                                    borderRadius: '16px',
+                                    backgroundColor: '#3B82F6',
+                                    color: 'white',
+                                    fontSize: '14px',
+                                    opacity: 0.7
+                                }}>
+                                    {currentTranscription}
+                                </div>
+                            </div>
+                        )}
 
-.message.bot {
-  align-self: flex-start;
-}
+                        {/* Conversation Starters - ORIGINAL */}
+                        {showStarters && <ConversationStarters onSelect={handleStarterClick} />}
 
-.message.user {
-  align-self: flex-end;
-}
+                        {/* Loading indicator - ORIGINAL */}
+                        {isLoading && <TypingIndicator />}
 
-.message-content {
-  padding: 12px 16px;
-  border-radius: 18px;
-  position: relative;
-}
+                        {/* Form - ORIGINAL */}
+                        {showForm && <SignUpForm onSubmit={handleFormSubmit} />}
 
-.bot .message-content {
-  background: white;
-  border: 1px solid #e0e0e0;
-  color: #333;
-  border-bottom-left-radius: 4px;
-}
+                        {/* Coupon - ORIGINAL */}
+                        {showCoupon && <CouponDisplay code="TAKE20OFF" />}
 
-.user .message-content {
-  background: #3498db;
-  color: white;
-  border-bottom-right-radius: 4px;
-}
+                        {/* AI Status - ORIGINAL */}
+                        <AIStatusIndicator state={appState} />
+                    </div>
 
-.message-time {
-  font-size: 0.8em;
-  color: #95a5a6;
-  margin-top: 5px;
-  text-align: right;
-}
+                    {/* Footer/Input Area - ALL ORIGINAL LOGIC PRESERVED */}
+                    <footer style={{
+                        padding: '16px',
+                        borderTop: '1px solid #1E293B',
+                        backgroundColor: '#0F172A',
+                        borderBottomLeftRadius: isMobile ? '20px' : '16px',
+                        borderBottomRightRadius: isMobile ? '20px' : '16px',
+                    }}>
+                        {isVoiceMode ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', position: 'relative' }}>
+                                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                                    <VoiceVisualizer state={appState as 'listening' | 'thinking' | 'speaking'} onClick={handleMicClick} />
+                                </div>
+                                <button 
+                                    onClick={stopRecording} 
+                                    style={{
+                                        position: 'absolute',
+                                        right: 0,
+                                        padding: '8px',
+                                        backgroundColor: '#1E293B',
+                                        borderRadius: '50%',
+                                        border: 'none',
+                                        color: 'white',
+                                        cursor: 'pointer'
+                                    }}
+                                    aria-label="Switch to text input"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        ) : (
+                            !showForm && !showCoupon && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                        type="text"
+                                        value={userInput}
+                                        onChange={(e) => setUserInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleTextSend()}
+                                        placeholder="Ask a question..."
+                                        style={{
+                                            flex: 1,
+                                            padding: '12px 16px',
+                                            backgroundColor: '#1E293B',
+                                            border: '1px solid #334155',
+                                            borderRadius: '24px',
+                                            color: 'white',
+                                            fontSize: '14px',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                    <button 
+                                        onClick={handleTextSend} 
+                                        style={{
+                                            padding: '12px',
+                                            backgroundColor: '#3B82F6',
+                                            borderRadius: '50%',
+                                            border: 'none',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onClick={handleMicClick} 
+                                        style={{
+                                            padding: '12px',
+                                            backgroundColor: '#1E293B',
+                                            borderRadius: '50%',
+                                            border: 'none',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                        aria-label="Start voice interaction"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )
+                        )}
+                    </footer>
+                </div>
+            )}
 
-/* Chat Input Area */
-.chat-input-area {
-  padding: 20px;
-  border-top: 1px solid #e0e0e0;
-  background: white;
-}
+            {/* Floating Action Button - Modified for right side */}
+            <FloatingActionButton 
+                onClick={() => setIsChatOpen(true)} 
+                isHidden={isChatOpen}
+                position="right" // Added position prop
+            />
+        </>
+    );
+};
 
-.input-wrapper {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.chat-input {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #ddd;
-  border-radius: 24px;
-  font-size: 0.95em;
-  outline: none;
-  transition: border-color 0.3s ease;
-}
-
-.chat-input:focus {
-  border-color: #3498db;
-}
-
-.send-button {
-  background: #3498db;
-  color: white;
-  border: none;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.3s ease;
-}
-
-.send-button:disabled {
-  background: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.send-button:not(:disabled):hover {
-  background: #2980b9;
-}
-
-.send-icon {
-  font-size: 1.2em;
-  transform: rotate(90deg);
-}
-
-/* Powered by footer */
-.chat-footer {
-  text-align: center;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.powered-by {
-  font-size: 0.85em;
-  color: #7f8c8d;
-  margin: 0;
-}
-
-.powered-by a {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.powered-by a:hover {
-  text-decoration: underline;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .desktop-chat-toggle {
-    display: none;
-  }
-  
-  .mobile-chat-toggle {
-    display: block;
-  }
-  
-  .chat-widget.desktop {
-    display: none;
-  }
-  
-  .chat-widget.mobile {
-    display: flex;
-  }
-  
-  .app-header h1 {
-    font-size: 1.8em;
-  }
-  
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-chat-toggle {
-    display: none;
-  }
-  
-  .chat-widget.mobile {
-    display: none;
-  }
-  
-  .chat-widget.desktop {
-    display: flex;
-  }
-}
-
-/* Original message scrollbar styling */
-.chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
+export default App;
