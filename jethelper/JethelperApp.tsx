@@ -299,18 +299,19 @@ const App: React.FC = () => {
                 style={{
                     display: isChatOpen ? 'flex' : 'none',
                     flexDirection: 'column',
-                    backgroundColor: '#0F172A',
+                    backgroundColor: '#0F172A', // Solid, non-transparent dark blue
                     border: '1px solid #1E293B',
-                    borderRadius: isMobile ? '0' : '16px',
-                    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                    borderRadius: isMobile ? '20px' : '16px', // Keep rounded corners on mobile
+                    boxShadow: isMobile ? '0 10px 40px rgba(0, 0, 0, 0.4)' : '0 20px 60px rgba(0, 0, 0, 0.5)',
                     position: 'fixed',
-                    bottom: isMobile ? '0' : '20px',
-                    right: isMobile ? '0' : '20px',
-                    width: isMobile ? '100vw' : '400px',
-                    height: isMobile ? '100vh' : '600px',
-                    maxWidth: '100vw',
-                    maxHeight: '100vh',
+                    bottom: isMobile ? '90px' : '20px', // Position above the floating button
+                    right: isMobile ? '20px' : '20px',
+                    width: isMobile ? 'calc(100vw - 40px)' : '400px', // Not full screen, leaves margins
+                    height: isMobile ? '75vh' : '600px', // Most of the screen but not all
+                    maxWidth: '400px', // Prevents it from getting too wide
+                    maxHeight: '600px',
                     zIndex: 10000,
+                    overflow: 'hidden', // Keeps child content contained
                 }}
             >
                 {/* Header */}
@@ -320,10 +321,10 @@ const App: React.FC = () => {
                     justifyContent: 'space-between',
                     padding: '16px',
                     borderBottom: '1px solid #1E293B',
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderTopLeftRadius: isMobile ? '0' : '16px',
-                    borderTopRightRadius: isMobile ? '0' : '16px',
+                    backgroundColor: '#0F172A', // Solid background
+                    backdropFilter: 'none', // Removed for solid look
+                    borderTopLeftRadius: isMobile ? '20px' : '16px',
+                    borderTopRightRadius: isMobile ? '20px' : '16px',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <GrowthIcon className="w-6 h-6" />
@@ -435,8 +436,8 @@ const App: React.FC = () => {
                     padding: '16px',
                     borderTop: '1px solid #1E293B',
                     backgroundColor: '#0F172A',
-                    borderBottomLeftRadius: isMobile ? '0' : '16px',
-                    borderBottomRightRadius: isMobile ? '0' : '16px',
+                    borderBottomLeftRadius: isMobile ? '20px' : '16px',
+                    borderBottomRightRadius: isMobile ? '20px' : '16px',
                 }}>
                     {isVoiceMode ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', position: 'relative' }}>
