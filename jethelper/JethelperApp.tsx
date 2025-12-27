@@ -1,383 +1,156 @@
-/* Base Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+import React, { useState, useRef, useEffect } from 'react';
+import './JethelperApp.css';
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background-color: #f8fafc;
-  color: #333;
-  line-height: 1.6;
-}
+const JethelperApp: React.FC = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([
+    { text: "Hello! Welcome to our live chat. How can we help you today?", isUser: false },
+    { text: "I'm interested in your live chat software", isUser: true }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const chatBodyRef = useRef<HTMLDivElement>(null);
 
-.app-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
-}
+  const handleSendMessage = () => {
+    if (!inputMessage.trim()) return;
+    
+    // Add user message
+    setMessages(prev => [...prev, { text: inputMessage, isUser: true }]);
+    setInputMessage('');
+    
+    // Simulate bot response
+    setTimeout(() => {
+      const responses = [
+        "Thanks for your message! Our team will get back to you shortly.",
+        "That's a great question! Let me connect you with a specialist.",
+        "I can help with that! Would you like to schedule a demo of our software?",
+        "We offer several plans depending on your business needs. Would you like to see pricing options?"
+      ];
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      setMessages(prev => [...prev, { text: randomResponse, isUser: false }]);
+    }, 1000);
+  };
 
-/* Header */
-.app-header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding-top: 20px;
-}
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
 
-.app-header h1 {
-  font-size: 2.5rem;
-  color: #1a56db;
-  margin-bottom: 15px;
-  font-weight: 700;
-  background: linear-gradient(90deg, #1a56db, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
+  useEffect(() => {
+    // Auto-scroll to bottom when messages change
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-.tagline {
-  font-size: 1.1rem;
-  color: #6b7280;
-  max-width: 800px;
-  margin: 0 auto 30px;
-}
+  return (
+    <div className="app-container">
+      <header className="app-header">
+        <h1>The live chat software that gets the job done</h1>
+        <p className="tagline">
+          Premium customer service software that helps you engage with customers, boost sales, and support your business growth.
+        </p>
+      </header>
 
-/* Features Grid */
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
-  margin-bottom: 50px;
-}
+      <div className="features-grid">
+        <div className="feature-card">
+          <div className="feature-icon">💬</div>
+          <h3>Engage with live chat, sell with ease</h3>
+          <p>Convert website visitors into customers with real-time conversations and personalized support that drives sales.</p>
+        </div>
 
-.feature-card {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
+        <div className="feature-card">
+          <div className="feature-icon">⭐</div>
+          <h3>Make premium support your new standard</h3>
+          <p>Deliver exceptional customer service with AI-powered tools, canned responses, and seamless ticket management.</p>
+        </div>
 
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
+        <div className="feature-card">
+          <div className="feature-icon">🔄</div>
+          <h3>Admission support and share with a customer service solution</h3>
+          <p>Streamline your support processes with shared inboxes, team collaboration, and performance analytics.</p>
+        </div>
 
-.feature-icon {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
-}
+        <div className="feature-card">
+          <div className="feature-icon">👥</div>
+          <h3>Empower your teams with business insights</h3>
+          <p>Equip your support team with the data and tools they need to excel and drive customer satisfaction.</p>
+        </div>
 
-.feature-card h3 {
-  font-size: 1.3rem;
-  color: #1f2937;
-  margin-bottom: 12px;
-}
+        <div className="feature-card">
+          <div className="feature-icon">🛠️</div>
+          <h3>Connect with tools that support your business growth</h3>
+          <p>Integrate with your favorite CRM, marketing, and productivity tools to create a seamless workflow.</p>
+        </div>
 
-.feature-card p {
-  color: #6b7280;
-  font-size: 1rem;
-}
+        <div className="feature-card">
+          <div className="feature-icon">🔗</div>
+          <h3>LinkedIn customer service software</h3>
+          <p>Capture leads from LinkedIn conversations and provide instant support through integrated chat functionality.</p>
+        </div>
+      </div>
 
-/* Live Chat Widget */
-.live-chat-widget {
-  position: fixed;
-  right: 30px;
-  bottom: 30px;
-  width: 380px;
-  max-width: 90vw;
-  height: 500px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
-}
+      {/* Mobile Chat Bar (shown on mobile) */}
+      <div className="mobile-chat-bar">
+        <div className="mobile-chat-content">
+          <div className="mobile-chat-text">
+            <h4>Need help?</h4>
+            <p>Chat with our support team</p>
+          </div>
+          <button className="mobile-chat-button" onClick={() => setIsChatOpen(true)}>
+            💬 Start Chat
+          </button>
+        </div>
+      </div>
 
-.live-chat-widget.closed {
-  transform: translateY(100px);
-  opacity: 0;
-  pointer-events: none;
-}
+      {/* Chat Toggle Button (shown on desktop) */}
+      <button className={`chat-toggle ${isChatOpen ? 'hidden' : ''}`} onClick={() => setIsChatOpen(true)}>
+        💬
+      </button>
 
-.live-chat-widget.open {
-  transform: translateY(0);
-  opacity: 1;
-}
+      {/* Live Chat Widget */}
+      <div className={`live-chat-widget ${isChatOpen ? 'open' : 'closed'}`}>
+        <div className="chat-header">
+          <h3>Live Chat Support</h3>
+          <button className="close-chat" onClick={() => setIsChatOpen(false)}>
+            ✕
+          </button>
+        </div>
 
-.chat-header {
-  background: linear-gradient(135deg, #1a56db, #3b82f6);
-  color: white;
-  padding: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+        <div className="chat-body" ref={chatBodyRef}>
+          {messages.map((message, index) => (
+            <div key={index} className={`chat-message ${message.isUser ? 'user' : 'bot'}`}>
+              <div className="message-content">
+                {message.text}
+              </div>
+            </div>
+          ))}
+        </div>
 
-.chat-header h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
+        <div className="chat-footer">
+          <input
+            type="text"
+            className="chat-input"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+          />
+          <button className="send-button" onClick={handleSendMessage}>
+            ↗
+          </button>
+        </div>
 
-.close-chat {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
+        <div className="powered-by">
+          Powered by <a href="https://jetautomations.ai" target="_blank" rel="noopener noreferrer">JetAutomations.ai</a>
+        </div>
+      </div>
 
-.close-chat:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
+      <footer className="app-footer">
+        <p>Ready to transform your customer service? Get started today with our industry-leading live chat solution.</p>
+      </footer>
+    </div>
+  );
+};
 
-.chat-body {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background: #f9fafb;
-}
-
-.chat-message {
-  margin-bottom: 16px;
-  display: flex;
-}
-
-.chat-message.bot {
-  justify-content: flex-start;
-}
-
-.chat-message.user {
-  justify-content: flex-end;
-}
-
-.message-content {
-  max-width: 75%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.bot .message-content {
-  background: white;
-  border: 1px solid #e5e7eb;
-  color: #1f2937;
-  border-top-left-radius: 4px;
-}
-
-.user .message-content {
-  background: #3b82f6;
-  color: white;
-  border-top-right-radius: 4px;
-}
-
-.chat-footer {
-  padding: 20px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  gap: 10px;
-}
-
-.chat-input {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 24px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border 0.2s;
-}
-
-.chat-input:focus {
-  border-color: #3b82f6;
-}
-
-.send-button {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-  font-size: 1.2rem;
-}
-
-.send-button:hover {
-  background: #1d4ed8;
-}
-
-/* Chat Toggle Button */
-.chat-toggle {
-  position: fixed;
-  right: 30px;
-  bottom: 30px;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #1a56db, #3b82f6);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(26, 86, 219, 0.4);
-  z-index: 999;
-  border: none;
-  font-size: 1.5rem;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.chat-toggle.hidden {
-  display: none;
-}
-
-.chat-toggle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 25px rgba(26, 86, 219, 0.5);
-}
-
-/* Mobile Bottom Bar */
-.mobile-chat-bar {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  padding: 15px 20px;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 998;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-}
-
-.mobile-chat-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mobile-chat-text {
-  flex: 1;
-}
-
-.mobile-chat-text h4 {
-  color: #1f2937;
-  font-size: 1.1rem;
-  margin-bottom: 4px;
-}
-
-.mobile-chat-text p {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.mobile-chat-button {
-  background: linear-gradient(135deg, #1a56db, #3b82f6);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 24px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.mobile-chat-button:hover {
-  background: #1d4ed8;
-}
-
-/* Powered by */
-.powered-by {
-  text-align: center;
-  padding: 15px;
-  color: #6b7280;
-  font-size: 0.9rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.powered-by a {
-  color: #3b82f6;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.2s;
-}
-
-.powered-by a:hover {
-  color: #1a56db;
-  text-decoration: underline;
-}
-
-/* Footer */
-.app-footer {
-  text-align: center;
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 1px solid #e5e7eb;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .live-chat-widget {
-    width: 100%;
-    height: 70vh;
-    right: 0;
-    bottom: 0;
-    border-radius: 16px 16px 0 0;
-  }
-
-  .chat-toggle {
-    display: none;
-  }
-
-  .mobile-chat-bar {
-    display: block;
-  }
-
-  .app-header h1 {
-    font-size: 2rem;
-  }
-
-  .tagline {
-    font-size: 1rem;
-  }
-
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-card {
-    padding: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-header h1 {
-    font-size: 1.8rem;
-  }
-
-  .live-chat-widget {
-    height: 80vh;
-  }
-}
+export default JethelperApp;
