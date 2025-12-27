@@ -2,32 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import './JethelperApp.css';
 
 const JethelperApp: React.FC = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState<Array<{text: string, isUser: boolean}>>([
-    { text: "Hello! Welcome to our live chat. How can we help you today?", isUser: false },
-    { text: "I'm interested in your live chat software", isUser: true }
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const chatBodyRef = useRef<HTMLDivElement>(null);
-
+  // Original state from screenshot
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  
+  // Original functions from screenshot
   const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-    
-    // Add user message
-    setMessages(prev => [...prev, { text: inputMessage, isUser: true }]);
-    setInputMessage('');
-    
-    // Simulate bot response
-    setTimeout(() => {
-      const responses = [
-        "Thanks for your message! Our team will get back to you shortly.",
-        "That's a great question! Let me connect you with a specialist.",
-        "I can help with that! Would you like to schedule a demo of our software?",
-        "We offer several plans depending on your business needs. Would you like to see pricing options?"
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      setMessages(prev => [...prev, { text: randomResponse, isUser: false }]);
-    }, 1000);
+    if (inputValue.trim()) {
+      setMessages([...messages, `User: ${inputValue}`]);
+      setInputValue('');
+      
+      // Simulate bot response (original logic)
+      setTimeout(() => {
+        setMessages(prev => [...prev, "Bot: Thanks for your message!"]);
+      }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -36,119 +26,149 @@ const JethelperApp: React.FC = () => {
     }
   };
 
+  // Original chat toggle logic
+  const toggleChat = () => {
+    setChatOpen(!chatOpen);
+  };
+
+  // Auto-open for demo (original behavior)
   useEffect(() => {
-    // Auto-scroll to bottom when messages change
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  }, [messages]);
+    const timer = setTimeout(() => {
+      if (!chatOpen) {
+        setChatOpen(true);
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <div className="app-container">
+    <div className="jethelper-app">
+      {/* Original header from screenshot */}
       <header className="app-header">
         <h1>The live chat software that gets the job done</h1>
-        <p className="tagline">
-          Premium customer service software that helps you engage with customers, boost sales, and support your business growth.
-        </p>
+        <div className="header-subtitle">
+          <p><strong>LinkedIn:</strong> In service customer service software,</p>
+          <p>Chats for info, name for user name use and age-to-choice for your customers.</p>
+        </div>
       </header>
 
-      <div className="features-grid">
-        <div className="feature-card">
-          <div className="feature-icon">💬</div>
-          <h3>Engage with live chat, sell with ease</h3>
-          <p>Convert website visitors into customers with real-time conversations and personalized support that drives sales.</p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">⭐</div>
-          <h3>Make premium support your new standard</h3>
-          <p>Deliver exceptional customer service with AI-powered tools, canned responses, and seamless ticket management.</p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">🔄</div>
-          <h3>Admission support and share with a customer service solution</h3>
-          <p>Streamline your support processes with shared inboxes, team collaboration, and performance analytics.</p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">👥</div>
-          <h3>Empower your teams with business insights</h3>
-          <p>Equip your support team with the data and tools they need to excel and drive customer satisfaction.</p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">🛠️</div>
-          <h3>Connect with tools that support your business growth</h3>
-          <p>Integrate with your favorite CRM, marketing, and productivity tools to create a seamless workflow.</p>
-        </div>
-
-        <div className="feature-card">
-          <div className="feature-icon">🔗</div>
-          <h3>LinkedIn customer service software</h3>
-          <p>Capture leads from LinkedIn conversations and provide instant support through integrated chat functionality.</p>
-        </div>
-      </div>
-
-      {/* Mobile Chat Bar (shown on mobile) */}
-      <div className="mobile-chat-bar">
-        <div className="mobile-chat-content">
-          <div className="mobile-chat-text">
-            <h4>Need help?</h4>
-            <p>Chat with our support team</p>
+      <main className="app-main">
+        {/* Original content sections from screenshot */}
+        <section className="content-section">
+          <div className="content-card">
+            <h2>Email:</h2>
+            <a href="https://www.facebook.com" className="email-link">www.facebook.com</a>
           </div>
-          <button className="mobile-chat-button" onClick={() => setIsChatOpen(true)}>
-            💬 Start Chat
-          </button>
+        </section>
+
+        <section className="features-grid">
+          <div className="feature-card original">
+            <h3>Engage with live chat, sell with ease</h3>
+          </div>
+          
+          <div className="feature-card original">
+            <h3>Make premium support your new staunch</h3>
+          </div>
+          
+          <div className="feature-card original">
+            <h3>Admission support and share with a customer service solution</h3>
+          </div>
+          
+          <div className="feature-card original">
+            <h3>Backer your teams in business with Content inside the app</h3>
+          </div>
+          
+          <div className="feature-card original">
+            <h3>Connect with tools that support your business growth</h3>
+          </div>
+        </section>
+      </main>
+
+      {/* Mobile Chat Toggle (bottom bar for mobile) */}
+      <div className="mobile-chat-toggle" onClick={toggleChat}>
+        <div className="mobile-toggle-content">
+          <span className="chat-icon">💬</span>
+          <span className="toggle-text">Need help? Chat with us</span>
+          <span className="toggle-arrow">{chatOpen ? '▼' : '▲'}</span>
         </div>
       </div>
 
-      {/* Chat Toggle Button (shown on desktop) */}
-      <button className={`chat-toggle ${isChatOpen ? 'hidden' : ''}`} onClick={() => setIsChatOpen(true)}>
-        💬
+      {/* Desktop Chat Toggle (floating button on right) */}
+      <button 
+        className={`desktop-chat-toggle ${chatOpen ? 'active' : ''}`}
+        onClick={toggleChat}
+        aria-label={chatOpen ? "Close chat" : "Open chat"}
+      >
+        <span className="toggle-icon">💬</span>
+        <span className="toggle-badge">1</span>
       </button>
 
-      {/* Live Chat Widget */}
-      <div className={`live-chat-widget ${isChatOpen ? 'open' : 'closed'}`}>
+      {/* Chat Widget - Now positioned on the right side */}
+      <div className={`chat-widget ${chatOpen ? 'open' : 'closed'} ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`}>
         <div className="chat-header">
-          <h3>Live Chat Support</h3>
-          <button className="close-chat" onClick={() => setIsChatOpen(false)}>
-            ✕
+          <div className="header-content">
+            <h3>Live Chat Support</h3>
+            <p className="header-sub">How can we help you today?</p>
+          </div>
+          <button 
+            className="close-chat" 
+            onClick={toggleChat}
+            aria-label="Close chat"
+          >
+            ×
           </button>
         </div>
 
-        <div className="chat-body" ref={chatBodyRef}>
+        <div className="chat-messages">
+          {/* Initial welcome message (original logic) */}
+          <div className="message bot">
+            <div className="message-content">
+              <p>Hello! Welcome to our live chat. How can we help you today?</p>
+            </div>
+            <div className="message-time">Just now</div>
+          </div>
+
+          {/* Original message rendering logic */}
           {messages.map((message, index) => (
-            <div key={index} className={`chat-message ${message.isUser ? 'user' : 'bot'}`}>
+            <div 
+              key={index} 
+              className={`message ${message.startsWith('User:') ? 'user' : 'bot'}`}
+            >
               <div className="message-content">
-                {message.text}
+                <p>{message.replace('User: ', '').replace('Bot: ', '')}</p>
               </div>
+              <div className="message-time">Just now</div>
             </div>
           ))}
         </div>
 
-        <div className="chat-footer">
-          <input
-            type="text"
-            className="chat-input"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message..."
-          />
-          <button className="send-button" onClick={handleSendMessage}>
-            ↗
-          </button>
-        </div>
-
-        <div className="powered-by">
-          Powered by <a href="https://jetautomations.ai" target="_blank" rel="noopener noreferrer">JetAutomations.ai</a>
+        <div className="chat-input-area">
+          <div className="input-wrapper">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type your message here..."
+              className="chat-input"
+            />
+            <button 
+              onClick={handleSendMessage}
+              className="send-button"
+              disabled={!inputValue.trim()}
+            >
+              <span className="send-icon">➤</span>
+            </button>
+          </div>
+          
+          {/* Original powered by section */}
+          <div className="chat-footer">
+            <p className="powered-by">
+              Powered by <a href="https://jetautomations.ai" target="_blank" rel="noopener noreferrer">JetAutomations.ai</a>
+            </p>
+          </div>
         </div>
       </div>
-
-      <footer className="app-footer">
-        <p>Ready to transform your customer service? Get started today with our industry-leading live chat solution.</p>
-      </footer>
     </div>
   );
 };
