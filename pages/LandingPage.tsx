@@ -184,7 +184,41 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </div>
         </div>
       </section>
+      </section>
 
+      {/* "VIEW ALL TOOLS" BUTTON SECTION - ADD THIS */}
+      <section className="py-12 px-4 bg-slate-900 border-y border-slate-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-medium mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Complete Marketing Platform
+          </div>
+          
+          <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            See Everything JetSuite Can Do
+          </h3>
+          <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
+            Get instant access to all 20+ AI-powered tools that handle your entire online presence.
+          </p>
+          
+          <button 
+            onClick={() => window.open("https://www.getjetsuite.com/features", "_blank")}
+            className="group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1"
+          >
+            <span>View All 20+ Tools</span>
+            <span className="group-hover:translate-x-2 transition-transform">→</span>
+          </button>
+          
+          <p className="text-gray-500 text-sm mt-4">
+            No credit card required • Explore at your own pace
+          </p>
+        </div>
+      </section>
+      {/* END OF "VIEW ALL TOOLS" SECTION */}
+    
       {/* 4. FEATURES SHOWCASE - WITH ENHANCED ANIMATIONS FOR ALL TOOLS */}
       <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto space-y-20">
