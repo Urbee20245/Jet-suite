@@ -21,7 +21,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit }) => {
     setError('');
 
     try {
-      // Submit to Formspree
       const response = await fetch('https://formspree.io/f/mbdjloja', {
         method: 'POST',
         headers: {
@@ -37,7 +36,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit }) => {
       });
 
       if (response.ok) {
-        // Call the parent onSubmit to show coupon
         onSubmit(name, email);
       } else {
         throw new Error('Submission failed');
@@ -167,7 +165,4 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit }) => {
       </form>
     </div>
   );
-};
-        </div>
-    );
 };
