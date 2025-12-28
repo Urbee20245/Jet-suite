@@ -184,8 +184,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </div>
         </div>
       </section>
-      </section>
-
+    
       {/* "VIEW ALL TOOLS" BUTTON SECTION - ADD THIS */}
       <section className="py-12 px-4 bg-slate-900 border-y border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
