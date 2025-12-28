@@ -11,7 +11,6 @@ import { ConversationStarters } from './components/JethelperConversationStarters
 import { TypingIndicator } from './components/JethelperTypingIndicator';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob, LiveSession, Chat } from '@google/genai';
 import { SYSTEM_INSTRUCTION, SYSTEM_INSTRUCTION_VOICE } from './JethelperConstants';
-import { decode, encode, decodeAudioData, resampleBuffer } from './utils/JethelperAudio';
 import { sendMessageToAI as sendTextMessageToAI } from './services/JethelperGeminiService';
 import { GrowthIcon } from './components/JethelperGrowthIcon';
 
@@ -19,8 +18,6 @@ if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
 }
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mbdjloja';
 
 type AppState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'text_input' | 'waiting_for_response';
 type Turn = { id: number; userQuery?: string; aiResponse: string; };
@@ -99,6 +96,60 @@ const renderMessageWithLinks = (text: string) => {
   return parts;
 };
 
+// Audio helper functions from GETLYFE
+function downsampleTo16k(buffer: Float32Array, inputSampleRate: number): Float32Array {
+  if (inputSampleRate === 16000) return buffer;
+  const ratio = inputSampleRate / 16000;
+  const newLength = Math.ceil(buffer.length / ratio);
+  const result = new Float32Array(newLength);
+  for (let i = 0; i < newLength; i++) {
+    const x = i * ratio;
+    const index = Math.floor(x);
+    const t = x - index;
+    const v0 = buffer[index];
+    const v1 = buffer[index + 1] || v0;
+    result[i] = v0 * (1 - t) + v1 * t;
+  }
+  return result;
+}
+
+function createBlob(data: Float32Array): Blob {
+  const l = data.length;
+  const int16 = new Int16Array(l);
+  for (let i = 0; i < l; i++) int16[i] = data[i] * 32768;
+  return { 
+    data: encode(new Uint8Array(int16.buffer)), 
+    mimeType: 'audio/pcm;rate=16000' 
+  };
+}
+
+function encode(bytes: Uint8Array) {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+function decode(base64: string) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+  return bytes;
+}
+
+async function decodeAudioData(data: Uint8Array, ctx: AudioContext, sampleRate: number, numChannels: number): Promise<AudioBuffer> {
+  const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  const dataInt16 = new Int16Array(arrayBuffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+  }
+  return buffer;
+}
+
 const App: React.FC = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [appState, setAppState] = useState<AppState>('text_input');
@@ -109,24 +160,19 @@ const App: React.FC = () => {
     const [showCoupon, setShowCoupon] = useState(false);
     const [currentTranscription, setCurrentTranscription] = useState('');
     const [showStarters, setShowStarters] = useState(true);
-    const [audioQueue, setAudioQueue] = useState<AudioBuffer[]>([]);
-    const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
     const chatRef = useRef<Chat | null>(null);
-    const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
-    const userSpeakingTimeoutRef = useRef<number | null>(null);
-    const audioQueueRef = useRef<AudioBuffer[]>([]);
-    const isPlayingRef = useRef(false);
-    const silenceTimeoutRef = useRef<number | null>(null);
-    const autoRestartTimeoutRef = useRef<number | null>(null);
     
+    // Voice refs - using GETLYFE approach
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
-    const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
-    const mediaStreamSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
-    const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+    const liveSessionRef = useRef<any>(null);
+    const nextStartTimeRef = useRef<number>(0);
+    const audioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+    const currentInputTranscription = useRef('');
+    const isVoiceActiveRef = useRef(false);
 
     const initChat = useCallback(() => {
         if (messages.length > 0) return;
@@ -200,114 +246,6 @@ const App: React.FC = () => {
         await sendMessage(starterText);
     };
 
-    const stopRecording = useCallback(async () => {
-        if (userSpeakingTimeoutRef.current) {
-            clearTimeout(userSpeakingTimeoutRef.current);
-            userSpeakingTimeoutRef.current = null;
-        }
-        if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current);
-            silenceTimeoutRef.current = null;
-        }
-        if (autoRestartTimeoutRef.current) {
-            clearTimeout(autoRestartTimeoutRef.current);
-            autoRestartTimeoutRef.current = null;
-        }
-        
-        setAppState('text_input');
-        setCurrentTranscription('');
-        
-        if (sessionPromiseRef.current) {
-            try {
-                const session = await sessionPromiseRef.current;
-                session.close();
-            } catch (error) {
-                console.error('Error closing session:', error);
-            }
-        }
-        
-        if (currentAudioSourceRef.current) {
-            try {
-                currentAudioSourceRef.current.stop();
-            } catch (error) {
-                // Ignore errors when stopping audio
-            }
-            currentAudioSourceRef.current = null;
-        }
-        
-        if (scriptProcessorRef.current) {
-            scriptProcessorRef.current.disconnect();
-            scriptProcessorRef.current = null;
-        }
-        
-        if (mediaStreamSourceRef.current) {
-            mediaStreamSourceRef.current.disconnect();
-            mediaStreamSourceRef.current = null;
-        }
-        
-        if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach(track => {
-                track.stop();
-                track.enabled = false;
-            });
-            mediaStreamRef.current = null;
-        }
-        
-        audioQueueRef.current = [];
-        setIsPlayingAudio(false);
-        
-        if (inputAudioContextRef.current && inputAudioContextRef.current.state !== 'closed') {
-            try {
-                await inputAudioContextRef.current.close();
-            } catch (error) {
-                console.error('Error closing input audio context:', error);
-            }
-        }
-        
-        if (outputAudioContextRef.current && outputAudioContextRef.current.state !== 'closed') {
-            try {
-                await outputAudioContextRef.current.close();
-            } catch (error) {
-                console.error('Error closing output audio context:', error);
-            }
-        }
-        
-        inputAudioContextRef.current = null;
-        outputAudioContextRef.current = null;
-    }, []);
-
-    const playAudioBuffer = useCallback(async (audioBuffer: AudioBuffer) => {
-        if (!outputAudioContextRef.current) {
-            console.error('No audio context available');
-            return;
-        }
-
-        return new Promise<void>((resolve) => {
-            try {
-                const source = outputAudioContextRef.current!.createBufferSource();
-                currentAudioSourceRef.current = source;
-                source.buffer = audioBuffer;
-                source.connect(outputAudioContextRef.current!.destination);
-                
-                source.onended = () => {
-                    currentAudioSourceRef.current = null;
-                    resolve();
-                };
-                
-                source.onerror = (error) => {
-                    console.error('Audio playback error:', error);
-                    currentAudioSourceRef.current = null;
-                    resolve();
-                };
-                
-                source.start();
-            } catch (error) {
-                console.error('Error starting audio:', error);
-                resolve();
-            }
-        });
-    }, []);
-
     const handleFormSubmit = async (name: string, email: string) => {
         try {
             setShowForm(false);
@@ -326,166 +264,214 @@ const App: React.FC = () => {
         }
     };
 
-    const handleMicClick = async () => {
-        const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking' || appState === 'waiting_for_response';
-        if (isVoiceMode) {
-            await stopRecording();
+    // Voice functions using GETLYFE approach
+    const stopVoiceMode = useCallback(() => {
+        setAppState('text_input');
+        setCurrentTranscription('');
+        isVoiceActiveRef.current = false;
+        
+        if (liveSessionRef.current) {
+            liveSessionRef.current = null;
+        }
+        
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+            mediaStreamRef.current = null;
+        }
+        
+        if (audioSourcesRef.current) {
+            audioSourcesRef.current.forEach(source => source.stop());
+            audioSourcesRef.current.clear();
+        }
+        
+        if (inputAudioContextRef.current) {
+            inputAudioContextRef.current.close().catch(() => {});
+            inputAudioContextRef.current = null;
+        }
+        
+        if (outputAudioContextRef.current) {
+            outputAudioContextRef.current.close().catch(() => {});
+            outputAudioContextRef.current = null;
+        }
+    }, []);
+
+    const startVoiceMode = async () => {
+        if (isVoiceActiveRef.current) {
+            stopVoiceMode();
+            return;
+        }
+        
+        if (!window.isSecureContext) {
+            setMessages(prev => [...prev, { 
+                role: Role.ASSISTANT, 
+                text: "Voice Mode Error: Browser security requires an HTTPS connection to access the microphone.",
+                timestamp: new Date()
+            }]);
             return;
         }
 
-        setShowStarters(false);
         setAppState('listening');
-        let accumulatedInput = '';
-        let accumulatedOutput = '';
-        let hasOutputStarted = false;
-        let lastInputTime = Date.now();
-
+        setShowStarters(false);
+        isVoiceActiveRef.current = true;
+        setCurrentTranscription('');
+        
         try {
-            mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ 
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            inputAudioContextRef.current = new AudioContextClass();
+            outputAudioContextRef.current = new AudioContextClass();
+
+            if (outputAudioContextRef.current.state === 'suspended') {
+                await outputAudioContextRef.current.resume();
+            }
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: {
                     echoCancellation: true,
-                    noiseSuppression: true,
-                    sampleRate: 16000
+                    noiseSuppression: true
                 } 
             });
-            
-            inputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ 
-                sampleRate: 24000,
-                latencyHint: 'playback'
-            });
-            
-            sessionPromiseRef.current = ai.live.connect({
+            mediaStreamRef.current = stream;
+
+            const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    systemInstruction: SYSTEM_INSTRUCTION_VOICE,
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
+                    },
+                    inputAudioTranscription: {},
+                    outputAudioTranscription: {},
+                },
                 callbacks: {
                     onopen: () => {
-                        if (!mediaStreamRef.current || !inputAudioContextRef.current) return;
-                        mediaStreamSourceRef.current = inputAudioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+                        if (!inputAudioContextRef.current || !mediaStreamRef.current) return;
+                        const inputSampleRate = inputAudioContextRef.current.sampleRate;
+                        const source = inputAudioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+                        const scriptProcessor = inputAudioContextRef.current.createScriptProcessor(4096, 1, 1);
                         
-                        scriptProcessorRef.current = inputAudioContextRef.current.createScriptProcessor(2048, 1, 1);
-                        
-                        scriptProcessorRef.current.onaudioprocess = (e) => {
+                        scriptProcessor.onaudioprocess = (e) => {
                             if (!inputAudioContextRef.current) return;
                             const inputData = e.inputBuffer.getChannelData(0);
-                            const resampledData = resampleBuffer(inputData, inputAudioContextRef.current.sampleRate, 16000);
-                            
-                            const compressedData = resampledData.map(v => {
-                                const compressed = Math.max(-0.9, Math.min(0.9, v));
-                                return compressed * 32768;
-                            });
-                            
-                            const pcmBlob: Blob = { 
-                                data: encode(new Uint8Array(new Int16Array(compressedData).buffer)), 
-                                mimeType: 'audio/pcm;rate=16000' 
-                            };
-                            
-                            sessionPromiseRef.current?.then((session) => session.sendRealtimeInput({ media: pcmBlob }));
+                            const downsampledData = downsampleTo16k(inputData, inputSampleRate);
+                            const pcmBlob = createBlob(downsampledData);
+                            sessionPromise.then(session => session.sendRealtimeInput({ media: pcmBlob }));
                         };
                         
-                        mediaStreamSourceRef.current.connect(scriptProcessorRef.current);
-                        scriptProcessorRef.current.connect(inputAudioContextRef.current.destination);
+                        source.connect(scriptProcessor);
+                        const muteNode = inputAudioContextRef.current.createGain();
+                        muteNode.gain.value = 0;
+                        scriptProcessor.connect(muteNode);
+                        muteNode.connect(inputAudioContextRef.current.destination);
                     },
-                    onmessage: async (message) => {
-                        if (userSpeakingTimeoutRef.current) {
-                            clearTimeout(userSpeakingTimeoutRef.current);
+                    onmessage: async (message: LiveServerMessage) => {
+                        const inputTrans = message.serverContent?.inputTranscription?.text;
+                        const outputTrans = message.serverContent?.outputTranscription?.text;
+                        
+                        // Handle input transcription
+                        if (inputTrans) {
+                            currentInputTranscription.current += inputTrans;
+                            setCurrentTranscription(currentInputTranscription.current);
+                            setAppState('listening');
                         }
-
-                        const isOutputting = message.serverContent?.outputTranscription || message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-
-                        if (isOutputting && !hasOutputStarted) {
-                            hasOutputStarted = true;
+                        
+                        // Handle output transcription
+                        if (outputTrans) {
                             setAppState('speaking');
                         }
-
-                        if (message.serverContent?.inputTranscription) {
-                            lastInputTime = Date.now();
-                            
-                            if (!hasOutputStarted) {
-                                setAppState('listening');
-                                userSpeakingTimeoutRef.current = window.setTimeout(() => {
-                                    if (!hasOutputStarted) setAppState('thinking');
-                                }, 2000);
-                            }
-                            accumulatedInput += message.serverContent.inputTranscription.text;
-                            setCurrentTranscription(accumulatedInput);
-                        }
-                       
-                        if (message.serverContent?.outputTranscription) {
-                            accumulatedOutput += message.serverContent.outputTranscription.text;
-                        }
-
+                        
+                        // Handle turn completion
                         if (message.serverContent?.turnComplete) {
-                            setMessages(prev => [
-                                ...prev,
-                                { role: Role.USER, text: accumulatedInput, timestamp: new Date() },
-                                { role: Role.ASSISTANT, text: accumulatedOutput, timestamp: new Date() },
-                            ]);
-
-                            const showFormTriggers = [
-                                "form for you now",
-                                "form below to unlock your code",
-                                "provide your details in the form"
-                            ];
-                            if (showFormTriggers.some(trigger => accumulatedOutput.toLowerCase().includes(trigger))) {
-                                setShowForm(true);
-                            }
-                            
-                            setTimeout(() => {
-                                if (appState === 'speaking') {
+                            if (currentInputTranscription.current) {
+                                const userMessage: Message = { 
+                                    role: Role.USER, 
+                                    text: currentInputTranscription.current, 
+                                    timestamp: new Date() 
+                                };
+                                const assistantMessage: Message = {
+                                    role: Role.ASSISTANT,
+                                    text: message.serverContent.outputTranscription?.text || '',
+                                    timestamp: new Date()
+                                };
+                                
+                                setMessages(prev => [...prev, userMessage, assistantMessage]);
+                                
+                                const showFormTriggers = [
+                                    "form for you now",
+                                    "form below to unlock your code",
+                                    "provide your details in the form"
+                                ];
+                                if (showFormTriggers.some(trigger => 
+                                    assistantMessage.text.toLowerCase().includes(trigger))) {
+                                    setShowForm(true);
+                                }
+                                
+                                currentInputTranscription.current = '';
+                                setCurrentTranscription('');
+                                
+                                // After speaking, wait for response
+                                setTimeout(() => {
                                     setAppState('waiting_for_response');
-                                    if (autoRestartTimeoutRef.current) {
-                                        clearTimeout(autoRestartTimeoutRef.current);
-                                    }
-                                    autoRestartTimeoutRef.current = window.setTimeout(() => {
+                                    setTimeout(() => {
                                         if (appState === 'waiting_for_response') {
                                             setAppState('listening');
                                         }
                                     }, 3000);
-                                }
-                            }, 1000);
-                        }
-                        
-                        const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-                        if (base64Audio && outputAudioContextRef.current) {
-                            try {
-                                const audioBuffer = await decodeAudioData(decode(base64Audio), outputAudioContextRef.current, 24000, 1);
-                                await playAudioBuffer(audioBuffer);
-                            } catch (error) {
-                                console.error('Error playing audio:', error);
+                                }, 1000);
                             }
                         }
-                    },
-                    onerror: (e) => { 
-                        console.error('Voice session error:', e); 
-                        stopRecording(); 
-                    },
-                    onclose: () => {
-                        console.log('Voice session closed');
-                        if (appState === 'speaking') {
-                            setAppState('waiting_for_response');
+                        
+                        // Handle audio playback
+                        const parts = message.serverContent?.modelTurn?.parts || [];
+                        for (const part of parts) {
+                            const audioData = part.inlineData?.data;
+                            if (audioData && outputAudioContextRef.current) {
+                                const ctx = outputAudioContextRef.current;
+                                nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                                const audioBuffer = await decodeAudioData(decode(audioData), ctx, 24000, 1);
+                                const source = ctx.createBufferSource();
+                                source.buffer = audioBuffer;
+                                const outputNode = ctx.createGain();
+                                source.connect(outputNode);
+                                outputNode.connect(ctx.destination);
+                                source.addEventListener('ended', () => audioSourcesRef.current.delete(source));
+                                source.start(nextStartTimeRef.current);
+                                nextStartTimeRef.current += audioBuffer.duration;
+                                audioSourcesRef.current.add(source);
+                            }
+                        }
+                        
+                        // Handle interruption
+                        if (message.serverContent?.interrupted) {
+                            audioSourcesRef.current.forEach(src => src.stop());
+                            audioSourcesRef.current.clear();
+                            nextStartTimeRef.current = 0;
+                            setCurrentTranscription('');
                         }
                     },
-                },
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    inputAudioTranscription: {}, 
-                    outputAudioTranscription: {},
-                    speechConfig: { 
-                        voiceConfig: { 
-                            prebuiltVoiceConfig: { 
-                                voiceName: 'Zephyr',
-                                speakingRate: 1.0,
-                                pitch: 0
-                            } 
-                        } 
+                    onclose: () => {
+                        stopVoiceMode();
                     },
-                    systemInstruction: SYSTEM_INSTRUCTION_VOICE,
-                },
+                    onerror: (error: any) => {
+                        console.error('Voice session error:', error);
+                        stopVoiceMode();
+                    }
+                }
             });
-        } catch (error) {
+            
+            liveSessionRef.current = sessionPromise;
+        } catch (error: any) {
             console.error('Microphone error:', error);
             alert("Could not start recording. Please ensure microphone permissions are granted.");
-            stopRecording();
+            stopVoiceMode();
+        }
+    };
+
+    const handleMicClick = async () => {
+        if (isVoiceActiveRef.current) {
+            stopVoiceMode();
+        } else {
+            startVoiceMode();
         }
     };
     
@@ -717,11 +703,11 @@ const App: React.FC = () => {
                                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
                                     <VoiceVisualizer 
                                         state={appState as 'listening' | 'thinking' | 'speaking' | 'waiting_for_response'} 
-                                        onClick={appState === 'waiting_for_response' ? () => setAppState('listening') : handleMicClick} 
+                                        onClick={handleMicClick} 
                                     />
                                 </div>
                                 <button 
-                                    onClick={stopRecording} 
+                                    onClick={stopVoiceMode} 
                                     style={{
                                         position: 'absolute',
                                         right: 0,
