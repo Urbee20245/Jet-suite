@@ -317,7 +317,7 @@ const App: React.FC = () => {
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Header with Powered by */}
+                    {/* Header - Clean without Powered by */}
                     <header style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -345,35 +345,6 @@ const App: React.FC = () => {
                                     <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>Online and ready to help</p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        {/* Powered by JetAutomations.ai */}
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '-25px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            backgroundColor: '#1E293B',
-                            padding: '4px 12px',
-                            borderRadius: '12px',
-                            fontSize: '10px',
-                            color: '#9CA3AF',
-                            border: '1px solid #334155',
-                            whiteSpace: 'nowrap',
-                        }}>
-                            Powered by <a 
-                                href="https://jetautomations.ai" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                style={{ 
-                                    color: '#60A5FA', 
-                                    textDecoration: 'none',
-                                    fontWeight: 600,
-                                    marginLeft: '2px'
-                                }}
-                            >
-                                JetAutomations.ai
-                            </a>
                         </div>
                         
                         <button 
@@ -465,13 +436,16 @@ const App: React.FC = () => {
                         <AIStatusIndicator state={appState} />
                     </div>
 
-                    {/* Footer/Input Area - ALL ORIGINAL LOGIC PRESERVED */}
+                    {/* Footer/Input Area with Powered by at the BOTTOM */}
                     <footer style={{
                         padding: '16px',
                         borderTop: '1px solid #1E293B',
                         backgroundColor: '#0F172A',
                         borderBottomLeftRadius: isMobile ? '20px' : '16px',
                         borderBottomRightRadius: isMobile ? '20px' : '16px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '12px',
                     }}>
                         {isVoiceMode ? (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', position: 'relative' }}>
@@ -557,6 +531,28 @@ const App: React.FC = () => {
                                 </div>
                             )
                         )}
+                        
+                        {/* Powered by JetAutomations.ai - NOW AT THE BOTTOM */}
+                        <div style={{
+                            textAlign: 'center',
+                            paddingTop: showForm || showCoupon ? '0' : '8px',
+                            borderTop: (showForm || showCoupon) ? 'none' : '1px solid #334155',
+                            color: '#9CA3AF',
+                            fontSize: '11px',
+                        }}>
+                            Powered by <a 
+                                href="https://jetautomations.ai" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                    color: '#60A5FA', 
+                                    textDecoration: 'none',
+                                    fontWeight: 500,
+                                }}
+                            >
+                                JetAutomations.ai
+                            </a>
+                        </div>
                     </footer>
                 </div>
             )}
