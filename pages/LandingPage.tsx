@@ -39,7 +39,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   return (
     <div className="bg-brand-darker text-gray-300 overflow-x-hidden font-sans">
       
-      {/* 1. HERO SECTION - REVISED */}
+      {/* 1. HERO SECTION - REVISED with video */}
       <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden">
         {/* Background Gradients */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50"></div>
@@ -110,7 +110,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 2. THE PROBLEM SECTION - UNCHANGED (Already strong) */}
+      {/* 2. THE PROBLEM SECTION */}
       <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -154,11 +154,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 3. VALUE PROPOSITION GRID - REVISED TITLE */}
+      {/* 3. VALUE PROPOSITION GRID */}
       <section className="py-24 px-4 bg-slate-900">
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-                {/* SIMPLIFIED TITLE */}
                 <h2 className="text-3xl md:text-4xl font-bold text-white">Everything You Need to Dominate Local Search</h2>
             </div>
             
@@ -166,32 +165,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-blue-500 shadow-xl">
                     <div className="mb-4"><JetVizIcon className="w-10 h-10 text-blue-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Analyze & Diagnose</h3>
-                    {/* SIMPLIFIED DESCRIPTION */}
                     <p className="text-gray-400 text-sm">Audit your Google Business Profile, website, and competitors instantly.</p>
                 </div>
                 <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-teal-400 shadow-xl">
                     <div className="mb-4"><JetCreateIcon className="w-10 h-10 text-teal-400"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Create & Publish</h3>
-                    {/* SIMPLIFIED DESCRIPTION */}
                     <p className="text-gray-400 text-sm">AI generates your marketing content, images, and ads in seconds.</p>
                 </div>
                 <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-purple-500 shadow-xl">
                     <div className="mb-4"><ChatBubbleLeftRightIcon className="w-10 h-10 text-purple-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Engage & Convert</h3>
-                    {/* SIMPLIFIED DESCRIPTION */}
                     <p className="text-gray-400 text-sm">Manage reviews, capture leads, and build trust automatically.</p>
                 </div>
                 <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-pink-500 shadow-xl">
                     <div className="mb-4"><RocketLaunchIcon className="w-10 h-10 text-pink-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Execute & Grow</h3>
-                    {/* SIMPLIFIED DESCRIPTION */}
                     <p className="text-gray-400 text-sm">Weekly prioritized action plan that actually gets done.</p>
                 </div>
             </div>
         </div>
       </section>
 
-      {/* 4. FEATURES SHOWCASE - REVISED COPY */}
+      {/* 4. FEATURES SHOWCASE - WITH ENHANCED AI SECTION */}
       <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto space-y-20">
             {/* Foundation Tools */}
@@ -204,7 +199,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetBizIcon className="w-6 h-6 text-white"/></div>
                             <div>
                                 <h4 className="font-bold text-white">JetBiz</h4>
-                                {/* ACTIVE LANGUAGE */}
                                 <p className="text-gray-400 text-sm">Optimize your Google Business Profile for higher ranking.</p>
                             </div>
                         </div>
@@ -212,7 +206,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetVizIcon className="w-6 h-6 text-white"/></div>
                             <div>
                                 <h4 className="font-bold text-white">JetViz</h4>
-                                {/* ACTIVE LANGUAGE */}
                                 <p className="text-gray-400 text-sm">Deep-dive AI website audit with specific technical fixes.</p>
                             </div>
                         </div>
@@ -220,7 +213,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetKeywordsIcon className="w-6 h-6 text-white"/></div>
                             <div>
                                 <h4 className="font-bold text-white">JetKeywords</h4>
-                                {/* ACTIVE LANGUAGE */}
                                 <p className="text-gray-400 text-sm">Find profitable local search terms your competitors missed.</p>
                             </div>
                         </div>
@@ -245,50 +237,124 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
             </div>
 
-            {/* Creation Tools */}
+            {/* Creation Tools - ENHANCED with animated AI section */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
-                     <div className="absolute -right-20 -top-20 bg-teal-500/20 w-64 h-64 blur-3xl rounded-full"></div>
-                     <div className="relative z-10 grid grid-cols-2 gap-4">
-                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center">
-                            <div className="text-center">
-                                <JetCreateIcon className="w-8 h-8 text-teal-400 mx-auto mb-2"/>
-                                <span className="text-xs text-gray-400 block">Social Post</span>
+                    <div className="absolute -right-20 -top-20 bg-teal-500/20 w-64 h-64 blur-3xl rounded-full"></div>
+                    
+                    {/* Animated AI Content Generator */}
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="relative">
+                                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-lg flex items-center justify-center">
+                                    <BoltIcon className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-teal-400 rounded-full">
+                                    <div className="absolute inset-0 animate-ping bg-teal-400 rounded-full"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-bold">JetCreate AI</h4>
+                                <p className="text-xs text-teal-300">Generating content...</p>
                             </div>
                         </div>
-                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center">
-                             <div className="text-center">
-                                <JetImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2"/>
-                                <span className="text-xs text-gray-400 block">Ad Creative</span>
+                        
+                        {/* AI Thinking Animation */}
+                        <div className="mb-6">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="h-2 w-2 rounded-full bg-teal-400 animate-pulse"></div>
+                                <div className="h-2 w-2 rounded-full bg-teal-400 animate-pulse delay-150"></div>
+                                <div className="h-2 w-2 rounded-full bg-teal-400 animate-pulse delay-300"></div>
+                                <span className="text-xs text-teal-300 ml-2">AI is thinking</span>
+                            </div>
+                            
+                            {/* Typing Animation Container */}
+                            <div className="bg-slate-950/80 p-4 rounded-lg border border-slate-700 min-h-[120px]">
+                                <div className="typing-demo">
+                                    <span className="text-teal-300 font-mono text-sm">Creating social post about:</span>
+                                    <div className="text-white font-medium mt-2 flex items-center">
+                                        <span className="typing-text">"Summer plumbing special - 20% off water heater installs"</span>
+                                        <span className="typing-cursor animate-pulse">|</span>
+                                    </div>
+                                    <div className="mt-4 text-gray-400 text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-1 w-16 bg-slate-700 rounded-full overflow-hidden">
+                                                <div className="h-full w-3/4 bg-teal-500 rounded-full animate-progress"></div>
+                                            </div>
+                                            <span>Optimizing for local SEO...</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 aspect-square flex items-center justify-center col-span-2">
-                             <div className="text-center w-full">
-                                <div className="h-2 w-3/4 bg-slate-800 rounded mx-auto mb-2"></div>
-                                <div className="h-2 w-1/2 bg-slate-800 rounded mx-auto"></div>
-                                <span className="text-xs text-gray-500 block mt-2">AI Generating...</span>
+                        
+                        {/* Generated Content Preview Grid */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-teal-500/50 transition-colors group">
+                                <div className="flex items-center justify-between mb-2">
+                                    <JetCreateIcon className="w-5 h-5 text-teal-400" />
+                                    <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-1 rounded">Ready</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="text-xs text-gray-400 block">Social Post</span>
+                                    <div className="mt-1 h-6 w-full bg-slate-800 rounded animate-pulse group-hover:bg-slate-700"></div>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-purple-500/50 transition-colors group">
+                                <div className="flex items-center justify-between mb-2">
+                                    <JetImageIcon className="w-5 h-5 text-purple-400" />
+                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">Ready</span>
+                                </div>
+                                <div className="text-center">
+                                    <span className="text-xs text-gray-400 block">Ad Creative</span>
+                                    <div className="mt-1 h-6 w-full bg-slate-800 rounded animate-pulse group-hover:bg-slate-700"></div>
+                                </div>
+                            </div>
+                            
+                            <div className="col-span-2 bg-gradient-to-r from-slate-900 to-slate-950 p-3 rounded-lg border border-slate-700 mt-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-400">Next up:</span>
+                                    <span className="text-xs text-blue-300">Email newsletter</span>
+                                </div>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                                        <div className="h-full w-1/3 bg-blue-500 rounded-full"></div>
+                                    </div>
+                                    <span className="text-xs text-gray-500">33%</span>
+                                </div>
                             </div>
                         </div>
-                     </div>
+                    </div>
                 </div>
                 <div>
                     <span className="text-teal-400 font-bold uppercase tracking-wider text-sm">Creation</span>
                     <h3 className="text-3xl font-bold text-white mt-2 mb-6">Never Run Out of Content</h3>
                     <div className="space-y-6">
                         <div className="flex gap-4">
-                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetCreateIcon className="w-6 h-6 text-white"/></div>
+                            <div className="bg-gradient-to-br from-teal-500/20 to-teal-600/10 p-3 rounded-lg h-fit border border-teal-500/30">
+                                <JetCreateIcon className="w-6 h-6 text-teal-400"/>
+                            </div>
                             <div>
                                 <h4 className="font-bold text-white">JetCreate ⭐</h4>
-                                {/* ACTIVE, USER-FOCUSED LANGUAGE */}
-                                <p className="text-gray-400 text-sm">Create marketing content, images, and ads in seconds with AI.</p>
+                                <p className="text-gray-400 text-sm">Your AI creative director that writes posts, emails, and ads in seconds.</p>
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <span className="text-teal-300">• Auto-optimizes for SEO</span>
+                                    <span className="text-teal-300">• Writes in your brand voice</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetImageIcon className="w-6 h-6 text-white"/></div>
+                            <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 p-3 rounded-lg h-fit border border-purple-500/30">
+                                <JetImageIcon className="w-6 h-6 text-purple-400"/>
+                            </div>
                             <div>
                                 <h4 className="font-bold text-white">JetImage</h4>
-                                {/* ACTIVE, USER-FOCUSED LANGUAGE */}
-                                <p className="text-gray-400 text-sm">Generate custom, on-brand images instantly.</p>
+                                <p className="text-gray-400 text-sm">Generate custom, on-brand images instantly. No design skills needed.</p>
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <span className="text-purple-300">• Creates social media graphics</span>
+                                    <span className="text-purple-300">• Generates ad visuals</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -305,7 +371,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetReplyIcon className="w-6 h-6 text-white"/></div>
                             <div>
                                 <h4 className="font-bold text-white">JetReply</h4>
-                                {/* ACTIVE LANGUAGE */}
                                 <p className="text-gray-400 text-sm">AI-crafted responses to all your reviews in one click.</p>
                             </div>
                         </div>
@@ -313,7 +378,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetTrustIcon className="w-6 h-6 text-white"/></div>
                             <div>
                                 <h4 className="font-bold text-white">JetTrust</h4>
-                                {/* ACTIVE LANGUAGE */}
                                 <p className="text-gray-400 text-sm">Showcase your best reviews on your website to build trust.</p>
                             </div>
                         </div>
@@ -335,7 +399,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 5. HOW IT WORKS - UNCHANGED */}
+      {/* 5. HOW IT WORKS */}
       <section className="py-24 px-4 bg-slate-900">
          <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-16">Your Path to More Customers in 10 Minutes/Day</h2>
@@ -371,7 +435,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
          </div>
       </section>
 
-      {/* 6. PRICING & VALUE SHOCK - UNCHANGED */}
+      {/* 6. PRICING & VALUE SHOCK */}
       <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
@@ -440,7 +504,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 7. SOCIAL PROOF - UNCHANGED */}
+      {/* 7. SOCIAL PROOF */}
       <section className="py-24 px-4 bg-brand-darker">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-bold text-white text-center mb-16">What Local Business Owners Are Saying</h2>
@@ -464,7 +528,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 8. GROWTH SCORE - UNCHANGED */}
+      {/* 8. GROWTH SCORE */}
       <section className="py-24 px-4 bg-slate-900 border-y border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Track Your Progress With One Number</h2>
@@ -484,7 +548,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 9. FAQ - UNCHANGED */}
+      {/* 9. FAQ */}
       <section className="py-24 px-4 bg-brand-darker">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-bold text-center text-white mb-16">Frequently Asked Questions</h2>
@@ -494,7 +558,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 10. FINAL CTA - UNCHANGED */}
+      {/* 10. FINAL CTA */}
       <section className="py-24 sm:py-32 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker relative overflow-hidden">
           {/* Background Effects */}
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
