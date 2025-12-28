@@ -45,6 +45,60 @@ const groupMessagesIntoTurns = (messages: Message[]): Turn[] => {
     return turns;
 };
 
+// Function to render links in messages
+const renderMessageWithLinks = (text: string) => {
+  // Handle [text](url) format
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    
+    // Add the link
+    const linkText = match[1];
+    const linkUrl = match[2];
+    const isJetDemo = linkUrl.includes('getjetsuite.com/demo');
+    const displayText = isJetDemo ? linkText : linkUrl;
+    
+    parts.push(
+      <a
+        key={match.index}
+        href={linkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: '#60A5FA',
+          textDecoration: 'underline',
+          fontWeight: 500,
+          padding: '2px 0',
+          display: 'inline-block'
+        }}
+      >
+        {displayText}
+      </a>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  
+  // If no links were found, return the original text
+  if (parts.length === 0) {
+    return text;
+  }
+  
+  return parts;
+};
+
 const App: React.FC = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [appState, setAppState] = useState<AppState>('text_input');
@@ -456,6 +510,15 @@ const App: React.FC = () => {
                 0%, 100% { transform: scale(1); }
                 50% { transform: scale(1.05); }
             }
+            .chat-link {
+                color: #60A5FA;
+                text-decoration: underline;
+                font-weight: 500;
+                transition: color 0.2s;
+            }
+            .chat-link:hover {
+                color: #93C5FD;
+            }
         `;
         document.head.appendChild(style);
         return () => {
@@ -566,10 +629,12 @@ const App: React.FC = () => {
                                         color: 'white',
                                         fontSize: '14px',
                                         lineHeight: '1.5',
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word'
                                     }}
                                 >
-                                    {msg.text}
+                                    {renderMessageWithLinks(msg.text)}
                                 </div>
                             </div>
                         ))}
@@ -583,7 +648,8 @@ const App: React.FC = () => {
                                     backgroundColor: '#3B82F6',
                                     color: 'white',
                                     fontSize: '14px',
-                                    opacity: 0.7
+                                    opacity: 0.7,
+                                    wordBreak: 'break-word'
                                 }}>
                                     {currentTranscription}
                                 </div>
@@ -627,7 +693,8 @@ const App: React.FC = () => {
                                     borderRadius: '16px',
                                     backgroundColor: '#1E293B',
                                     color: '#9CA3AF',
-                                    fontSize: '14px'
+                                    fontSize: '14px',
+                                    wordBreak: 'break-word'
                                 }}>
                                     I'm listening... feel free to continue speaking
                                 </div>
