@@ -212,7 +212,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           </button>
           
           <p className="text-gray-500 text-sm mt-4">
-            No credit card required • Explore at your own pace
+           See complete tool breakdowns • Learn what each feature does
           </p>
         </div>
       </section>
