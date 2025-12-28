@@ -15,20 +15,17 @@ import { decode, encode, decodeAudioData, resampleBuffer } from './utils/Jethelp
 import { sendMessageToAI as sendTextMessageToAI } from './services/JethelperGeminiService';
 import { GrowthIcon } from './components/JethelperGrowthIcon';
 
-// REMOVED: import './JethelperApp.css'; // This line should NOT exist
-
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
 }
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// IMPORTANT: Replace this with your own Formspree endpoint URL.
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mbdjloja';
 
 type AppState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'text_input' | 'waiting_for_response';
 type Turn = { id: number; userQuery?: string; aiResponse: string; };
 
-const groupMessagesIntoTurns = (messages: Message[]): Turn[] = {
+const groupMessagesIntoTurns = (messages: Message[]): Turn[] => {
     const turns: Turn[] = [];
     let userMessage: string | undefined = undefined;
     
@@ -47,7 +44,6 @@ const groupMessagesIntoTurns = (messages: Message[]): Turn[] = {
 
     return turns;
 };
-
 
 const App: React.FC = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -71,7 +67,6 @@ const App: React.FC = () => {
     const silenceTimeoutRef = useRef<number | null>(null);
     const autoRestartTimeoutRef = useRef<number | null>(null);
     
-    // Audio refs
     const inputAudioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
     const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -134,7 +129,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }
+    };
 
     const handleTextSend = async () => {
         if (!userInput.trim()) return;
@@ -177,7 +172,6 @@ const App: React.FC = () => {
             }
         }
         
-        // Stop and clean up audio
         if (currentAudioSourceRef.current) {
             try {
                 currentAudioSourceRef.current.stop();
@@ -205,11 +199,9 @@ const App: React.FC = () => {
             mediaStreamRef.current = null;
         }
         
-        // Clear audio queue
         audioQueueRef.current = [];
         setIsPlayingAudio(false);
         
-        // Close audio contexts
         if (inputAudioContextRef.current && inputAudioContextRef.current.state !== 'closed') {
             try {
                 await inputAudioContextRef.current.close();
@@ -264,7 +256,6 @@ const App: React.FC = () => {
 
     const handleFormSubmit = async (name: string, email: string) => {
         try {
-            // The form already submits to Formspree, so we just show the coupon
             setShowForm(false);
             setShowCoupon(true);
             
@@ -317,7 +308,6 @@ const App: React.FC = () => {
                         if (!mediaStreamRef.current || !inputAudioContextRef.current) return;
                         mediaStreamSourceRef.current = inputAudioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
                         
-                        // Use smaller buffer for better performance
                         scriptProcessorRef.current = inputAudioContextRef.current.createScriptProcessor(2048, 1, 1);
                         
                         scriptProcessorRef.current.onaudioprocess = (e) => {
@@ -325,7 +315,6 @@ const App: React.FC = () => {
                             const inputData = e.inputBuffer.getChannelData(0);
                             const resampledData = resampleBuffer(inputData, inputAudioContextRef.current.sampleRate, 16000);
                             
-                            // Apply compression to prevent clipping
                             const compressedData = resampledData.map(v => {
                                 const compressed = Math.max(-0.9, Math.min(0.9, v));
                                 return compressed * 32768;
@@ -361,7 +350,7 @@ const App: React.FC = () => {
                                 setAppState('listening');
                                 userSpeakingTimeoutRef.current = window.setTimeout(() => {
                                     if (!hasOutputStarted) setAppState('thinking');
-                                }, 2000); // Increased to 2 seconds
+                                }, 2000);
                             }
                             accumulatedInput += message.serverContent.inputTranscription.text;
                             setCurrentTranscription(accumulatedInput);
@@ -387,11 +376,9 @@ const App: React.FC = () => {
                                 setShowForm(true);
                             }
                             
-                            // After AI speaks, wait a moment then go back to listening
                             setTimeout(() => {
                                 if (appState === 'speaking') {
                                     setAppState('waiting_for_response');
-                                    // Auto-restart listening after 3 seconds of silence
                                     if (autoRestartTimeoutRef.current) {
                                         clearTimeout(autoRestartTimeoutRef.current);
                                     }
@@ -420,7 +407,6 @@ const App: React.FC = () => {
                     },
                     onclose: () => {
                         console.log('Voice session closed');
-                        // When session closes, if we were in speaking mode, go to waiting
                         if (appState === 'speaking') {
                             setAppState('waiting_for_response');
                         }
@@ -452,10 +438,8 @@ const App: React.FC = () => {
     const turns = groupMessagesIntoTurns(messages);
     const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking' || appState === 'waiting_for_response';
 
-    // Check if mobile
     const isMobile = window.innerWidth <= 768;
 
-    // Add pulse animation for waiting state
     useEffect(() => {
         const style = document.createElement('style');
         style.textContent = `
@@ -481,7 +465,6 @@ const App: React.FC = () => {
 
     return (
         <>
-            {/* Chat Window - Positioned on RIGHT side */}
             {isChatOpen && (
                 <div 
                     style={{
@@ -493,7 +476,7 @@ const App: React.FC = () => {
                         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
                         position: 'fixed',
                         bottom: isMobile ? '90px' : '20px',
-                        right: isMobile ? '20px' : '20px', // Changed from left to right
+                        right: isMobile ? '20px' : '20px',
                         width: isMobile ? 'calc(100vw - 40px)' : '400px',
                         height: isMobile ? '75vh' : '600px',
                         maxWidth: '400px',
@@ -502,7 +485,6 @@ const App: React.FC = () => {
                         overflow: 'hidden',
                     }}
                 >
-                    {/* Header - Clean without Powered by */}
                     <header style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -557,7 +539,6 @@ const App: React.FC = () => {
                         </button>
                     </header>
 
-                    {/* Messages Container */}
                     <div 
                         ref={chatContainerRef} 
                         style={{
@@ -567,7 +548,6 @@ const App: React.FC = () => {
                             backgroundColor: '#0F172A',
                         }}
                     >
-                        {/* Messages - ALL ORIGINAL LOGIC PRESERVED */}
                         {messages.map((msg, index) => (
                             <div 
                                 key={index} 
@@ -594,7 +574,6 @@ const App: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Current transcription - ORIGINAL */}
                         {currentTranscription && (
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
                                 <div style={{
@@ -611,22 +590,16 @@ const App: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Conversation Starters - ORIGINAL */}
                         {showStarters && <ConversationStarters onSelect={handleStarterClick} />}
 
-                        {/* Loading indicator - ORIGINAL */}
                         {isLoading && <TypingIndicator />}
 
-                        {/* Form - ORIGINAL */}
                         {showForm && <SignUpForm onSubmit={handleFormSubmit} />}
 
-                        {/* Coupon - ORIGINAL */}
                         {showCoupon && <CouponDisplay code="TAKE20OFF" />}
 
-                        {/* AI Status - ORIGINAL */}
                         <AIStatusIndicator state={appState} />
                         
-                        {/* Waiting for response indicator */}
                         {appState === 'waiting_for_response' && (
                             <div style={{
                                 display: 'flex',
@@ -662,7 +635,6 @@ const App: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Footer/Input Area with Powered by at the BOTTOM */}
                     <footer style={{
                         padding: '16px',
                         borderTop: '1px solid #1E293B',
@@ -761,7 +733,6 @@ const App: React.FC = () => {
                             )
                         )}
                         
-                        {/* Powered by JetAutomations.ai - NOW AT THE BOTTOM */}
                         <div style={{
                             textAlign: 'center',
                             paddingTop: showForm || showCoupon ? '0' : '8px',
@@ -786,7 +757,6 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            {/* Floating Action Button */}
             <FloatingActionButton 
                 onClick={() => setIsChatOpen(true)} 
                 isHidden={isChatOpen}
