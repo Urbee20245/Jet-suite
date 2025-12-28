@@ -676,9 +676,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
                   Get Started
                 </button>
-                <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
-                  Schedule a Demo
-                </button>
+               <button 
+  onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
+  className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
+>
+  Schedule a Personalized Demo
+</button>
               </div>
           </div>
       </section>
