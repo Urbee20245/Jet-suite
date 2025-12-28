@@ -79,7 +79,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         Get Started
                     </button>
                     <button 
-                      onClick={() => navigate('/demo')} // Update to your actual demo path
+                      onClick={() => navigate('/demo')}
                       className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
                     >
                         Watch 2-Min Demo <span>→</span>
@@ -103,7 +103,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         See how it works in 2 minutes
                     </div>
                 </div>
-                {/* Optional caption */}
                 <p className="text-center text-gray-500 text-sm mt-4">See how JetSuite works for businesses like yours</p>
             </div>
           </div>
@@ -186,7 +185,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 4. FEATURES SHOWCASE - WITH ENHANCED AI SECTION */}
+      {/* 4. FEATURES SHOWCASE - WITH ENHANCED ANIMATIONS FOR ALL TOOLS */}
       <section className="py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto space-y-20">
             {/* Foundation Tools */}
@@ -221,17 +220,35 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
                      <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full"></div>
                      <div className="relative z-10 space-y-4">
-                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-500/50 transition-colors">
                             <span className="text-white font-medium">Google Profile Health</span>
-                            <span className="text-green-400 font-bold">94/100</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-green-400 font-bold">94/100</span>
+                                <div className="h-2 w-16 bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full w-[94%] bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                                </div>
+                            </div>
                         </div>
-                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center hover:border-yellow-500/50 transition-colors">
                             <span className="text-white font-medium">Website Performance</span>
-                            <span className="text-yellow-400 font-bold">72/100</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-yellow-400 font-bold">72/100</span>
+                                <div className="h-2 w-16 bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full w-[72%] bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"></div>
+                                </div>
+                            </div>
                         </div>
-                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-400/50 transition-colors">
                             <span className="text-white font-medium">Keyword Opportunities</span>
-                            <span className="text-blue-400 font-bold">12 Found</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-blue-400 font-bold">12 Found</span>
+                                <div className="relative">
+                                    <div className="w-6 h-6 bg-blue-900/50 rounded-full flex items-center justify-center">
+                                        <span className="text-xs text-blue-300">+3</span>
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                </div>
+                            </div>
                         </div>
                      </div>
                 </div>
@@ -290,10 +307,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         
                         {/* Generated Content Preview Grid */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-teal-500/50 transition-colors group">
+                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-teal-500/50 transition-colors group ai-content-card">
                                 <div className="flex items-center justify-between mb-2">
                                     <JetCreateIcon className="w-5 h-5 text-teal-400" />
-                                    <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-1 rounded">Ready</span>
+                                    <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-1 rounded ai-status-ready">Ready</span>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-xs text-gray-400 block">Social Post</span>
@@ -301,10 +318,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                 </div>
                             </div>
                             
-                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-purple-500/50 transition-colors group">
+                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-purple-500/50 transition-colors group ai-content-card">
                                 <div className="flex items-center justify-between mb-2">
                                     <JetImageIcon className="w-5 h-5 text-purple-400" />
-                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">Ready</span>
+                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded ai-status-ready">Ready</span>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-xs text-gray-400 block">Ad Creative</span>
@@ -361,37 +378,124 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
             </div>
             
-            {/* Engagement Tools */}
-             <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Engagement Tools - ENHANCED with animated JetReply & JetTrust */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div className="order-2 md:order-1">
                     <span className="text-purple-500 font-bold uppercase tracking-wider text-sm">Engagement</span>
                     <h3 className="text-3xl font-bold text-white mt-2 mb-6">Turn Visitors into Loyal Customers</h3>
                     <div className="space-y-6">
                         <div className="flex gap-4">
-                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetReplyIcon className="w-6 h-6 text-white"/></div>
+                            <div className="bg-gradient-to-br from-purple-500/20 to-pink-600/10 p-3 rounded-lg h-fit border border-purple-500/30">
+                                <JetReplyIcon className="w-6 h-6 text-purple-400"/>
+                            </div>
                             <div>
                                 <h4 className="font-bold text-white">JetReply</h4>
                                 <p className="text-gray-400 text-sm">AI-crafted responses to all your reviews in one click.</p>
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <span className="text-purple-300">• Maintains brand voice</span>
+                                    <span className="text-purple-300">• Saves 10+ hours/week</span>
+                                </div>
                             </div>
                         </div>
                         <div className="flex gap-4">
-                            <div className="bg-slate-800 p-3 rounded-lg h-fit"><JetTrustIcon className="w-6 h-6 text-white"/></div>
+                            <div className="bg-gradient-to-br from-pink-500/20 to-rose-600/10 p-3 rounded-lg h-fit border border-pink-500/30">
+                                <JetTrustIcon className="w-6 h-6 text-pink-400"/>
+                            </div>
                             <div>
                                 <h4 className="font-bold text-white">JetTrust</h4>
                                 <p className="text-gray-400 text-sm">Showcase your best reviews on your website to build trust.</p>
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <span className="text-pink-300">• Increases conversion by 45%</span>
+                                    <span className="text-pink-300">• Updates automatically</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                  <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
-                     <div className="space-y-4">
-                        <div className="bg-white text-slate-900 p-4 rounded-xl rounded-tl-none shadow-lg max-w-[90%]">
-                            <p className="text-sm font-semibold mb-1">Five Star Review!</p>
-                            <p className="text-xs text-slate-600">"The service was incredible. Highly recommend to everyone in the area!"</p>
+                     <div className="space-y-6">
+                        {/* Animated Review Stream */}
+                        <div className="relative">
+                            <div className="absolute -top-3 -left-3 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                                <ChatBubbleLeftRightIcon className="w-3 h-3 text-white" />
+                            </div>
+                            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex">
+                                        {[...Array(5)].map((_, i) => (
+                                            <StarIcon key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-gray-400">New review • Just now</span>
+                                </div>
+                                <p className="text-sm text-white">"The service was incredible. Highly recommend to everyone in the area!"</p>
+                                <div className="mt-3 flex items-center gap-2 text-xs">
+                                    <span className="text-gray-500">Sentiment:</span>
+                                    <span className="text-green-400 font-medium">Very Positive</span>
+                                    <div className="h-1 w-16 bg-slate-700 rounded-full overflow-hidden ml-auto">
+                                        <div className="h-full w-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                         <div className="bg-blue-600 text-white p-4 rounded-xl rounded-tr-none shadow-lg max-w-[90%] ml-auto">
-                            <p className="text-xs text-blue-100 mb-1">AI Suggested Reply:</p>
-                            <p className="text-sm">"Thank you so much! We love serving our local community. Hope to see you again soon!"</p>
+
+                        {/* AI Response Animation */}
+                        <div className="relative">
+                            <div className="absolute -top-3 -left-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                            </div>
+                            <div className="bg-gradient-to-r from-blue-900/30 to-slate-900/30 p-4 rounded-xl border border-blue-500/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-xs text-blue-300 font-medium">AI Suggested Reply</span>
+                                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Generating...</span>
+                                </div>
+                                
+                                {/* AI Typing Response */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1">
+                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></div>
+                                        <div className="h-2 w-12 bg-blue-400/30 rounded-full animate-pulse delay-100"></div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse delay-200"></div>
+                                        <div className="h-2 w-20 bg-blue-400/30 rounded-full animate-pulse delay-300"></div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse delay-400"></div>
+                                        <div className="h-2 w-16 bg-blue-400/30 rounded-full animate-pulse delay-500"></div>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-3 pt-3 border-t border-blue-500/20">
+                                    <div className="text-xs text-blue-200 opacity-70 flex items-center justify-between">
+                                        <span>Personalized for: Plumbing business</span>
+                                        <span className="text-blue-300">✓ Brand voice matched</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Trust Score Visualization */}
+                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm text-white font-medium">Trust Score Impact</span>
+                                <span className="text-xs text-pink-300 bg-pink-500/20 px-2 py-1 rounded">+45%</span>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-400">Before JetTrust</span>
+                                    <span className="text-xs text-gray-400">After JetTrust</span>
+                                </div>
+                                <div className="h-8 rounded-lg bg-slate-800 overflow-hidden flex">
+                                    <div className="h-full w-1/3 bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center">
+                                        <span className="text-xs text-white">2.8%</span>
+                                    </div>
+                                    <div className="h-full w-2/3 bg-gradient-to-r from-pink-500 to-rose-600 flex items-center justify-center">
+                                        <span className="text-xs text-white">4.1% Conversion</span>
+                                    </div>
+                                </div>
+                                <div className="text-xs text-gray-500 text-center">Showing reviews boosts customer trust</div>
+                            </div>
                         </div>
                      </div>
                 </div>
