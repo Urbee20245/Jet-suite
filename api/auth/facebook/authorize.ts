@@ -58,7 +58,7 @@ export default async function handler(
       client_id: FACEBOOK_APP_ID,
       redirect_uri: FACEBOOK_REDIRECT_URI,
       state: state,
-      scope: 'pages_manage_posts,pages_read_engagement,public_profile',
+      scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
       response_type: 'code',
     });
 
