@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { createClient } from '@supabase/supabase-js';
 
@@ -247,7 +247,19 @@ const App: React.FC = () => {
   });
   
   try {
-    // Show loading while checking session
+    // ⚡ CHECK LEGAL PAGES FIRST - BEFORE ANY AUTH CHECKS
+    // This ensures /privacy and /terms load immediately without waiting for session
+    if (currentPath === '/privacy') {
+      console.log('[App] 📜 Rendering Privacy Policy (public)');
+      return <PrivacyPolicy />;
+    }
+    
+    if (currentPath === '/terms') {
+      console.log('[App] 📜 Rendering Terms of Service (public)');
+      return <TermsOfService />;
+    }
+
+    // Show loading while checking session (only for non-legal pages)
     if (!sessionChecked) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-brand-dark">
@@ -257,15 +269,6 @@ const App: React.FC = () => {
           </div>
         </div>
       );
-    }
-
-    // Public legal pages - accessible to everyone (logged in or not)
-    if (currentPath === '/privacy') {
-      return <PrivacyPolicy />;
-    }
-    
-    if (currentPath === '/terms') {
-      return <TermsOfService />;
     }
 
     // User is logged in with valid session
