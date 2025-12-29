@@ -13,6 +13,8 @@ import { DemoJetVizPage } from './DemoJetVizPage';
 import { GetStartedPage } from './GetStartedPage';
 import { BillingSuccessPage } from './BillingSuccessPage';
 import { BillingLockedPage } from './BillingLockedPage';
+import { PrivacyPolicy } from './PrivacyPolicy';
+import { TermsOfService } from './TermsOfService';
 import JethelperApp from '../jethelper/JethelperApp';
 
 interface MarketingWebsiteProps {
@@ -48,6 +50,10 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <BillingSuccessPage navigate={navigate} />;
             case '/billing/locked':
                 return <BillingLockedPage navigate={navigate} />;
+            case '/privacy':
+                return <PrivacyPolicy />;
+            case '/terms':
+                return <TermsOfService />;
             default:
                 return <LandingPage navigate={navigate} />;
         }
