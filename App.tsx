@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { createClient } from '@supabase/supabase-js';
 
@@ -205,18 +207,21 @@ const App: React.FC = () => {
   useEffect(() => {
     if (isLoggedIn) {
       // If the user logs in, redirect them to the app.
-      // Allow /pricing and /account so users can manage subscriptions
+      // Allow /pricing, /account, /privacy, /terms so users can access these pages
       if (!currentPath.startsWith('/app') && 
           !currentPath.startsWith('/billing') && 
           !currentPath.startsWith('/pricing') &&
           !currentPath.startsWith('/account') &&
           !currentPath.startsWith('/demo') &&
-          !currentPath.startsWith('/get-started')) {
+          !currentPath.startsWith('/get-started') &&
+          !currentPath.startsWith('/privacy') &&
+          !currentPath.startsWith('/terms')) {
         navigate('/app');
       }
     } else {
       // If the user logs out or is not logged in,
       // redirect them from the app section to the homepage.
+      // But allow access to /privacy and /terms (public pages)
       if (currentPath.startsWith('/app')) {
         navigate('/');
       }
@@ -252,6 +257,15 @@ const App: React.FC = () => {
           </div>
         </div>
       );
+    }
+
+    // Public legal pages - accessible to everyone (logged in or not)
+    if (currentPath === '/privacy') {
+      return <PrivacyPolicy />;
+    }
+    
+    if (currentPath === '/terms') {
+      return <TermsOfService />;
     }
 
     // User is logged in with valid session
