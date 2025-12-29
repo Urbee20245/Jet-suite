@@ -7,6 +7,7 @@ import {
 } from '../services/socialMediaService';
 import type { ScheduledPost, SocialConnection, CalendarDay } from '../types';
 import { Loader } from './Loader';
+import { generateNextNDays, formatDateForDisplay } from '../utils/dateTimeUtils';
 
 interface SevenDayPlannerProps {
   userId: string;
@@ -33,23 +34,8 @@ export const SevenDayPlanner: React.FC<SevenDayPlannerProps> = ({
     try {
       setLoading(true);
       
-      // Generate next 7 days
-      const days: CalendarDay[] = [];
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        
-        const dateString = date.toISOString().split('T')[0];
-        days.push({
-          date,
-          dateString,
-          isToday: i === 0,
-          posts: [],
-        });
-      }
+      // Generate next 7 days using utility
+      const days = generateNextNDays(7);
 
       // Load scheduled posts for this period
       const startDate = days[0].dateString;
@@ -285,7 +271,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-2xl w-full my-8">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold text-brand-text">
-            Schedule for {day.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            Schedule for {formatDateForDisplay(day.date)}
           </h3>
           <button
             onClick={onClose}
