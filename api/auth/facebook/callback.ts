@@ -38,7 +38,9 @@ async function getAccessToken(code: string) {
 
   const response = await fetch(`${FACEBOOK_TOKEN_URL}?${params.toString()}`);
   if (!response.ok) {
-    throw new Error('Failed to get access token');
+    const error = await response.json();
+    console.error('Facebook token error:', error);
+    throw new Error(`Failed to get access token: ${error.error?.message || 'Unknown error'}`);
   }
   return await response.json();
 }
@@ -53,6 +55,8 @@ async function getLongLivedToken(shortToken: string) {
 
   const response = await fetch(`${FACEBOOK_TOKEN_URL}?${params.toString()}`);
   if (!response.ok) {
+    const error = await response.json();
+    console.error('Facebook long-lived token error:', error);
     throw new Error('Failed to get long-lived token');
   }
   return await response.json();
@@ -78,7 +82,9 @@ async function getUserPages(accessToken: string) {
 
   const response = await fetch(`${FACEBOOK_GRAPH_URL}/me/accounts?${params.toString()}`);
   if (!response.ok) {
-    throw new Error('Failed to get user pages');
+    const error = await response.json();
+    console.error('Failed to get pages:', error);
+    return [];
   }
   const data = await response.json();
   return data.data || [];
@@ -89,26 +95,46 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
+    console.log('Callback received, query params:', req.query);
+    
     const { code, state, error: fbError, error_description } = req.query;
 
     // Handle Facebook OAuth errors
     if (fbError) {
       console.error('Facebook OAuth error:', fbError, error_description);
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=facebook_auth_failed`
+        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=facebook_auth_failed&details=${fbError}`
       );
     }
 
-    // Validate required parameters
-    if (!code || !state || typeof code !== 'string' || typeof state !== 'string') {
-      return res.status(400).json({ error: 'Invalid callback parameters' });
+    // Validate code parameter
+    if (!code) {
+      console.error('Missing code parameter');
+      return res.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=missing_code`
+      );
     }
+
+    // Validate state parameter
+    if (!state) {
+      console.error('Missing state parameter');
+      return res.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=missing_state`
+      );
+    }
+
+    // Convert to strings
+    const codeStr = Array.isArray(code) ? code[0] : code;
+    const stateStr = Array.isArray(state) ? state[0] : state;
+
+    console.log('Code:', codeStr?.substring(0, 20) + '...');
+    console.log('State:', stateStr);
 
     // Verify state token (CSRF protection)
     const { data: stateData, error: stateError } = await supabase
       .from('oauth_states')
       .select('*')
-      .eq('state', state)
+      .eq('state', stateStr)
       .eq('platform', 'facebook')
       .single();
 
@@ -121,25 +147,35 @@ export default async function handler(
 
     // Check if state has expired
     if (new Date(stateData.expires_at) < new Date()) {
-      await supabase.from('oauth_states').delete().eq('state', state);
+      await supabase.from('oauth_states').delete().eq('state', stateStr);
+      console.error('State expired');
       return res.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=state_expired`
       );
     }
 
     const userId = stateData.user_id;
+    console.log('Valid state for user:', userId);
 
     // Exchange code for access token
-    const tokens = await getAccessToken(code);
+    console.log('Exchanging code for access token...');
+    const tokens = await getAccessToken(codeStr);
+    console.log('Got access token');
 
     // Get long-lived token (60 days)
+    console.log('Getting long-lived token...');
     const longLivedTokens = await getLongLivedToken(tokens.access_token);
+    console.log('Got long-lived token');
 
     // Get user profile
+    console.log('Getting user profile...');
     const userProfile = await getUserProfile(longLivedTokens.access_token);
+    console.log('Got user profile:', userProfile.name);
 
     // Get user's Facebook pages
+    console.log('Getting user pages...');
     const pages = await getUserPages(longLivedTokens.access_token);
+    console.log('Got pages:', pages.length);
 
     // Calculate token expiration (60 days from now)
     const expiresAt = new Date();
@@ -154,6 +190,7 @@ export default async function handler(
       .single();
 
     if (existingConnection) {
+      console.log('Updating existing connection');
       // Update existing connection
       const { error: updateError } = await supabase
         .from('social_connections')
@@ -169,9 +206,11 @@ export default async function handler(
         .eq('id', existingConnection.id);
 
       if (updateError) {
+        console.error('Update error:', updateError);
         throw updateError;
       }
     } else {
+      console.log('Creating new connection');
       // Create new connection
       const { error: insertError } = await supabase
         .from('social_connections')
@@ -187,12 +226,14 @@ export default async function handler(
         });
 
       if (insertError) {
+        console.error('Insert error:', insertError);
         throw insertError;
       }
     }
 
     // Clean up state
-    await supabase.from('oauth_states').delete().eq('state', state);
+    await supabase.from('oauth_states').delete().eq('state', stateStr);
+    console.log('Connection saved successfully!');
 
     // Redirect back to app with success
     res.redirect(
@@ -201,7 +242,7 @@ export default async function handler(
   } catch (error) {
     console.error('Facebook callback error:', error);
     res.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=connection_failed`
+      `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=connection_failed&details=${encodeURIComponent(String(error))}`
     );
   }
 }
