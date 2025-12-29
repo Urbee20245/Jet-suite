@@ -249,13 +249,16 @@ const App: React.FC = () => {
   try {
     // ⚡ CHECK LEGAL PAGES FIRST - BEFORE ANY AUTH CHECKS
     // This ensures /privacy and /terms load immediately without waiting for session
-    if (currentPath === '/privacy') {
-      console.log('[App] 📜 Rendering Privacy Policy (public)');
+    // Normalize path to handle trailing slashes
+    const normalizedPath = currentPath.replace(/\/$/, '');
+    
+    if (normalizedPath === '/privacy') {
+      console.log('[App] 📜 Rendering Privacy Policy (public)', { originalPath: currentPath, normalized: normalizedPath });
       return <PrivacyPolicy />;
     }
     
-    if (currentPath === '/terms') {
-      console.log('[App] 📜 Rendering Terms of Service (public)');
+    if (normalizedPath === '/terms') {
+      console.log('[App] 📜 Rendering Terms of Service (public)', { originalPath: currentPath, normalized: normalizedPath });
       return <TermsOfService />;
     }
 
