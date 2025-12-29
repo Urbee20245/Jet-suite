@@ -130,6 +130,7 @@ export const generateNextNDays = (count: number = 7): Array<{
   date: Date;
   dateString: string;
   isToday: boolean;
+  posts: any[];
 }> => {
   const days = [];
   const today = getStartOfToday();
@@ -142,6 +143,7 @@ export const generateNextNDays = (count: number = 7): Array<{
       date,
       dateString: date.toISOString().split('T')[0],
       isToday: i === 0,
+      posts: [],
     });
   }
   
