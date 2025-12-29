@@ -1,9 +1,9 @@
-// api/auth/facebook/callback.ts
+// pages/api/auth/facebook/callback.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
-import { createFacebookOAuthService } from '../../../services/oauth/facebookOAuth';
-import { encrypt } from '../../../utils/crypto';
+import { createFacebookOAuthService } from '../../../../services/oauth/facebookOAuth';
+import { encrypt } from '../../../../utils/crypto';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
