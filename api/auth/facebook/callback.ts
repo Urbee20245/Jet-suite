@@ -78,6 +78,7 @@ async function getUserProfile(accessToken: string) {
 async function getUserPages(accessToken: string) {
   const params = new URLSearchParams({
     access_token: accessToken,
+    fields: 'id,name,access_token,instagram_business_account',
   });
 
   const response = await fetch(`${FACEBOOK_GRAPH_URL}/me/accounts?${params.toString()}`);
@@ -88,6 +89,25 @@ async function getUserPages(accessToken: string) {
   }
   const data = await response.json();
   return data.data || [];
+}
+
+async function getInstagramAccount(pageAccessToken: string, instagramBusinessAccountId: string) {
+  try {
+    const params = new URLSearchParams({
+      fields: 'id,username,profile_picture_url',
+      access_token: pageAccessToken,
+    });
+
+    const response = await fetch(`${FACEBOOK_GRAPH_URL}/${instagramBusinessAccountId}?${params.toString()}`);
+    if (!response.ok) {
+      console.error('Failed to get Instagram account');
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Instagram account:', error);
+    return null;
+  }
 }
 
 export default async function handler(
@@ -172,27 +192,45 @@ export default async function handler(
     const userProfile = await getUserProfile(longLivedTokens.access_token);
     console.log('Got user profile:', userProfile.name);
 
-    // Get user's Facebook pages
+    // Get user's Facebook pages with Instagram info
     console.log('Getting user pages...');
     const pages = await getUserPages(longLivedTokens.access_token);
     console.log('Got pages:', pages.length);
+
+    // Check if any page has Instagram Business Account
+    let instagramAccount = null;
+    let pageWithInstagram = null;
+    
+    for (const page of pages) {
+      if (page.instagram_business_account) {
+        console.log('Found Instagram account on page:', page.name);
+        instagramAccount = await getInstagramAccount(
+          page.access_token,
+          page.instagram_business_account.id
+        );
+        if (instagramAccount) {
+          pageWithInstagram = page;
+          console.log('Instagram username:', instagramAccount.username);
+          break;
+        }
+      }
+    }
 
     // Calculate token expiration (60 days from now)
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 60);
 
-    // Check if connection already exists
-    const { data: existingConnection } = await supabase
+    // Save Facebook connection
+    const { data: existingFBConnection } = await supabase
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'facebook')
       .single();
 
-    if (existingConnection) {
-      console.log('Updating existing connection');
-      // Update existing connection
-      const { error: updateError } = await supabase
+    if (existingFBConnection) {
+      console.log('Updating existing Facebook connection');
+      await supabase
         .from('social_connections')
         .update({
           access_token: encrypt(longLivedTokens.access_token),
@@ -203,16 +241,10 @@ export default async function handler(
           is_active: true,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', existingConnection.id);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        throw updateError;
-      }
+        .eq('id', existingFBConnection.id);
     } else {
-      console.log('Creating new connection');
-      // Create new connection
-      const { error: insertError } = await supabase
+      console.log('Creating new Facebook connection');
+      await supabase
         .from('social_connections')
         .insert({
           user_id: userId,
@@ -224,16 +256,55 @@ export default async function handler(
           platform_page_id: pages.length > 0 ? pages[0].id : null,
           is_active: true,
         });
+    }
 
-      if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+    // Save Instagram connection if found
+    if (instagramAccount && pageWithInstagram) {
+      console.log('Saving Instagram connection:', instagramAccount.username);
+      
+      const { data: existingIGConnection } = await supabase
+        .from('social_connections')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('platform', 'instagram')
+        .single();
+
+      if (existingIGConnection) {
+        console.log('Updating existing Instagram connection');
+        await supabase
+          .from('social_connections')
+          .update({
+            access_token: encrypt(pageWithInstagram.access_token),
+            token_expires_at: expiresAt.toISOString(),
+            platform_user_id: instagramAccount.id,
+            platform_username: instagramAccount.username,
+            platform_page_id: pageWithInstagram.id,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingIGConnection.id);
+      } else {
+        console.log('Creating new Instagram connection');
+        await supabase
+          .from('social_connections')
+          .insert({
+            user_id: userId,
+            platform: 'instagram',
+            access_token: encrypt(pageWithInstagram.access_token),
+            token_expires_at: expiresAt.toISOString(),
+            platform_user_id: instagramAccount.id,
+            platform_username: instagramAccount.username,
+            platform_page_id: pageWithInstagram.id,
+            is_active: true,
+          });
       }
+    } else {
+      console.log('No Instagram Business account found');
     }
 
     // Clean up state
     await supabase.from('oauth_states').delete().eq('state', stateStr);
-    console.log('Connection saved successfully!');
+    console.log('Connection(s) saved successfully!');
 
     // Redirect back to app with success
     res.redirect(
