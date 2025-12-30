@@ -10,6 +10,7 @@ interface AccountProps {
     profileData: ProfileData;
     onLogout: () => void;
     onUpdateProfile: (data: ProfileData) => void;
+    userId: string;
 }
 
 const AccountSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -76,7 +77,7 @@ const TeamMemberCard: React.FC<{ member: TeamMember; onRemove: (id: string) => v
     </div>
 );
 
-export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, onUpdateProfile }) => {
+export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, onUpdateProfile, userId }) => {
     const profilesUsed = profileData.isProfileActive ? 1 : 0;
     const isAdmin = profileData.user.email === 'theivsightcompany@gmail.com';
     
@@ -137,12 +138,12 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         });
     }, [profileData.user]);
 
-    // Fetch billing information and subscription details
+    // Fetch billing information using UUID
     useEffect(() => {
         const loadBillingInfo = async () => {
             try {
                 setIsLoadingBilling(true);
-                const account = await getBillingAccount(profileData.user.email);
+                const account = await getBillingAccount(userId);
                 setBillingAccount(account);
                 
                 // Load current subscription details
@@ -159,7 +160,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
             }
         };
         loadBillingInfo();
-    }, [profileData.user.email]);
+    }, [userId]);
 
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -225,9 +226,14 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     };
 
     const handleManageSubscription = async () => {
+        if (!billingAccount?.stripe_customer_id) {
+            alert('Stripe customer information missing. Please contact support.');
+            return;
+        }
+
         try {
             setIsOpeningPortal(true);
-            const response = await createPortalSession(profileData.user.email);
+            const response = await createPortalSession(billingAccount.stripe_customer_id);
             window.location.href = response.url;
         } catch (error) {
             console.error('Error opening portal:', error);
@@ -287,7 +293,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     setCurrentBusinesses(newBusinesses);
                     setCurrentSeats(newSeats);
                     setShowPlanEditor(false);
-                    const account = await getBillingAccount(profileData.user.email);
+                    const account = await getBillingAccount(userId);
                     setBillingAccount(account);
                     alert('Plan updated successfully!');
                 }
