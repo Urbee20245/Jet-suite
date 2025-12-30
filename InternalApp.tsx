@@ -16,7 +16,7 @@ import { JetKeywords } from './tools/JetKeywords';
 import { JetImage } from './tools/JetImage';
 import { JetCreate } from './tools/JetCreate';
 import { GrowthPlan } from './tools/GrowthPlan';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis, SavedKeyword, KeywordData } from './types';
+import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis, SavedKeyword, KeywordData, BusinessProfile } from './types';
 import { BusinessDetails } from './tools/profile/BusinessDetails';
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import { ReportsDownloads } from './tools/profile/ReportsDownloads';
@@ -44,7 +44,7 @@ const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
-    business: { name: '', category: '', description: '', websiteUrl: '', location: '', serviceArea: '', phone: '', email: '', dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, dnaLastUpdatedAt: undefined },
+    business: { id: 'temp-biz-id', name: '', category: '', description: '', websiteUrl: '', location: '', serviceArea: '', phone: '', email: '', dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, dnaLastUpdatedAt: undefined },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
     brandDnaProfile: undefined,
@@ -53,6 +53,12 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
 export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
+
+  // --- Multi-Business Management ---
+  const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
+  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(
+    localStorage.getItem('jetsuite_active_biz_id')
+  );
 
   // --- Identity & State Management ---
   const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
@@ -82,19 +88,58 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       } catch(e) { return [adminProfile, testProfile]; }
   });
 
-  // 🔄 Sync Database Profile on Mount (Targeting Primary Business)
+  // 1. Fetch all accessible businesses
   useEffect(() => {
-    const syncProfileWithDatabase = async () => {
+    const fetchBusinesses = async () => {
       if (!userId) return;
 
-      const { data: dbProfile } = await supabase
+      // Fetch owned businesses + shared seats
+      const { data: dbProfiles } = await supabase
         .from('business_profiles')
         .select('*')
-        .eq('user_id', userId)
-        .eq('is_primary', true)
+        .eq('user_id', userId);
+
+      if (dbProfiles && dbProfiles.length > 0) {
+        const formatted = dbProfiles.map(p => ({
+          id: p.id,
+          name: p.business_name,
+          category: p.industry,
+          websiteUrl: p.business_website,
+          location: `${p.city}, ${p.state}`,
+          description: '',
+          serviceArea: '',
+          phone: '',
+          email: '',
+          dna: { logo: '', colors: [], fonts: '', style: '' },
+          isDnaApproved: false
+        }));
+
+        setBusinesses(formatted);
+        
+        // Default to primary or first available
+        if (!activeBusinessId) {
+          const primary = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
+          setActiveBusinessId(primary.id);
+          localStorage.setItem('jetsuite_active_biz_id', primary.id);
+        }
+      }
+    };
+
+    fetchBusinesses();
+  }, [userId]);
+
+  // 🔄 Sync Active Business Details into Profile State
+  useEffect(() => {
+    const syncActiveBusiness = async () => {
+      if (!activeBusinessId || !userId) return;
+
+      const { data: biz } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('id', activeBusinessId)
         .maybeSingle();
 
-      if (dbProfile) {
+      if (biz) {
         setAllProfiles(prev => {
           const updated = [...prev];
           const index = updated.findIndex(p => p.user.id === userId);
@@ -103,26 +148,29 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
               ...updated[index],
               business: {
                 ...updated[index].business,
-                name: dbProfile.business_name || updated[index].business.name,
-                websiteUrl: dbProfile.business_website || updated[index].business.websiteUrl,
-                category: dbProfile.industry || updated[index].business.category,
-                location: dbProfile.city && dbProfile.state 
-                  ? `${dbProfile.city}, ${dbProfile.state}` 
-                  : updated[index].business.location
+                id: biz.id,
+                name: biz.business_name,
+                websiteUrl: biz.business_website,
+                category: biz.industry,
+                location: `${biz.city}, ${biz.state}`
               },
-              isProfileActive: !!dbProfile.is_complete
+              isProfileActive: !!biz.is_complete
             };
-            
             updated[index] = syncedProfile;
-            localStorage.setItem(`jetsuite_profile_${userId}`, JSON.stringify(syncedProfile));
           }
           return updated;
         });
       }
     };
 
-    syncProfileWithDatabase();
-  }, [userId]);
+    syncActiveBusiness();
+  }, [activeBusinessId, userId]);
+
+  const handleSwitchBusiness = (id: string) => {
+    setActiveBusinessId(id);
+    localStorage.setItem('jetsuite_active_biz_id', id);
+    // Tool UI will naturally refresh via profileData changes
+  };
 
   const isAdmin = userEmail === ADMIN_EMAIL;
   const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
@@ -269,7 +317,15 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} onLogout={onLogout} />}
       <div className="flex-1 flex flex-col overflow-hidden">
         {impersonatedUserId && ( <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> <EyeIcon className="w-5 h-5"/> Viewing as {profileData.user.email}. <button onClick={() => setImpersonatedUserId(null)} className="underline ml-2">Return to Admin</button> </div> )}
-        {!isJetCreateActive && <Header activeTool={activeTool} growthScore={growthScore} />}
+        {!isJetCreateActive && (
+          <Header 
+            activeTool={activeTool} 
+            growthScore={growthScore} 
+            businesses={businesses}
+            activeBusinessId={activeBusinessId}
+            onSwitchBusiness={handleSwitchBusiness}
+          />
+        )}
         <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>
           {renderActiveTool()}
         </main>

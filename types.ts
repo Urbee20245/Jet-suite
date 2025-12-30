@@ -91,6 +91,7 @@ export interface UserProfile {
 }
 
 export interface BusinessProfile {
+  id: string; // Business UUID
   name: string;
   category: string;
   description: string;
@@ -183,6 +184,14 @@ export interface TeamMember {
   title: string;
   role: 'Owner' | 'Team Member';
   status: 'Active' | 'Pending Invite';
+}
+
+export interface BusinessMember {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: 'owner' | 'admin' | 'member';
+  created_at: string;
 }
 
 export interface ProfileData {
