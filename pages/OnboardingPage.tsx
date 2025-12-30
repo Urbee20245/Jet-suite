@@ -57,8 +57,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
 
       if (dbError) throw dbError;
 
-      // Navigate smoothly to the app
-      navigate('/app');
+      // Use a hard redirect to ensure the main App router re-verifies the 
+      // newly created business profile from the database on refresh.
+      window.location.href = '/app';
     } catch (err: any) {
       console.error('[Onboarding] Submit error:', err);
       setError(err.message || 'Failed to save profile. Please try again.');
