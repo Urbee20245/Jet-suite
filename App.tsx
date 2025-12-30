@@ -3,6 +3,7 @@ import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
+import { OnboardingPage } from './pages/OnboardingPage';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { createClient } from '@supabase/supabase-js';
@@ -85,11 +86,11 @@ const App: React.FC = () => {
       // We define "complete" as having a business name and website URL in the database
       const { data: profile } = await supabase
         .from('business_profiles')
-        .select('business_name, website_url')
+        .select('business_name, business_website')
         .eq('user_id', uid)
-        .single();
+        .maybeSingle();
       
-      setIsOnboardingComplete(!!(profile?.business_name && profile?.website_url));
+      setIsOnboardingComplete(!!(profile?.business_name && profile?.business_website));
       setIsOnboardingResolved(true);
     } catch (error) {
       console.error('[App] Verification failed:', error);
@@ -211,7 +212,7 @@ const App: React.FC = () => {
         currentPath.startsWith('/privacy') ||
         currentPath.startsWith('/terms');
 
-      if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage) {
+      if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
       }
     } else {
@@ -268,7 +269,12 @@ const App: React.FC = () => {
       );
     }
 
-    // Authenticated View
+    // Authenticated Onboarding View
+    if (isLoggedIn && currentUserId && currentPath === '/onboarding') {
+      return <OnboardingPage navigate={navigate} userId={currentUserId} />;
+    }
+
+    // Authenticated App View
     if (isLoggedIn && currentUserId && currentUserEmail) {
       return (
         <SubscriptionGuard 
