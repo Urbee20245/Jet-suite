@@ -4,6 +4,7 @@
  */
 
 interface CreateCheckoutSessionParams {
+  /** MUST be the Supabase Auth UUID, not an email address. */
   userId: string;
   email: string;
   seatCount?: number;
@@ -91,7 +92,7 @@ export async function createPortalSession(
 /**
  * Get billing account information for a user
  * 
- * @param userId - User ID
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  * @returns Promise with billing account data
  */
 export async function getBillingAccount(userId: string) {

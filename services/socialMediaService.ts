@@ -63,6 +63,7 @@ export const PLATFORM_INFO: Record<SocialPlatform, {
 
 /**
  * Get all social connections for current user
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  */
 export async function getSocialConnections(userId: string): Promise<SocialConnection[]> {
   try {
@@ -82,6 +83,7 @@ export async function getSocialConnections(userId: string): Promise<SocialConnec
 
 /**
  * Add a new social connection (mock OAuth for now)
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  */
 export async function addSocialConnection(
   userId: string,
@@ -140,6 +142,7 @@ export async function removeSocialConnection(connectionId: string): Promise<void
 
 /**
  * Get scheduled posts for date range
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  */
 export async function getScheduledPosts(
   userId: string,
@@ -167,6 +170,7 @@ export async function getScheduledPosts(
 
 /**
  * Create a new scheduled post
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  */
 export async function createScheduledPost(
   userId: string,
@@ -244,6 +248,7 @@ export async function deleteScheduledPost(postId: string): Promise<void> {
 
 /**
  * Get posting statistics
+ * @param userId - MUST be the Supabase Auth UUID (not email)
  */
 export async function getPostingStats(userId: string): Promise<{
   scheduled: number;
