@@ -82,6 +82,7 @@ export interface BusinessDna {
 
 // Profile Data Structures
 export interface UserProfile {
+  id: string; // Supabase UUID
   firstName: string;
   lastName: string;
   email: string;

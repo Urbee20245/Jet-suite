@@ -37,8 +37,8 @@ interface InternalAppProps {
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
-const createInitialProfile = (email: string, firstName: string, lastName: string): ProfileData => ({
-    user: { firstName, lastName, email, phone: '', role: 'Owner' },
+const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
+    user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
     business: { name: '', category: '', description: '', websiteUrl: '', location: '', serviceArea: '', phone: '', email: '', dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, dnaLastUpdatedAt: undefined },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
@@ -66,8 +66,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   // --- Admin State Simulation ---
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
-      const adminProfile = createInitialProfile(userEmail, 'The Ivsight', 'Company');
-      const testProfile = createInitialProfile('test.user@example.com', 'Test', 'User');
+      const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
+      const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
       
       try { 
           // Load using UUID keys as the source of truth
@@ -83,13 +83,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const isAdmin = userEmail === ADMIN_EMAIL;
   
   // Find profile based on the active identity (self vs impersonated)
-  // In our mock system, Profile 0 is always the primary user session
-  const profileData = impersonatedUserId ? allProfiles[1] : allProfiles[0];
+  const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
   
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
-        // Determine which profile slot to update based on email (display-only check)
-        const isSelf = newProfileData.user.email === userEmail;
+        // Determine which profile slot to update based on UUID
+        const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : 1;
         
         const updatedProfiles = [...prev];
@@ -97,9 +96,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
         if (persist) {
             // Persist using UUID as the key
-            const storageKey = isSelf ? userId : 'test-user-uuid';
             try { 
-              localStorage.setItem(`jetsuite_profile_${storageKey}`, JSON.stringify(newProfileData)); 
+              localStorage.setItem(`jetsuite_profile_${newProfileData.user.id}`, JSON.stringify(newProfileData)); 
             } catch (e) { 
               console.warn("Could not save profile to localStorage", e); 
             }
@@ -201,7 +199,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(email) => setImpersonatedUserId(email === 'test.user@example.com' ? 'test-user-uuid' : null)} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(id) => setImpersonatedUserId(id === 'test-user-uuid' ? 'test-user-uuid' : null)} />;
     }
     if (!activeTool || activeTool.id === 'home') {
       return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;

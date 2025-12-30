@@ -15,7 +15,7 @@ interface AdminPanelProps {
     setAllProfiles: React.Dispatch<React.SetStateAction<ProfileData[]>>;
     currentUserProfile: ProfileData;
     setCurrentUserProfile: (data: ProfileData) => void;
-    onImpersonate: (email: string) => void;
+    onImpersonate: (userId: string) => void;
 }
 
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -170,22 +170,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
-    // ===== EXISTING ADMIN FUNCTIONS =====
-    const handleResetDna = (email: string) => {
-        if (window.confirm(`Are you sure you want to reset DNA for ${email}? This will clear all extracted data and any extraction cooldowns.`)) {
-            console.log(`[ADMIN] Forcing DNA reset for user: ${email}. Cooldowns and lockouts cleared.`);
+    // ===== UPDATED ADMIN FUNCTIONS (USING UUID) =====
+    const handleResetDna = (userId: string) => {
+        const profile = allProfiles.find(p => p.user.id === userId);
+        const email = profile?.user.email || userId;
+        
+        if (window.confirm(`Are you sure you want to reset DNA for ${email}? This will clear all extracted data.`)) {
+            console.log(`[ADMIN] Forcing DNA reset for user UUID: ${userId}.`);
             setAllProfiles(profiles => profiles.map(p => {
-                if (p.user.email === email) {
-                    return { ...p, business: { ...p.business, dna: { logo: '', colors: [], fonts: '', style: '' } }, brandDnaProfile: undefined };
+                if (p.user.id === userId) {
+                    return { 
+                        ...p, 
+                        business: { ...p.business, dna: { logo: '', colors: [], fonts: '', style: '' } }, 
+                        brandDnaProfile: undefined 
+                    };
                 }
                 return p;
             }));
-            alert(`DNA reset complete for ${email}. They can now extract again.`);
+            alert(`DNA reset complete for ${email}.`);
         }
     };
 
     const handleResetCurrentUserDna = () => {
-        handleResetDna(currentUserProfile.user.email);
+        handleResetDna(currentUserProfile.user.id);
     };
 
     const getStatusColor = (status: TicketStatus) => {
@@ -349,12 +356,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {allProfiles.map(profile => {
                                     const status = dnaStatus(profile.business.dna);
                                     return (
-                                    <tr key={profile.user.email} className="bg-white border-b hover:bg-brand-light">
+                                    <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
                                         <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">{profile.business.name || '(No Name)'}</th>
                                         <td className="px-6 py-4">{profile.user.email}</td>
                                         <td className="px-6 py-4"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>{status.text}</span></td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            <button onClick={() => handleResetDna(profile.user.email)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Reset DNA"><ArrowPathIcon className="w-4 h-4 text-yellow-600"/></button>
+                                            <button onClick={() => handleResetDna(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Reset DNA"><ArrowPathIcon className="w-4 h-4 text-yellow-600"/></button>
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
                                         </td>
@@ -381,13 +388,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </thead>
                             <tbody>
                                 {allProfiles.map(profile => (
-                                    <tr key={profile.user.email} className="bg-white border-b hover:bg-brand-light">
+                                    <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
                                         <td className="px-6 py-4 font-medium text-brand-text">{profile.user.email}</td>
                                         <td className="px-6 py-4">{profile.user.firstName} {profile.user.lastName}</td>
                                         <td className="px-6 py-4">{profile.user.email === 'theivsightcompany@gmail.com' ? 'Admin' : 'Owner'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
                                             {profile.user.email !== 'theivsightcompany@gmail.com' &&
-                                                <button onClick={() => onImpersonate(profile.user.email)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
+                                                <button onClick={() => onImpersonate(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
                                             }
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
