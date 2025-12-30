@@ -4,7 +4,7 @@ import type {
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
     LiveWebsiteAnalysis, BusinessReview
 } from '../types';
-import { getCurrentMonthYear, getCurrentYear } from '../utils/dateTimeUtils';
+import { getCurrentMonthYear, getCurrentYear, getUserCurrentDateTimeString } from '../utils/dateTimeUtils';
 
 const API_KEY = process.env.API_KEY;
 
@@ -239,10 +239,10 @@ Your entire output MUST be a single JSON object matching the provided schema.
   return report;
 };
 
-export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[]) => {
-  const currentMonthYear = getCurrentMonthYear();
-  const currentYear = getCurrentYear();
-  const prompt = `You are a creative social media manager for local businesses. It is currently ${currentMonthYear}. Generate distinct social media posts for a '${businessType}'. The topic is '${topic}'. The desired tone is '${tone}'. Create a version specifically tailored for each of the following platforms: ${platforms.join(', ')}. Ensure the content is optimized for the style and constraints of each platform. Use current ${currentYear} dates and trends when relevant. For TikTok, suggest a short video concept.`;
+export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[], timezone?: string) => {
+  const currentDateTime = getUserCurrentDateTimeString(timezone);
+  const currentYear = getCurrentYear(timezone);
+  const prompt = `You are a creative social media manager for local businesses. It is currently ${currentDateTime}. Generate distinct social media posts for a '${businessType}'. The topic is '${topic}'. The desired tone is '${tone}'. Create a version specifically tailored for each of the following platforms: ${platforms.join(', ')}. Ensure the content is optimized for the style and constraints of each platform. Use current ${currentYear} dates and trends when relevant. For TikTok, suggest a short video concept.`;
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -287,8 +287,8 @@ export const generateSocialPosts = async (businessType: string, topic: string, t
 };
 
 
-export const fetchBusinessReviews = async (businessName: string, businessAddress: string): Promise<any[]> => {
-  const currentMonthYear = getCurrentMonthYear();
+export const fetchBusinessReviews = async (businessName: string, businessAddress: string, timezone?: string): Promise<any[]> => {
+  const currentMonthYear = getCurrentMonthYear(timezone);
   const prompt = `You are a Google Business Profile review specialist. Use Google Search to find recent reviews for the business "${businessName}" located at "${businessAddress}". 
   
   Search for reviews on their Google Business Profile listing. Return the most recent 10 reviews you can find.
@@ -782,7 +782,7 @@ const creativeAssetsSchema = {
                 },
                 required: ["headline", "description", "cta"]
             }
-        }
+        },
     },
     required: ["social_posts", "ad_copy"]
 };
