@@ -147,11 +147,11 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 setBillingAccount(account);
                 
                 // Load current subscription details
-                if (account?.metadata) {
-                    setCurrentBusinesses(parseInt(account.metadata.businessCount || '1'));
-                    setCurrentSeats(parseInt(account.metadata.seatCount || '0'));
-                    setNewBusinesses(parseInt(account.metadata.businessCount || '1'));
-                    setNewSeats(parseInt(account.metadata.seatCount || '0'));
+                if (account) {
+                    setCurrentBusinesses(parseInt(account.business_count || '1'));
+                    setCurrentSeats(parseInt(account.seat_count || '0'));
+                    setNewBusinesses(parseInt(account.business_count || '1'));
+                    setNewSeats(parseInt(account.seat_count || '0'));
                 }
             } catch (error) {
                 console.error('Failed to load billing info:', error);
@@ -269,14 +269,14 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         
         try {
             if (hasActiveSubscription) {
-                // Existing subscription - update it
+                // Existing subscription - update it using userId (UUID)
                 const response = await fetch('/api/stripe/update-subscription', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        email: profileData.user.email,
+                        userId, // Pass Supabase UUID instead of email
                         businessCount: newBusinesses,
                         seatCount: newSeats,
                     }),
@@ -299,15 +299,16 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     alert('Plan updated successfully!');
                 }
             } else {
-                // No subscription - create new checkout session
+                // No subscription - create new checkout session using userId (UUID)
                 const response = await fetch('/api/stripe/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        email: profileData.user.email,
-                        businessCount: newBusinesses,
+                        userId, // Pass Supabase UUID
+                        email: profileData.user.email, // Kept for Stripe communication
+                        additionalBusinessCount: newAdditionalBusinessCount,
                         seatCount: newSeats,
                     }),
                 });
