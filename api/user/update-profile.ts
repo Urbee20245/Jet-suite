@@ -15,106 +15,63 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { email, firstName, lastName, role } = req.body;
+  const { userId, firstName, lastName, role, email } = req.body;
 
-  // Validate required fields
-  if (!email || !firstName || !lastName) {
+  // Validate required fields - userId is now the primary key
+  if (!userId || !firstName || !lastName) {
     return res.status(400).json({ 
-      message: 'Missing required fields: email, firstName, lastName' 
+      message: 'Missing required fields: userId, firstName, lastName' 
     });
   }
 
   try {
-    console.log('Updating profile for:', email, { firstName, lastName, role });
+    console.log('Updating profile for UUID:', userId);
 
-    // Get all users and find by email
-    const { data: usersData, error: findError } = await supabase.auth.admin.listUsers();
-    
-    if (findError) {
-      console.error('Error finding user:', findError);
-      throw new Error('Failed to find user');
-    }
-
-    // Find user by email (with proper type handling)
-    const user = usersData?.users?.find((u: any) => u.email === email);
-    
-    if (!user) {
-      console.error('User not found:', email);
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Update user metadata in Supabase Auth
+    // 1. Update user metadata in Supabase Auth by UUID
     const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
-      user.id,
+      userId,
       {
         user_metadata: {
           first_name: firstName,
           last_name: lastName,
           role: role || '',
-        }
+        },
+        // Only update email if it was actually provided in the request
+        ...(email ? { email } : {})
       }
     );
 
     if (authError) {
       console.error('Auth update error:', authError);
-      // Continue even if auth update fails - we'll update the database
+      throw new Error(`Auth update failed: ${authError.message}`);
     }
 
-    // Check if users table exists and update it
-    const { data: tableCheck } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle();
+    // 2. Update the public profiles table using the UUID as the primary key
+    // We use upsert to ensure a profile exists for this authenticated user
+    const { data: profileData, error: dbError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        first_name: firstName,
+        last_name: lastName,
+        role: role || '',
+        updated_at: new Date().toISOString(),
+        ...(email ? { email } : {})
+      }, { onConflict: 'id' })
+      .select()
+      .single();
 
-    if (tableCheck) {
-      // Users table exists and has this record - update it
-      const { data: userData, error: dbError } = await supabase
-        .from('users')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          role: role || '',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('email', email)
-        .select()
-        .maybeSingle();
-
-      if (dbError) {
-        console.error('Database update error:', dbError);
-        // Don't fail if database update fails - auth update succeeded
-      }
-    } else {
-      // Users table doesn't exist or record not found - insert it
-      const { error: insertError } = await supabase
-        .from('users')
-        .insert({
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          role: role || '',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-      if (insertError) {
-        console.error('Database insert error:', insertError);
-        // Don't fail - auth update succeeded
-      }
+    if (dbError) {
+      console.error('Database update error:', dbError);
+      throw new Error(`Database update failed: ${dbError.message}`);
     }
 
     // Return success
-    console.log('Profile updated successfully for:', email);
+    console.log('Profile updated successfully for UUID:', userId);
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      user: {
-        email,
-        firstName,
-        lastName,
-        role,
-      },
+      user: profileData
     });
 
   } catch (error: any) {
