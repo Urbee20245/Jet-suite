@@ -51,88 +51,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const session = event.data.object as Stripe.Checkout.Session;
     
     try {
-      // Get subscription metadata
+      // 1. Extract the definitive Supabase UUID
+      const userId = session.client_reference_id || session.metadata?.user_id;
+      
+      if (!userId) {
+        console.error('[Webhook] Missing client_reference_id (UUID) in session:', session.id);
+        return res.status(400).json({ error: 'Missing user identity' });
+      }
+
+      // Get subscription details for metadata
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       const metadata = subscription.metadata;
       
       const email = session.customer_email!;
-      const firstName = metadata.first_name || '';
-      const lastName = metadata.last_name || '';
       const businessName = metadata.business_name || '';
-      const phone = metadata.phone || '';
       const website = metadata.website || '';
+      const phone = metadata.phone || '';
       const seatCount = parseInt(metadata.seat_count || '0');
       const businessCount = parseInt(metadata.business_count || '1');
 
-      // 1. Create auth user in Supabase
-      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'; // Random temp password
-      
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: email,
-        password: tempPassword,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          business_name: businessName,
-        }
-      });
-
-      if (authError) {
-        console.error('Failed to create auth user:', authError);
-        throw authError;
-      }
-
-      const userId = authData.user.id;
-
-      // 2. Create billing account record
+      // 2. Link the Stripe Customer to the existing Supabase User in billing_accounts
+      // We use upsert on user_id to ensure we update if exists or create if missing
       const { error: billingError } = await supabase
         .from('billing_accounts')
-        .insert({
+        .upsert({
           user_id: userId,
-          user_email: email,
+          user_email: email, // informational only
           subscription_status: 'active',
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
           seat_count: seatCount,
           business_count: businessCount,
-          is_admin: false, // Regular customer
-        });
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
 
       if (billingError) {
-        console.error('Failed to create billing account:', billingError);
+        console.error('[Webhook] Failed to upsert billing account:', billingError);
         throw billingError;
       }
 
-      // 3. Create business profile
+      // 3. Update or create business profile for this UUID
       const { error: profileError } = await supabase
         .from('business_profiles')
-        .insert({
+        .upsert({
           user_id: userId,
           business_name: businessName,
           website_url: website,
           phone: phone,
-          // Other fields can be filled in by user later
-        });
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
 
       if (profileError) {
-        console.error('Failed to create business profile:', profileError);
-        // Don't throw - this is less critical
+        console.error('[Webhook] Failed to update business profile:', profileError);
       }
-
-      // 4. Send welcome email with login link (optional)
-      // TODO: Implement email sending via SendGrid, Resend, etc.
-      // Should include:
-      // - Welcome message
-      // - Login link: ${process.env.APP_URL}/login
-      // - Instructions to reset password
       
-      console.log(`Account created for ${email} (User ID: ${userId})`);
+      console.log(`[Webhook] Subscription successfully linked to UUID: ${userId}`);
       
     } catch (error: any) {
-      console.error('Error processing checkout.session.completed:', error);
-      // Don't return error to Stripe - we already have their payment
-      // Instead, log for manual intervention
+      console.error('[Webhook] Error processing checkout.session.completed:', error);
     }
   }
 
