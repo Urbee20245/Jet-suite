@@ -47,7 +47,7 @@ const oauthPlatforms = ['facebook']; // Will add more as we implement them
 // Platforms that support OAuth
 const availablePlatforms: SocialPlatform[] = [
   'facebook',
-  // 'instagram', // Coming soon
+  'instagram', // Auto-detects through Facebook OAuth
   // 'twitter',   // Coming soon
   // 'linkedin',  // Coming soon
   // 'tiktok',    // Coming soon
