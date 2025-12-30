@@ -49,66 +49,77 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
 
-  // Use userId for storage keys instead of email
+  // --- Identity & State Management ---
+  const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
+  const activeUserId = impersonatedUserId || userId;
+
+  // Persistence logic now strictly uses UUIDs
   const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>(() => {
-      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${userId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
+      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${activeUserId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
   });
   const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>(() => {
-      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${userId}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
+      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${activeUserId}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
   });
   const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
   const [growthScore, setGrowthScore] = useState(150);
   
   // --- Admin State Simulation ---
-    const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
-        const adminProfile = createInitialProfile(ADMIN_EMAIL, 'The Ivsight', 'Company');
-        const testProfile = createInitialProfile('test.user@example.com', 'Test', 'User');
-        // Associate the admin profile with the current logged in ID if the email matches
-        const adminEmailMatch = userEmail === ADMIN_EMAIL;
-        
-        try { 
-            const savedAdmin = localStorage.getItem(`jetsuite_profile_${adminEmailMatch ? userId : ADMIN_EMAIL}`); 
-            const savedTest = localStorage.getItem(`jetsuite_profile_test.user@example.com`); 
-            return [ savedAdmin ? JSON.parse(savedAdmin) : adminProfile, savedTest ? JSON.parse(savedTest) : testProfile ]; 
-        } catch(e) { return [adminProfile, testProfile]; }
-    });
-  const [impersonatedUserEmail, setImpersonatedUserEmail] = useState<string | null>(null);
-  // --- End Admin State ---
+  const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
+      const adminProfile = createInitialProfile(userEmail, 'The Ivsight', 'Company');
+      const testProfile = createInitialProfile('test.user@example.com', 'Test', 'User');
+      
+      try { 
+          // Load using UUID keys as the source of truth
+          const savedAdmin = localStorage.getItem(`jetsuite_profile_${userId}`); 
+          const savedTest = localStorage.getItem(`jetsuite_profile_test-user-uuid`); 
+          return [ 
+            savedAdmin ? JSON.parse(savedAdmin) : adminProfile, 
+            savedTest ? JSON.parse(savedTest) : testProfile 
+          ]; 
+      } catch(e) { return [adminProfile, testProfile]; }
+  });
 
-  const currentUser = impersonatedUserEmail || userEmail;
   const isAdmin = userEmail === ADMIN_EMAIL;
   
-  // Find profile by email (mock system)
-  const profileData = allProfiles.find(p => p.user.email === currentUser) || allProfiles[0];
+  // Find profile based on the active identity (self vs impersonated)
+  // In our mock system, Profile 0 is always the primary user session
+  const profileData = impersonatedUserId ? allProfiles[1] : allProfiles[0];
   
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
-        const updatedProfiles = prev.map(p => p.user.email === newProfileData.user.email ? newProfileData : p);
+        // Determine which profile slot to update based on email (display-only check)
+        const isSelf = newProfileData.user.email === userEmail;
+        const index = isSelf ? 0 : 1;
+        
+        const updatedProfiles = [...prev];
+        updatedProfiles[index] = newProfileData;
+
         if (persist) {
-            // If the profile being updated belongs to the logged-in user, use userId for storage
-            const storageKey = newProfileData.user.email === userEmail ? userId : newProfileData.user.email;
-            try { localStorage.setItem(`jetsuite_profile_${storageKey}`, JSON.stringify(newProfileData)); } catch (e) { console.warn("Could not save profile to localStorage", e); }
+            // Persist using UUID as the key
+            const storageKey = isSelf ? userId : 'test-user-uuid';
+            try { 
+              localStorage.setItem(`jetsuite_profile_${storageKey}`, JSON.stringify(newProfileData)); 
+            } catch (e) { 
+              console.warn("Could not save profile to localStorage", e); 
+            }
         }
         return updatedProfiles;
     });
   };
 
   useEffect(() => {
-      // Save data for the active context (uses userId if not impersonating)
-      const storageId = impersonatedUserEmail ? impersonatedUserEmail : userId;
-      try { localStorage.setItem(`jetsuite_growthPlanTasks_${storageId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks to localStorage", e); }
-  }, [growthPlanTasks, userId, impersonatedUserEmail]);
+      try { localStorage.setItem(`jetsuite_growthPlanTasks_${activeUserId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks", e); }
+  }, [growthPlanTasks, activeUserId]);
   
   useEffect(() => {
-      const storageId = impersonatedUserEmail ? impersonatedUserEmail : userId;
-      try { localStorage.setItem(`jetsuite_savedKeywords_${storageId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords to localStorage", e); }
-  }, [savedKeywords, userId, impersonatedUserEmail]);
+      try { localStorage.setItem(`jetsuite_savedKeywords_${activeUserId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords", e); }
+  }, [savedKeywords, activeUserId]);
 
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
   const setActiveTool = (tool: Tool | null, articleId?: string) => {
-    setJetContentInitialProps(null); // Reset on any navigation
+    setJetContentInitialProps(null); 
     setActiveToolState(tool);
     if (tool?.id === 'knowledgebase') {
       setActiveKbArticle(articleId || 'introduction');
@@ -116,61 +127,46 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   };
 
   useEffect(() => {
-    if (impersonatedUserEmail && activeTool?.id === 'adminpanel') { setImpersonatedUserEmail(null); }
+    if (impersonatedUserId && activeTool?.id === 'adminpanel') { setImpersonatedUserId(null); }
     if (!isAdmin && activeTool?.id === 'adminpanel') { setActiveToolState(null); }
-  }, [activeTool, impersonatedUserEmail, isAdmin]);
+  }, [activeTool, impersonatedUserId, isAdmin]);
 
   useEffect(() => {
-    // Growth Score Calculation (0-99 max, 100 is benchmark but unachievable)
     let score = 0;
     const { business, googleBusiness } = profileData;
     const totalTasks = growthPlanTasks.length;
     const completedTasks = growthPlanTasks.filter(t => t.status === 'completed').length;
     const inProgressTasks = growthPlanTasks.filter(t => t.status === 'in_progress').length;
     
-    // FOUNDATION SETUP (35 points max)
-    // Basic business info - 10 points
     if (business.name && business.location && business.websiteUrl) {
       score += 10;
     } else if (business.name || business.location || business.websiteUrl) {
-      // Partial credit for incomplete setup
       score += 3;
     }
     
-    // Brand DNA approved - 10 points
     if (business.isDnaApproved) {
       score += 10;
     }
     
-    // Google Business Profile - 15 points
     if (googleBusiness.status === 'Verified') {
       score += 15;
     } else if (googleBusiness.status === 'Not Verified') {
-      score += 5; // Partial credit for connecting but not verified
+      score += 5;
     }
     
-    // TASK COMPLETION (65 points max - this is the main driver)
     if (totalTasks > 0) {
-      // Completed tasks worth more
-      const completedPoints = Math.min(completedTasks * 5, 50); // Max 50 points from completed tasks
+      const completedPoints = Math.min(completedTasks * 5, 50);
       score += completedPoints;
-      
-      // In-progress tasks worth something but much less
-      const inProgressPoints = Math.min(inProgressTasks * 2, 10); // Max 10 points from in-progress tasks
+      const inProgressPoints = Math.min(inProgressTasks * 2, 10);
       score += inProgressPoints;
-      
-      // Consistency bonus: If they've completed at least 25% of their tasks
       if (totalTasks >= 4 && completedTasks >= Math.ceil(totalTasks * 0.25)) {
-        score += 5; // Consistency bonus
+        score += 5;
       }
     } else {
-      // No tasks in growth plan at all = penalty (they haven't engaged with tools)
       score = Math.max(0, score - 10);
     }
     
-    // Cap at 99 (100 is benchmark but never achievable)
     score = Math.min(score, 99);
-    
     setGrowthScore(score);
   }, [profileData, growthPlanTasks]);
 
@@ -193,7 +189,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const handleSaveAnalysis = (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
       const newProfileData = { ...profileData, [`${type}Analysis`]: report };
-      handleUpdateProfileData(newProfileData, true); // Persist analysis
+      handleUpdateProfileData(newProfileData, true); 
   };
 
   const isStep1Complete = !!(profileData.business.name && profileData.business.location && profileData.business.websiteUrl);
@@ -205,7 +201,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={setImpersonatedUserEmail} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(email) => setImpersonatedUserId(email === 'test.user@example.com' ? 'test-user-uuid' : null)} />;
     }
     if (!activeTool || activeTool.id === 'home') {
       return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
@@ -215,7 +211,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} />;
       case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
-      
       case 'jetbiz': return <JetBiz tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis('jetbiz', report)} profileData={profileData} setActiveTool={setActiveTool} growthPlanTasks={growthPlanTasks} onTaskStatusChange={handleTaskStatusChange} />;
       case 'jetviz': return <JetViz tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis('jetviz', report)} profileData={profileData} setActiveTool={setActiveTool} growthPlanTasks={growthPlanTasks} onTaskStatusChange={handleTaskStatusChange} />;
       case 'jetcompete': return <JetCompete tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={profileData} setActiveTool={setActiveTool} />;
@@ -229,7 +224,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       case 'jetleads': return <JetLeads tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetevents': return <JetEvents tool={activeTool} />;
       case 'jetads': return <JetAds tool={activeTool} />;
-      
       case 'growthplan': return <GrowthPlan tasks={growthPlanTasks} setTasks={setGrowthPlanTasks} setActiveTool={setActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={growthScore} />;
       case 'support': return <UserSupportTickets />;
       default: return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
@@ -242,13 +236,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     <div className="flex h-screen text-brand-text font-sans bg-brand-light">
       {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} onLogout={onLogout} />}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {impersonatedUserEmail && ( <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> <EyeIcon className="w-5 h-5"/> Viewing as {impersonatedUserEmail}. <button onClick={() => setImpersonatedUserEmail(null)} className="underline ml-2">Return to Admin</button> </div> )}
+        {impersonatedUserId && ( <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> <EyeIcon className="w-5 h-5"/> Viewing as {profileData.user.email}. <button onClick={() => setImpersonatedUserId(null)} className="underline ml-2">Return to Admin</button> </div> )}
         {!isJetCreateActive && <Header activeTool={activeTool} growthScore={growthScore} />}
         <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>
           {renderActiveTool()}
         </main>
         
-        {/* Support Chatbot - Available ONLY on Support page */}
         {activeTool?.id === 'support' && (
           <SupportChatbot context={{ 
             user_id: userId,
