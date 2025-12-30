@@ -21,6 +21,8 @@ export type SubscriptionStatus =
  * 
  * RULE: Only 'active' or 'trialing' subscriptions get app access
  * All other statuses => locked and redirect to /pricing or /billing
+ * 
+ * @param userId - MUST be the Supabase Auth UUID (e.g. from user.id), NOT an email address.
  */
 export async function checkSubscriptionAccess(userId: string): Promise<{
   hasAccess: boolean;
