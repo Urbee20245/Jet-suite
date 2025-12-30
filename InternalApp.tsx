@@ -28,6 +28,12 @@ import UserSupportTickets from './tools/UserSupportTickets';
 import SupportChatbot from './components/SupportChatbot';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client for data synchronization
+const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface InternalAppProps {
     onLogout: () => void;
@@ -79,6 +85,48 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           ]; 
       } catch(e) { return [adminProfile, testProfile]; }
   });
+
+  // 🔄 Sync Database Profile on Mount
+  useEffect(() => {
+    const syncProfileWithDatabase = async () => {
+      if (!userId) return;
+
+      const { data: dbProfile, error } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (dbProfile) {
+        setAllProfiles(prev => {
+          const updated = [...prev];
+          const index = updated.findIndex(p => p.user.id === userId);
+          if (index !== -1) {
+            const syncedProfile = {
+              ...updated[index],
+              business: {
+                ...updated[index].business,
+                name: dbProfile.business_name || updated[index].business.name,
+                websiteUrl: dbProfile.business_website || updated[index].business.websiteUrl,
+                category: dbProfile.industry || updated[index].business.category,
+                location: dbProfile.city && dbProfile.state 
+                  ? `${dbProfile.city}, ${dbProfile.state}` 
+                  : updated[index].business.location
+              },
+              isProfileActive: !!(dbProfile.business_name && dbProfile.business_website)
+            };
+            
+            updated[index] = syncedProfile;
+            // Update cache immediately to prevent flash of old data
+            localStorage.setItem(`jetsuite_profile_${userId}`, JSON.stringify(syncedProfile));
+          }
+          return updated;
+        });
+      }
+    };
+
+    syncProfileWithDatabase();
+  }, [userId]);
 
   const isAdmin = userEmail === ADMIN_EMAIL;
   
