@@ -53,12 +53,12 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to initiate OAuth flow' });
     }
 
-    // Build Facebook OAuth URL
+    // Build Facebook OAuth URL with Instagram permissions
     const params = new URLSearchParams({
       client_id: FACEBOOK_APP_ID,
       redirect_uri: FACEBOOK_REDIRECT_URI,
       state: state,
-      scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts',
+      scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish',
       response_type: 'code',
     });
 
