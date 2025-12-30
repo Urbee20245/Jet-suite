@@ -10,12 +10,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const {
+      userId, // Supabase UUID
       email,
       seatCount = 0,
       additionalBusinessCount = 0,
       isFounder = true, // ← TEMP: trusted for now
       metadata = {},
     } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID (UUID) is required' });
+    }
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
@@ -70,11 +75,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer_email: email,
+      client_reference_id: userId, // DEFINITIVE LINK: Supabase UUID
       payment_method_types: ['card'],
       allow_promotion_codes: true, // coupons enabled
       line_items: lineItems,
+      metadata: {
+        user_id: userId, // Backup ID storage
+      },
       subscription_data: {
         metadata: {
+          user_id: userId, // Ensure ID persists on the subscription object
           seat_count: String(seatCount),
           business_count: String(additionalBusinessCount + 1),
           first_name: metadata.firstName || '',
