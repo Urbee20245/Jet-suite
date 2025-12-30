@@ -51,11 +51,15 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
 
     setIsProcessing(true);
     
+    // Get userId from localStorage (set by App.tsx if already logged in)
+    const userId = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userId') : null;
+    
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: userId || email, // Use UUID if available, fallback to email for identification
           email,
           seatCount: seats,
           additionalBusinessCount,
@@ -293,12 +297,6 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
       <span className="font-semibold">${seats * seatCost}/mo</span>
     </div>
   )}
-                  {seats > 0 && (
-                    <div className="flex justify-between text-gray-300 text-sm">
-                      <span>Additional Seats ({seats} × ${seatCost})</span>
-                      <span className="font-semibold">${seatCost * seats}/mo</span>
-                    </div>
-                  )}
                   <div className="border-t border-slate-600 pt-3 mt-3">
                     <div className="flex justify-between items-baseline">
                       <span className="font-bold text-white text-lg">Monthly Total</span>
