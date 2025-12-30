@@ -26,28 +26,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Select correct price set
+    // Select correct price set - aligned with config/stripePrices.ts
     const basePriceId = isFounder
-      ? process.env.STRIPE_PRICE_BASE_FOUNDER
-      : process.env.STRIPE_PRICE_BASE_STANDARD;
+      ? process.env.STRIPE_PRICE_FOUNDER_BASE
+      : process.env.STRIPE_PRICE_BASE_149;
 
     const additionalBusinessPriceId = isFounder
-      ? process.env.STRIPE_PRICE_BUSINESS_FOUNDER
-      : process.env.STRIPE_PRICE_BUSINESS_STANDARD;
+      ? process.env.STRIPE_PRICE_FOUNDER_BUSINESS
+      : process.env.STRIPE_PRICE_BUSINESS_49;
 
     const seatPriceId = isFounder
-      ? process.env.STRIPE_PRICE_SEAT_FOUNDER
-      : process.env.STRIPE_PRICE_SEAT_STANDARD;
+      ? process.env.STRIPE_PRICE_FOUNDER_SEAT
+      : process.env.STRIPE_PRICE_SEAT_15;
 
     // Defensive checks (PREVENTS Stripe line_items[*] error)
     if (!basePriceId) {
-      throw new Error('Missing Stripe base price env var');
+      throw new Error(`Missing Stripe base price env var for ${isFounder ? 'founder' : 'standard'} tier`);
     }
     if (additionalBusinessCount > 0 && !additionalBusinessPriceId) {
-      throw new Error('Missing Stripe additional business price env var');
+      throw new Error(`Missing Stripe additional business price env var for ${isFounder ? 'founder' : 'standard'} tier`);
     }
     if (seatCount > 0 && !seatPriceId) {
-      throw new Error('Missing Stripe seat price env var');
+      throw new Error(`Missing Stripe seat price env var for ${isFounder ? 'founder' : 'standard'} tier`);
     }
 
     // Build line items safely (NO zero quantities)
