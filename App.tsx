@@ -178,7 +178,7 @@ const App: React.FC = () => {
           localStorage.setItem('jetsuite_userId', session.user.id);
         }
       } catch (error) {
-        console.error('[App] Failed to get session after login:', error);
+        console.error(' [App] Failed to get session after login:', error);
         // Fallback to basic email storage
         setIsLoggedIn(true);
         setCurrentUserEmail(email);
@@ -282,7 +282,11 @@ const App: React.FC = () => {
           userId={currentUserId}
           onAccessDenied={handleSubscriptionAccessDenied}
         >
-          <InternalApp onLogout={handleLogout} userEmail={currentUserEmail} />
+          <InternalApp 
+            onLogout={handleLogout} 
+            userEmail={currentUserEmail} 
+            userId={currentUserId}
+          />
         </SubscriptionGuard>
       );
     }

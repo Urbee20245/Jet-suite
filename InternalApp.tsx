@@ -32,6 +32,7 @@ import { EyeIcon } from './components/icons/MiniIcons';
 interface InternalAppProps {
     onLogout: () => void;
     userEmail: string;
+    userId: string;
 }
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
@@ -44,7 +45,7 @@ const createInitialProfile = (email: string, firstName: string, lastName: string
     brandDnaProfile: undefined,
 });
 
-export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail }) => {
+export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
 
