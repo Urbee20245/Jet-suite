@@ -10,25 +10,25 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function handler(req, res) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { email, businessCount, seatCount } = req.body;
+  const { userId, businessCount, seatCount } = req.body;
 
-  if (!email || businessCount === undefined || seatCount === undefined) {
+  if (!userId || businessCount === undefined || seatCount === undefined) {
     return res.status(400).json({ 
-      message: 'Missing required fields: email, businessCount, seatCount' 
+      message: 'Missing required fields: userId, businessCount, seatCount' 
     });
   }
 
   try {
-    // Get user's billing account from database
+    // Get user's billing account from database using UUID as primary key
     const { data: billingAccount, error: billingError } = await supabase
       .from('billing_accounts')
       .select('*')
-      .eq('user_email', email)
+      .eq('user_id', userId)
       .single();
 
     if (billingError || !billingAccount) {
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
         customer: billingAccount.stripe_customer_id,
         payment_method_types: ['card'],
         mode: 'subscription',
+        client_reference_id: userId, // Ensure UUID link persists
         line_items: [
           {
             price_data: {
@@ -82,8 +83,9 @@ export default async function handler(req, res) {
         ],
         subscription_data: {
           metadata: {
-            businessCount: businessCount.toString(),
-            seatCount: seatCount.toString(),
+            user_id: userId,
+            business_count: businessCount.toString(),
+            seat_count: seatCount.toString(),
           },
         },
         success_url: `${process.env.APP_URL}/account?upgrade=success`,
@@ -98,13 +100,14 @@ export default async function handler(req, res) {
       // Downgrade - update subscription immediately (takes effect at period end)
       await stripe.subscriptions.update(subscription.id, {
         metadata: {
-          businessCount: businessCount.toString(),
-          seatCount: seatCount.toString(),
+          user_id: userId,
+          business_count: businessCount.toString(),
+          seat_count: seatCount.toString(),
         },
         proration_behavior: 'none', // Don't prorate downgrades
       });
 
-      // Update database
+      // Update database using UUID as the key
       await supabase
         .from('billing_accounts')
         .update({
@@ -112,7 +115,7 @@ export default async function handler(req, res) {
           seat_count: seatCount,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_email', email);
+        .eq('user_id', userId);
 
       return res.json({ 
         success: true,
@@ -120,7 +123,7 @@ export default async function handler(req, res) {
       });
     }
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating subscription:', error);
     return res.status(500).json({ 
       message: 'Failed to update subscription',
