@@ -46,37 +46,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // Handle checkout.session.completed event
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
     try {
-      // 1. Extract the definitive Supabase UUID
       const userId = session.client_reference_id || session.metadata?.user_id;
       
       if (!userId) {
-        console.error('[Webhook] Missing client_reference_id (UUID) in session:', session.id);
-        return res.status(400).json({ error: 'Missing user identity' });
+        console.error('[Webhook] Missing identity in session:', session.id);
+        return res.status(200).json({ received: true });
       }
 
-      // Get subscription details for metadata
-      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      // Safe subscription retrieval
+      let subscription;
+      try {
+        subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      } catch (err) {
+        console.error('[Webhook] Failed to retrieve subscription:', session.subscription);
+        return res.status(200).json({ received: true });
+      }
+
       const metadata = subscription.metadata;
-      
-      const email = session.customer_email!;
+      const email = session.customer_email || session.metadata?.email || '';
       const businessName = metadata.business_name || '';
       const website = metadata.website || '';
       const phone = metadata.phone || '';
       const seatCount = parseInt(metadata.seat_count || '0');
       const businessCount = parseInt(metadata.business_count || '1');
 
-      // 2. Link the Stripe Customer to the existing Supabase User in billing_accounts
-      // We use upsert on user_id to ensure we update if exists or create if missing
+      // Check if we need to cancel a previous subscription (from upgrade flow)
+      if (metadata.previous_subscription_id) {
+        try {
+          await stripe.subscriptions.cancel(metadata.previous_subscription_id);
+          console.log('[Webhook] Cancelled previous subscription:', metadata.previous_subscription_id);
+        } catch (err) {
+          console.warn('[Webhook] Failed to cancel old sub during upgrade (already cancelled?):', metadata.previous_subscription_id);
+        }
+      }
+
       const { error: billingError } = await supabase
         .from('billing_accounts')
         .upsert({
           user_id: userId,
-          user_email: email, // informational only
+          user_email: email,
           subscription_status: 'active',
           stripe_customer_id: session.customer as string,
           stripe_subscription_id: session.subscription as string,
@@ -85,13 +97,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
-      if (billingError) {
-        console.error('[Webhook] Failed to upsert billing account:', billingError);
-        throw billingError;
-      }
+      if (billingError) throw billingError;
 
-      // 3. Update or create business profile for this UUID
-      const { error: profileError } = await supabase
+      await supabase
         .from('business_profiles')
         .upsert({
           user_id: userId,
@@ -100,57 +108,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           phone: phone,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
-
-      if (profileError) {
-        console.error('[Webhook] Failed to update business profile:', profileError);
-      }
-      
-      console.log(`[Webhook] Subscription successfully linked to UUID: ${userId}`);
       
     } catch (error: any) {
-      console.error('[Webhook] Error processing checkout.session.completed:', error);
+      console.error('[Webhook] Error processing checkout:', error);
     }
   }
 
-  // Handle subscription updates
-  if (event.type === 'customer.subscription.updated') {
+  // Sync other status changes
+  if (['customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
     const subscription = event.data.object as Stripe.Subscription;
-    
     try {
-      const { error } = await supabase
+      await supabase
         .from('billing_accounts')
         .update({
           subscription_status: subscription.status,
           updated_at: new Date().toISOString(),
         })
         .eq('stripe_subscription_id', subscription.id);
-
-      if (error) {
-        console.error('Failed to update subscription status:', error);
-      }
     } catch (error) {
-      console.error('Error processing customer.subscription.updated:', error);
-    }
-  }
-
-  // Handle subscription cancellation
-  if (event.type === 'customer.subscription.deleted') {
-    const subscription = event.data.object as Stripe.Subscription;
-    
-    try {
-      const { error } = await supabase
-        .from('billing_accounts')
-        .update({
-          subscription_status: 'canceled',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('stripe_subscription_id', subscription.id);
-
-      if (error) {
-        console.error('Failed to update subscription to canceled:', error);
-      }
-    } catch (error) {
-      console.error('Error processing customer.subscription.deleted:', error);
+      console.error('[Webhook] Error syncing status:', error);
     }
   }
 

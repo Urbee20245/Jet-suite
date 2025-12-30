@@ -1,6 +1,3 @@
-// /api/stripe/update-subscription.ts
-// Backend API to handle plan upgrades/downgrades
-
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,7 +21,6 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // Get user's billing account from database using UUID as primary key
     const { data: billingAccount, error: billingError } = await supabase
       .from('billing_accounts')
       .select('*')
@@ -35,12 +31,10 @@ export default async function handler(req: any, res: any) {
       return res.status(404).json({ message: 'No billing account found' });
     }
 
-    // Get current subscription from Stripe
     const subscription = await stripe.subscriptions.retrieve(
       billingAccount.stripe_subscription_id
     );
 
-    // Calculate new pricing
     const basePlan = 149;
     const additionalBusinessCost = 49;
     const seatCost = 15;
@@ -48,17 +42,14 @@ export default async function handler(req: any, res: any) {
     const additionalBusinessCount = Math.max(0, businessCount - 1);
     const newTotal = basePlan + (additionalBusinessCount * additionalBusinessCost) + (seatCount * seatCost);
 
-    // Calculate current pricing
     const currentBusinessCount = parseInt(billingAccount.business_count || '1');
     const currentSeatCount = parseInt(billingAccount.seat_count || '0');
     const currentAdditionalBusinessCount = Math.max(0, currentBusinessCount - 1);
     const currentTotal = basePlan + (currentAdditionalBusinessCount * additionalBusinessCost) + (currentSeatCount * seatCost);
 
-    // Determine if this is an upgrade (requires payment) or downgrade
     const isUpgrade = newTotal > currentTotal;
 
     if (isUpgrade) {
-      // Create a new checkout session for the upgrade
       const productId = typeof subscription.items.data[0].price.product === 'string' 
         ? subscription.items.data[0].price.product 
         : subscription.items.data[0].price.product.id;
@@ -67,7 +58,7 @@ export default async function handler(req: any, res: any) {
         customer: billingAccount.stripe_customer_id,
         payment_method_types: ['card'],
         mode: 'subscription',
-        client_reference_id: userId, // Ensure UUID link persists
+        client_reference_id: userId,
         line_items: [
           {
             price_data: {
@@ -76,7 +67,7 @@ export default async function handler(req: any, res: any) {
               recurring: {
                 interval: 'month',
               },
-              unit_amount: newTotal * 100, // Convert to cents
+              unit_amount: newTotal * 100,
             },
             quantity: 1,
           },
@@ -86,40 +77,32 @@ export default async function handler(req: any, res: any) {
             user_id: userId,
             business_count: businessCount.toString(),
             seat_count: seatCount.toString(),
+            previous_subscription_id: subscription.id // Pass for webhook to cancel old sub safely
           },
         },
         success_url: `${process.env.APP_URL}/account?upgrade=success`,
         cancel_url: `${process.env.APP_URL}/account?upgrade=cancelled`,
       });
 
-      // Cancel the old subscription
-      await stripe.subscriptions.cancel(billingAccount.stripe_subscription_id);
-
+      // DO NOT cancel the old subscription yet. 
+      // The webhook will handle the cleanup once payment for the new one is confirmed.
       return res.json({ url: session.url });
     } else {
-      // Downgrade - update subscription immediately (takes effect at period end)
+      // Downgrade Path
       await stripe.subscriptions.update(subscription.id, {
         metadata: {
           user_id: userId,
           business_count: businessCount.toString(),
           seat_count: seatCount.toString(),
         },
-        proration_behavior: 'none', // Don't prorate downgrades
+        proration_behavior: 'none',
       });
 
-      // Update database using UUID as the key
-      await supabase
-        .from('billing_accounts')
-        .update({
-          business_count: businessCount,
-          seat_count: seatCount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId);
-
+      // REMOVED: Immediate database update. 
+      // Limits should only change at the end of the period (via webhook).
       return res.json({ 
         success: true,
-        message: 'Plan updated successfully. Changes will take effect at the end of your current billing period.',
+        message: 'Plan update requested. Changes will take effect at the end of your current billing period.',
       });
     }
 

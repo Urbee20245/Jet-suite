@@ -1,7 +1,12 @@
 import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+const supabase = createClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -14,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email,
       seatCount = 0,
       additionalBusinessCount = 0,
-      isFounder = true, // ← TEMP: trusted for now
+      isFounder = true,
       metadata = {},
     } = req.body;
 
@@ -26,7 +31,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Select correct price set - aligned with config/stripePrices.ts
+    // 1. DEDUPLICATION: Check for existing customer ID for this UUID
+    const { data: account } = await supabase
+      .from('billing_accounts')
+      .select('stripe_customer_id')
+      .eq('user_id', userId)
+      .single();
+
+    // Select correct price set
     const basePriceId = isFounder
       ? process.env.STRIPE_PRICE_FOUNDER_BASE
       : process.env.STRIPE_PRICE_BASE_149;
@@ -39,18 +51,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? process.env.STRIPE_PRICE_FOUNDER_SEAT
       : process.env.STRIPE_PRICE_SEAT_15;
 
-    // Defensive checks (PREVENTS Stripe line_items[*] error)
     if (!basePriceId) {
       throw new Error(`Missing Stripe base price env var for ${isFounder ? 'founder' : 'standard'} tier`);
     }
-    if (additionalBusinessCount > 0 && !additionalBusinessPriceId) {
-      throw new Error(`Missing Stripe additional business price env var for ${isFounder ? 'founder' : 'standard'} tier`);
-    }
-    if (seatCount > 0 && !seatPriceId) {
-      throw new Error(`Missing Stripe seat price env var for ${isFounder ? 'founder' : 'standard'} tier`);
-    }
 
-    // Build line items safely (NO zero quantities)
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
       {
         price: basePriceId,
@@ -58,33 +62,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     ];
 
-    if (additionalBusinessCount > 0) {
+    if (additionalBusinessCount > 0 && additionalBusinessPriceId) {
       lineItems.push({
-        price: additionalBusinessPriceId!,
+        price: additionalBusinessPriceId,
         quantity: additionalBusinessCount,
       });
     }
 
-    if (seatCount > 0) {
+    if (seatCount > 0 && seatPriceId) {
       lineItems.push({
-        price: seatPriceId!,
+        price: seatPriceId,
         quantity: seatCount,
       });
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      customer_email: email,
-      client_reference_id: userId, // DEFINITIVE LINK: Supabase UUID
+      // 2. Use existing customer if available, otherwise use email to create/link
+      ...(account?.stripe_customer_id 
+        ? { customer: account.stripe_customer_id } 
+        : { customer_email: email }),
+      client_reference_id: userId,
       payment_method_types: ['card'],
-      allow_promotion_codes: true, // coupons enabled
+      allow_promotion_codes: true,
       line_items: lineItems,
       metadata: {
-        user_id: userId, // Backup ID storage
+        user_id: userId,
       },
       subscription_data: {
         metadata: {
-          user_id: userId, // Ensure ID persists on the subscription object
+          user_id: userId,
           seat_count: String(seatCount),
           business_count: String(additionalBusinessCount + 1),
           first_name: metadata.firstName || '',
