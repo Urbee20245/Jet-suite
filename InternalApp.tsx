@@ -49,11 +49,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
 
+  // Use userId for storage keys instead of email
   const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>(() => {
-      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${userEmail}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
+      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${userId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
   });
   const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>(() => {
-      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${userEmail}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
+      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${userId}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
   });
   const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
@@ -63,7 +64,14 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
         const adminProfile = createInitialProfile(ADMIN_EMAIL, 'The Ivsight', 'Company');
         const testProfile = createInitialProfile('test.user@example.com', 'Test', 'User');
-        try { const savedAdmin = localStorage.getItem(`jetsuite_profile_${ADMIN_EMAIL}`); const savedTest = localStorage.getItem(`jetsuite_profile_test.user@example.com`); return [ savedAdmin ? JSON.parse(savedAdmin) : adminProfile, savedTest ? JSON.parse(savedTest) : testProfile ]; } catch(e) { return [adminProfile, testProfile]; }
+        // Associate the admin profile with the current logged in ID if the email matches
+        const adminEmailMatch = userEmail === ADMIN_EMAIL;
+        
+        try { 
+            const savedAdmin = localStorage.getItem(`jetsuite_profile_${adminEmailMatch ? userId : ADMIN_EMAIL}`); 
+            const savedTest = localStorage.getItem(`jetsuite_profile_test.user@example.com`); 
+            return [ savedAdmin ? JSON.parse(savedAdmin) : adminProfile, savedTest ? JSON.parse(savedTest) : testProfile ]; 
+        } catch(e) { return [adminProfile, testProfile]; }
     });
   const [impersonatedUserEmail, setImpersonatedUserEmail] = useState<string | null>(null);
   // --- End Admin State ---
@@ -71,25 +79,31 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const currentUser = impersonatedUserEmail || userEmail;
   const isAdmin = userEmail === ADMIN_EMAIL;
   
+  // Find profile by email (mock system)
   const profileData = allProfiles.find(p => p.user.email === currentUser) || allProfiles[0];
   
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
         const updatedProfiles = prev.map(p => p.user.email === newProfileData.user.email ? newProfileData : p);
         if (persist) {
-            try { localStorage.setItem(`jetsuite_profile_${newProfileData.user.email}`, JSON.stringify(newProfileData)); } catch (e) { console.warn("Could not save profile to localStorage", e); }
+            // If the profile being updated belongs to the logged-in user, use userId for storage
+            const storageKey = newProfileData.user.email === userEmail ? userId : newProfileData.user.email;
+            try { localStorage.setItem(`jetsuite_profile_${storageKey}`, JSON.stringify(newProfileData)); } catch (e) { console.warn("Could not save profile to localStorage", e); }
         }
         return updatedProfiles;
     });
   };
 
   useEffect(() => {
-      try { localStorage.setItem(`jetsuite_growthPlanTasks_${currentUser}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks to localStorage", e); }
-  }, [growthPlanTasks, currentUser]);
+      // Save data for the active context (uses userId if not impersonating)
+      const storageId = impersonatedUserEmail ? impersonatedUserEmail : userId;
+      try { localStorage.setItem(`jetsuite_growthPlanTasks_${storageId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks to localStorage", e); }
+  }, [growthPlanTasks, userId, impersonatedUserEmail]);
   
   useEffect(() => {
-      try { localStorage.setItem(`jetsuite_savedKeywords_${currentUser}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords to localStorage", e); }
-  }, [savedKeywords, currentUser]);
+      const storageId = impersonatedUserEmail ? impersonatedUserEmail : userId;
+      try { localStorage.setItem(`jetsuite_savedKeywords_${storageId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords to localStorage", e); }
+  }, [savedKeywords, userId, impersonatedUserEmail]);
 
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
@@ -237,7 +251,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         {/* Support Chatbot - Available ONLY on Support page */}
         {activeTool?.id === 'support' && (
           <SupportChatbot context={{ 
-            user_email: currentUser || undefined,
+            user_id: userId,
+            user_email: userEmail,
             business_name: profileData.business.name,
             current_page: activeTool?.id || 'home',
             subscription_status: 'active',
