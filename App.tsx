@@ -179,7 +179,7 @@ const App: React.FC = () => {
   useEffect(() => {
     // 🛡️ Phase 1: Wait for resolution
     if (!sessionChecked) return;
-    if (isLoggedIn && !isAccessTierResolved) return;
+    if (isLoggedIn && (!isAccessTierResolved || !isOnboardingResolved)) return;
 
     // 🛡️ Phase 2: Evaluate access
     if (isLoggedIn) {
@@ -191,8 +191,17 @@ const App: React.FC = () => {
         }
         return;
       }
+
+      // Rule 2: Enforce onboarding destination (Paid but not setup)
+      if (!isOnboardingComplete) {
+        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms')) {
+          console.log('[App] Enforcing onboarding redirect');
+          navigate('/onboarding');
+        }
+        return;
+      }
       
-      // Rule 2: Move logged-in & paid users into the app context if on general landing pages
+      // Rule 3: Move logged-in & paid users into the app context if on general landing pages
       const isWhitelistedMarketingPage = 
         currentPath.startsWith('/billing') ||
         currentPath.startsWith('/pricing') ||
@@ -206,12 +215,12 @@ const App: React.FC = () => {
         navigate('/app');
       }
     } else {
-      // Rule 3: Kick unauthenticated users out of the app context
-      if (currentPath.startsWith('/app')) {
+      // Rule 4: Kick unauthenticated users out of the app context
+      if (currentPath.startsWith('/app') || currentPath === '/onboarding') {
         navigate('/');
       }
     }
-  }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, subscriptionRedirect]);
+  }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, isOnboardingResolved, subscriptionRedirect, isOnboardingComplete]);
 
   // Handler for login success - simple state update, effect will handle sub check
   const handleLoginSuccess = (email: string) => {
