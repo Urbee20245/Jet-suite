@@ -172,14 +172,15 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
         e.preventDefault();
         
         try {
-            // Save to backend API
+            // Save to backend API - uses userId (UUID) as primary identifier
             const response = await fetch('/api/user/update-profile', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: profileData.user.email,
+                    userId, // Primary ID (Supabase UUID)
+                    email: profileData.user.email, // Secondary identifier
                     firstName: formState.firstName,
                     lastName: formState.lastName,
                     role: formState.role,
