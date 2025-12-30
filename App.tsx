@@ -51,6 +51,8 @@ const App: React.FC = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isAccessTierResolved, setIsAccessTierResolved] = useState(false);
   const [subscriptionRedirect, setSubscriptionRedirect] = useState<string | null>(null);
+  const [isOnboardingResolved, setIsOnboardingResolved] = useState(false);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
 
   // 3. Navigation State
   const [currentPath, setCurrentPath] = useState(() => {
@@ -74,13 +76,26 @@ const App: React.FC = () => {
   // Helper to verify subscription and update resolution state
   const verifySubscription = async (uid: string) => {
     try {
+      // 1. Check Subscription
       const result = await checkSubscriptionAccess(uid);
       setSubscriptionRedirect(result.hasAccess ? null : (result.redirectTo || '/pricing'));
       setIsAccessTierResolved(true);
+
+      // 2. Check Onboarding (Extension)
+      // We define "complete" as having a business name and website URL in the database
+      const { data: profile } = await supabase
+        .from('business_profiles')
+        .select('business_name, website_url')
+        .eq('user_id', uid)
+        .single();
+      
+      setIsOnboardingComplete(!!(profile?.business_name && profile?.website_url));
+      setIsOnboardingResolved(true);
     } catch (error) {
-      console.error('[App] Subscription verify failed:', error);
+      console.error('[App] Verification failed:', error);
       setSubscriptionRedirect('/pricing');
       setIsAccessTierResolved(true);
+      setIsOnboardingResolved(true); // Resolve on error to avoid hanging the UI
     }
   };
 
@@ -112,7 +127,7 @@ const App: React.FC = () => {
         setCurrentUserEmail(session.user.email || null);
         setCurrentUserId(session.user.id);
         
-        // Block sessionChecked until subscription is also verified
+        // Block sessionChecked until subscription and onboarding are also verified
         await verifySubscription(session.user.id);
         setSessionChecked(true);
       } catch (error) {
@@ -141,6 +156,8 @@ const App: React.FC = () => {
         setCurrentUserId(null);
         setIsAccessTierResolved(false);
         setSubscriptionRedirect(null);
+        setIsOnboardingResolved(false);
+        setIsOnboardingComplete(false);
       }
     });
     
@@ -164,7 +181,7 @@ const App: React.FC = () => {
     if (!sessionChecked) return;
     if (isLoggedIn && !isAccessTierResolved) return;
 
-    // 🛡️ Phase 2: Evalute access
+    // 🛡️ Phase 2: Evaluate access
     if (isLoggedIn) {
       // Rule 1: Enforce subscription destination (e.g., /pricing or /account for past_due)
       if (subscriptionRedirect) {
@@ -211,6 +228,8 @@ const App: React.FC = () => {
       setCurrentUserId(null);
       setIsAccessTierResolved(false);
       setSubscriptionRedirect(null);
+      setIsOnboardingResolved(false);
+      setIsOnboardingComplete(false);
       navigate('/');
   }
 
