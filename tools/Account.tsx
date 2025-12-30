@@ -66,7 +66,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     const [actualBusinessCount, setActualBusinessCount] = useState(0);
     const [actualSeatCount, setActualSeatCount] = useState(0);
 
-    const hasActiveSubscription = billingAccount && (billingAccount.subscription_status === 'active' || billingAccount.is_admin);
+    const isAdmin = billingAccount?.is_admin === true;
 
     // Initial load
     useEffect(() => {
@@ -159,18 +159,17 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
 
     const handleAddBusinessRequest = () => {
         const limit = billingAccount?.business_count || 1;
-        if (actualBusinessCount >= limit && !billingAccount?.is_admin) {
+        if (actualBusinessCount >= limit && !isAdmin) {
             alert(`Limit Reached: Your current plan allows for ${limit} business profile(s). Please upgrade your plan to add more.`);
             setActiveTool(ALL_TOOLS['pricing'] || null);
         } else {
-            // In a real implementation, this would open a modal or navigate to a creation form
             alert('Opening business creation flow...');
         }
     };
 
     const handleInviteMemberRequest = () => {
         const limit = billingAccount?.seat_count || 0;
-        if (actualSeatCount >= limit && !billingAccount?.is_admin) {
+        if (actualSeatCount >= limit && !isAdmin) {
             alert(`No Seats Available: You have used all ${limit} of your additional team seats. Buy more in the billing portal or upgrade your plan.`);
         } else {
             alert('Opening invitation form...');
@@ -188,6 +187,16 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 </h1>
                 <p className="text-brand-text-muted mt-2">Manage your plan, businesses, and team.</p>
             </div>
+
+            {isAdmin && (
+                <div className="mb-8 bg-red-50 border-2 border-red-200 p-4 rounded-xl flex items-center gap-3">
+                    <div className="p-2 bg-red-100 rounded-full text-red-600">🛡️</div>
+                    <div>
+                        <p className="text-red-800 font-bold">Admin Override Active</p>
+                        <p className="text-red-700 text-sm">Plan limits are ignored. You can create unlimited businesses and seats.</p>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Column 1: Billing & Team */}
@@ -207,11 +216,15 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-xs text-brand-text-muted mb-1">Businesses</p>
-                                            <p className="text-lg font-bold text-brand-text">{actualBusinessCount} / {billingAccount?.business_count || 1}</p>
+                                            <p className="text-lg font-bold text-brand-text">
+                                                {actualBusinessCount} / {isAdmin ? '∞' : (billingAccount?.business_count || 1)}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-brand-text-muted mb-1">Additional Seats</p>
-                                            <p className="text-lg font-bold text-brand-text">{actualSeatCount} / {billingAccount?.seat_count || 0}</p>
+                                            <p className="text-lg font-bold text-brand-text">
+                                                {actualSeatCount} / {isAdmin ? '∞' : (billingAccount?.seat_count || 0)}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -232,7 +245,9 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-brand-text-muted">Invite team members to collaborate.</p>
-                                <span className="text-xs font-bold text-brand-text-muted">{actualSeatCount} of {billingAccount?.seat_count || 0} seats used</span>
+                                <span className="text-xs font-bold text-brand-text-muted">
+                                    {actualSeatCount} of {isAdmin ? '∞' : (billingAccount?.seat_count || 0)} seats used
+                                </span>
                             </div>
                             <div className="space-y-3">
                                 {teamMembers.map(member => (
@@ -255,7 +270,9 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <p className="text-sm text-brand-text-muted">Active businesses under your account.</p>
-                                <span className="text-xs font-bold text-brand-text-muted">{actualBusinessCount} of {billingAccount?.business_count || 1} used</span>
+                                <span className="text-xs font-bold text-brand-text-muted">
+                                    {actualBusinessCount} of {isAdmin ? '∞' : (billingAccount?.business_count || 1)} used
+                                </span>
                             </div>
                             <div className="bg-brand-light p-4 rounded-lg border border-brand-border flex items-center justify-between">
                                 <div>
