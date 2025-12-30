@@ -289,6 +289,8 @@ export interface ChatbotContext {
   recent_tickets?: number;
   conversation_turns?: number;
   mentioned_topics?: string[];
+  timezone?: string;
+  current_time?: string;
 }
 
 // =====================================================
