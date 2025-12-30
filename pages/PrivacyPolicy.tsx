@@ -10,7 +10,7 @@ export const PrivacyPolicy: React.FC = () => {
           <p className="text-gray-100">
             <strong>Effective Date:</strong> December 29, 2024
           </p>
-          <p className="text-gray-100-muted">
+          <p className="text-gray-100">
             <strong>Last Updated:</strong> December 29, 2024
           </p>
         </div>
