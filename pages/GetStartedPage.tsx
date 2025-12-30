@@ -54,12 +54,21 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
     // Get userId from localStorage (set by App.tsx if already logged in)
     const userId = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userId') : null;
     
+    // REQUIRE AUTHENTICATION: We must have a Supabase UUID to proceed.
+    // Passing an email as a userId will cause a database failure in the webhook.
+    if (!userId) {
+      setError('Please sign in or create an account to start your subscription. Redirecting to login...');
+      setTimeout(() => navigate('/login'), 2500);
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: userId || email, // Use UUID if available, fallback to email for identification
+          userId, // Definitively passing a valid UUID
           email,
           seatCount: seats,
           additionalBusinessCount,
