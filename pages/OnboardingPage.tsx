@@ -54,8 +54,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
 
       if (dbError) throw dbError;
 
-      // Force a full reload to /app to trigger App.tsx re-verification
-      window.location.href = '/app';
+      // Navigate smoothly to the app now that hydration is handled in InternalApp
+      navigate('/app');
     } catch (err: any) {
       console.error('[Onboarding] Submit error:', err);
       setError(err.message || 'Failed to save profile. Please try again.');
