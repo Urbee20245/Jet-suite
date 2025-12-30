@@ -114,6 +114,22 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
               />
               I don't have a website yet
             </label>
+
+            {hasNoWebsite && (
+              <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <p className="text-xs text-blue-300">
+                  Need a professional website? We build high-converting sites for local businesses.{' '}
+                  <a 
+                    href="https://customwebsitesplus.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-accent-purple font-bold hover:underline"
+                  >
+                    Learn more here →
+                  </a>
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
