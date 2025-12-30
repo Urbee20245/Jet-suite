@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface FooterProps {
@@ -14,8 +13,8 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           <span className="text-xl font-bold text-white">JetSuite</span>
         </div>
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
-          <button className="hover:text-white">Privacy</button>
-          <button className="hover:text-white">Terms</button>
+          <button onClick={() => navigate('/privacy')} className="hover:text-white">Privacy</button>
+          <button onClick={() => navigate('/terms')} className="hover:text-white">Terms</button>
           <button onClick={() => navigate('/login')} className="hover:text-white">Support</button>
           <button onClick={() => navigate('/login')} className="hover:text-white">Login</button>
         </div>
