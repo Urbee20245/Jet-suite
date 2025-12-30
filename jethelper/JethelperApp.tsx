@@ -42,6 +42,20 @@ const groupMessagesIntoTurns = (messages: Message[]): Turn[] => {
     return turns;
 };
 
+// Function to get current date/time string for system prompt
+const getCurrentDateTimeString = () => {
+    const now = new Date();
+    return now.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZoneName: 'short'
+    });
+};
+
 // Function to render links in messages
 const renderMessageWithLinks = (text: string) => {
   // Handle [text](url) format
@@ -184,7 +198,7 @@ const App: React.FC = () => {
         chatRef.current = ai.chats.create({
             model: 'gemini-3-flash-preview',
             config: {
-              systemInstruction: SYSTEM_INSTRUCTION,
+              systemInstruction: `${SYSTEM_INSTRUCTION}\n\nCurrent Date and Time: ${getCurrentDateTimeString()}`,
             },
         });
     }, [messages.length]);
@@ -206,7 +220,9 @@ const App: React.FC = () => {
             if (!chatRef.current) {
                 chatRef.current = ai.chats.create({
                     model: 'gemini-3-flash-preview',
-                    config: { systemInstruction: SYSTEM_INSTRUCTION },
+                    config: { 
+                        systemInstruction: `${SYSTEM_INSTRUCTION}\n\nCurrent Date and Time: ${getCurrentDateTimeString()}` 
+                    },
                 });
             }
 
@@ -336,7 +352,7 @@ const App: React.FC = () => {
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
-                    systemInstruction: SYSTEM_INSTRUCTION_VOICE,
+                    systemInstruction: `${SYSTEM_INSTRUCTION_VOICE}\n\nCurrent Date and Time: ${getCurrentDateTimeString()}`,
                     speechConfig: {
                         voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
                     },

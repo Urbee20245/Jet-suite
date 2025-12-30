@@ -15,6 +15,7 @@ import type {
 import { supportService } from './supportService';
 // @ts-ignore
 import jetbotKnowledgeBase from '../jetbot-knowledge/JETBOT_KNOWLEDGE_BASE.md?raw';
+import { getUserCurrentDateTimeString } from '../utils/dateTimeUtils';
 
 // Use the environment variable as configured in vite.config.ts
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -50,7 +51,7 @@ export const chatbotService = {
       const contextInfo = this.buildContextPrompt(context, kbArticles);
       
       // 4. Build conversation messages
-      const systemPrompt = this.buildSystemPrompt(contextInfo);
+      const systemPrompt = this.buildSystemPrompt(contextInfo, context);
       
       // 5. Call Gemini API
       const responseText = await this.callGeminiAPI(userMessage, conversationHistory, systemPrompt);
@@ -134,8 +135,15 @@ export const chatbotService = {
   /**
    * Build the full system prompt including the static Knowledge Base
    */
-  buildSystemPrompt(contextInfo: string): string {
+  buildSystemPrompt(contextInfo: string, context?: ChatbotContext): string {
+    const currentDateTime = context?.current_time 
+      ? context.current_time 
+      : getUserCurrentDateTimeString(context?.timezone || 'UTC');
+
     return `
+You are JetBot, the helpful AI support assistant for JetSuite.
+Current Date and Time: ${currentDateTime}
+
 ${jetbotKnowledgeBase}
 
 ${contextInfo}
