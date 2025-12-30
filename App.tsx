@@ -83,20 +83,21 @@ const App: React.FC = () => {
       setIsAccessTierResolved(true);
 
       // 2. Check Onboarding (Extension)
-      // We define "complete" as having a business name and website URL in the database
+      // We look for the primary business to decide if onboarding is finished
       const { data: profile } = await supabase
         .from('business_profiles')
-        .select('business_name, business_website')
+        .select('is_complete')
         .eq('user_id', uid)
+        .eq('is_primary', true)
         .maybeSingle();
       
-      setIsOnboardingComplete(!!(profile?.business_name && profile?.business_website));
+      setIsOnboardingComplete(!!profile?.is_complete);
       setIsOnboardingResolved(true);
     } catch (error) {
       console.error('[App] Verification failed:', error);
       setSubscriptionRedirect('/pricing');
       setIsAccessTierResolved(true);
-      setIsOnboardingResolved(true); // Resolve on error to avoid hanging the UI
+      setIsOnboardingResolved(true);
     }
   };
 
@@ -175,34 +176,26 @@ const App: React.FC = () => {
 
   /**
    * UNIFIED NAVIGATION GUARD
-   * Centralizes all routing decisions based on fully resolved state.
    */
   useEffect(() => {
-    // 🛡️ Phase 1: Wait for resolution
     if (!sessionChecked) return;
     if (isLoggedIn && (!isAccessTierResolved || !isOnboardingResolved)) return;
 
-    // 🛡️ Phase 2: Evaluate access
     if (isLoggedIn) {
-      // Rule 1: Enforce subscription destination (e.g., /pricing or /account for past_due)
       if (subscriptionRedirect) {
         if (currentPath !== subscriptionRedirect) {
-          console.log('[App] Enforcing subscription redirect:', subscriptionRedirect);
           navigate(subscriptionRedirect);
         }
         return;
       }
 
-      // Rule 2: Enforce onboarding destination (Paid but not setup)
       if (!isOnboardingComplete) {
         if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms')) {
-          console.log('[App] Enforcing onboarding redirect');
           navigate('/onboarding');
         }
         return;
       }
       
-      // Rule 3: Move logged-in & paid users into the app context if on general landing pages
       const isWhitelistedMarketingPage = 
         currentPath.startsWith('/billing') ||
         currentPath.startsWith('/pricing') ||
@@ -216,22 +209,18 @@ const App: React.FC = () => {
         navigate('/app');
       }
     } else {
-      // Rule 4: Kick unauthenticated users out of the app context
       if (currentPath.startsWith('/app') || currentPath === '/onboarding') {
         navigate('/');
       }
     }
   }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, isOnboardingResolved, subscriptionRedirect, isOnboardingComplete]);
 
-  // Handler for login success - simple state update, effect will handle sub check
   const handleLoginSuccess = (email: string) => {
-      console.log('[App] Login callback received');
       setIsLoggedIn(true);
       setCurrentUserEmail(email);
   };
   
   const handleLogout = async () => {
-      console.log('[App] Logging out...');
       try { await supabase.auth.signOut(); } catch (error) {}
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
@@ -244,20 +233,16 @@ const App: React.FC = () => {
   }
 
   const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
-    console.log('[App] Callback: Subscription access denied');
     setSubscriptionRedirect(redirectTo);
     setIsAccessTierResolved(true);
   };
 
-  // ⚡ RENDER LOGIC
   try {
     const normalizedPath = currentPath.replace(/\/$/, '') || '/';
     
-    // Public Legal Pages (Always accessible, no auth wait)
     if (normalizedPath === '/privacy') return <PrivacyPolicy />;
     if (normalizedPath === '/terms') return <TermsOfService />;
 
-    // Global Loader
     if (!sessionChecked) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-brand-dark">
@@ -269,12 +254,10 @@ const App: React.FC = () => {
       );
     }
 
-    // Authenticated Onboarding View
     if (isLoggedIn && currentUserId && currentPath === '/onboarding') {
       return <OnboardingPage navigate={navigate} userId={currentUserId} />;
     }
 
-    // Authenticated App View
     if (isLoggedIn && currentUserId && currentUserEmail) {
       return (
         <SubscriptionGuard 
@@ -290,7 +273,6 @@ const App: React.FC = () => {
       );
     }
     
-    // Default Marketing View
     return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
   } catch (error) {
     console.error('[App] Critical render error:', error);

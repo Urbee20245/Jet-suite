@@ -30,7 +30,6 @@ import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase client for data synchronization
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -59,7 +58,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
   const activeUserId = impersonatedUserId || userId;
 
-  // Persistence logic now strictly uses UUIDs
   const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>(() => {
       try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${activeUserId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
   });
@@ -70,13 +68,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const [growthScore, setGrowthScore] = useState(150);
   
-  // --- Admin State Simulation ---
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
       const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
       const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
       
       try { 
-          // Load using UUID keys as the source of truth
           const savedAdmin = localStorage.getItem(`jetsuite_profile_${userId}`); 
           const savedTest = localStorage.getItem(`jetsuite_profile_test-user-uuid`); 
           return [ 
@@ -86,15 +82,16 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       } catch(e) { return [adminProfile, testProfile]; }
   });
 
-  // 🔄 Sync Database Profile on Mount
+  // 🔄 Sync Database Profile on Mount (Targeting Primary Business)
   useEffect(() => {
     const syncProfileWithDatabase = async () => {
       if (!userId) return;
 
-      const { data: dbProfile, error } = await supabase
+      const { data: dbProfile } = await supabase
         .from('business_profiles')
         .select('*')
         .eq('user_id', userId)
+        .eq('is_primary', true)
         .maybeSingle();
 
       if (dbProfile) {
@@ -113,11 +110,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
                   ? `${dbProfile.city}, ${dbProfile.state}` 
                   : updated[index].business.location
               },
-              isProfileActive: !!(dbProfile.business_name && dbProfile.business_website)
+              isProfileActive: !!dbProfile.is_complete
             };
             
             updated[index] = syncedProfile;
-            // Update cache immediately to prevent flash of old data
             localStorage.setItem(`jetsuite_profile_${userId}`, JSON.stringify(syncedProfile));
           }
           return updated;
@@ -129,21 +125,16 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   }, [userId]);
 
   const isAdmin = userEmail === ADMIN_EMAIL;
-  
-  // Find profile based on the active identity (self vs impersonated)
   const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
   
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
-        // Determine which profile slot to update based on UUID
         const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : 1;
-        
         const updatedProfiles = [...prev];
         updatedProfiles[index] = newProfileData;
 
         if (persist) {
-            // Persist using UUID as the key
             try { 
               localStorage.setItem(`jetsuite_profile_${newProfileData.user.id}`, JSON.stringify(newProfileData)); 
             } catch (e) { 
@@ -171,11 +162,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       setActiveKbArticle(articleId || 'introduction');
     }
   };
-
-  useEffect(() => {
-    if (impersonatedUserId && activeTool?.id === 'adminpanel') { setImpersonatedUserId(null); }
-    if (!isAdmin && activeTool?.id === 'adminpanel') { setActiveToolState(null); }
-  }, [activeTool, impersonatedUserId, isAdmin]);
 
   useEffect(() => {
     let score = 0;

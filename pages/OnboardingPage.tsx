@@ -42,19 +42,22 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
     try {
       const { error: dbError } = await supabase
         .from('business_profiles')
-        .upsert({
+        .insert({
           user_id: userId,
           business_name: formData.business_name,
           business_website: website,
           industry: formData.industry,
           city: formData.city,
           state: formData.state,
+          is_primary: true,
+          is_active: true,
+          is_complete: true,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        });
 
       if (dbError) throw dbError;
 
-      // Navigate smoothly to the app now that hydration is handled in InternalApp
+      // Navigate smoothly to the app
       navigate('/app');
     } catch (err: any) {
       console.error('[Onboarding] Submit error:', err);
