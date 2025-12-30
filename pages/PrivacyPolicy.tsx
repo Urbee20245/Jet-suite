@@ -7,7 +7,7 @@ export const PrivacyPolicy: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-extrabold text-gray-100 mb-4">Privacy Policy</h1>
-          <p className="text-gray-100-muted">
+          <p className="text-gray-100">
             <strong>Effective Date:</strong> December 29, 2024
           </p>
           <p className="text-gray-100-muted">
@@ -405,7 +405,7 @@ export const PrivacyPolicy: React.FC = () => {
 
         {/* Footer */}
         <section className="mt-12 pt-8 border-t border-gray-700">
-          <p className="text-sm text-gray-100-muted text-center">
+          <p className="text-sm text-gray-100 text-center">
             © {new Date().getFullYear()} JetSuite. All rights reserved. This Privacy Policy is effective as of 
             the date stated at the top of this page.
           </p>
