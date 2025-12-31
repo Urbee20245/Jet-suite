@@ -4,7 +4,7 @@ import type {
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
     LiveWebsiteAnalysis, BusinessReview
 } from '../types';
-import { getCurrentMonthYear, getCurrentYear } from '../utils/dateTimeUtils';
+import { getCurrentMonthYear, getCurrentYear, getAIDateTimeContextShort } from '../utils/dateTimeUtils';
 
 const API_KEY = process.env.API_KEY;
 
@@ -13,6 +13,15 @@ if (!API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+/**
+ * CRITICAL: Inject current date/time context into every AI prompt
+ * This ensures all AI responses use the ACTUAL current date, not 2024
+ */
+const injectDateContext = (prompt: string): string => {
+  const dateContext = getAIDateTimeContextShort();
+  return `${dateContext}\n\n${prompt}`;
+};
 
 const businessSearchResultSchema = {
     type: Type.ARRAY,
@@ -738,9 +747,7 @@ export const generateCampaignIdeas = async (profileData: ProfileData): Promise<C
 Business Name: ${profileData.business.name}
 Business Category: ${profileData.business.category}
 Location: ${profileData.business.location}
-Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}
-
-Your entire output must be a single JSON object matching the provided schema.`;
+Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}`.trim();
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -794,18 +801,7 @@ export const generateCreativeAssets = async (campaign: CampaignIdea, profileData
 - Business Name: ${profileData.business.name}
 - Business Category: ${profileData.business.category}
 - Location: ${profileData.business.location}
-- Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}
-
-**Selected Campaign:**
-- Name: ${campaign.name}
-- Description: ${campaign.description}
-${modifier ? `- **Refinement Prompt:** "${modifier}"\n` : ''}
-**Asset Generation Task:**
-Generate a set of creative assets for this campaign.
-1.  **Social Posts**: Create 3 distinct posts for different platforms (e.g., Instagram, Facebook, LinkedIn), including copy and a visual suggestion for each.
-2.  **Ad Copy**: Create 2 variations of ad copy, each with a headline, description, and a call-to-action (CTA).
-
-Your entire output must be a single JSON object matching the provided schema.`;
+- Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}`.trim();
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
