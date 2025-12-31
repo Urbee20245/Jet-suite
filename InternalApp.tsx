@@ -7,6 +7,7 @@ import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
+import { Sidebar } from './components/Sidebar'; // Import Sidebar
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
