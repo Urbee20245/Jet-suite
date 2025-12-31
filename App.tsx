@@ -7,6 +7,10 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { createClient } from '@supabase/supabase-js';
+import { fetchRealDateTime } from './utils/realTime';
+
+// Fetch real current time on app load
+fetchRealDateTime().catch(console.error);
 
 // Access Vite environment variables with proper fallbacks
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
