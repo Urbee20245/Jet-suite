@@ -3,12 +3,19 @@
  * Ensures consistent date/time handling across all timezone considerations
  */
 
+// Add real-time sync import and getNow helper
+import { getRealCurrentTimeSync } from './getCurrentTime';
+
+const getNow = (): Date => {
+  return getRealCurrentTimeSync();
+};
+
 /**
  * Get the current date and time in ISO format
  * This always returns the actual current UTC time
  */
 export const getCurrentDateTime = (): string => {
-  return new Date().toISOString();
+  return getNow().toISOString();
 };
 
 /**
@@ -16,7 +23,7 @@ export const getCurrentDateTime = (): string => {
  * Uses UTC to ensure consistency across all timezones
  */
 export const getCurrentDate = (): string => {
-  const now = new Date();
+  const now = getNow();
   return now.toISOString().split('T')[0];
 };
 
@@ -25,7 +32,7 @@ export const getCurrentDate = (): string => {
  * Used for display purposes and prompts
  */
 export const getCurrentMonthYear = (): string => {
-  const now = new Date();
+  const now = getNow();
   return now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
@@ -33,14 +40,14 @@ export const getCurrentMonthYear = (): string => {
  * Get the current year
  */
 export const getCurrentYear = (): number => {
-  return new Date().getFullYear();
+  return getNow().getFullYear();
 };
 
 /**
  * Get tomorrow's date in YYYY-MM-DD format
  */
 export const getTomorrowDate = (): string => {
-  const tomorrow = new Date();
+  const tomorrow = getNow();
   tomorrow.setDate(tomorrow.getDate() + 1);
   return tomorrow.toISOString().split('T')[0];
 };
@@ -50,7 +57,7 @@ export const getTomorrowDate = (): string => {
  * @param days - Number of days to add (can be negative for past dates)
  */
 export const getDateNDaysFromNow = (days: number): string => {
-  const date = new Date();
+  const date = getNow();
   date.setDate(date.getDate() + days);
   return date.toISOString().split('T')[0];
 };
@@ -90,7 +97,7 @@ export const formatDateForDisplay = (date: Date | string): string => {
  */
 export const getRelativeDateDescription = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const now = new Date();
+  const now = getNow();
   const diffTime = dateObj.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
@@ -106,9 +113,9 @@ export const getRelativeDateDescription = (date: Date | string): string => {
  * @param dateString - Date in YYYY-MM-DD format
  */
 export const isFutureDate = (dateString: string): boolean => {
-  const inputDate = new Date(dateString + 'T00:00:00');
-  const today = new Date();
+  const today = getNow();
   today.setHours(0, 0, 0, 0);
+  const inputDate = new Date(dateString + 'T00:00:00');
   return inputDate >= today;
 };
 
@@ -116,7 +123,7 @@ export const isFutureDate = (dateString: string): boolean => {
  * Get the start of today (00:00:00) as a Date object
  */
 export const getStartOfToday = (): Date => {
-  const today = new Date();
+  const today = getNow();
   today.setHours(0, 0, 0, 0);
   return today;
 };
