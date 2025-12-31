@@ -10,7 +10,7 @@ import { AIStatusIndicator } from './components/JethelperAIStatusIndicator';
 import { ConversationStarters } from './components/JethelperConversationStarters';
 import { TypingIndicator } from './components/JethelperTypingIndicator';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob, LiveSession, Chat } from '@google/genai';
-import { SYSTEM_INSTRUCTION, SYSTEM_INSTRUCTION_VOICE } from './JethelperConstants';
+import { getSystemInstruction, getSystemInstructionVoice } from './JethelperConstants';
 import { sendMessageToAI as sendTextMessageToAI } from './services/JethelperGeminiService';
 import { GrowthIcon } from './components/JethelperGrowthIcon';
 
@@ -181,10 +181,11 @@ const App: React.FC = () => {
         setMessages([{ role: Role.ASSISTANT, text: welcomeMessage, timestamp: new Date() }]);
         setShowStarters(true);
 
+        // FIXED: Use dynamic system instruction with current date/time
         chatRef.current = ai.chats.create({
             model: 'gemini-3-flash-preview',
             config: {
-              systemInstruction: SYSTEM_INSTRUCTION,
+              systemInstruction: getSystemInstruction(),
             },
         });
     }, [messages.length]);
@@ -204,9 +205,10 @@ const App: React.FC = () => {
         setShowStarters(false);
         try {
             if (!chatRef.current) {
+                // FIXED: Use dynamic system instruction with current date/time
                 chatRef.current = ai.chats.create({
                     model: 'gemini-3-flash-preview',
-                    config: { systemInstruction: SYSTEM_INSTRUCTION },
+                    config: { systemInstruction: getSystemInstruction() },
                 });
             }
 
@@ -332,11 +334,12 @@ const App: React.FC = () => {
             });
             mediaStreamRef.current = stream;
 
+            // FIXED: Use dynamic voice system instruction with current date/time
             const sessionPromise = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
                 config: {
                     responseModalities: [Modality.AUDIO],
-                    systemInstruction: SYSTEM_INSTRUCTION_VOICE,
+                    systemInstruction: getSystemInstructionVoice(),
                     speechConfig: {
                         voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } },
                     },
