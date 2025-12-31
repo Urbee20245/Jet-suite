@@ -16,7 +16,7 @@ export function getSupabaseClient(): SupabaseClient | null {
   const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('[Supabase Client] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Supabase features are disabled.');
+    console.error('[Supabase Client] CRITICAL ERROR: Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. Supabase features are disabled.');
     return null;
   }
 
