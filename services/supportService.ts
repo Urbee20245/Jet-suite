@@ -3,14 +3,12 @@
 // Handles all support-related API calls to Supabase
 // =====================================================
 
-import { createClient } from '@supabase/supabase-js';
 import type {
   SupportTicket,
   SupportMessage,
   CreateTicketRequest,
   UpdateTicketRequest,
   CreateMessageRequest,
-  ChatbotConversation,
   KnowledgeBaseArticle,
   SearchKnowledgeBaseRequest,
   CannedResponse,
@@ -18,52 +16,7 @@ import type {
   ApiResponse,
   PaginatedResponse,
 } from '../Types/supportTypes';
-
-// Initialize Supabase client
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-
-let supabase: any;
-
-try {
-  if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  } else {
-    console.warn('Missing Supabase environment variables. Support service will be disabled.');
-    // Mock client to prevent top-level crash
-    supabase = {
-      from: () => ({
-        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
-        rpc: async () => ({ error: null })
-      }),
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
-      },
-      channel: () => ({
-        on: () => ({
-          subscribe: () => ({ unsubscribe: () => {} })
-        })
-      })
-    };
-  }
-} catch (error) {
-  console.error('Failed to initialize Supabase client in supportService:', error);
-  // Fallback mock
-   supabase = {
-      from: () => ({
-        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
-        rpc: async () => ({ error: null })
-      }),
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
-      },
-      channel: () => ({
-        on: () => ({
-          subscribe: () => ({ unsubscribe: () => {} })
-        })
-      })
-    };
-}
+import { supabase } from '../integrations/supabase/client'; // Import centralized client
 
 // =====================================================
 // TICKET MANAGEMENT

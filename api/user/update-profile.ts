@@ -3,7 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with service role for admin operations
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseUrl = process.env.SUPABASE_URL; // Use standard key for serverless functions
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {

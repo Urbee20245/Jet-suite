@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import type { ProfileData, BusinessDna, Tool, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';
 import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon } from '../../components/icons/MiniIcons';
 import { Loader } from '../../components/Loader';
 import { SocialAccountsStep } from '../../components/SocialAccountsStep';
 import { ALL_TOOLS } from '../../constants';
-
-// Initialize Supabase client for dashboard saves
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '../../integrations/supabase/client'; // Import centralized client
 
 // --- Types ---
 interface BusinessDetailsProps { profileData: ProfileData; onUpdate: (data: ProfileData) => void; setActiveTool: (tool: Tool | null) => void; }

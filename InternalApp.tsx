@@ -28,19 +28,15 @@ import UserSupportTickets from './tools/UserSupportTickets';
 import SupportChatbot from './components/SupportChatbot';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './integrations/supabase/client'; // Import centralized client
 
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 interface InternalAppProps {
     onLogout: () => void;
     userEmail: string;
     userId: string;
 }
-
-const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
