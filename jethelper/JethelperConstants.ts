@@ -1,4 +1,12 @@
-export const SYSTEM_INSTRUCTION = `You are JetSuite Helper, the AI assistant for JetSuite. Your responses must be EXTREMELY CONCISE - maximum 2-3 sentences.
+/**
+ * JetHelper System Instructions with Dynamic Date/Time Context
+ * This ensures the AI always knows the current date and time
+ */
+
+import { getAIDateTimeContext } from '../utils/dateTimeUtils';
+
+// Base system instruction template (without date context)
+const BASE_SYSTEM_INSTRUCTION = `You are JetSuite Helper, the AI assistant for JetSuite. Your responses must be EXTREMELY CONCISE - maximum 2-3 sentences.
 
 **CRITICAL RULES:**
 1. **BE BRIEF:** Every response must be 1-3 sentences MAX.
@@ -52,7 +60,8 @@ When someone asks for a free demo or wants to see a demo:
 
 **REMEMBER:** Use [Click here to view demo](url) format for JetSuite demos, full URL for customwebsitesplus.com.`;
 
-export const SYSTEM_INSTRUCTION_VOICE = `You are JetSuite Helper. Speak conversationally.
+// Base voice instruction template (without date context)
+const BASE_SYSTEM_INSTRUCTION_VOICE = `You are JetSuite Helper. Speak conversationally.
 
 **CRITICAL RULES:**
 - Maximum 2 sentences per response
@@ -81,3 +90,35 @@ export const SYSTEM_INSTRUCTION_VOICE = `You are JetSuite Helper. Speak conversa
 - If yes: "I'll bring up the form now."
 
 **Be brief, friendly, and to the point. Always mention that links are in the chat.**`;
+
+/**
+ * Get system instruction with current date/time context injected
+ * This function should be called each time a new chat session is created
+ * to ensure the AI has the most up-to-date date/time information
+ */
+export const getSystemInstruction = (): string => {
+  const dateContext = getAIDateTimeContext();
+  return `${dateContext}
+
+${BASE_SYSTEM_INSTRUCTION}`;
+};
+
+/**
+ * Get voice mode system instruction with current date/time context injected
+ * This function should be called when starting voice mode
+ * to ensure the AI has the most up-to-date date/time information
+ */
+export const getSystemInstructionVoice = (): string => {
+  const dateContext = getAIDateTimeContext();
+  return `${dateContext}
+
+${BASE_SYSTEM_INSTRUCTION_VOICE}`;
+};
+
+/**
+ * Legacy exports for backward compatibility
+ * These are now dynamic and will include current date/time
+ * @deprecated Use getSystemInstruction() and getSystemInstructionVoice() instead
+ */
+export const SYSTEM_INSTRUCTION = getSystemInstruction();
+export const SYSTEM_INSTRUCTION_VOICE = getSystemInstructionVoice();
