@@ -10,6 +10,30 @@ import { getSupabaseClient } from './integrations/supabase/client'; // Import ce
 import { Sidebar } from './components/Sidebar'; // Import Sidebar
 import { Header } from './components/Header'; // Import Header
 import { Welcome } from './tools/Welcome'; // Import Welcome
+import { BusinessDetails } from './tools/profile/BusinessDetails'; // Import BusinessDetails
+import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory'; // Import GrowthScoreHistory
+import { Account } from './tools/Account'; // Import Account
+import { KnowledgeBase } from './tools/KnowledgeBase'; // Import KnowledgeBase
+import { JetBiz } from './tools/JetBiz'; // Import JetBiz
+import { JetViz } from './tools/JetViz'; // Import JetViz
+import { JetCompete } from './tools/JetCompete'; // Import JetCompete
+import { JetKeywords } from './tools/JetKeywords'; // Import JetKeywords
+import { JetPost } from './tools/JetPost'; // Import JetPost
+import { JetContent } from './tools/JetContent'; // Import JetContent
+import { JetImage } from './tools/JetImage'; // Import JetImage
+import { JetCreate } from './tools/JetCreate'; // Import JetCreate
+import { JetReply } from './tools/JetReply'; // Import JetReply
+import { JetTrust } from './tools/JetTrust'; // Import JetTrust
+import { JetLeads } from './tools/JetLeads'; // Import JetLeads
+import { JetEvents } from './tools/JetEvents'; // Import JetEvents
+import { JetAds } from './tools/JetAds'; // Import JetAds
+import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
+import UserSupportTickets from './tools/UserSupportTickets'; // Import UserSupportTickets
+import { AdminPanel } from './tools/AdminPanel'; // Import AdminPanel
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types'; // Import types
+import { ALL_TOOLS } from './constants';
+import { EyeIcon } from './components/icons/MiniIcons';
+import SupportChatbot from './components/SupportChatbot'; // Import SupportChatbot
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -391,6 +415,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             businesses={businesses}
             activeBusinessId={activeBusinessId}
             onSwitchBusiness={handleSwitchBusiness}
+            setActiveTool={setActiveTool}
           />
         )}
         <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>
