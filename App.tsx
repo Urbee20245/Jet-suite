@@ -9,8 +9,21 @@ import { checkSubscriptionAccess } from './services/subscriptionService';
 import { createClient } from '@supabase/supabase-js';
 import { fetchRealDateTime } from './utils/realTime';
 
-// Fetch real current time on app load
-fetchRealDateTime().catch(console.error);
+// Fetch real current time on app load (with timeout to prevent hanging)
+if (typeof window !== 'undefined') {
+  const initRealTime = async () => {
+    try {
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      await Promise.race([fetchRealDateTime(), timeout]);
+      console.log('✅ Real date/time initialized');
+    } catch (error) {
+      console.warn('⚠️ Could not fetch real time, using system time');
+    }
+  };
+  initRealTime();
+}
 
 // Access Vite environment variables with proper fallbacks
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
