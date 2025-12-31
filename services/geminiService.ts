@@ -667,10 +667,30 @@ export const generateBusinessDescription = async (url: string): Promise<string> 
     }
 };
 
-export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string;}> => {
+export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string; faviconUrl: string;}> => {
     try {
         const ai = getAiClient();
-        const basePrompt = `You are an expert web asset extractor. Analyze the live website at the URL: '${url}'. Your task is to extract its 'Business DNA'. Your entire output must be a single JSON object with keys: "logoUrl", "colors", "fonts", "style".`;
+        const basePrompt = `You are an expert web asset extractor. Analyze the live website at the URL: '${url}'. Your task is to extract its 'Business DNA'. Your entire output must be a single JSON object with keys: "logoUrl", "colors", "fonts", "style", and "faviconUrl".
+
+1.  **Logo URL**: Find the primary logo on the page. You MUST return a full, absolute URL. Follow this priority order strictly:
+    1.  First, look for an \`<img>\` tag where \`src\`, \`alt\`, \`class\`, or \`id\` contains "logo".
+    2.  If none, look for an \`<img>\` tag inside a \`<header>\` or \`<nav>\` element that is one of the first prominent images.
+    3.  If none, look for an SVG element with "logo" in its \`class\` or \`id\`.
+    4.  If none, check for a \`<meta property="og:image" content="...">\` tag and use its content URL.
+    5.  If none, check for a \`<meta name="twitter:image" content="...">\` tag.
+    6.  If none, check for a \`<link rel="apple-touch-icon" href="...">\` tag.
+    
+    *Rules for logo selection*:
+    - The URL MUST be absolute (start with http or https). If you find a relative URL, resolve it based on the site's base URL.
+    - Prefer SVG or PNG formats.
+    - Ignore images smaller than 40x40 pixels.
+    - Ignore social media icons (e.g., facebook.svg, twitter.png).
+    - If after all these steps no logo is found, return an empty string "".
+
+2.  **Colors**: Identify up to 8 primary and secondary colors used on the site (buttons, headers, backgrounds). Return them as an array of hex codes. Be comprehensive.
+3.  **Fonts**: Identify the main font-family used for headings and body text. Return a string like 'Inter, sans-serif'.
+4.  **Style**: Describe the overall visual style in a short phrase (e.g., 'Clean and corporate', 'Vibrant and playful', 'Minimalist and modern').
+5.  **Favicon URL**: Find the favicon URL. Look for \`<link rel="icon" href="...">\` or \`<link rel="shortcut icon" href="...">\`. Return the full, absolute URL. If none is found, return an empty string "".`;
         const prompt = injectDateContext(basePrompt);
 
         const response = await ai.models.generateContent({
@@ -688,9 +708,10 @@ export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; 
                             items: { type: Type.STRING }
                         },
                         fonts: { type: Type.STRING },
-                        style: { type: Type.STRING }
+                        style: { type: Type.STRING },
+                        faviconUrl: { type: Type.STRING } // NEW FIELD
                     },
-                    required: ["logoUrl", "colors", "fonts", "style"]
+                    required: ["logoUrl", "colors", "fonts", "style", "faviconUrl"]
                 }
             },
         });
