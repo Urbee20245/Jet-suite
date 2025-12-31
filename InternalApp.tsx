@@ -9,6 +9,7 @@ import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 import { Sidebar } from './components/Sidebar'; // Import Sidebar
 import { Header } from './components/Header'; // Import Header
+import { Welcome } from './tools/Welcome'; // Import Welcome
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
