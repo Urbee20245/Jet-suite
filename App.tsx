@@ -7,7 +7,7 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
-import { supabase } from './integrations/supabase/client'; // Import centralized client
+import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -29,6 +29,8 @@ console.log('[App] Component module loaded');
 
 const App: React.FC = () => {
   console.log('[App] Component rendering');
+  
+  const supabase = getSupabaseClient();
   
   // 1. Identity State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -63,6 +65,14 @@ const App: React.FC = () => {
 
   // Helper to verify subscription and update resolution state
   const verifySubscription = async (uid: string) => {
+    if (!supabase) {
+      // If Supabase is disabled, assume no subscription/onboarding is possible
+      setSubscriptionRedirect('/pricing');
+      setIsAccessTierResolved(true);
+      setIsOnboardingResolved(true);
+      return;
+    }
+    
     try {
       // 1. Check Subscription
       const result = await checkSubscriptionAccess(uid);
@@ -91,6 +101,12 @@ const App: React.FC = () => {
   // Check Supabase session on mount
   useEffect(() => {
     const checkSession = async () => {
+      if (!supabase) {
+        setIsLoggedIn(false);
+        setSessionChecked(true);
+        return;
+      }
+      
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Session check timeout')), 5000)
       );
@@ -129,10 +145,12 @@ const App: React.FC = () => {
     };
     
     checkSession();
-  }, []);
+  }, [supabase]);
 
   // Listen for auth state changes
   useEffect(() => {
+    if (!supabase) return;
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[App] Auth state changed:', event);
       
@@ -155,7 +173,7 @@ const App: React.FC = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   // Sync currentPath with browser forward/back buttons
   useEffect(() => {
@@ -213,7 +231,9 @@ const App: React.FC = () => {
   };
   
   const handleLogout = async () => {
-      try { await supabase.auth.signOut(); } catch (error) {}
+      if (supabase) {
+        try { await supabase.auth.signOut(); } catch (error) {}
+      }
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
       setCurrentUserId(null);

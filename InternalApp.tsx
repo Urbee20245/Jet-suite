@@ -28,7 +28,7 @@ import UserSupportTickets from './tools/UserSupportTickets';
 import SupportChatbot from './components/SupportChatbot';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
-import { supabase } from './integrations/supabase/client'; // Import centralized client
+import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -49,6 +49,8 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
 export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
+  
+  const supabase = getSupabaseClient();
 
   // --- Multi-Business Management ---
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
@@ -87,7 +89,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   // 1. Fetch all accessible businesses
   useEffect(() => {
     const fetchBusinesses = async () => {
-      if (!userId) return;
+      if (!userId || !supabase) return;
 
       // Fetch owned businesses + shared seats
       const { data: dbProfiles } = await supabase
@@ -122,12 +124,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
 
     fetchBusinesses();
-  }, [userId]);
+  }, [userId, supabase]);
 
   // 🔄 Sync Active Business Details into Profile State
   useEffect(() => {
     const syncActiveBusiness = async () => {
-      if (!activeBusinessId || !userId) return;
+      if (!activeBusinessId || !userId || !supabase) return;
 
       const { data: biz } = await supabase
         .from('business_profiles')
@@ -160,7 +162,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
 
     syncActiveBusiness();
-  }, [activeBusinessId, userId]);
+  }, [activeBusinessId, userId, supabase]);
 
   const handleSwitchBusiness = (id: string) => {
     setActiveBusinessId(id);

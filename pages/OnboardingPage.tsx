@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface OnboardingPageProps {
   navigate: (path: string) => void;
@@ -30,6 +26,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        setError('Database service is currently unavailable. Cannot complete onboarding.');
+        setIsSubmitting(false);
+        return;
+    }
 
     const website = hasNoWebsite ? 'https://pending-setup.com' : formData.business_website;
 

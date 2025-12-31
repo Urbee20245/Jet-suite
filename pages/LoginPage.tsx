@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../integrations/supabase/client'; // Import centralized client
+import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
 
 interface LoginPageProps {
     navigate: (path: string) => void;
@@ -16,6 +16,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate, onLoginSuccess }
         e.preventDefault();
         setError('');
         setLoading(true);
+        
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            setError('Authentication service is currently unavailable. Please check your connection.');
+            setLoading(false);
+            return;
+        }
 
         try {
             // Use Supabase authentication
