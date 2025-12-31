@@ -19,25 +19,24 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 export default async function handler(req: any, res: any) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   const { userId, firstName, lastName, role, email } = req.body;
 
-  // Validate required fields - userId is now the primary key
-  if (!userId || !firstName || !lastName) {
+  // Validate required fields - userId and email are critical for the profiles table upsert
+  if (!userId || !firstName || !lastName || !email) {
     return res.status(400).json({ 
-      message: 'Missing required fields: userId, firstName, lastName' 
+      message: 'Missing required fields: userId, firstName, lastName, or email' 
     });
   }
 
   try {
     console.log('Updating profile for UUID:', userId);
 
-    // 1. Update user metadata in Supabase Auth by UUID
-    const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
+    // 1. Update user metadata in Supabase Auth by UUID (Optional, but good practice)
+    const { error: authError } = await supabase.auth.admin.updateUserById(
       userId,
       {
         user_metadata: {
@@ -45,18 +44,18 @@ export default async function handler(req: any, res: any) {
           last_name: lastName,
           role: role || '',
         },
-        // Only update email if it was actually provided in the request
-        ...(email ? { email } : {})
+        // Do NOT update email here unless explicitly requested and verified, 
+        // as it requires special handling in Supabase Auth.
       }
     );
 
     if (authError) {
-      console.error('Auth update error:', authError);
-      throw new Error(`Auth update failed: ${authError.message}`);
+      console.warn('Auth metadata update warning:', authError.message);
+      // Continue even if metadata update fails, as the primary goal is the public profile table
     }
 
     // 2. Update the public profiles table using the UUID as the primary key
-    // We use upsert to ensure a profile exists for this authenticated user
+    // CRITICAL: Include email in the upsert data to satisfy the non-nullable constraint.
     const { data: profileData, error: dbError } = await supabase
       .from('profiles')
       .upsert({
@@ -64,8 +63,8 @@ export default async function handler(req: any, res: any) {
         first_name: firstName,
         last_name: lastName,
         role: role || '',
+        email: email, // Ensure email is included
         updated_at: new Date().toISOString(),
-        ...(email ? { email } : {})
       }, { onConflict: 'id' })
       .select()
       .single();
@@ -86,7 +85,7 @@ export default async function handler(req: any, res: any) {
   } catch (error: any) {
     console.error('Error updating profile:', error);
     return res.status(500).json({ 
-      message: 'Failed to update profile',
+      message: error.message || 'Failed to update profile due to server error.',
       error: error.message 
     });
   }

@@ -122,14 +122,23 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
             const response = await fetch('/api/user/update-profile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, firstName: formState.firstName, lastName: formState.lastName, role: formState.role }),
+                body: JSON.stringify({ 
+                    userId, 
+                    firstName: formState.firstName, 
+                    lastName: formState.lastName, 
+                    role: formState.role,
+                    email: profileData.user.email, // CRITICAL FIX: Include email for database upsert
+                }),
             });
-            if (!response.ok) throw new Error('Failed to save profile');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save profile');
+            }
             onUpdateProfile({ ...profileData, user: { ...profileData.user, firstName: formState.firstName, lastName: formState.lastName, role: formState.role } });
             setIsDirty(false);
             alert('Profile updated successfully!');
-        } catch (error) {
-            alert('Failed to save profile.');
+        } catch (error: any) {
+            alert(error.message || 'Failed to save profile.');
         }
     };
 
