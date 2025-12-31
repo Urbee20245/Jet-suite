@@ -1,34 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { Welcome } from './tools/Welcome';
-import { JetBiz } from './tools/JetBiz';
-import { JetViz } from './tools/JetViz';
-import { JetPost } from './tools/JetPost';
-import { JetReply } from './tools/JetReply';
-import { JetTrust } from './tools/JetTrust';
-import { JetLeads } from './tools/JetLeads';
-import { JetContent } from './tools/JetContent';
-import { JetAds } from './tools/JetAds';
-import { JetCompete } from './tools/JetCompete';
-import { JetEvents } from './tools/JetEvents';
-import { JetKeywords } from './tools/JetKeywords';
-import { JetImage } from './tools/JetImage';
-import { JetCreate } from './tools/JetCreate';
-import { GrowthPlan } from './tools/GrowthPlan';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis, SavedKeyword, KeywordData, BusinessProfile } from './types';
-import { BusinessDetails } from './tools/profile/BusinessDetails';
-import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import { ReportsDownloads } from './tools/profile/ReportsDownloads';
-import { WeeklyProgress } from './tools/WeeklyProgress';
-import { KnowledgeBase } from './tools/KnowledgeBase';
-import { Account } from './tools/Account';
-import { AdminPanel } from './tools/AdminPanel';
-import UserSupportTickets from './tools/UserSupportTickets';
-import SupportChatbot from './components/SupportChatbot';
-import { ALL_TOOLS } from './constants';
-import { EyeIcon } from './components/icons/MiniIcons';
+import { InternalApp } from './InternalApp';
+import { MarketingWebsite } from './pages/MarketingWebsite';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { SubscriptionGuard } from './components/SubscriptionGuard';
+import { checkSubscriptionAccess } from './services/subscriptionService';
+import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
+
+// Fetch real current time on app load (with timeout to prevent hanging)
+if (typeof window !== 'undefined') {
+  const initRealTime = async () => {
+    try {
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      await Promise.race([fetchRealDateTime(), timeout]);
+      console.log('✅ Real date/time initialized');
+    } catch (error) {
+      console.warn('⚠️ Could not fetch real time, using system time');
+    }
+  };
+  initRealTime();
+}
+
+console.log('[App] Component module loaded');
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -72,19 +69,89 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const [growthScore, setGrowthScore] = useState(150);
   
+  // Initialize allProfiles with default structure, will be updated in useEffect
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
       const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
       const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
-      
-      try { 
-          const savedAdmin = localStorage.getItem(`jetsuite_profile_${userId}`); 
-          const savedTest = localStorage.getItem(`jetsuite_profile_test-user-uuid`); 
-          return [ 
-            savedAdmin ? JSON.parse(savedAdmin) : adminProfile, 
-            savedTest ? JSON.parse(savedTest) : testProfile 
-          ]; 
-      } catch(e) { return [adminProfile, testProfile]; }
+      return [adminProfile, testProfile];
   });
+
+  // Function to fetch profile from DB and merge with local/default state
+  const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
+    let defaultProfile: ProfileData;
+    // Use generic defaults for current user or test defaults
+    defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
+
+    try {
+        // 1. Fetch profile from the new API endpoint
+        const response = await fetch(`/api/user/get-profile?userId=${uid}`);
+        if (!response.ok) throw new Error('Failed to fetch profile from API');
+        
+        const { profile: dbProfile } = await response.json();
+        
+        let mergedProfile = defaultProfile;
+        
+        if (dbProfile) {
+            // Merge DB data into the user part of the profile
+            mergedProfile = {
+                ...defaultProfile,
+                user: {
+                    ...defaultProfile.user,
+                    id: dbProfile.id,
+                    firstName: dbProfile.first_name || defaultProfile.user.firstName,
+                    lastName: dbProfile.last_name || defaultProfile.user.lastName,
+                    email: dbProfile.email || defaultProfile.user.email,
+                    role: dbProfile.role || defaultProfile.user.role,
+                    phone: dbProfile.phone || defaultProfile.user.phone,
+                }
+            };
+        }
+        
+        // 2. Attempt to load other data (business, dna, etc.) from localStorage
+        try {
+            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
+            if (savedLocal) {
+                const localProfile = JSON.parse(savedLocal);
+                // Merge DB user data with local business/dna data
+                mergedProfile = {
+                    ...localProfile,
+                    user: mergedProfile.user, // Prioritize fresh DB user data
+                };
+            }
+        } catch (e) {
+            console.warn(`Failed to parse local storage for user ${uid}`);
+        }
+        
+        return mergedProfile;
+
+    } catch (error) {
+        console.error(`Error fetching profile for ${uid}:`, error);
+        // Fallback to local storage or default if DB fetch fails
+        try {
+            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
+            return savedLocal ? JSON.parse(savedLocal) : defaultProfile;
+        } catch (e) {
+            return defaultProfile;
+        }
+    }
+  };
+
+  // 0. Initial Profile Load (DB + Local Storage)
+  useEffect(() => {
+    const loadProfiles = async () => {
+        // Load current user profile
+        const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
+        
+        // Load test user profile (for admin impersonation)
+        const testUserEmail = 'test.user@example.com';
+        const testUserId = 'test-user-uuid';
+        const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
+        
+        setAllProfiles([currentUserProfile, testUserProfile]);
+    };
+    
+    loadProfiles();
+  }, [userId, userEmail]); // Only run once on mount/user change
 
   // 1. Fetch all accessible businesses
   useEffect(() => {
@@ -124,7 +191,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
 
     fetchBusinesses();
-  }, [userId, supabase]);
+  }, [userId, supabase, activeBusinessId]);
 
   // 🔄 Sync Active Business Details into Profile State
   useEffect(() => {
