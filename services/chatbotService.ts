@@ -136,7 +136,8 @@ export const chatbotService = {
    * Build the full system prompt including the static Knowledge Base
    */
   buildSystemPrompt(contextInfo: string): string {
-    return `
+    return `${getAIDateTimeContext()}
+
 ${jetbotKnowledgeBase}
 
 ${contextInfo}
