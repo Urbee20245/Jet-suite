@@ -3,11 +3,11 @@
  * Ensures consistent date/time handling across all timezone considerations
  */
 
-// Add real-time sync import and getNow helper
-import { getRealCurrentTimeSync } from './getCurrentTime';
+// Import real-time sync from our new realTime utility
+import { getRealTimeSync, formatInUserTimezone as formatInUserTimezoneReal } from './realTime';
 
 const getNow = (): Date => {
-  return getRealCurrentTimeSync();
+  return getRealTimeSync();
 };
 
 /**
@@ -173,13 +173,6 @@ export const formatTimestamp = (isoString: string): string => {
 };
 
 /**
- * Get user's detected timezone
- */
-export const getUserTimezone = (): string => {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-};
-
-/**
  * Format date in user's local timezone
  * @param date - Date object or ISO string
  * @param userTimezone - Optional timezone override (defaults to browser timezone)
@@ -189,7 +182,7 @@ export const formatInUserTimezone = (
   userTimezone?: string
 ): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const tz = userTimezone || getUserTimezone();
+  const tz = userTimezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   
   return dateObj.toLocaleString('en-US', {
     timeZone: tz,
@@ -207,8 +200,8 @@ export const formatInUserTimezone = (
  * This ensures all AI tools know the ACTUAL current date/time
  */
 export const getAIDateTimeContext = (): string => {
-  const now = new Date();
-  const timezone = getUserTimezone();
+  const now = getNow();
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   
   return `CURRENT DATE & TIME CONTEXT:
 - Current Date: ${formatDateForDisplay(now)}
@@ -225,6 +218,6 @@ IMPORTANT: When generating content, use the above current date/time. Do not refe
  * Get short AI context (for token efficiency)
  */
 export const getAIDateTimeContextShort = (): string => {
-  const now = new Date();
+  const now = getNow();
   return `Current date: ${formatDateForDisplay(now)}. Current year: ${now.getFullYear()}.`;
 };
