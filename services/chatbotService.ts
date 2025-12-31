@@ -13,6 +13,7 @@ import type {
   CreateTicketRequest,
 } from '../Types/supportTypes';
 import { supportService } from './supportService';
+import { getAIDateTimeContext } from '../utils/dateTimeUtils';
 // @ts-ignore
 import jetbotKnowledgeBase from '../jetbot-knowledge/JETBOT_KNOWLEDGE_BASE.md?raw';
 
@@ -165,6 +166,8 @@ Your response MUST be a valid JSON object matching this schema:
     if (!GEMINI_API_KEY) {
       throw new Error('Gemini API key not configured');
     }
+
+    console.log('DATE CONTEXT:', getAIDateTimeContext());
 
     // Use generateContent (single turn) which is more stable with the current SDK.
     // We construct the full conversation history manually.
