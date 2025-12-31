@@ -15,10 +15,15 @@ import { decode, encode, decodeAudioData, resampleBuffer } from './utils/Jethelp
 import { sendMessageToAI as sendTextMessageToAI } from './services/JethelperGeminiService';
 import { GrowthIcon } from './components/JethelperGrowthIcon';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// CRITICAL FIX: Remove top-level initialization and error throw
+const getAiClient = () => {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+        console.warn("JETHELPER: API_KEY environment variable not set. Voice/Chat features disabled.");
+        return null;
+    }
+    return new GoogleGenAI({ apiKey });
+};
 
 // IMPORTANT: Replace this with your own Formspree endpoint URL.
 const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mbdjloja';
@@ -71,6 +76,16 @@ const App: React.FC = () => {
     const mediaStreamRef = useRef<MediaStream | null>(null);
 
     const initChat = useCallback(() => {
+        const ai = getAiClient();
+        if (!ai) {
+            setMessages([{ 
+                role: Role.ASSISTANT, 
+                text: "👋 Hi! I'm JetBot. My AI features are currently disabled due to a missing API key, but I can still provide links and basic information.", 
+                timestamp: new Date() 
+            }]);
+            return;
+        }
+        
         if (messages.length > 0) return;
 
         const welcomeMessage = "Welcome to JetSuite. I'm your AI guide. Feel free to ask me anything by typing or using your voice. How can I help you today?";
@@ -96,6 +111,12 @@ const App: React.FC = () => {
     }, [messages, isLoading, showForm, showCoupon, currentTranscription, appState, showStarters]);
 
     const sendMessage = async (messageText: string) => {
+        const ai = getAiClient();
+        if (!ai) {
+            setMessages(prev => [...prev, { role: Role.ASSISTANT, text: "AI features are currently disabled. Please check the console for details.", timestamp: new Date() }]);
+            return;
+        }
+        
         setIsLoading(true);
         setShowStarters(false);
         try {
@@ -159,6 +180,16 @@ const App: React.FC = () => {
     }, []);
 
     const handleMicClick = async () => {
+        const ai = getAiClient();
+        if (!ai) {
+            setMessages(prev => [...prev, { 
+                role: Role.ASSISTANT, 
+                text: "Voice Mode is disabled due to a missing API key.",
+                timestamp: new Date()
+            }]);
+            return;
+        }
+        
         const isVoiceMode = appState === 'listening' || appState === 'thinking' || appState === 'speaking';
         if (isVoiceMode) {
             await stopRecording();

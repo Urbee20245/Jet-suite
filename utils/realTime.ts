@@ -2,11 +2,16 @@ import { GoogleGenAI } from "@google/genai";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY;
 
-if (!GEMINI_API_KEY) {
-  console.warn('GEMINI_API_KEY not set - will use system time');
+let ai: GoogleGenAI | null = null;
+try {
+  if (GEMINI_API_KEY) {
+    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  } else {
+    console.warn('GEMINI_API_KEY not set - will use system time for real time sync.');
+  }
+} catch (e) {
+  console.error('Failed to initialize Gemini client for real time sync:', e);
 }
-
-const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
 
 let cachedRealDate: Date | null = null;
 let cacheExpiry: number = 0;
@@ -22,7 +27,6 @@ export const fetchRealDateTime = async (): Promise<Date> => {
   }
 
   if (!ai) {
-    console.warn('Gemini API not available, using system time');
     return new Date();
   }
 
@@ -52,7 +56,7 @@ export const fetchRealDateTime = async (): Promise<Date> => {
     return realDate;
     
   } catch (error) {
-    console.error('Failed to get real date from Gemini:', error);
+    console.error('Failed to get real date from Gemini, falling back to system time:', error);
     return new Date();
   }
 };
