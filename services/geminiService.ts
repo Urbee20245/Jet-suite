@@ -39,7 +39,8 @@ const businessSearchResultSchema = {
 };
 
 export const searchGoogleBusiness = async (query: string): Promise<BusinessSearchResult[]> => {
-    const prompt = `You are a Google Maps search specialist. A user is searching for their business with the query: "${query}". Use Google Search to find matching business listings on Google Maps. Return a list of up to 5 of the most relevant results. For each result, provide the business name, full address, star rating, total review count, and primary category. Your entire output must be a single JSON array matching the provided schema. If no businesses are found, return an empty array.`;
+    const basePrompt = `You are a Google Maps search specialist. A user is searching for their business with the query: "${query}". Use Google Search to find matching business listings on Google Maps. Return a list of up to 5 of the most relevant results. For each result, provide the business name, full address, star rating, total review count, and primary category. Your entire output must be a single JSON array matching the provided schema. If no businesses are found, return an empty array.`;
+    const prompt = injectDateContext(basePrompt);
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -142,9 +143,10 @@ const auditReportSchema = {
 
 
 export const analyzeBusinessListing = async (business: ConfirmedBusiness): Promise<AuditReport> => {
-  const prompt = `You are an expert local SEO strategist upgrading the JetBiz tool. A user has CONFIRMED their business is: Name: '${business.name}', Address: '${business.address}'.
+  const basePrompt = `You are an expert local SEO strategist upgrading the JetBiz tool. A user has CONFIRMED their business is: Name: '${business.name}', Address: '${business.address}'.
   
   Your task is to perform a deep analysis of THIS SPECIFIC Google Business Profile (GBP). For each issue or competitive gap identified, generate a structured output following the JSON schema. Be extremely specific and generate a unique 'id' for each issue. For the 'weeklyActions' list, you MUST include the 'whyItMatters' field for each task, explaining its direct impact. Your entire output must be a single JSON object matching the provided schema. If the business appears unclaimed, make that a HIGH priority issue.`;
+  const prompt = injectDateContext(basePrompt);
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -221,7 +223,7 @@ const liveWebsiteAnalysisSchema = {
 };
 
 export const analyzeWebsiteWithLiveApis = async (url: string): Promise<LiveWebsiteAnalysis> => {
-    const prompt = `You are operating inside JetViz, the website audit module of JetSuite. Your audits are execution guides, not reports.
+    const basePrompt = `You are operating inside JetViz, the website audit module of JetSuite. Your audits are execution guides, not reports.
 
 Your task is to perform a DEEP analysis of the live website at the URL: '${url}'. You must use Google Search to get live data, including simulating PageSpeed Insights for mobile and desktop.
 
@@ -230,6 +232,7 @@ Your entire output MUST be a single JSON object matching the provided schema.
 1.  **PageSpeed Scores**: Provide estimated scores (0-100) for Performance, Accessibility, Best Practices, and SEO for both Mobile and Desktop.
 2.  **Issues**: Focus on Homepage Clarity, Local SEO, Conversion Friction, and Trust Signals. For every issue you identify, generate the full structured output (id, issue, whyItMatters, fix, priority, task).
 3.  **Weekly Actions**: For the 'weeklyActions' list, you MUST include the 'whyItMatters' field for each task, explaining its direct impact. If a headline is weak or a CTA is missing, provide specific, improved example copy in the 'fix' instructions.`;
+    const prompt = injectDateContext(basePrompt);
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-pro-preview',
@@ -251,7 +254,8 @@ Your entire output MUST be a single JSON object matching the provided schema.
 export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[]) => {
   const currentMonthYear = getCurrentMonthYear();
   const currentYear = getCurrentYear();
-  const prompt = `You are a creative social media manager for local businesses. It is currently ${currentMonthYear}. Generate distinct social media posts for a '${businessType}'. The topic is '${topic}'. The desired tone is '${tone}'. Create a version specifically tailored for each of the following platforms: ${platforms.join(', ')}. Ensure the content is optimized for the style and constraints of each platform. Use current ${currentYear} dates and trends when relevant. For TikTok, suggest a short video concept.`;
+  const basePrompt = `You are a creative social media manager for local businesses. It is currently ${currentMonthYear}. Generate distinct social media posts for a '${businessType}'. The topic is '${topic}'. The desired tone is '${tone}'. Create a version specifically tailored for each of the following platforms: ${platforms.join(', ')}. Ensure the content is optimized for the style and constraints of each platform. Use current ${currentYear} dates and trends when relevant. For TikTok, suggest a short video concept.`;
+  const prompt = injectDateContext(basePrompt);
 
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -344,7 +348,7 @@ export const fetchBusinessReviews = async (businessName: string, businessAddress
 
 export const generateReviewReply = async (review: string, isPositive: boolean, tone: string) => {
   const toneInstruction = tone ? `The tone of the reply should be ${tone}.` : 'The tone of the reply should be professional and empathetic.';
-  const prompt = `You are a customer service manager. ${toneInstruction} A customer left the following review: "${review}". 
+  const basePrompt = `You are a customer service manager. ${toneInstruction} A customer left the following review: "${review}". 
   
   The review is considered ${isPositive ? 'positive' : 'negative'}. 
   
@@ -353,6 +357,7 @@ export const generateReviewReply = async (review: string, isPositive: boolean, t
   - If it's negative, acknowledge their issue, apologize sincerely without admitting fault, and offer to resolve the situation offline (e.g., "Please contact us at..."). Do not make excuses.
   
   Provide only the response text.`;
+  const prompt = injectDateContext(basePrompt);
   
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
@@ -375,7 +380,9 @@ export const findLeads = async (service: string, area: string) => {
 };
 
 export const generateLocalContent = async (businessType: string, topic: string) => {
-  const prompt = `You are a local SEO content writer. Write an engaging and informative blog post for a '${businessType}'. The topic is '${topic}'. The article should be optimized for local search, be at least 400 words long, and have a clear title, introduction, several subheadings using markdown, and a concluding paragraph with a call to action. The tone should be helpful and expert.`;
+  const basePrompt = `You are a local SEO content writer. Write an engaging and informative blog post for a '${businessType}'. The topic is '${topic}'. The article should be optimized for local search, be at least 400 words long, and have a clear title, introduction, several subheadings using markdown, and a concluding paragraph with a call to action. The tone should be helpful and expert.`;
+  const prompt = injectDateContext(basePrompt);
+  
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: prompt,
@@ -536,27 +543,8 @@ export const generateBusinessDescription = async (url: string): Promise<string> 
 };
 
 export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string;}> => {
-    const prompt = `You are an expert web asset extractor. Analyze the live website at the URL: '${url}'. Your task is to extract its 'Business DNA'. Your entire output must be a single JSON object with keys: "logoUrl", "colors", "fonts", "style".
-
-1.  **Logo URL**: Find the primary logo on the page. You MUST return a full, absolute URL. Follow this priority order strictly:
-    1.  First, look for an \`<img>\` tag where \`src\`, \`alt\`, \`class\`, or \`id\` contains "logo".
-    2.  If none, look for an \`<img>\` tag inside a \`<header>\` or \`<nav>\` element that is one of the first prominent images.
-    3.  If none, look for an SVG element with "logo" in its \`class\` or \`id\`.
-    4.  If none, check for a \`<meta property="og:image" content="...">\` tag and use its content URL.
-    5.  If none, check for a \`<meta name="twitter:image" content="...">\` tag.
-    6.  If none, check for a \`<link rel="apple-touch-icon" href="...">\` tag.
-    7.  As a last resort, check for a \`<link rel="icon" href="...">\` tag (favicon).
-    
-    *Rules for logo selection*:
-    - The URL MUST be absolute (start with http or https). If you find a relative URL, resolve it based on the site's base URL.
-    - Prefer SVG or PNG formats.
-    - Ignore images smaller than 40x40 pixels.
-    - Ignore social media icons (e.g., facebook.svg, twitter.png).
-    - If after all these steps no logo is found, return an empty string "".
-
-2.  **Colors**: Identify up to 5 primary and secondary colors used on the site (buttons, headers, backgrounds). Return them as an array of hex codes.
-3.  **Fonts**: Identify the main font-family used for headings and body text. Return a string like 'Inter, sans-serif'.
-4.  **Style**: Describe the overall visual style in a short phrase (e.g., 'Clean and corporate', 'Vibrant and playful', 'Minimalist and modern').`;
+    const basePrompt = `You are an expert web asset extractor. Analyze the live website at the URL: '${url}'. Your task is to extract its 'Business DNA'. Your entire output must be a single JSON object with keys: "logoUrl", "colors", "fonts", "style".`;
+    const prompt = injectDateContext(basePrompt);
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -652,7 +640,7 @@ const brandDnaProfileSchema = {
 
 // FIX: Removed stray comment from within the template literal.
 export const extractBrandDnaProfile = async (business: BusinessProfile): Promise<BrandDnaProfile> => {
-    const prompt = `You are an expert brand strategist analyzing a business website to extract its Brand and Business DNA. This is a one-time analysis to create an authoritative brand profile that will be reused across all marketing tools. Be accurate, neutral, and consistent. Do NOT generate any marketing content or ideas. Focus ONLY on brand identity extraction.
+    const basePrompt = `You are an expert brand strategist analyzing a business website to extract its Brand and Business DNA. This is a one-time analysis to create an authoritative brand profile that will be reused across all marketing tools. Be accurate, neutral, and consistent. Do NOT generate any marketing content or ideas. Focus ONLY on brand identity extraction.
 
 Business Name: ${business.name}
 Business Category: ${business.category}
@@ -660,6 +648,7 @@ Business Location: ${business.location}
 Business Website URL: ${business.websiteUrl}
 
 Analyze the live website and return a complete, structured Brand DNA profile. Your entire output must be a single JSON object matching the provided schema.`;
+    const prompt = injectDateContext(basePrompt);
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -742,12 +731,13 @@ const campaignIdeasSchema = {
 };
 
 export const generateCampaignIdeas = async (profileData: ProfileData): Promise<CampaignIdea[]> => {
-    const prompt = `You are a creative director inside JetSuite. Your task is to generate 3-5 distinct, on-brand campaign ideas for the following business. The ideas should be relevant to the business category and location. Use the provided Brand DNA to ensure the concepts align with the brand's tone, style, and positioning.
+    const basePrompt = `You are a creative director inside JetSuite. Your task is to generate 3-5 distinct, on-brand campaign ideas for the following business. The ideas should be relevant to the business category and location. Use the provided Brand DNA to ensure the concepts align with the brand's tone, style, and positioning.
 
 Business Name: ${profileData.business.name}
 Business Category: ${profileData.business.category}
 Location: ${profileData.business.location}
 Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}`.trim();
+    const prompt = injectDateContext(basePrompt);
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
