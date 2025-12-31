@@ -164,3 +164,60 @@ export const formatTimestamp = (isoString: string): string => {
     minute: '2-digit',
   });
 };
+
+/**
+ * Get user's detected timezone
+ */
+export const getUserTimezone = (): string => {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+};
+
+/**
+ * Format date in user's local timezone
+ * @param date - Date object or ISO string
+ * @param userTimezone - Optional timezone override (defaults to browser timezone)
+ */
+export const formatInUserTimezone = (
+  date: Date | string,
+  userTimezone?: string
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  const tz = userTimezone || getUserTimezone();
+  
+  return dateObj.toLocaleString('en-US', {
+    timeZone: tz,
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+};
+
+/**
+ * Get complete date/time context for AI prompts
+ * This ensures all AI tools know the ACTUAL current date/time
+ */
+export const getAIDateTimeContext = (): string => {
+  const now = new Date();
+  const timezone = getUserTimezone();
+  
+  return `CURRENT DATE & TIME CONTEXT:
+- Current Date: ${formatDateForDisplay(now)}
+- Current Time: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
+- Current Year: ${now.getFullYear()}
+- Current Month: ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+- User Timezone: ${timezone}
+- ISO Timestamp: ${now.toISOString()}
+
+IMPORTANT: When generating content, use the above current date/time. Do not reference outdated dates.`;
+};
+
+/**
+ * Get short AI context (for token efficiency)
+ */
+export const getAIDateTimeContextShort = (): string => {
+  const now = new Date();
+  return `Current date: ${formatDateForDisplay(now)}. Current year: ${now.getFullYear()}.`;
+};
