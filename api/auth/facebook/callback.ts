@@ -5,23 +5,32 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
+// Check for required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey || !FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET || !APP_URL || !ENCRYPTION_KEY) {
+  throw new Error('Missing required environment variables for Facebook OAuth callback setup.');
+}
+
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  supabaseUrl,
+  supabaseServiceKey
 );
 
 // Facebook API configuration
-const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID!;
-const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET!;
-const FACEBOOK_REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`;
+const FACEBOOK_REDIRECT_URI = `${APP_URL}/api/auth/facebook/callback`;
 const FACEBOOK_TOKEN_URL = 'https://graph.facebook.com/v18.0/oauth/access_token';
 const FACEBOOK_GRAPH_URL = 'https://graph.facebook.com/v18.0';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!;
 
 // Encryption functions
 function encrypt(text: string): string {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY!), iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
@@ -30,8 +39,8 @@ function encrypt(text: string): string {
 // Facebook API functions
 async function getAccessToken(code: string) {
   const params = new URLSearchParams({
-    client_id: FACEBOOK_APP_ID,
-    client_secret: FACEBOOK_APP_SECRET,
+    client_id: FACEBOOK_APP_ID!,
+    client_secret: FACEBOOK_APP_SECRET!,
     redirect_uri: FACEBOOK_REDIRECT_URI,
     code: code,
   });
@@ -48,8 +57,8 @@ async function getAccessToken(code: string) {
 async function getLongLivedToken(shortToken: string) {
   const params = new URLSearchParams({
     grant_type: 'fb_exchange_token',
-    client_id: FACEBOOK_APP_ID,
-    client_secret: FACEBOOK_APP_SECRET,
+    client_id: FACEBOOK_APP_ID!,
+    client_secret: FACEBOOK_APP_SECRET!,
     fb_exchange_token: shortToken,
   });
 
@@ -123,7 +132,7 @@ export default async function handler(
     if (fbError) {
       console.error('Facebook OAuth error:', fbError, error_description);
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=facebook_auth_failed&details=${fbError}`
+        `${APP_URL}/business-details?error=facebook_auth_failed&details=${fbError}`
       );
     }
 
@@ -131,7 +140,7 @@ export default async function handler(
     if (!code) {
       console.error('Missing code parameter');
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=missing_code`
+        `${APP_URL}/business-details?error=missing_code`
       );
     }
 
@@ -139,7 +148,7 @@ export default async function handler(
     if (!state) {
       console.error('Missing state parameter');
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=missing_state`
+        `${APP_URL}/business-details?error=missing_state`
       );
     }
 
@@ -161,7 +170,7 @@ export default async function handler(
     if (stateError || !stateData) {
       console.error('Invalid OAuth state:', stateError);
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=invalid_state`
+        `${APP_URL}/business-details?error=invalid_state`
       );
     }
 
@@ -170,7 +179,7 @@ export default async function handler(
       await supabase.from('oauth_states').delete().eq('state', stateStr);
       console.error('State expired');
       return res.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=state_expired`
+        `${APP_URL}/business-details?error=state_expired`
       );
     }
 
@@ -308,12 +317,12 @@ export default async function handler(
 
     // Redirect back to app with success
     res.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/business-details?success=facebook_connected`
+      `${APP_URL}/business-details?success=facebook_connected`
     );
   } catch (error) {
     console.error('Facebook callback error:', error);
     res.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/business-details?error=connection_failed&details=${encodeURIComponent(String(error))}`
+      `${APP_URL}/business-details?error=connection_failed&details=${encodeURIComponent(String(error))}`
     );
   }
 }

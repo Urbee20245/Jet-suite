@@ -4,14 +4,23 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
+// Check for required environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+
+if (!supabaseUrl || !supabaseServiceKey || !FACEBOOK_APP_ID || !APP_URL) {
+  throw new Error('Missing required environment variables for Facebook OAuth setup.');
+}
+
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  supabaseUrl,
+  supabaseServiceKey
 );
 
 // Facebook OAuth configuration
-const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID!;
-const FACEBOOK_REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/facebook/callback`;
+const FACEBOOK_REDIRECT_URI = `${APP_URL}/api/auth/facebook/callback`;
 const FACEBOOK_OAUTH_URL = 'https://www.facebook.com/v18.0/dialog/oauth';
 
 // Generate state token
