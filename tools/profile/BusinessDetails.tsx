@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ProfileData, BusinessDna, Tool, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';
-import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon } from '../../components/icons/MiniIcons';
+import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon } from '../../components/icons/MiniIcons';
 import { Loader } from '../../components/Loader';
 import { SocialAccountsStep } from '../../components/SocialAccountsStep';
 import { ALL_TOOLS } from '../../constants';
@@ -78,7 +78,40 @@ const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => voi
 const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => { const [searchTerm, setSearchTerm] = useState(''); const [results, setResults] = useState<BusinessSearchResult[]>([]); const [selected, setSelected] = useState<BusinessSearchResult | null>(null); const [loading, setLoading] = useState(false); const handleSearch = async (e: React.FormEvent) => { e.preventDefault(); if (!searchTerm) return; setLoading(true); setResults([]); setSelected(null); const res = await searchGoogleBusiness(searchTerm); setResults(res); setLoading(false); }; if (selected) return ( <div className="bg-brand-light p-6 rounded-lg border text-center"><h4 className="font-bold">Is this your business?</h4><div className="bg-white my-4 p-4 rounded-lg border"><p className="font-bold">{selected.name}</p><p className="text-sm text-brand-text-muted">{selected.address}</p></div><div className="flex gap-4 justify-center"><button onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button><button onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button></div></div> ); return ( <div className="bg-brand-light p-6 rounded-lg border space-y-4"> <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4> <form onSubmit={handleSearch} className="space-y-4"> <div><label className="text-xs font-semibold">1. Paste Google Share or Maps URL</label><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="https://share.google/... or https://maps.app.goo.gl/..." className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <div className="text-center text-xs font-semibold">OR</div> <div><label className="text-xs font-semibold">2. Search by Name & Location</label><input type="text" onChange={e => setSearchTerm(e.target.value)} placeholder={`${profileData.business.name}, ${profileData.business.location}`} className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">{loading ? '...' : 'Find & Connect'}</button> </form> {loading && <Loader />} <div className="space-y-2 mt-4">{results.map(r => <button key={r.name+r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"><p className="font-semibold">{r.name}</p><p className="text-xs text-brand-text-muted">{r.address}</p></button>)}</div> </div> ); };
 const CompletionCard: React.FC<{ onNext: () => void }> = ({ onNext }) => ( <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl"> <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" /> <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Business Profile Complete!</h2> <p className="text-brand-text-muted my-4 max-w-md mx-auto">Great work! Your business identity is set up. Now let's analyze your local presence and find growth opportunities.</p> <button onClick={onNext} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center gap-2 mx-auto">Continue to JetBiz <ArrowRightIcon className="w-5 h-5" /></button> <button className="text-sm text-brand-text-muted hover:underline mt-4">Stay here and review my details</button> </div> );
 
-const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children }) => { const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; return (<div className={`bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''}`}><div className="flex items-center gap-4 mb-6"><div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>{isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}</div><div><h2 className="text-2xl font-bold text-brand-text flex items-center gap-3">{title} <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span></h2></div><div className="ml-auto">{isComplete && <CheckCircleIcon className="w-6 h-6 text-green-500"/>}</div></div><div className={isLocked ? 'pointer-events-none' : ''}>{children}</div></div>); };
+const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen }) => { 
+    const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''}`}>
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-6 sm:p-8 text-left">
+                <div className="flex items-center gap-4">
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>
+                        {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-3">
+                            {title} 
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+                        </h2>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    {isComplete && <CheckCircleIcon className="w-6 h-6 text-green-500"/>}
+                    {isOpen ? <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" /> : <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />}
+                </div>
+            </button>
+            
+            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="p-6 sm:p-8 pt-0">
+                    <div className={isLocked ? 'pointer-events-none' : ''}>
+                        {children}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
 
 // --- Main Component ---
@@ -189,13 +222,62 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
         
-        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed}><p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>{saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}<form onSubmit={handleSaveInfo} className="space-y-4"><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label className="block text-sm font-medium text-brand-text mb-1">Business Name <span className="text-red-500">*</span></label><input type="text" name="name" value={business.name} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/></div><div><label className="block text-sm font-medium text-brand-text mb-1">Website URL <span className="text-red-500">*</span></label><input type="url" name="websiteUrl" value={business.websiteUrl} onChange={handleBusinessChange} placeholder="https://..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/></div></div><div><label className="block text-sm font-medium text-brand-text mb-1">Business Description</label><div className="flex items-center gap-2 mb-2"><button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription} className="flex items-center gap-1 text-xs font-semibold bg-accent-purple/10 text-accent-purple px-2 py-1 rounded-md hover:bg-accent-purple/20">{isGeneratingDescription ? <><Loader /> Generating...</> : <><SparklesIcon className="w-3 h-3"/> Generate with AI</>}</button><span className="text-xs text-brand-text-muted">or write your own below</span></div><textarea name="description" value={business.description} onChange={handleBusinessChange} rows={3} maxLength={500} placeholder="Use AI to generate one..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/><p className="text-right text-xs text-brand-text-muted">{business.description?.length || 0} / 500</p></div><div><label className="block text-sm font-medium text-brand-text mb-1">Business Category</label>{suggestedCategory && <div className="bg-blue-50 border border-blue-200 p-2 rounded-lg mb-2 flex justify-between items-center text-sm"><p>💡 Suggested: <span className="font-bold">{suggestedCategory}</span></p><div><button type="button" onClick={() => { setBusiness(b => ({ ...b, category: suggestedCategory })); setSuggestedCategory(null); }} className="font-semibold text-blue-600 px-2">Accept</button><button onClick={() => setSuggestedCategory(null)} className="text-gray-500">x</button></div></div>}<input list="business-categories" name="category" value={business.category} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/><datalist id="business-categories">{BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}</datalist></div><div><label className="block text-sm font-medium text-brand-text mb-1">Primary Location (City, State)</label><input type="text" name="location" value={business.location} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/></div>{isDirty && <div className="flex justify-end pt-2"><button type="submit" className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save Changes</button></div>}</form></StepCard>
+        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed}>
+            <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
+            {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
+            <form onSubmit={handleSaveInfo} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium text-brand-text mb-1">Business Name <span className="text-red-500">*</span></label><input type="text" name="name" value={business.name} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/></div>
+                    <div><label className="block text-sm font-medium text-brand-text mb-1">Website URL <span className="text-red-500">*</span></label><input type="url" name="websiteUrl" value={business.websiteUrl} onChange={handleBusinessChange} placeholder="https://..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/></div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-brand-text mb-1">Business Description</label>
+                    <div className="flex items-center gap-2 mb-2">
+                        <button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription} className="flex items-center gap-1 text-xs font-semibold bg-accent-purple/10 text-accent-purple px-2 py-1 rounded-md hover:bg-accent-purple/20">
+                            {isGeneratingDescription ? <><Loader /> Generating...</> : <><SparklesIcon className="w-3 h-3"/> Generate with AI</>}
+                        </button>
+                        <span className="text-xs text-brand-text-muted">or write your own below</span>
+                    </div>
+                    <textarea name="description" value={business.description} onChange={handleBusinessChange} rows={3} maxLength={500} placeholder="Use AI to generate one..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
+                    <p className="text-right text-xs text-brand-text-muted">{business.description?.length || 0} / 500</p>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-brand-text mb-1">Business Category</label>
+                    {suggestedCategory && <div className="bg-blue-50 border border-blue-200 p-2 rounded-lg mb-2 flex justify-between items-center text-sm"><p>💡 Suggested: <span className="font-bold">{suggestedCategory}</span></p><div><button type="button" onClick={() => { setBusiness(b => ({ ...b, category: suggestedCategory })); setSuggestedCategory(null); }} className="font-semibold text-blue-600 px-2">Accept</button><button onClick={() => setSuggestedCategory(null)} className="text-gray-500">x</button></div></div>}
+                    <input list="business-categories" name="category" value={business.category} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
+                    <datalist id="business-categories">{BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}</datalist>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-brand-text mb-1">Primary Location (City, State)</label>
+                    <input type="text" name="location" value={business.location} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
+                </div>
+                {isDirty && <div className="flex justify-end pt-2"><button type="submit" className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save Changes</button></div>}
+            </form>
+        </StepCard>
 
-        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed}>{!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}</StepCard>
+        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed} defaultOpen={step1Completed && !step2Completed}>
+            {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
+        </StepCard>
 
-        <StepCard number={3} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step3Completed}>{!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />}</StepCard>
+        <StepCard number={3} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed}>
+            {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />}
+        </StepCard>
 
-        <StepCard number={4} title="Google Business Profile" badge={step4Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step4Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step4Completed}><div className="flex justify-between items-start mb-4"><div><p className="text-brand-text-muted">Critical for local visibility and map rankings.</p></div>{step4Completed && !isGbpSkipped && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}</div><div className="mt-4"><label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label><select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step4Completed && !isGbpSkipped}><option value="Not Created">I don't have a profile yet</option><option value="Not Verified">I have a profile, but it's not verified</option><option value="Verified">My profile is verified</option></select>{renderGbpContent()}</div></StepCard>
+        <StepCard number={4} title="Google Business Profile" badge={step4Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step4Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step4Completed} isLocked={!step2Completed} defaultOpen={step3Completed && !step4Completed}>
+            <div className="flex justify-between items-start mb-4">
+                <div><p className="text-brand-text-muted">Critical for local visibility and map rankings.</p></div>
+                {step4Completed && !isGbpSkipped && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}
+            </div>
+            <div className="mt-4">
+                <label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label>
+                <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step4Completed && !isGbpSkipped}>
+                    <option value="Not Created">I don't have a profile yet</option>
+                    <option value="Not Verified">I have a profile, but it's not verified</option>
+                    <option value="Verified">My profile is verified</option>
+                </select>
+                {renderGbpContent()}
+            </div>
+        </StepCard>
 
         {allStepsComplete && <CompletionCard onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} />}
     </div>
