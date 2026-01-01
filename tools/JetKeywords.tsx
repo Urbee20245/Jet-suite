@@ -49,6 +49,7 @@ const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[]
 
 export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, setActiveTool }) => {
   const { category: service, location } = profileData.business;
+  const [descriptiveKeywords, setDescriptiveKeywords] = useState('');
   const [result, setResult] = useState<KeywordAnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,11 +57,18 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const keywordArray = descriptiveKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+    if (keywordArray.length < 5) {
+      setError('Please enter at least 5 descriptive keywords, separated by commas.');
+      return;
+    }
+    
     setError('');
     setLoading(true);
     setResult(null);
     try {
-      const keywords = await findKeywords(service, location);
+      const keywords = await findKeywords(service, location, keywordArray.join(', '));
       setResult(keywords);
     } catch (err) {
       setError('Failed to find keywords. The AI may be having trouble with this request. Please try again.');
@@ -94,6 +102,7 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>Your primary service and location are automatically used from your active profile.</li>
+                <li>Enter at least 5 keywords that describe your business or services, separated by commas.</li>
                 <li>Click 'Find Keywords' to get a categorized list of valuable local search terms.</li>
             </ul>
         </HowToUse>
@@ -114,6 +123,24 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
                 <span className="font-semibold text-brand-text">{location}</span>
             </div>
           </div>
+          
+          <div className="mb-6">
+            <label htmlFor="descriptive-keywords" className="block text-sm font-medium text-brand-text mb-2">
+              Your Descriptive Keywords (Min 5, separated by commas)
+            </label>
+            <textarea
+              id="descriptive-keywords"
+              rows={3}
+              value={descriptiveKeywords}
+              onChange={(e) => setDescriptiveKeywords(e.target.value)}
+              placeholder="e.g., emergency plumber, water heater repair, drain cleaning, affordable plumbing, 24/7 service"
+              className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
+            />
+            <p className="text-xs text-brand-text-muted mt-1">
+              Enter keywords that accurately describe your business and services.
+            </p>
+          </div>
+          
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           <button
             type="submit"

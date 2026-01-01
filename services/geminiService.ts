@@ -561,10 +561,10 @@ export const generateEventIdeas = async (businessType: string, goal: string) => 
     }
 };
 
-export const findKeywords = async (service: string, location: string) => {
+export const findKeywords = async (service: string, location: string, descriptiveKeywords: string) => {
     try {
         const ai = getAiClient();
-        const prompt = `You are a local SEO keyword specialist. For a '${service}' business in '${location}', generate a comprehensive list of keywords. For each keyword, provide an estimated monthly search volume (e.g., '10-100', '1K-10K') and a ranking difficulty ('Low', 'Medium', or 'High'). Use Google Search to understand user intent and current search trends.`;
+        const prompt = `You are a local SEO keyword specialist. For a '${service}' business in '${location}', generate a comprehensive list of keywords. The user provided these descriptive keywords: "${descriptiveKeywords}". Use these descriptive keywords to refine your search and find highly relevant, high-intent keywords. For each keyword, provide an estimated monthly search volume (e.g., '10-100', '1K-10K') and a ranking difficulty ('Low', 'Medium', or 'High'). Use Google Search to understand user intent and current search trends.`;
 
         const keywordSchema = {
             type: Type.ARRAY,
@@ -761,7 +761,7 @@ const brandDnaProfileSchema = {
             required: ["has_logo", "logo_style", "dominant_colors", "is_reusable"],
         },
         brand_positioning: {
-            type: Type.OBJECT,
+            type: Type:OBJECT,
             properties: {
                 value_proposition: { type: Type.STRING },
                 primary_customer_intent: { type: Type.STRING },
