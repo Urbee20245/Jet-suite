@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { 
     AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna, 
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
-    LiveWebsiteAnalysis, BusinessReview
+    LiveWebsiteAnalysis, BusinessReview, KeywordAnalysisResult
 } from '../types';
 import { getCurrentMonthYear, getCurrentYear, getAIDateTimeContextShort } from '../utils/dateTimeUtils';
 
@@ -619,6 +619,113 @@ export const findKeywords = async (service: string, location: string, descriptiv
                   local_modifier_keywords: { ...keywordSchema, description: "Keywords with a local modifier like 'near me' or specific neighborhoods." }
                 }
               }
+            }
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
+
+// NEW: Content ideas schema and generator based on keyword analysis
+const keywordContentIdeasSchema = {
+    type: Type.OBJECT,
+    properties: {
+        ideas: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: {
+                        type: Type.STRING,
+                        description: "SEO-focused title for the blog post or page."
+                    },
+                    type: {
+                        type: Type.STRING,
+                        description: "Either 'blog_post' or 'service_page' (or 'landing_page')."
+                    },
+                    target_keyword: {
+                        type: Type.STRING,
+                        description: "The primary keyword this piece should target."
+                    },
+                    search_intent: {
+                        type: Type.STRING,
+                        description: "Intent such as 'Informational', 'Commercial', 'Transactional', or 'Local'."
+                    },
+                    url_slug: {
+                        type: Type.STRING,
+                        description: "Recommended URL slug, e.g., '/emergency-plumber-denver-co'."
+                    },
+                    content_outline: {
+                        type: Type.STRING,
+                        description: "Short outline in 4–8 bullet points (H2/H3 ideas)."
+                    },
+                    notes: {
+                        type: Type.STRING,
+                        description: "Extra notes on how this helps rankings and local growth."
+                    }
+                },
+                required: ["title", "type", "target_keyword", "search_intent", "url_slug", "content_outline", "notes"]
+            }
+        }
+    },
+    required: ["ideas"]
+};
+
+export const generateKeywordContentIdeas = async (
+    service: string,
+    location: string,
+    keywordAnalysis: KeywordAnalysisResult,
+    descriptiveKeywords: string
+): Promise<{ ideas: {
+    title: string;
+    type: string;
+    target_keyword: string;
+    search_intent: string;
+    url_slug: string;
+    content_outline: string;
+    notes: string;
+}[] }> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `
+You are an SEO content strategist for local businesses.
+
+Business type: ${service}
+Location: ${location}
+Descriptive keywords from user: ${descriptiveKeywords}
+
+You already ran a keyword analysis with these grouped results:
+${JSON.stringify(keywordAnalysis, null, 2)}
+
+Using those keywords, generate a content plan of blog posts and website pages that will help this business:
+- rank higher in Google for high-intent local searches
+- attract qualified visitors who are likely to become customers
+- build topical authority around their services in ${location}
+
+Requirements:
+- Mix of core service pages (or landing pages) and supporting blog posts.
+- Each idea must be tied directly to ONE primary keyword from the analysis.
+- Use local modifiers where appropriate (city, neighborhoods, "near me" phrasing).
+- Titles should be compelling, but still clearly optimized for the target keyword.
+- For each idea, explain briefly WHY it helps rankings and growth in the notes field.
+
+Return ONLY a JSON object that matches the provided schema.
+        `.trim();
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: keywordContentIdeasSchema
             }
         });
 
