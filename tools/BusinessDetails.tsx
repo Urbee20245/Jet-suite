@@ -78,7 +78,88 @@ const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed
 const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
-const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => { const [searchTerm, setSearchTerm] = useState(''); const [results, setResults] = useState<BusinessSearchResult[]>([]); const [selected, setSelected] = useState<BusinessSearchResult | null>(null); const [loading, setLoading] = useState(false); const handleSearch = async (e: React.FormEvent) => { e.preventDefault(); if (!searchTerm) return; setLoading(true); setResults([]); setSelected(null); const res = await searchGoogleBusiness(searchTerm); setResults(res); setLoading(false); }; if (selected) return ( <div className="bg-brand-light p-6 rounded-lg border text-center"><h4 className="font-bold">Is this your business?</h4><div className="bg-white my-4 p-4 rounded-lg border"><p className="font-bold">{selected.name}</p><p className="text-sm text-brand-text-muted">{selected.address}</p></div><div className="flex gap-4 justify-center"><button onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button><button onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button></div></div> ); return ( <div className="bg-brand-light p-6 rounded-lg border space-y-4"> <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4> <form onSubmit={handleSearch} className="space-y-4"> <div><label className="text-xs font-semibold">1. Paste Google Share or Maps URL</label><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="https://share.google/... or https://maps.app.goo.gl/..." className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <div className="text-center text-xs font-semibold">OR</div> <div><label className="text-xs font-semibold">2. Search by Name & Location</label><input type="text" onChange={e => setSearchTerm(e.target.value)} placeholder={`${profileData.business.name}, ${profileData.business.location}`} className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">{loading ? '...' : 'Find & Connect'}</button> </form> {loading && <Loader />} <div className="space-y-2 mt-4">{results.map(r => <button key={r.name+r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"><p className="font-semibold">{r.name}</p><p className="text-xs text-brand-text-muted">{r.address}</p></button>)}</div> </div> ); };
+const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => {
+    const [searchMethod, setSearchMethod] = useState<'name' | 'url' | 'code'>('name');
+    const [inputValue, setInputValue] = useState('');
+    const [results, setResults] = useState<BusinessSearchResult[]>([]);
+    const [selected, setSelected] = useState<BusinessSearchResult | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        let query = inputValue.trim();
+        if (searchMethod === 'name' && !query) {
+            query = `${profileData.business.name}, ${profileData.business.location}`;
+        } else if (searchMethod === 'code' && query) {
+            query = `Google Business Profile with store code ${query}`;
+        }
+
+        if (!query) return;
+        
+        setLoading(true);
+        setResults([]);
+        setSelected(null);
+        const res = await searchGoogleBusiness(query);
+        setResults(res);
+        setLoading(false);
+    };
+
+    if (selected) {
+        return (
+            <div className="bg-brand-light p-6 rounded-lg border text-center">
+                <h4 className="font-bold">Is this your business?</h4>
+                <div className="bg-white my-4 p-4 rounded-lg border">
+                    <p className="font-bold">{selected.name}</p>
+                    <p className="text-sm text-brand-text-muted">{selected.address}</p>
+                </div>
+                <div className="flex gap-4 justify-center">
+                    <button onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button>
+                    <button onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-brand-light p-6 rounded-lg border space-y-4">
+            <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4>
+            
+            <div className="flex border-b border-brand-border">
+                <button onClick={() => { setSearchMethod('name'); setInputValue(''); }} className={`px-4 py-2 text-sm font-semibold ${searchMethod === 'name' ? 'border-b-2 border-accent-blue text-accent-blue' : 'text-brand-text-muted'}`}>By Name</button>
+                <button onClick={() => { setSearchMethod('url'); setInputValue(''); }} className={`px-4 py-2 text-sm font-semibold ${searchMethod === 'url' ? 'border-b-2 border-accent-blue text-accent-blue' : 'text-brand-text-muted'}`}>By URL</button>
+                <button onClick={() => { setSearchMethod('code'); setInputValue(''); }} className={`px-4 py-2 text-sm font-semibold ${searchMethod === 'code' ? 'border-b-2 border-accent-blue text-accent-blue' : 'text-brand-text-muted'}`}>By Store Code</button>
+            </div>
+
+            <form onSubmit={handleSearch} className="space-y-4">
+                <div>
+                    <input 
+                        type="text" 
+                        value={inputValue} 
+                        onChange={e => setInputValue(e.target.value)} 
+                        placeholder={
+                            searchMethod === 'name' ? `${profileData.business.name}, ${profileData.business.location}` :
+                            searchMethod === 'url' ? 'https://maps.app.goo.gl/...' :
+                            'Enter your store code'
+                        }
+                        className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" 
+                    />
+                </div>
+                <button type="submit" disabled={loading} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
+                    {loading ? 'Searching...' : 'Find & Connect'}
+                </button>
+            </form>
+            {loading && <Loader />}
+            <div className="space-y-2 mt-4">
+                {results.map(r => (
+                    <button key={r.name + r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border">
+                        <p className="font-semibold">{r.name}</p>
+                        <p className="text-xs text-brand-text-muted">{r.address}</p>
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+};
 const CompletionCard: React.FC<{ onNext: () => void }> = ({ onNext }) => ( <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl"> <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" /> <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Business Profile Complete!</h2> <p className="text-brand-text-muted my-4 max-w-md mx-auto">Great work! Your business identity is set up. Now let's analyze your local presence and find growth opportunities.</p> <button onClick={onNext} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center gap-2 mx-auto">Continue to JetBiz <ArrowRightIcon className="w-5 h-5" /></button> <button className="text-sm text-brand-text-muted hover:underline mt-4">Stay here and review my details</button> </div> );
 
 const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick }) => { 

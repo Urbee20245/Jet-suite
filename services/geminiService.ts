@@ -49,7 +49,7 @@ const businessSearchResultSchema = {
 export const searchGoogleBusiness = async (query: string): Promise<BusinessSearchResult[]> => {
     try {
         const ai = getAiClient();
-        const basePrompt = `You are a Google Maps search specialist. A user is searching for their business with the query: "${query}". Use Google Search to find matching business listings on Google Maps. Return a list of up to 5 of the most relevant results. For each result, provide the business name, full address, star rating, total review count, and primary category. Your entire output must be a single JSON array matching the provided schema. If no businesses are found, return an empty array.`;
+        const basePrompt = `You are a Google Maps search specialist. A user is searching for their business with the query: "${query}". The query could be a business name and location, a Google Maps URL, or a specific store code (e.g., "Google Business Profile with store code 12345"). Use Google Search to find matching business listings on Google Maps. If a store code is provided, prioritize finding that exact business. Return a list of up to 5 of the most relevant results. For each result, provide the business name, full address, star rating, total review count, and primary category. Your entire output must be a single JSON array matching the provided schema. If no businesses are found, return an empty array.`;
         const prompt = injectDateContext(basePrompt);
 
         const response = await ai.models.generateContent({
