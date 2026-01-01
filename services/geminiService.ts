@@ -1013,11 +1013,3 @@ export const getTrendingImageStyles = async (): Promise<{ name: string; descript
         throw error;
     }
 };
-// TEMP safety export to unblock Vite cache
-export const detectGbpOnWebsite = undefined as any;// TEMP safety export to unblock stale imports (remove later)
-export const detectGbpOnWebsite = async () => {
-  throw new Error(
-    'detectGbpOnWebsite is deprecated. Use searchGoogleBusiness instead.'
-  );
-};
-
