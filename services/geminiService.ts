@@ -1013,3 +1013,5 @@ export const getTrendingImageStyles = async (): Promise<{ name: string; descript
         throw error;
     }
 };
+// TEMP safety export to unblock Vite cache
+export const detectGbpOnWebsite = undefined as any;
