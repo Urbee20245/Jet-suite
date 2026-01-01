@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, BusinessReview } from '../types';
 import { fetchBusinessReviews } from '../services/geminiService';
@@ -43,47 +42,57 @@ const WidgetPreview: React.FC<{
   layout: WidgetLayout;
   businessName: string;
   reviewUrl: string;
-}> = ({ reviews, layout, businessName, reviewUrl }) => {
+  colors: { primary: string; text: string; background: string; card: string; };
+}> = ({ reviews, layout, businessName, reviewUrl, colors }) => {
   
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) 
+    : '5.0';
+
   const WidgetHeader = () => (
     <div className="text-center mb-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">What Our Customers Say</h2>
-      <p className="text-gray-600">Real reviews from real customers</p>
+      <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>What Our Customers Say</h2>
+      <div className="flex items-center justify-center gap-2">
+        <StarRating rating={parseFloat(averageRating)} />
+        <span className="font-semibold" style={{ color: colors.text }}>{averageRating}</span>
+        <span className="text-sm" style={{ color: colors.text, opacity: 0.7 }}>({reviews.length} reviews)</span>
+      </div>
     </div>
   );
 
   const WidgetFooter = () => (
-    <div className="mt-6 pt-6 border-t border-gray-200">
+    <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
       <a
         href={reviewUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
+        className="block w-full text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3 shadow-md hover:shadow-lg"
+        style={{ background: `linear-gradient(to right, ${colors.primary}, color-mix(in srgb, ${colors.primary} 80%, black))` }}
       >
         Leave a Review
       </a>
-      <p className="text-center text-xs text-gray-500">
-        Powered by <span className="font-semibold text-blue-600">JetSuite</span>
+      <p className="text-center text-xs" style={{ color: colors.text, opacity: 0.6 }}>
+        Powered by <span className="font-semibold" style={{ color: colors.primary }}>JetSuite</span>
       </p>
     </div>
   );
 
   const ReviewItem: React.FC<{ review: BusinessReview }> = ({ review }) => (
-    <div className="bg-white p-4 rounded-lg shadow border border-gray-200">
+    <div className="p-4 rounded-lg shadow border" style={{ backgroundColor: colors.card, borderColor: 'rgba(0,0,0,0.08)' }}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <p className="font-semibold text-gray-900">{review.author}</p>
-          <p className="text-xs text-gray-500">{review.date}</p>
+          <p className="font-semibold" style={{ color: colors.text }}>{review.author}</p>
+          <p className="text-xs" style={{ color: colors.text, opacity: 0.6 }}>{review.date}</p>
         </div>
         <StarRating rating={review.rating} size="sm" />
       </div>
-      <p className="text-sm text-gray-700">{review.text}</p>
+      <p className="text-sm leading-relaxed" style={{ color: colors.text, opacity: 0.8 }}>{review.text}</p>
     </div>
   );
 
   if (layout === 'grid') {
     return (
-      <div className="bg-gray-50 p-8 rounded-lg">
+      <div className="p-8 rounded-lg" style={{ backgroundColor: colors.background }}>
         <WidgetHeader />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {reviews.map(review => (
@@ -97,7 +106,7 @@ const WidgetPreview: React.FC<{
 
   if (layout === 'carousel') {
     return (
-      <div className="bg-gray-50 p-8 rounded-lg">
+      <div className="p-8 rounded-lg" style={{ backgroundColor: colors.background }}>
         <WidgetHeader />
         <div className="overflow-x-auto">
           <div className="flex gap-4 pb-4" style={{ scrollSnapType: 'x mandatory' }}>
@@ -115,7 +124,7 @@ const WidgetPreview: React.FC<{
 
   // List layout
   return (
-    <div className="bg-gray-50 p-8 rounded-lg">
+    <div className="p-8 rounded-lg" style={{ backgroundColor: colors.background }}>
       <WidgetHeader />
       <div className="space-y-4 max-w-2xl mx-auto">
         {reviews.map(review => (
@@ -142,6 +151,12 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Connecting to your Google Business Profile...');
   const [socialCopied, setSocialCopied] = useState(false);
+
+  // New state for color customization
+  const [primaryColor, setPrimaryColor] = useState('#3B82F6');
+  const [textColor, setTextColor] = useState('#1F2937');
+  const [backgroundColor, setBackgroundColor] = useState('#F9FAFB');
+  const [cardColor, setCardColor] = useState('#FFFFFF');
 
   const reviewUrl = profileData.googleBusiness.mapsUrl || 
     `https://search.google.com/local/writereview?placeid=${profileData.googleBusiness.placeId}`;
@@ -230,9 +245,10 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       layout,
       reviewUrl,
       colors: {
-        primary: '#3B82F6',
-        text: '#1F2937',
-        background: '#F9FAFB'
+        primary: primaryColor,
+        text: textColor,
+        background: backgroundColor,
+        card: cardColor,
       }
     };
 
@@ -251,39 +267,39 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       .jetsuite-widget { font-family: system-ui, -apple-system, sans-serif; max-width: 1200px; margin: 0 auto; padding: 2rem; background: \${widgetData.colors.background}; border-radius: 12px; }
       .jetsuite-header { text-align: center; margin-bottom: 2rem; }
       .jetsuite-title { font-size: 1.875rem; font-weight: bold; color: \${widgetData.colors.text}; margin-bottom: 0.5rem; }
-      .jetsuite-subtitle { color: #6B7280; }
+      .jetsuite-subtitle { color: \${widgetData.colors.text}; opacity: 0.7; }
       .jetsuite-reviews-${layout} { display: ${layout === 'grid' ? 'grid' : layout === 'list' ? 'flex' : 'flex'}; ${layout === 'grid' ? 'grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));' : layout === 'list' ? 'flex-direction: column; max-width: 42rem; margin: 0 auto;' : 'overflow-x: auto;'} gap: 1rem; }
-      .jetsuite-review { background: white; padding: 1rem; border-radius: 8px; border: 1px solid #E5E7EB; ${layout === 'carousel' ? 'min-width: 320px;' : ''} }
+      .jetsuite-review { background: \${widgetData.colors.card}; padding: 1rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 6px rgba(0,0,0,0.05); ${layout === 'carousel' ? 'min-width: 320px;' : ''} }
       .jetsuite-review-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; }
       .jetsuite-author { font-weight: 600; color: \${widgetData.colors.text}; }
-      .jetsuite-date { font-size: 0.75rem; color: #9CA3AF; }
+      .jetsuite-date { font-size: 0.75rem; color: \${widgetData.colors.text}; opacity: 0.6; }
       .jetsuite-stars { display: flex; gap: 2px; }
       .jetsuite-star { width: 1rem; height: 1rem; }
-      .jetsuite-text { font-size: 0.875rem; color: #4B5563; line-height: 1.5; }
-      .jetsuite-footer { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #E5E7EB; text-align: center; }
-      .jetsuite-cta { display: block; width: 100%; background: \${widgetData.colors.primary}; color: white; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; margin-bottom: 1rem; transition: background 0.2s; }
-      .jetsuite-cta:hover { background: #2563EB; }
-      .jetsuite-powered { font-size: 0.75rem; color: #9CA3AF; }
+      .jetsuite-text { font-size: 0.875rem; color: \${widgetData.colors.text}; opacity: 0.8; line-height: 1.5; }
+      .jetsuite-footer { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; }
+      .jetsuite-cta { display: block; width: 100%; color: white; font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; margin-bottom: 1rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: linear-gradient(to right, \${widgetData.colors.primary}, color-mix(in srgb, \${widgetData.colors.primary} 80%, black)); }
+      .jetsuite-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+      .jetsuite-powered { font-size: 0.75rem; color: \${widgetData.colors.text}; opacity: 0.6; }
       .jetsuite-brand { font-weight: 600; color: \${widgetData.colors.primary}; }
     \`;
     document.head.appendChild(style);
     
     // Build HTML
     let html = '<div class="jetsuite-widget">';
+    const avgRating = widgetData.reviews.length > 0 ? (widgetData.reviews.reduce((acc, r) => acc + r.rating, 0) / widgetData.reviews.length).toFixed(1) : '5.0';
     html += '<div class="jetsuite-header">';
     html += '<h2 class="jetsuite-title">What Our Customers Say</h2>';
-    html += '<p class="jetsuite-subtitle">Real reviews from real customers</p>';
+    html += \`<div style="display: flex; align-items: center; justify-content: center; gap: 8px;"><div class="jetsuite-stars" style="color: #FBBF24;">\${'★'.repeat(Math.round(avgRating)) + '☆'.repeat(5 - Math.round(avgRating))}</div><span style="font-weight: 600; color: \${widgetData.colors.text};">\${avgRating}</span><span class="jetsuite-subtitle">(\${widgetData.reviews.length} reviews)</span></div>\`;
     html += '</div>';
     
     html += \`<div class="jetsuite-reviews-\${widgetData.layout}">\`;
     
     if (widgetData.reviews.length === 0) {
-      // Zero reviews state - encourage review collection
-      html += '<div style="text-align: center; padding: 3rem 2rem; background: white; border-radius: 12px; border: 2px dashed #E5E7EB;">';
+      html += '<div style="text-align: center; padding: 3rem 2rem; background: \${widgetData.colors.card}; border-radius: 12px; border: 2px dashed rgba(0,0,0,0.1);">';
       html += '<div style="font-size: 3rem; margin-bottom: 1rem;">⭐</div>';
-      html += '<h3 style="font-size: 1.5rem; font-weight: bold; color: #1F2937; margin-bottom: 0.5rem;">Be Our First Reviewer!</h3>';
-      html += '<p style="color: #6B7280; margin-bottom: 1.5rem;">We\\'d love to hear about your experience with us.</p>';
-      html += \`<a href="\${widgetData.reviewUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: \${widgetData.colors.primary}; color: white; font-weight: 600; padding: 0.75rem 2rem; border-radius: 8px; text-decoration: none; transition: background 0.2s;">Leave the First Review</a>\`;
+      html += \`<h3 style="font-size: 1.5rem; font-weight: bold; color: \${widgetData.colors.text}; margin-bottom: 0.5rem;">Be Our First Reviewer!</h3>\`;
+      html += \`<p style="color: \${widgetData.colors.text}; opacity: 0.7; margin-bottom: 1.5rem;">We\\'d love to hear about your experience with us.</p>\`;
+      html += \`<a href="\${widgetData.reviewUrl}" target="_blank" rel="noopener noreferrer" class="jetsuite-cta" style="display: inline-block; width: auto;">Leave the First Review</a>\`;
       html += '</div>';
     } else {
       widgetData.reviews.forEach(review => {
@@ -504,54 +520,26 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       <div className="bg-brand-card p-6 rounded-xl shadow-lg">
         <h2 className="text-2xl font-bold text-brand-text mb-6">Widget Configuration</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Layout Selection with Visual Previews */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Layout Selection */}
           <div>
             <label className="block text-sm font-medium text-brand-text mb-3">Layout Style</label>
             <div className="space-y-3">
               {[
-                { 
-                  value: 'grid' as WidgetLayout, 
-                  label: 'Grid Layout', 
-                  description: 'Modern card grid, perfect for landing pages',
-                  icon: '▦'
-                },
-                { 
-                  value: 'carousel' as WidgetLayout, 
-                  label: 'Carousel', 
-                  description: 'Sleek horizontal scroll, great for mobile',
-                  icon: '◫'
-                },
-                { 
-                  value: 'list' as WidgetLayout, 
-                  label: 'List Layout', 
-                  description: 'Clean vertical stack, ideal for sidebars',
-                  icon: '☰'
-                }
+                { value: 'grid' as WidgetLayout, label: 'Grid' },
+                { value: 'carousel' as WidgetLayout, label: 'Carousel' },
+                { value: 'list' as WidgetLayout, label: 'List' }
               ].map(option => (
                 <button
                   key={option.value}
                   onClick={() => setLayout(option.value)}
-                  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                     layout === option.value
-                      ? 'bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 border-accent-purple shadow-md'
-                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50 hover:shadow-sm'
+                      ? 'bg-accent-purple/10 border-accent-purple'
+                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`text-3xl ${layout === option.value ? 'text-accent-purple' : 'text-gray-400'}`}>
-                      {option.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-brand-text">{option.label}</p>
-                        {layout === option.value && (
-                          <CheckCircleIcon className="w-5 h-5 text-accent-purple" />
-                        )}
-                      </div>
-                      <p className="text-xs text-brand-text-muted leading-relaxed">{option.description}</p>
-                    </div>
-                  </div>
+                  <p className="font-bold text-brand-text">{option.label}</p>
                 </button>
               ))}
             </div>
@@ -572,21 +560,34 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full border-2 ${
-                        minStars === stars ? 'bg-accent-purple border-accent-purple' : 'border-gray-300'
-                      }`}>
-                        {minStars === stars && <CheckCircleIcon className="w-4 h-4 text-white" />}
-                      </div>
-                      <span className="font-semibold text-brand-text">{stars}+ Stars Only</span>
-                    </div>
+                    <span className="font-semibold text-brand-text">{stars}+ Stars Only</span>
                     <StarRating rating={stars} size="sm" />
                   </div>
-                  <p className="text-xs text-brand-text-muted ml-6 mt-1">
-                    {reviews.filter(r => r.rating >= stars).length} reviews match
-                  </p>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Color Customization */}
+          <div>
+            <label className="block text-sm font-medium text-brand-text mb-3">Widget Colors</label>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                <label htmlFor="primaryColor" className="text-sm text-brand-text-muted">Primary</label>
+                <input type="color" id="primaryColor" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+              </div>
+              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                <label htmlFor="textColor" className="text-sm text-brand-text-muted">Text</label>
+                <input type="color" id="textColor" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+              </div>
+              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                <label htmlFor="backgroundColor" className="text-sm text-brand-text-muted">Background</label>
+                <input type="color" id="backgroundColor" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+              </div>
+              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                <label htmlFor="cardColor" className="text-sm text-brand-text-muted">Card</label>
+                <input type="color" id="cardColor" value={cardColor} onChange={e => setCardColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+              </div>
             </div>
           </div>
         </div>
@@ -714,35 +715,37 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           </p>
           <div className="border-2 border-dashed border-brand-border rounded-lg p-4">
             {filteredReviews.length === 0 ? (
-              <div className="bg-gray-50 p-8 rounded-lg">
+              <div style={{ backgroundColor: backgroundColor }} className="p-8 rounded-lg">
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">What Our Customers Say</h2>
-                  <p className="text-gray-600">Real reviews from real customers</p>
+                  <h2 className="text-2xl font-bold" style={{ color: textColor }}>What Our Customers Say</h2>
+                  <p style={{ color: textColor, opacity: 0.7 }}>Real reviews from real customers</p>
                 </div>
-                <div className="text-center py-12 bg-white rounded-xl border-2 border-dashed border-gray-300">
+                <div className="text-center py-12 rounded-xl border-2 border-dashed" style={{ backgroundColor: cardColor, borderColor: 'rgba(0,0,0,0.1)' }}>
                   <div className="text-6xl mb-4">⭐</div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Be Our First Reviewer!</h3>
-                  <p className="text-gray-600 mb-6">We'd love to hear about your experience with us.</p>
+                  <h3 className="text-2xl font-bold" style={{ color: textColor }}>Be Our First Reviewer!</h3>
+                  <p className="mb-6" style={{ color: textColor, opacity: 0.7 }}>We'd love to hear about your experience with us.</p>
                   <a
                     href={reviewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
+                    className="inline-block text-white font-semibold py-3 px-8 rounded-lg transition"
+                    style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
                   >
                     Leave the First Review
                   </a>
                 </div>
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
                   <a
                     href={reviewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
+                    className="block w-full text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
+                    style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
                   >
                     Leave a Review
                   </a>
-                  <p className="text-center text-xs text-gray-500">
-                    Powered by <span className="font-semibold text-blue-600">JetSuite</span>
+                  <p className="text-center text-xs" style={{ color: textColor, opacity: 0.6 }}>
+                    Powered by <span className="font-semibold" style={{ color: primaryColor }}>JetSuite</span>
                   </p>
                 </div>
               </div>
@@ -752,6 +755,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
                 layout={layout}
                 businessName={profileData.business.name}
                 reviewUrl={reviewUrl}
+                colors={{ primary: primaryColor, text: textColor, background: backgroundColor, card: cardColor }}
               />
             )}
           </div>

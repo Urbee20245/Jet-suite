@@ -1,46 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { Welcome } from './tools/Welcome';
-import { JetBiz } from './tools/JetBiz';
-import { JetViz } from './tools/JetViz';
-import { JetPost } from './tools/JetPost';
-import { JetReply } from './tools/JetReply';
-import { JetTrust } from './tools/JetTrust';
-import { JetLeads } from './tools/JetLeads';
-import { JetContent } from './tools/JetContent';
-import { JetAds } from './tools/JetAds';
-import { JetCompete } from './tools/JetCompete';
-import { JetEvents } from './tools/JetEvents';
-import { JetKeywords } from './tools/JetKeywords';
-import { JetImage } from './tools/JetImage';
-import { JetCreate } from './tools/JetCreate';
-import { GrowthPlan } from './tools/GrowthPlan';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis, SavedKeyword, KeywordData, BusinessProfile } from './types';
-import { BusinessDetails } from './tools/profile/BusinessDetails';
-import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import { ReportsDownloads } from './tools/profile/ReportsDownloads';
-import { WeeklyProgress } from './tools/WeeklyProgress';
-import { KnowledgeBase } from './tools/KnowledgeBase';
-import { Account } from './tools/Account';
-import { AdminPanel } from './tools/AdminPanel';
-import UserSupportTickets from './tools/UserSupportTickets';
-import SupportChatbot from './components/SupportChatbot';
+import { MarketingWebsite } from './pages/MarketingWebsite';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { SubscriptionGuard } from './components/SubscriptionGuard';
+import { checkSubscriptionAccess } from './services/subscriptionService';
+import { fetchRealDateTime } from './utils/realTime';
+import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
+import { Sidebar } from './components/Sidebar'; // Import Sidebar
+import { Header } from './components/Header'; // Import Header
+import { Welcome } from './tools/Welcome'; // Import Welcome
+import { BusinessDetails } from './tools/profile/BusinessDetails'; // Import BusinessDetails
+import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory'; // Import GrowthScoreHistory
+import { Account } from './tools/Account'; // Import Account
+import { KnowledgeBase } from './tools/KnowledgeBase'; // Import KnowledgeBase
+import { JetBiz } from './tools/JetBiz'; // Import JetBiz
+import { JetViz } from './tools/JetViz'; // Import JetViz
+import { JetCompete } from './tools/JetCompete'; // Import JetCompete
+import { JetKeywords } from './tools/JetKeywords'; // Import JetKeywords
+import { JetPost } from './tools/JetPost'; // Import JetPost
+import { JetContent } from './tools/JetContent'; // Import JetContent
+import { JetImage } from './tools/JetImage'; // Import JetImage
+import { JetCreate } from './tools/JetCreate'; // Import JetCreate
+import { JetReply } from './tools/JetReply'; // Import JetReply
+import { JetTrust } from './tools/JetTrust'; // Import JetTrust
+import { JetLeads } from './tools/JetLeads'; // Import JetLeads
+import { JetEvents } from './tools/JetEvents'; // Import JetEvents
+import { JetAds } from './tools/JetAds'; // Import JetAds
+import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
+import UserSupportTickets from './tools/UserSupportTickets'; // Import UserSupportTickets
+import { AdminPanel } from './tools/AdminPanel'; // Import AdminPanel
+import { Planner } from './tools/Planner'; // Import Planner
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types'; // Import types
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
-import { createClient } from '@supabase/supabase-js';
+import SupportChatbot from './components/SupportChatbot'; // Import SupportChatbot
 
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Fetch real current time on app load (with timeout to prevent hanging)
+if (typeof window !== 'undefined') {
+  const initRealTime = async () => {
+    try {
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      await Promise.race([fetchRealDateTime(), timeout]);
+      console.log('✅ Real date/time initialized');
+    } catch (error) {
+      console.warn('⚠️ Could not fetch real time, using system time');
+    }
+  };
+  initRealTime();
+}
+
+console.log('[App] Component module loaded');
+
+const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 interface InternalAppProps {
     onLogout: () => void;
     userEmail: string;
     userId: string;
 }
-
-const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
@@ -53,6 +73,8 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
 export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
+  
+  const supabase = getSupabaseClient();
 
   // --- Multi-Business Management ---
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
@@ -74,24 +96,94 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const [growthScore, setGrowthScore] = useState(150);
   
+  // Initialize allProfiles with default structure, will be updated in useEffect
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
       const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
       const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
-      
-      try { 
-          const savedAdmin = localStorage.getItem(`jetsuite_profile_${userId}`); 
-          const savedTest = localStorage.getItem(`jetsuite_profile_test-user-uuid`); 
-          return [ 
-            savedAdmin ? JSON.parse(savedAdmin) : adminProfile, 
-            savedTest ? JSON.parse(savedTest) : testProfile 
-          ]; 
-      } catch(e) { return [adminProfile, testProfile]; }
+      return [adminProfile, testProfile];
   });
+
+  // Function to fetch profile from DB and merge with local/default state
+  const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
+    let defaultProfile: ProfileData;
+    // Use generic defaults for current user or test defaults
+    defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
+
+    try {
+        // 1. Fetch profile from the new API endpoint
+        const response = await fetch(`/api/user/get-profile?userId=${uid}`);
+        if (!response.ok) throw new Error('Failed to fetch profile from API');
+        
+        const { profile: dbProfile } = await response.json();
+        
+        let mergedProfile = defaultProfile;
+        
+        if (dbProfile) {
+            // Merge DB data into the user part of the profile
+            mergedProfile = {
+                ...defaultProfile,
+                user: {
+                    ...defaultProfile.user,
+                    id: dbProfile.id,
+                    firstName: dbProfile.first_name || defaultProfile.user.firstName,
+                    lastName: dbProfile.last_name || defaultProfile.user.lastName,
+                    email: dbProfile.email || defaultProfile.user.email,
+                    role: dbProfile.role || defaultProfile.user.role,
+                    phone: dbProfile.phone || defaultProfile.user.phone,
+                }
+            };
+        }
+        
+        // 2. Attempt to load other data (business, dna, etc.) from localStorage
+        try {
+            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
+            if (savedLocal) {
+                const localProfile = JSON.parse(savedLocal);
+                // Merge DB user data with local business/dna data
+                mergedProfile = {
+                    ...localProfile,
+                    user: mergedProfile.user, // Prioritize fresh DB user data
+                };
+            }
+        } catch (e) {
+            console.warn(`Failed to parse local storage for user ${uid}`);
+        }
+        
+        return mergedProfile;
+
+    } catch (error) {
+        console.error(`Error fetching profile for ${uid}:`, error);
+        // Fallback to local storage or default if DB fetch fails
+        try {
+            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
+            return savedLocal ? JSON.parse(savedLocal) : defaultProfile;
+        } catch (e) {
+            return defaultProfile;
+        }
+    }
+  };
+
+  // 0. Initial Profile Load (DB + Local Storage)
+  useEffect(() => {
+    const loadProfiles = async () => {
+        // Load current user profile
+        const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
+        
+        // Load test user profile (for admin impersonation)
+        const testUserEmail = 'test.user@example.com';
+        const testUserId = 'test-user-uuid';
+        const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
+        
+        setAllProfiles([currentUserProfile, testUserProfile]);
+    };
+    
+    loadProfiles();
+  }, [userId, userEmail]); // Only run once on mount/user change
 
   // 1. Fetch all accessible businesses
   useEffect(() => {
     const fetchBusinesses = async () => {
-      if (!userId) return;
+      if (!userId || !supabase) return;
 
       // Fetch owned businesses + shared seats
       const { data: dbProfiles } = await supabase
@@ -126,12 +218,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
 
     fetchBusinesses();
-  }, [userId]);
+  }, [userId, supabase, activeBusinessId]);
 
   // 🔄 Sync Active Business Details into Profile State
   useEffect(() => {
     const syncActiveBusiness = async () => {
-      if (!activeBusinessId || !userId) return;
+      if (!activeBusinessId || !userId || !supabase) return;
 
       const { data: biz } = await supabase
         .from('business_profiles')
@@ -164,7 +256,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
 
     syncActiveBusiness();
-  }, [activeBusinessId, userId]);
+  }, [activeBusinessId, userId, supabase]);
 
   const handleSwitchBusiness = (id: string) => {
     setActiveBusinessId(id);
@@ -288,6 +380,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
     switch (activeTool.id) {
       case 'businessdetails': return <BusinessDetails profileData={profileData} onUpdate={handleUpdateProfileData} setActiveTool={setActiveTool} />;
+      case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
       case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
@@ -324,6 +417,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             businesses={businesses}
             activeBusinessId={activeBusinessId}
             onSwitchBusiness={handleSwitchBusiness}
+            setActiveTool={setActiveTool}
           />
         )}
         <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>

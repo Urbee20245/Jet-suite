@@ -78,6 +78,7 @@ export interface BusinessDna {
   colors: string[]; // hex codes
   fonts: string;
   style: string;
+  faviconUrl?: string; // NEW: Favicon URL
 }
 
 // Profile Data Structures

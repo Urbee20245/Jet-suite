@@ -1,7 +1,12 @@
 {
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
-    { 
-      "source": "/:path((?!api).*)",
+    {
+      "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
   ]

@@ -18,13 +18,20 @@ import { getAIDateTimeContext } from '../utils/dateTimeUtils';
 import jetbotKnowledgeBase from '../jetbot-knowledge/JETBOT_KNOWLEDGE_BASE.md?raw';
 
 // Use the environment variable as configured in vite.config.ts
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const getApiKey = () => process.env.GEMINI_API_KEY;
 
-if (!GEMINI_API_KEY) {
-  console.warn("GEMINI_API_KEY environment variable not set. Chatbot will not function.");
-}
-
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY || '' });
+/**
+ * Helper function to get the AI client instance.
+ * Throws an error if the API key is missing, ensuring all AI functions are guarded.
+ */
+const getAiClient = (): GoogleGenAI => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("GEMINI_API_KEY is missing. Chatbot will not function.");
+    throw new Error("AI_KEY_MISSING");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 // =====================================================
 // CHATBOT SERVICE
@@ -61,6 +68,22 @@ export const chatbotService = {
       
       return chatbotResponse;
     } catch (error) {
+      if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+        return {
+          message: "I'm sorry, my AI brain is currently offline due to a missing API key. Please contact human support directly.",
+          confidence: 0.1,
+          should_escalate: true,
+          escalation_reason: 'AI service unavailable',
+          suggested_actions: [
+            {
+              type: 'create_ticket',
+              label: 'Create Support Ticket',
+              data: { category: 'technical' }
+            }
+          ]
+        };
+      }
+      
       console.error('Error in chatbot.chat:', error);
       
       // Return fallback response
@@ -164,9 +187,7 @@ Your response MUST be a valid JSON object matching this schema:
     history: ChatMessage[],
     systemPrompt: string
   ): Promise<string> {
-    if (!GEMINI_API_KEY) {
-      throw new Error('Gemini API key not configured');
-    }
+    const ai = getAiClient();
 
     console.log('DATE CONTEXT:', getAIDateTimeContext());
 

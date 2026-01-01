@@ -31,6 +31,16 @@ export async function checkSubscriptionAccess(userId: string): Promise<{
   redirectTo?: string;
 }> {
   try {
+    // --- PREVIEW ADMIN BYPASS CHECK ---
+    if (import.meta.env.VITE_PREVIEW_ADMIN_BYPASS === 'true') {
+      console.log('[subscriptionService] 🔑 PREVIEW ADMIN BYPASS ACTIVE. Access granted.');
+      return {
+        hasAccess: true,
+        status: 'active',
+      };
+    }
+    // --- END PREVIEW ADMIN BYPASS CHECK ---
+
     const billingAccount = await getBillingAccount(userId);
     
     if (!billingAccount) {

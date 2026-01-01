@@ -3,14 +3,12 @@
 // Handles all support-related API calls to Supabase
 // =====================================================
 
-import { createClient } from '@supabase/supabase-js';
 import type {
   SupportTicket,
   SupportMessage,
   CreateTicketRequest,
   UpdateTicketRequest,
   CreateMessageRequest,
-  ChatbotConversation,
   KnowledgeBaseArticle,
   SearchKnowledgeBaseRequest,
   CannedResponse,
@@ -18,52 +16,7 @@ import type {
   ApiResponse,
   PaginatedResponse,
 } from '../Types/supportTypes';
-
-// Initialize Supabase client
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
-
-let supabase: any;
-
-try {
-  if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  } else {
-    console.warn('Missing Supabase environment variables. Support service will be disabled.');
-    // Mock client to prevent top-level crash
-    supabase = {
-      from: () => ({
-        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
-        rpc: async () => ({ error: null })
-      }),
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
-      },
-      channel: () => ({
-        on: () => ({
-          subscribe: () => ({ unsubscribe: () => {} })
-        })
-      })
-    };
-  }
-} catch (error) {
-  console.error('Failed to initialize Supabase client in supportService:', error);
-  // Fallback mock
-   supabase = {
-      from: () => ({
-        select: () => ({ eq: () => ({ single: async () => ({ data: null, error: null }), order: () => ({ limit: () => ({}) }) }), insert: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }), update: () => ({ eq: () => ({ select: () => ({ single: async () => ({ data: null, error: null }) }) }) }) }),
-        rpc: async () => ({ error: null })
-      }),
-      auth: {
-        getUser: async () => ({ data: { user: null }, error: 'Supabase not configured' })
-      },
-      channel: () => ({
-        on: () => ({
-          subscribe: () => ({ unsubscribe: () => {} })
-        })
-      })
-    };
-}
+import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
 
 // =====================================================
 // TICKET MANAGEMENT
@@ -72,6 +25,11 @@ try {
 export const supportService = {
   // Create a new support ticket
   async createTicket(request: CreateTicketRequest): Promise<ApiResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
@@ -125,6 +83,11 @@ export const supportService = {
 
   // Get all tickets for current user
   async getUserTickets(filters?: TicketFilters): Promise<PaginatedResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, data: [], total: 0, page: 1, limit: 50, has_more: false };
+    }
+    
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
@@ -198,6 +161,11 @@ export const supportService = {
 
   // Get all tickets for admin
   async getAllTickets(filters?: TicketFilters): Promise<PaginatedResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, data: [], total: 0, page: 1, limit: 50, has_more: false };
+    }
+    
     try {
       let query = supabase
         .from('support_tickets')
@@ -260,6 +228,11 @@ export const supportService = {
 
   // Get a specific ticket by ID
   async getTicketById(ticketId: string): Promise<ApiResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const { data, error } = await supabase
         .from('support_tickets')
@@ -290,6 +263,11 @@ export const supportService = {
 
   // Update a ticket
   async updateTicket(ticketId: string, updates: UpdateTicketRequest): Promise<ApiResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const updateData: any = { ...updates };
       
@@ -338,6 +316,11 @@ export const supportService = {
 
   // Get messages for a ticket
   async getTicketMessages(ticketId: string): Promise<ApiResponse<SupportMessage[]>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const { data, error } = await supabase
         .from('support_messages')
@@ -368,6 +351,11 @@ export const supportService = {
 
   // Send a message
   async sendMessage(request: CreateMessageRequest): Promise<ApiResponse<SupportMessage>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const { data: userData } = await supabase.auth.getUser();
       
@@ -415,6 +403,11 @@ export const supportService = {
 
   // Mark messages as read
   async markMessagesAsRead(ticketId: string, isAgent: boolean = false): Promise<ApiResponse<void>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const updateField = isAgent ? 'read_by_agent' : 'read_by_user';
       
@@ -454,6 +447,11 @@ export const supportService = {
 
   // Search knowledge base
   async searchKnowledgeBase(request: SearchKnowledgeBaseRequest): Promise<ApiResponse<KnowledgeBaseArticle[]>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable', data: [] };
+    }
+    
     try {
       let query = supabase
         .from('support_knowledge_base')
@@ -481,7 +479,8 @@ export const supportService = {
         console.error('Error searching knowledge base:', error);
         return {
           success: false,
-          error: error.message
+          error: error.message,
+          data: []
         };
       }
 
@@ -493,13 +492,19 @@ export const supportService = {
       console.error('Error in searchKnowledgeBase:', error);
       return {
         success: false,
-        error: 'Failed to search knowledge base'
+        error: 'Failed to search knowledge base',
+        data: []
       };
     }
   },
 
   // Get all public knowledge base articles
   async getPublicArticles(): Promise<ApiResponse<KnowledgeBaseArticle[]>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable', data: [] };
+    }
+    
     try {
       const { data, error } = await supabase
         .from('support_knowledge_base')
@@ -511,7 +516,8 @@ export const supportService = {
         console.error('Error fetching articles:', error);
         return {
           success: false,
-          error: error.message
+          error: error.message,
+          data: []
         };
       }
 
@@ -523,13 +529,19 @@ export const supportService = {
       console.error('Error in getPublicArticles:', error);
       return {
         success: false,
-        error: 'Failed to fetch articles'
+        error: 'Failed to fetch articles',
+        data: []
       };
     }
   },
 
   // Mark article as helpful
   async markArticleHelpful(articleId: string, isHelpful: boolean): Promise<ApiResponse<void>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable' };
+    }
+    
     try {
       const field = isHelpful ? 'helpful_count' : 'not_helpful_count';
       
@@ -573,6 +585,11 @@ export const supportService = {
 
   // Get all canned responses
   async getCannedResponses(): Promise<ApiResponse<CannedResponse[]>> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { success: false, error: 'Database service unavailable', data: [] };
+    }
+    
     try {
       const { data, error } = await supabase
         .from('support_canned_responses')
@@ -584,7 +601,8 @@ export const supportService = {
         console.error('Error fetching canned responses:', error);
         return {
           success: false,
-          error: error.message
+          error: error.message,
+          data: []
         };
       }
 
@@ -596,7 +614,8 @@ export const supportService = {
       console.error('Error in getCannedResponses:', error);
       return {
         success: false,
-        error: 'Failed to fetch canned responses'
+        error: 'Failed to fetch canned responses',
+        data: []
       };
     }
   },
@@ -607,6 +626,11 @@ export const supportService = {
 
   // Subscribe to ticket updates
   subscribeToTicket(ticketId: string, callback: (message: SupportMessage) => void) {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { unsubscribe: () => {} };
+    }
+    
     return supabase
       .channel(`ticket:${ticketId}`)
       .on(
@@ -626,6 +650,11 @@ export const supportService = {
 
   // Subscribe to all user tickets
   subscribeToUserTickets(userId: string, callback: (ticket: SupportTicket) => void) {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+        return { unsubscribe: () => {} };
+    }
+    
     return supabase
       .channel(`user-tickets:${userId}`)
       .on(

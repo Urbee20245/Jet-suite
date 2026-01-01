@@ -2,13 +2,23 @@ import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Check for required environment variables
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!STRIPE_SECRET_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !STRIPE_WEBHOOK_SECRET) {
+  throw new Error('Missing required environment variables for Stripe webhook setup.');
+}
+
+const stripe = new Stripe(STRIPE_SECRET_KEY, {
   apiVersion: '2025-02-24.acacia',
 });
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY
 );
 
 export const config = {
@@ -39,7 +49,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     event = stripe.webhooks.constructEvent(
       buf,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      STRIPE_WEBHOOK_SECRET
     );
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);

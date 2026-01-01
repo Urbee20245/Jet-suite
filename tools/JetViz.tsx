@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 
 interface JetVizProps {
@@ -199,6 +199,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [result, setResult] = useState<LiveWebsiteAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPromo, setShowPromo] = useState(true);
 
   useEffect(() => {
     if (profileData.jetvizAnalysis) {
@@ -238,6 +239,24 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
 
   return (
     <div className="space-y-6">
+        {showPromo && (
+            <div className="bg-gradient-to-r from-accent-purple/10 via-accent-pink/10 to-accent-cyan/10 border border-accent-purple/30 rounded-xl p-4 relative">
+                <button onClick={() => setShowPromo(false)} className="absolute top-2 right-2 text-brand-text-muted hover:text-brand-text"><XMarkIcon className="w-5 h-5" /></button>
+                <div className="flex items-center gap-4">
+                    <div className="hidden sm:block bg-white p-3 rounded-lg shadow-md"><img src="/Jetsuitewing.png" alt="Custom Websites Plus" className="w-10 h-10"/></div>
+                    <div>
+                        <h3 className="font-bold text-brand-text">Need a Website That Converts?</h3>
+                        <p className="text-sm text-brand-text-muted mt-1">
+                            We build innovative, modern websites and redesign existing ones to turn visitors into customers.
+                        </p>
+                        <a href="https://customwebsitesplus.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-accent-purple hover:underline mt-2 inline-block">
+                            Learn More at customwebsitesplus.com &rarr;
+                        </a>
+                    </div>
+                </div>
+            </div>
+        )}
+
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
             <p className="text-brand-text-muted">{tool.description}</p>
             <p className="text-sm text-brand-text-muted mt-2">

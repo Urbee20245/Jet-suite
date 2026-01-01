@@ -15,6 +15,40 @@ interface JetBizProps {
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
 }
 
+const gbpFacts = [
+  "Did you know? Businesses that add photos to their Google Business Profiles receive 42% more requests for directions.",
+  "Fact: Companies that respond to customer reviews are perceived as 1.7x more trustworthy.",
+  "Pro Tip: Regularly posting updates on your Google Business Profile can significantly boost your local search ranking.",
+  "Did you know? Completing your Google Business Profile can lead to a 70% increase in location visits.",
+  "Fact: Businesses with complete and accurate information are 2.7x more likely to be considered reputable by consumers.",
+  "Optimizing for 'near me' searches is crucial. 76% of people who search for something nearby on their smartphone visit a related business within a day."
+];
+
+const AnalysisLoading: React.FC = () => {
+    const [currentFactIndex, setCurrentFactIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentFactIndex(prev => (prev + 1) % gbpFacts.length);
+        }, 3500); // Change fact every 3.5 seconds
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg mt-6 text-center">
+            <Loader />
+            <h3 className="text-xl font-bold text-brand-text mt-4">Analyzing Your Profile...</h3>
+            <p className="text-brand-text-muted mt-2">This may take a moment as we compare you to local competitors.</p>
+            
+            <div className="mt-6 bg-brand-light p-4 rounded-lg border border-brand-border min-h-[90px] flex items-center justify-center transition-opacity duration-500">
+                <p className="text-brand-text-muted text-sm italic">
+                    {gbpFacts[currentFactIndex]}
+                </p>
+            </div>
+        </div>
+    );
+};
+
 const BusinessResultCard: React.FC<{ business: BusinessSearchResult; onSelect: (business: BusinessSearchResult) => void; }> = ({ business, onSelect }) => (
     <button onClick={() => onSelect(business)} className="w-full text-left p-4 bg-white hover:bg-brand-light rounded-lg border border-brand-border shadow-sm transition-all duration-200 flex flex-col justify-between">
         <div>
@@ -308,6 +342,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
 
   const renderContent = () => {
+    if (loading && step === 'result') {
+        return <AnalysisLoading />;
+    }
     if (step === 'result' && auditReport) {
         return (
           <>
@@ -318,7 +355,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
               </div>
               <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
             </div>
-            {loading && <Loader />}
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay report={auditReport} growthPlanTasks={growthPlanTasks} onRerun={handleRerun} isRunning={loading} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
           </>
