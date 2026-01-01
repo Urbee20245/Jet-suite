@@ -314,9 +314,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setDetectedGbp(null); 
     setIsGbpConfirmed(false); 
     try { 
-        const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
+        const [websiteDnaResult, brandDnaProfileResult, gbpResults] = await Promise.all([
             extractWebsiteDna(business.websiteUrl), 
-            extractBrandDnaProfile(business)
+            extractBrandDnaProfile(business),
+            searchGoogleBusiness(`${business.name}, ${business.location}`)
         ]); 
         const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; 
         const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; 
@@ -324,10 +325,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         setEditableBrandProfile(brandDnaProfileResult); 
         setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); 
         
-        // After DNA extraction, try to find the GBP
-        const gbpResult = await searchGoogleBusiness(`${business.name}, ${business.location}`);
-        if (gbpResult && gbpResult.length > 0) {
-            setDetectedGbp(gbpResult[0]);
+        if (gbpResults && gbpResults.length > 0) {
+            setDetectedGbp(gbpResults[0]);
         }
 
         setExtractionStage('reviewing'); 
