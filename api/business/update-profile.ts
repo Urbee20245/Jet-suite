@@ -1,16 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Check for required environment variables
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('CRITICAL: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
-}
-
-// Server-side client with service role (bypasses RLS)
-const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '');
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export default async function handler(
   req: VercelRequest,
@@ -20,11 +9,27 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
   // Defensive check for missing keys at runtime
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('CRITICAL: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
     return res.status(500).json({
       error: 'Server configuration error',
       message: 'Supabase environment variables are missing on the server.',
+    });
+  }
+
+  // Initialize Supabase client inside the handler
+  let supabase: SupabaseClient;
+  try {
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+  } catch (e) {
+    console.error('Supabase client initialization failed:', e);
+    return res.status(500).json({
+      error: 'Server initialization error',
+      message: 'Failed to create Supabase client.',
     });
   }
 
