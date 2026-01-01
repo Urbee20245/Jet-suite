@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, ReadinessState, BusinessReview } from '../types';
 import { generateReviewReply, fetchBusinessReviews } from '../services/geminiService';
@@ -68,6 +67,8 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
   const [showHowTo, setShowHowTo] = useState(true);
   const [showBanner, setShowBanner] = useState(true);
   const [showManualInput, setShowManualInput] = useState(false);
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [autoReplyMinStars, setAutoReplyMinStars] = useState<number>(4);
 
   // Fetch reviews on component mount if GBP is connected
   useEffect(() => {
@@ -112,6 +113,31 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
     setIsPositive(review.isPositive);
     setReply('');
     setCopied(false);
+
+    if (autoReplyEnabled && review.rating >= autoReplyMinStars) {
+      handleGenerateAutoReply(review);
+    }
+  };
+
+  const handleGenerateAutoReply = async (review: BusinessReview) => {
+    setError('');
+    setLoading(true);
+    setReply('');
+    setCopied(false);
+
+    try {
+      const result = await generateReviewReply(
+        review.text,
+        review.isPositive,
+        profileData.business.dna.style
+      );
+      setReply(result);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to auto-generate reply. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGenerateReply = async (e: React.FormEvent) => {
@@ -217,6 +243,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
                 <li>Your recent Google Business Profile reviews are automatically fetched</li>
                 <li>Select a review from the list to reply to</li>
                 <li>Or paste a review manually using the form below</li>
+                <li>Optionally turn on auto-reply so 4–5 star reviews get a drafted reply as soon as you click them</li>
                 <li>Click 'Draft Reply' to get a professional, on-brand response</li>
                 <li>Copy and post the reply to your Google Business Profile</li>
             </ul>
@@ -260,9 +287,53 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         </div>
       </div>
 
+      {/* Auto-reply configuration */}
+      <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-brand-text">Auto-Reply Settings</h3>
+            <p className="text-xs text-brand-text-muted">
+              Automatically draft replies when you click reviews at or above a chosen star rating.
+              Lower-rated reviews will not auto-reply, so you can read them first.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setAutoReplyEnabled(prev => !prev)}
+              className={`px-4 py-2 rounded-full text-xs font-semibold border transition ${
+                autoReplyEnabled
+                  ? 'bg-accent-purple text-white border-accent-purple'
+                  : 'bg-brand-light text-brand-text border-brand-border'
+              }`}
+            >
+              Auto-reply: {autoReplyEnabled ? 'On' : 'Off'}
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-brand-text-muted">Min stars:</span>
+              {[3, 4, 5].map(stars => (
+                <button
+                  key={stars}
+                  type="button"
+                  onClick={() => setAutoReplyMinStars(stars)}
+                  className={`w-8 h-8 rounded-full text-xs font-semibold flex items-center justify-center border transition ${
+                    autoReplyMinStars === stars
+                      ? 'bg-accent-purple text-white border-accent-purple'
+                      : 'bg-brand-light text-brand-text border-brand-border'
+                  } ${!autoReplyEnabled ? 'opacity-50' : ''}`}
+                  disabled={!autoReplyEnabled}
+                >
+                  {stars}★
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Reviews List */}
       {fetchingReviews ? (
-        <div className="bg-brand-card p-8 rounded-xl shadow-lg text-center">
+        <div className="mb-6 bg-brand-card p-8 rounded-xl shadow-lg text-center">
           <Loader />
           <p className="text-brand-text-muted mt-4">Fetching your recent reviews...</p>
         </div>
