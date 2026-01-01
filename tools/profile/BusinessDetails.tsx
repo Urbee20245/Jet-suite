@@ -113,7 +113,7 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
                 </div>
             </button>
             
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-none opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="p-6 sm:p-8 pt-0">
                     <div className={isLocked ? 'pointer-events-none' : ''}>
                         {children}
