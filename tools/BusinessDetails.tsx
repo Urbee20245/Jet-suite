@@ -307,7 +307,36 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
   
-  const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([extractWebsiteDna(business.websiteUrl), extractBrandDnaProfile(business)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
+  const handleAnalyzeDna = async () => { 
+    if (!step1Completed) return; 
+    setAnalysisError(''); 
+    setExtractionStage('extracting'); 
+    setDetectedGbp(null); 
+    setIsGbpConfirmed(false); 
+    try { 
+        const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
+            extractWebsiteDna(business.websiteUrl), 
+            extractBrandDnaProfile(business)
+        ]); 
+        const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; 
+        const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; 
+        setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); 
+        setEditableBrandProfile(brandDnaProfileResult); 
+        setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); 
+        
+        // After DNA extraction, try to find the GBP
+        const gbpResult = await searchGoogleBusiness(`${business.name}, ${business.location}`);
+        if (gbpResult && gbpResult.length > 0) {
+            setDetectedGbp(gbpResult[0]);
+        }
+
+        setExtractionStage('reviewing'); 
+    } catch (e) { 
+        console.error("Analysis failed:", e); 
+        setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); 
+        setExtractionStage('idle'); 
+    } 
+  };
   const handleInitialSaveDna = () => { if (!editableDna || !editableBrandProfile) return; setExtractionStage('saving'); let newGbpData = profileData.googleBusiness; if (detectedGbp && isGbpConfirmed) { newGbpData = { ...profileData.googleBusiness, profileName: detectedGbp.name, address: detectedGbp.address, rating: detectedGbp.rating, reviewCount: detectedGbp.reviewCount, status: 'Verified' as GbpStatus, placeId: `detected_${Date.now()}` }; } setTimeout(() => { const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile, googleBusiness: newGbpData }); setExtractionStage('idle'); setDetectedGbp(null); setIsGbpConfirmed(false); }, 1000); };
   const handleUpdateDna = () => { if (!editableDna || !editableBrandProfile) return; const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile }); setIsDnaEditing(false); };
 
