@@ -108,10 +108,10 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Divider */}
-        <span className="mx-3 text-brand-text-muted">/</span>
+        <span className="mx-3 text-brand-text-muted hidden sm:inline">/</span>
 
         {/* Page Title */}
-        <h2 className="text-xl font-semibold text-brand-text">
+        <h2 className="text-xl font-semibold text-brand-text hidden sm:block">
           {title}
         </h2>
       </div>
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="ml-2 text-sm font-bold text-brand-text">
             {growthScore}
           </span>
-          <span className="ml-1 text-xs text-brand-text-muted">
+          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
             Growth Score
           </span>
         </div>

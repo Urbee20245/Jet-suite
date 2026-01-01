@@ -114,7 +114,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
               <h2 className="text-2xl font-bold text-white mb-6">Your Information</h2>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-300 mb-2">
                       First Name <span className="text-red-400">*</span>

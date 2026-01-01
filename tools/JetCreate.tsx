@@ -481,9 +481,9 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
                 {/* Left Panel: Campaign Ideas */}
-                <aside className="w-80 flex flex-col gap-4">
+                <aside className="w-full lg:w-80 lg:flex-shrink-0 flex flex-col gap-4">
                     <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm">
                         <h2 className="font-bold text-lg text-brand-text mb-1">Campaign Ideas</h2>
                         <p className="text-xs text-brand-text-muted mb-4">Generated for your business</p>
@@ -581,18 +581,18 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                     ) : assets ? (
                         <>
                             {/* Asset Header */}
-                            <header className="p-6 border-b border-brand-border flex justify-between items-center bg-gradient-to-r from-brand-light/50 to-transparent">
+                            <header className="p-6 border-b border-brand-border flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-gradient-to-r from-brand-light/50 to-transparent">
                                 <div>
                                     <h1 className="text-2xl font-bold text-brand-text">{selectedCampaign.name}</h1>
                                     <p className="text-sm text-brand-text-muted mt-1">{selectedCampaign.description}</p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
                                     <input 
                                         type="text" 
                                         value={refinePrompt} 
                                         onChange={e => setRefinePrompt(e.target.value)} 
-                                        placeholder="Refine: e.g., more formal, add urgency..." 
-                                        className="bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm w-64 focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                                        placeholder="Refine: e.g., more formal..." 
+                                        className="flex-1 sm:w-64 bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-purple focus:border-transparent"
                                     />
                                     <button 
                                         onClick={handleRefine} 
@@ -614,7 +614,7 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
 
                             {/* Assets Grid */}
                             <div className="flex-1 overflow-y-auto p-6">
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Social Posts */}
                                     <div className="space-y-4">
                                         <h2 className="font-bold text-lg text-brand-text flex items-center gap-2">
