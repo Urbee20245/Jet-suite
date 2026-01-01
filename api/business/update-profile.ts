@@ -6,7 +6,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Check for required environment variables
 if (!supabaseUrl || !supabaseServiceKey) {
-  // This should ideally be caught during deployment, but we handle it defensively here.
   console.error('CRITICAL: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
 }
 
@@ -58,8 +57,8 @@ export default async function handler(
       updated_at: new Date().toISOString(),
     };
 
-    // Upsert business profile (insert or update based on user_id)
-    const { data, error } = await supabase
+    // --- CRITICAL DATABASE OPERATION ---
+    const { data, error: dbError } = await supabase
       .from('business_profiles')
       .upsert(businessData, {
         onConflict: 'user_id',
@@ -68,14 +67,16 @@ export default async function handler(
       .select()
       .single();
 
-    if (error) {
-      console.error('Supabase upsert error:', error);
-      throw error;
+    if (dbError) {
+      console.error('Supabase upsert error:', dbError);
+      // Throwing the error here ensures it is caught by the outer catch block
+      throw new Error(`Database Error: ${dbError.message} (Code: ${dbError.code})`);
     }
 
     return res.status(200).json({ businessProfile: data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
+    // Return a structured error response to the client
     return res.status(500).json({
       error: 'Failed to update business profile',
       message: error.message,
