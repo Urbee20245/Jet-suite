@@ -77,6 +77,25 @@ export const searchGoogleBusiness = async (query: string): Promise<BusinessSearc
     }
 }
 
+// NEW: Detect the most likely Google Business Profile for a business using its name and website.
+export const detectGbpOnWebsite = async (
+    websiteUrl: string,
+    businessName: string
+): Promise<BusinessSearchResult | null> => {
+    try {
+        // Use the existing search helper to find the best-matching GBP
+        const query = `${businessName} ${websiteUrl}`;
+        const results = await searchGoogleBusiness(query);
+        return results[0] || null;
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            // If AI is disabled, just behave as if nothing was detected
+            return null;
+        }
+        throw error;
+    }
+}
+
 
 const auditReportSchema = {
     type: Type.OBJECT,
