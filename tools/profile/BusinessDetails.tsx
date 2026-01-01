@@ -145,15 +145,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [isGbpConfirmed, setIsGbpConfirmed] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
-  // Get userId from localStorage
-  const [userId, setUserId] = useState<string>('');
-  
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('jetsuite_userId');
-    if (storedUserId) {
-      setUserId(storedUserId);
-    }
-  }, []);
+  // Use Supabase user id from profileData, not localStorage
+  const userId = profileData.user.id;
   
   useEffect(() => { setBusiness(profileData.business); setGoogleBusiness(profileData.googleBusiness); }, [profileData]);
   useEffect(() => { setIsDirty(JSON.stringify(profileData.business) !== JSON.stringify(business) || JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness)); }, [business, googleBusiness, profileData]);

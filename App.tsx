@@ -123,7 +123,6 @@ const App: React.FC = () => {
           setIsLoggedIn(false);
           setCurrentUserEmail(null);
           setCurrentUserId(null);
-          localStorage.removeItem('jetsuite_userId'); // Clear on no session
           setSessionChecked(true);
           return;
         }
@@ -132,7 +131,6 @@ const App: React.FC = () => {
         setIsLoggedIn(true);
         setCurrentUserEmail(session.user.email || null);
         setCurrentUserId(session.user.id);
-        localStorage.setItem('jetsuite_userId', session.user.id); // Save on valid session
         
         // Block sessionChecked until subscription and onboarding are also verified
         await verifySubscription(session.user.id);
@@ -158,13 +156,11 @@ const App: React.FC = () => {
         setIsLoggedIn(true);
         setCurrentUserEmail(session.user.email || null);
         setCurrentUserId(session.user.id);
-        localStorage.setItem('jetsuite_userId', session.user.id); // Save on sign in
         verifySubscription(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
         setCurrentUserEmail(null);
         setCurrentUserId(null);
-        localStorage.removeItem('jetsuite_userId'); // Clear on sign out
         setIsAccessTierResolved(false);
         setSubscriptionRedirect(null);
         setIsOnboardingResolved(false);
@@ -237,7 +233,6 @@ const App: React.FC = () => {
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
       setCurrentUserId(null);
-      localStorage.removeItem('jetsuite_userId');
       setIsAccessTierResolved(false);
       setSubscriptionRedirect(null);
       setIsOnboardingResolved(false);

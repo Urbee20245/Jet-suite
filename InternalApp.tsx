@@ -78,20 +78,14 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   // --- Multi-Business Management ---
   const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
-  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(
-    localStorage.getItem('jetsuite_active_biz_id')
-  );
+  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(null);
 
   // --- Identity & State Management ---
   const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
   const activeUserId = impersonatedUserId || userId;
 
-  const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>(() => {
-      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${activeUserId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
-  });
-  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>(() => {
-      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${activeUserId}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
-  });
+  const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>([]);
+  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
   const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
   const [growthScore, setGrowthScore] = useState(150);
@@ -103,73 +97,64 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       return [adminProfile, testProfile];
   });
 
-  // Function to fetch profile from DB and merge with local/default state
+  // Helper to map DB task -> GrowthPlanTask
+  const mapDbTaskToGrowthTask = (row: any): GrowthPlanTask => ({
+      id: row.id,
+      title: row.title,
+      description: row.fix_instructions || row.description || '',
+      whyItMatters: row.why_it_matters || '',
+      effort: (row.effort as GrowthPlanTask['effort']) || 'Medium',
+      sourceModule: row.source_module || 'JetSuite',
+      status: (row.status as GrowthPlanTask['status']) || 'to_do',
+      createdAt: row.created_at,
+      completionDate: row.completed_at || undefined,
+  });
+
+  // Function to fetch profile from DB (no localStorage) and merge with defaults
   const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
-    let defaultProfile: ProfileData;
-    // Use generic defaults for current user or test defaults
-    defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
+    const defaultProfile = createInitialProfile(
+      uid,
+      email,
+      isCurrentUser ? 'Owner' : 'Test',
+      isCurrentUser ? 'User' : 'User'
+    );
 
     try {
-        // 1. Fetch profile from the new API endpoint
         const response = await fetch(`/api/user/get-profile?userId=${uid}`);
         if (!response.ok) throw new Error('Failed to fetch profile from API');
         
         const { profile: dbProfile } = await response.json();
         
-        let mergedProfile = defaultProfile;
-        
-        if (dbProfile) {
-            // Merge DB data into the user part of the profile
-            mergedProfile = {
-                ...defaultProfile,
-                user: {
-                    ...defaultProfile.user,
-                    id: dbProfile.id,
-                    firstName: dbProfile.first_name || defaultProfile.user.firstName,
-                    lastName: dbProfile.last_name || defaultProfile.user.lastName,
-                    email: dbProfile.email || defaultProfile.user.email,
-                    role: dbProfile.role || defaultProfile.user.role,
-                    phone: dbProfile.phone || defaultProfile.user.phone,
-                }
-            };
+        if (!dbProfile) {
+          return defaultProfile;
         }
-        
-        // 2. Attempt to load other data (business, dna, etc.) from localStorage
-        try {
-            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
-            if (savedLocal) {
-                const localProfile = JSON.parse(savedLocal);
-                // Merge DB user data with local business/dna data
-                mergedProfile = {
-                    ...localProfile,
-                    user: mergedProfile.user, // Prioritize fresh DB user data
-                };
-            }
-        } catch (e) {
-            console.warn(`Failed to parse local storage for user ${uid}`);
-        }
+
+        const mergedProfile: ProfileData = {
+          ...defaultProfile,
+          user: {
+            ...defaultProfile.user,
+            id: dbProfile.id,
+            firstName: dbProfile.first_name || defaultProfile.user.firstName,
+            lastName: dbProfile.last_name || defaultProfile.user.lastName,
+            email: dbProfile.email || defaultProfile.user.email,
+            role: dbProfile.role || defaultProfile.user.role,
+            phone: dbProfile.phone || defaultProfile.user.phone,
+          }
+        };
         
         return mergedProfile;
-
     } catch (error) {
         console.error(`Error fetching profile for ${uid}:`, error);
-        // Fallback to local storage or default if DB fetch fails
-        try {
-            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
-            return savedLocal ? JSON.parse(savedLocal) : defaultProfile;
-        } catch (e) {
-            return defaultProfile;
-        }
+        // Fallback to defaults if DB fetch fails; do NOT pull from localStorage
+        return defaultProfile;
     }
   };
 
-  // 0. Initial Profile Load (DB + Local Storage)
+  // 0. Initial Profile Load (from DB)
   useEffect(() => {
     const loadProfiles = async () => {
-        // Load current user profile
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
-        
-        // Load test user profile (for admin impersonation)
+
         const testUserEmail = 'test.user@example.com';
         const testUserId = 'test-user-uuid';
         const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
@@ -178,21 +163,25 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
     
     loadProfiles();
-  }, [userId, userEmail]); // Only run once on mount/user change
+  }, [userId, userEmail]);
 
   // 1. Fetch all accessible businesses
   useEffect(() => {
     const fetchBusinesses = async () => {
       if (!userId || !supabase) return;
 
-      // Fetch owned businesses + shared seats
-      const { data: dbProfiles } = await supabase
+      const { data: dbProfiles, error } = await supabase
         .from('business_profiles')
         .select('*')
         .eq('user_id', userId);
 
+      if (error) {
+        console.error('Error fetching businesses:', error);
+        return;
+      }
+
       if (dbProfiles && dbProfiles.length > 0) {
-        const formatted = dbProfiles.map(p => ({
+        const formatted = dbProfiles.map((p: any) => ({
           id: p.id,
           name: p.business_name,
           category: p.industry,
@@ -208,11 +197,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
         setBusinesses(formatted);
         
-        // Default to primary or first available
         if (!activeBusinessId) {
-          const primary = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
+          const primary = dbProfiles.find((p: any) => p.is_primary) || dbProfiles[0];
           setActiveBusinessId(primary.id);
-          localStorage.setItem('jetsuite_active_biz_id', primary.id);
         }
       }
     };
@@ -225,11 +212,16 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const syncActiveBusiness = async () => {
       if (!activeBusinessId || !userId || !supabase) return;
 
-      const { data: biz } = await supabase
+      const { data: biz, error } = await supabase
         .from('business_profiles')
         .select('*')
         .eq('id', activeBusinessId)
         .maybeSingle();
+
+      if (error) {
+        console.error('Error loading active business:', error);
+        return;
+      }
 
       if (biz) {
         setAllProfiles(prev => {
@@ -258,40 +250,55 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     syncActiveBusiness();
   }, [activeBusinessId, userId, supabase]);
 
+  // 🔄 Load growth plan tasks for active business from DB (database = source of truth)
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!supabase || !activeBusinessId) {
+        setGrowthPlanTasks([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('growth_plan_tasks')
+        .select('*')
+        .eq('business_id', activeBusinessId)
+        .eq('is_trashed', false)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error loading growth plan tasks:', error);
+        return;
+      }
+
+      setGrowthPlanTasks((data || []).map(mapDbTaskToGrowthTask));
+    };
+
+    fetchTasks();
+  }, [supabase, activeBusinessId]);
+
   const handleSwitchBusiness = (id: string) => {
     setActiveBusinessId(id);
-    localStorage.setItem('jetsuite_active_biz_id', id);
-    // Tool UI will naturally refresh via profileData changes
+    // Persist primary business selection in the database so it follows the user across devices
+    if (supabase) {
+      supabase
+        .rpc('set_primary_business', { business_uuid: id, user_uuid: userId })
+        .catch(err => console.error('Failed to set primary business:', err));
+    }
   };
 
   const isAdmin = userEmail === ADMIN_EMAIL;
   const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
   
-  const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
+  const setProfileData = (newProfileData: ProfileData, _persist: boolean = false) => {
     setAllProfiles(prev => {
         const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : 1;
         const updatedProfiles = [...prev];
         updatedProfiles[index] = newProfileData;
-
-        if (persist) {
-            try { 
-              localStorage.setItem(`jetsuite_profile_${newProfileData.user.id}`, JSON.stringify(newProfileData)); 
-            } catch (e) { 
-              console.warn("Could not save profile to localStorage", e); 
-            }
-        }
+        // REMOVED: localStorage profile caching; database remains source of truth
         return updatedProfiles;
     });
   };
-
-  useEffect(() => {
-      try { localStorage.setItem(`jetsuite_growthPlanTasks_${activeUserId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks", e); }
-  }, [growthPlanTasks, activeUserId]);
-  
-  useEffect(() => {
-      try { localStorage.setItem(`jetsuite_savedKeywords_${activeUserId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords", e); }
-  }, [savedKeywords, activeUserId]);
 
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
@@ -348,15 +355,92 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   };
 
   const addTasksToGrowthPlan = (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
-    setGrowthPlanTasks(prevTasks => {
-      const existingTitles = new Set(prevTasks.map(t => t.title));
-      const tasksToAdd = newTasks.filter(newTask => !existingTitles.has(newTask.title)).map(task => ({ ...task, id: `${task.sourceModule.toLowerCase()}_${Math.random().toString(36).substr(2, 9)}`, status: 'to_do' as const, createdAt: new Date().toISOString() }));
-      return [...prevTasks, ...tasksToAdd];
-    });
+    if (!supabase || !activeBusinessId) {
+      // Fallback: keep previous in-memory behavior only if Supabase is unavailable
+      setGrowthPlanTasks(prevTasks => {
+        const existingTitles = new Set(prevTasks.map(t => t.title));
+        const tasksToAdd = newTasks
+          .filter(newTask => !existingTitles.has(newTask.title))
+          .map(task => ({
+            ...task,
+            id: `${task.sourceModule.toLowerCase()}_${Math.random().toString(36).substr(2, 9)}`,
+            status: 'to_do' as const,
+            createdAt: new Date().toISOString(),
+          }));
+        return [...prevTasks, ...tasksToAdd];
+      });
+      return;
+    }
+
+    (async () => {
+      try {
+        // Avoid duplicating by title for this business
+        const existingTitles = new Set(growthPlanTasks.map(t => t.title));
+        const toInsert = newTasks.filter(t => !existingTitles.has(t.title));
+        if (toInsert.length === 0) return;
+
+        const { data, error } = await supabase
+          .from('growth_plan_tasks')
+          .insert(
+            toInsert.map(task => ({
+              business_id: activeBusinessId,
+              title: task.title,
+              description: task.description,
+              why_it_matters: task.whyItMatters,
+              fix_instructions: task.description,
+              source_module: task.sourceModule,
+              priority: task.effort,
+              effort: task.effort,
+              status: 'to_do',
+            }))
+          )
+          .select('*');
+
+        if (error) {
+          console.error('Error inserting growth plan tasks:', error);
+          return;
+        }
+
+        if (data && data.length) {
+          setGrowthPlanTasks(prev => [...prev, ...data.map(mapDbTaskToGrowthTask)]);
+        }
+      } catch (e) {
+        console.error('Failed to add growth plan tasks:', e);
+      }
+    })();
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: GrowthPlanTask['status']) => {
-      setGrowthPlanTasks(prevTasks => prevTasks.map(task => task.id === taskId ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } : task ));
+      setGrowthPlanTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId
+            ? {
+                ...task,
+                status: newStatus,
+                completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined,
+              }
+            : task
+        )
+      );
+
+      if (supabase) {
+        (async () => {
+          try {
+            const update: any = { status: newStatus };
+            if (newStatus === 'completed') {
+              update.completed_at = new Date().toISOString();
+            } else {
+              update.completed_at = null;
+            }
+            await supabase
+              .from('growth_plan_tasks')
+              .update(update)
+              .eq('id', taskId);
+          } catch (error) {
+            console.error('Failed to update task status in DB:', error);
+          }
+        })();
+      }
   };
 
   const handleSaveAnalysis = (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {

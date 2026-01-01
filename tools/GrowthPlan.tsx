@@ -3,6 +3,7 @@ import type { GrowthPlanTask, Tool } from '../types';
 import { ALL_TOOLS } from '../constants';
 import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
@@ -91,16 +92,36 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
 
 export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore }) => {
   const [showCompleted, setShowCompleted] = useState(true);
+  const supabase = getSupabaseClient();
 
   const pendingTasks = useMemo(() => tasks.filter(t => t.status !== 'completed'), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(t => t.status === 'completed'), [tasks]);
   
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
-  const handleClearCompleted = () => {
-    if (window.confirm('Are you sure you want to clear all completed tasks? This cannot be undone.')) {
-      setTasks(tasks.filter(t => t.status !== 'completed'));
+  const handleClearCompleted = async () => {
+    if (completedTasks.length === 0) return;
+
+    if (!window.confirm('Are you sure you want to clear all completed tasks? This cannot be undone.')) {
+      return;
     }
+
+    const completedIds = completedTasks.map(t => t.id);
+
+    // Soft-delete in database: mark as trashed but keep rows for recovery
+    if (supabase) {
+      try {
+        await supabase
+          .from('growth_plan_tasks')
+          .update({ is_trashed: true })
+          .in('id', completedIds);
+      } catch (error) {
+        console.error('Failed to move completed tasks to trash:', error);
+      }
+    }
+
+    // Remove from current in-memory list; active tasks are never removed here
+    setTasks(tasks.filter(t => t.status !== 'completed'));
   };
 
   return (

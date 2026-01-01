@@ -49,15 +49,8 @@ type ViewMode = 'generate' | 'planner' | 'connections';
 export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTool }) => {
   const { category: businessType } = profileData.business;
   
-  // Get userId from localStorage (matching App.tsx pattern)
-  const [userId, setUserId] = useState<string>('');
-  
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('jetsuite_userId');
-    if (storedUserId) {
-      setUserId(storedUserId);
-    }
-  }, []);
+  // Use authenticated user id from profileData instead of localStorage
+  const userId = profileData.user.id;
   
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('generate');
