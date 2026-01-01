@@ -1,3 +1,4 @@
+Type.OBJECT).">
 import { GoogleGenAI, Type } from "@google/genai";
 import type { 
     AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna, 
@@ -658,7 +659,7 @@ export const generateBusinessDescription = async (url: string): Promise<string> 
         });
 
         // FIX: Ensure response.text is not undefined before trimming to prevent runtime errors.
-        return response.text?.trim() ?? '';
+        return response.text ?? '';
     } catch (error) {
         if (error instanceof Error && error.message === "AI_KEY_MISSING") {
             return "AI features are disabled due to missing API key.";
@@ -761,7 +762,7 @@ const brandDnaProfileSchema = {
             required: ["has_logo", "logo_style", "dominant_colors", "is_reusable"],
         },
         brand_positioning: {
-            type: Type:OBJECT,
+            type: Type.OBJECT,
             properties: {
                 value_proposition: { type: Type.STRING },
                 primary_customer_intent: { type: Type.STRING },
