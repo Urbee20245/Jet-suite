@@ -74,14 +74,17 @@ export default async function handler(
 
     if (dbError) {
       console.error('Supabase upsert error:', dbError);
-      // Throwing the error here ensures it is caught by the outer catch block
-      throw new Error(`Database Error: ${dbError.message} (Code: ${dbError.code})`);
+      // Return a structured error response for database failure
+      return res.status(500).json({
+        error: 'Database operation failed',
+        message: `Failed to save business profile: ${dbError.message} (Code: ${dbError.code})`,
+      });
     }
 
     return res.status(200).json({ businessProfile: data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
-    // Return a structured error response to the client
+    // Return a structured error response to the client for unexpected errors
     return res.status(500).json({
       error: 'Failed to update business profile',
       message: error.message,

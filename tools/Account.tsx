@@ -130,10 +130,18 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     email: profileData.user.email, // CRITICAL FIX: Include email for database upsert
                 }),
             });
+            
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to save profile');
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (e) {
+                    const text = await response.text();
+                    throw new Error(`Server returned non-JSON error (Status: ${response.status}). Raw response: ${text.substring(0, 100)}...`);
+                }
+                throw new Error(errorData.message || errorData.error || 'Failed to save profile');
             }
+            
             onUpdateProfile({ ...profileData, user: { ...profileData.user, firstName: formState.firstName, lastName: formState.lastName, role: formState.role } });
             setIsDirty(false);
             alert('Profile updated successfully!');
