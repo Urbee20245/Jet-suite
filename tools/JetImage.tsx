@@ -1,15 +1,44 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { Tool } from '../types';
 import { generateImage } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon } from '../components/icons/MiniIcons';
+import { getCurrentDate } from '../utils/dateTimeUtils';
 
 interface JetImageProps {
   tool: Tool;
 }
 
 type ImageSize = '1K' | '2K' | '4K';
+
+const trendingStyles = [
+  {
+    name: 'Cinematic Photorealism',
+    description: 'High-end, professional photos with dramatic lighting.',
+    prompt: 'A cinematic, hyperrealistic photo of a [your subject], dramatic lighting, sharp focus, 8k',
+  },
+  {
+    name: '90s Anime & Retro',
+    description: 'Nostalgic style mimicking classic anime or vintage film.',
+    prompt: '90s anime aesthetic drawing of a [your subject], retro-futurism, lo-fi, vintage film look',
+  },
+  {
+    name: '3D Claymation Style',
+    description: 'Cute, tactile-looking characters and scenes.',
+    prompt: 'A cute 3D claymation character of a [your subject], Pixar style, soft studio lighting',
+  },
+  {
+    name: 'Surreal & Dreamlike',
+    description: 'Impossible, beautiful scenes that blend reality with fantasy.',
+    prompt: 'A surreal, dreamlike painting of a [your subject], ethereal, fantasy art, magical',
+  },
+  {
+    name: 'Minimalist Line Art',
+    description: 'Clean, simple, and modern graphics with bold lines.',
+    prompt: 'Minimalist one-line drawing of a [your subject] on a clean white background, vector art',
+  },
+];
 
 export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
   const [prompt, setPrompt] = useState('');
@@ -21,6 +50,28 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
 
   const [inputImage, setInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const USAGE_LIMIT = 2;
+  const [usage, setUsage] = useState({ count: 0, date: getCurrentDate() });
+
+  useEffect(() => {
+    const savedUsage = localStorage.getItem('jetsuite_jetimage_usage');
+    const today = getCurrentDate();
+    if (savedUsage) {
+      const parsed = JSON.parse(savedUsage);
+      if (parsed.date === today) {
+        setUsage(parsed);
+      } else {
+        const newUsage = { count: 0, date: today };
+        localStorage.setItem('jetsuite_jetimage_usage', JSON.stringify(newUsage));
+        setUsage(newUsage);
+      }
+    } else {
+      const newUsage = { count: 0, date: today };
+      localStorage.setItem('jetsuite_jetimage_usage', JSON.stringify(newUsage));
+      setUsage(newUsage);
+    }
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,6 +98,10 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (usage.count >= USAGE_LIMIT) {
+      setError(`Daily limit of ${USAGE_LIMIT} images reached. Please try again tomorrow.`);
+      return;
+    }
     if (!prompt) {
       setError('Please enter a prompt to describe the image you want to generate.');
       return;
@@ -57,6 +112,13 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
     try {
       const base64Data = await generateImage(prompt, imageSize, "1:1", inputImage || undefined);
       setImageUrl(`data:image/png;base64,${base64Data}`);
+      
+      // Update usage count
+      const newCount = usage.count + 1;
+      const newUsage = { ...usage, count: newCount };
+      setUsage(newUsage);
+      localStorage.setItem('jetsuite_jetimage_usage', JSON.stringify(newUsage));
+
     } catch (err: any) {
       console.error(err);
       setError('Failed to generate image. Please try again or refine your prompt.');
@@ -64,6 +126,8 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
       setLoading(false);
     }
   };
+
+  const usesRemaining = USAGE_LIMIT - usage.count;
 
   return (
     <div>
@@ -91,8 +155,8 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
           <div className="mb-6">
             <label className="block text-sm font-medium text-brand-text mb-2">Upload an Image (Optional)</label>
             {inputImage ? (
-              <div className="relative group">
-                <img src={inputImage.dataUrl} alt="Input preview" className="w-32 h-32 object-cover rounded-lg border-2 border-brand-border" />
+              <div className="relative group w-32 h-32">
+                <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
                 <button
                   type="button"
                   onClick={clearInputImage}
@@ -120,6 +184,25 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
             )}
           </div>
 
+          {/* Trending Styles Section */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-brand-text mb-2">Trending Styles</label>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+              {trendingStyles.map(style => (
+                <button
+                  key={style.name}
+                  type="button"
+                  onClick={() => setPrompt(style.prompt)}
+                  className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full"
+                  title={style.description}
+                >
+                  <p className="text-xs font-bold text-brand-text">{style.name}</p>
+                  <p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mb-6">
             <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">
               {inputImage ? 'Describe how to change the image' : 'Describe the image you want'}
@@ -144,13 +227,20 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
             </div>
           </div>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-          >
-            {loading ? 'Generating...' : 'Generate Image'}
-          </button>
+          
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              disabled={loading || usesRemaining <= 0}
+              className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            >
+              {loading ? 'Generating...' : 'Generate Image'}
+            </button>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-brand-text">{usesRemaining} / {USAGE_LIMIT}</p>
+              <p className="text-xs text-brand-text-muted">uses remaining</p>
+            </div>
+          </div>
         </form>
       </div>
       {loading && <Loader />}
