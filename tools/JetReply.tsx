@@ -48,7 +48,7 @@ const ReviewCard: React.FC<{
     <p className="text-sm text-brand-text-muted line-clamp-3">{review.text}</p>
     {isSelected && (
       <div className="mt-2 text-xs text-accent-purple font-semibold">
-        ✓ Selected - Click "Draft Reply" below
+        ✓ Selected - Reply will follow your settings below
       </div>
     )}
   </button>
@@ -62,6 +62,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
   const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingReviews, setFetchingReviews] = useState(false);
+  const [postingReply, setPostingReply] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [showHowTo, setShowHowTo] = useState(true);
@@ -69,29 +70,56 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
   const [showManualInput, setShowManualInput] = useState(false);
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
   const [autoReplyMinStars, setAutoReplyMinStars] = useState<number>(4);
+  const [hasGoogleConnection, setHasGoogleConnection] = useState(false);
+
+  const isReady = readinessState === 'Foundation Ready';
 
   // Fetch reviews on component mount if GBP is connected
   useEffect(() => {
-    const fetchReviews = async () => {
-      if (profileData.googleBusiness.status === 'Verified' && 
-          profileData.business.name && 
-          profileData.googleBusiness.address) {
+    const fetchReviewsFromBackend = async () => {
+      if (
+        profileData.googleBusiness.status === 'Verified' && 
+        profileData.user.id
+      ) {
         setFetchingReviews(true);
         setError('');
         try {
+          // First try real Google Business API (if connected via OAuth)
+          const googleRes = await fetch(`/api/google-business/get-reviews?userId=${profileData.user.id}`);
+          
+          if (googleRes.ok) {
+            const data = await googleRes.json();
+            const googleReviews: BusinessReview[] = (data.reviews || []).map((r: any) => ({
+              id: r.id,
+              author: r.author,
+              rating: r.rating,
+              text: r.text,
+              date: r.date,
+              isPositive: r.isPositive,
+              source: r.source,
+              googleReviewName: r.googleReviewName,
+              googleLocationName: r.googleLocationName,
+            }));
+            setReviews(googleReviews);
+            setHasGoogleConnection(true);
+            return;
+          }
+
+          // If no Google connection, fall back to AI-based fetch
+          setHasGoogleConnection(false);
           const fetchedReviews = await fetchBusinessReviews(
             profileData.business.name,
-            profileData.googleBusiness.address
+            profileData.googleBusiness.address || ''
           );
           
-          // Convert to BusinessReview format with IDs
-          const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
+          const formattedReviews: BusinessReview[] = fetchedReviews.map((r: any, i: number) => ({
             id: `review_${Date.now()}_${i}`,
             author: r.author,
             rating: r.rating,
             text: r.text,
             date: r.date,
-            isPositive: r.rating >= 4
+            isPositive: r.rating >= 4,
+            source: 'ai',
           }));
           
           setReviews(formattedReviews);
@@ -104,8 +132,39 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
       }
     };
     
-    fetchReviews();
-  }, [profileData.googleBusiness, profileData.business.name]);
+    fetchReviewsFromBackend();
+  }, [profileData.googleBusiness, profileData.business.name, profileData.user.id]);
+
+  const handlePostReplyToGoogle = async (review: BusinessReview, replyText: string) => {
+    if (!hasGoogleConnection || !review.googleReviewName) {
+      // No real Google connection; nothing to post
+      return;
+    }
+
+    try {
+      setPostingReply(true);
+      setError('');
+      const res = await fetch('/api/google-business/post-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profileData.user.id,
+          reviewName: review.googleReviewName,
+          replyText,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'Failed to post reply to Google');
+      }
+    } catch (err: any) {
+      console.error('Post reply error:', err);
+      setError(err.message || 'Failed to post reply to Google. You can still copy and paste it manually.');
+    } finally {
+      setPostingReply(false);
+    }
+  };
 
   const handleSelectReview = (review: BusinessReview) => {
     setSelectedReview(review);
@@ -114,6 +173,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
     setReply('');
     setCopied(false);
 
+    // If auto-reply is enabled and rating meets threshold, auto-draft and auto-post (when possible)
     if (autoReplyEnabled && review.rating >= autoReplyMinStars) {
       handleGenerateAutoReply(review);
     }
@@ -132,6 +192,11 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         profileData.business.dna.style
       );
       setReply(result);
+
+      // If we have a live Google connection and a real review ID, post automatically
+      if (hasGoogleConnection && review.googleReviewName) {
+        await handlePostReplyToGoogle(review, result);
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to auto-generate reply. Please try again.');
@@ -166,30 +231,51 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
   };
   
   const handleCopyToClipboard = () => {
+    if (!reply) return;
     navigator.clipboard.writeText(reply);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleRefetchReviews = async () => {
+    // Re-run same logic as initial fetch
+    if (!profileData.user.id) return;
     setFetchingReviews(true);
     setError('');
     try {
-      const fetchedReviews = await fetchBusinessReviews(
-        profileData.business.name,
-        profileData.googleBusiness.address || ''
-      );
-      
-      const formattedReviews: BusinessReview[] = fetchedReviews.map((r, i) => ({
-        id: `review_${Date.now()}_${i}`,
-        author: r.author,
-        rating: r.rating,
-        text: r.text,
-        date: r.date,
-        isPositive: r.rating >= 4
-      }));
-      
-      setReviews(formattedReviews);
+      const googleRes = await fetch(`/api/google-business/get-reviews?userId=${profileData.user.id}`);
+      if (googleRes.ok) {
+        const data = await googleRes.json();
+        const googleReviews: BusinessReview[] = (data.reviews || []).map((r: any) => ({
+          id: r.id,
+          author: r.author,
+          rating: r.rating,
+          text: r.text,
+          date: r.date,
+          isPositive: r.isPositive,
+          source: r.source,
+          googleReviewName: r.googleReviewName,
+          googleLocationName: r.googleLocationName,
+        }));
+        setReviews(googleReviews);
+        setHasGoogleConnection(true);
+      } else {
+        setHasGoogleConnection(false);
+        const fetchedReviews = await fetchBusinessReviews(
+          profileData.business.name,
+          profileData.googleBusiness.address || ''
+        );
+        const formattedReviews: BusinessReview[] = fetchedReviews.map((r: any, i: number) => ({
+          id: `review_${Date.now()}_${i}`,
+          author: r.author,
+          rating: r.rating,
+          text: r.text,
+          date: r.date,
+          isPositive: r.rating >= 4,
+          source: 'ai',
+        }));
+        setReviews(formattedReviews);
+      }
     } catch (err) {
       console.error('Failed to fetch reviews:', err);
       setError('Could not fetch reviews. You can still paste reviews manually below.');
@@ -198,9 +284,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
     }
   };
 
-  const isReady = readinessState === 'Foundation Ready';
-
-  // Check if GBP is not connected
+  // Check if GBP is not connected at all
   if (profileData.googleBusiness.status === 'Not Created' || profileData.googleBusiness.status === 'Not Verified') {
     return (
       <div>
@@ -241,11 +325,10 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>Your recent Google Business Profile reviews are automatically fetched</li>
-                <li>Select a review from the list to reply to</li>
-                <li>Or paste a review manually using the form below</li>
-                <li>Optionally turn on auto-reply so 4–5 star reviews get a drafted reply as soon as you click them</li>
-                <li>Click 'Draft Reply' to get a professional, on-brand response</li>
-                <li>Copy and post the reply to your Google Business Profile</li>
+                <li>If you connect with Google OAuth, JetReply can also auto-post replies for high-star reviews</li>
+                <li>Select a review from the list to reply to, or paste one manually</li>
+                <li>Turn on auto-reply so 4–5 star reviews get a drafted reply and are posted automatically</li>
+                <li>For lower-star reviews, JetReply will draft a reply but wait for you to review and post</li>
             </ul>
         </HowToUse>
       )}
@@ -264,8 +347,8 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         <p className="text-sm text-brand-text-muted mb-3">
           Replaces: <span className="text-accent-purple font-semibold">Reputation Management ($200-800/mo)</span>
         </p>
-        <div className="flex items-center justify-between bg-accent-purple/5 p-3 rounded-lg border border-accent-purple/20">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-accent-purple/5 p-3 rounded-lg border border-accent-purple/20">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
             <span className="text-sm text-brand-text">
               Connected: <span className="font-semibold">{profileData.googleBusiness.profileName}</span>
@@ -275,15 +358,32 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
                 • {profileData.googleBusiness.rating} ⭐ ({profileData.googleBusiness.reviewCount} reviews)
               </span>
             )}
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-brand-border text-brand-text">
+              OAuth: {hasGoogleConnection ? 'Google Connected (auto-post on)' : 'App Not Authorized (draft only)'}
+            </span>
           </div>
-          <button
-            onClick={handleRefetchReviews}
-            disabled={fetchingReviews}
-            className="flex items-center gap-2 text-sm text-accent-purple hover:text-accent-pink font-semibold transition-colors disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`w-4 h-4 ${fetchingReviews ? 'animate-spin' : ''}`} />
-            {fetchingReviews ? 'Fetching...' : 'Refresh Reviews'}
-          </button>
+          <div className="flex items-center gap-3">
+            {!hasGoogleConnection && (
+              <button
+                type="button"
+                onClick={() => {
+                  // Start Google OAuth flow
+                  window.location.href = `/api/auth/google-business/authorize?userId=${profileData.user.id}`;
+                }}
+                className="text-xs font-semibold bg-white border border-accent-purple text-accent-purple px-3 py-1.5 rounded-full hover:bg-accent-purple/5"
+              >
+                Connect for Auto-Posting
+              </button>
+            )}
+            <button
+              onClick={handleRefetchReviews}
+              disabled={fetchingReviews}
+              className="flex items-center gap-2 text-sm text-accent-purple hover:text-accent-pink font-semibold transition-colors disabled:opacity-50"
+            >
+              <ArrowPathIcon className={`w-4 h-4 ${fetchingReviews ? 'animate-spin' : ''}`} />
+              {fetchingReviews ? 'Fetching...' : 'Refresh Reviews'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -291,10 +391,11 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
       <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-sm font-bold text-brand-text">Auto-Reply Settings</h3>
+            <h3 className="text-sm font-bold text-brand-text">Auto-Reply & Auto-Post Settings</h3>
             <p className="text-xs text-brand-text-muted">
-              Automatically draft replies when you click reviews at or above a chosen star rating.
-              Lower-rated reviews will not auto-reply, so you can read them first.
+              When enabled, clicking reviews at or above your star threshold will draft a reply automatically. 
+              If Google OAuth is connected, JetReply will also post those replies to Google on your behalf. 
+              Lower-rated reviews will wait for you to read before posting.
             </p>
           </div>
           <div className="flex items-center gap-4">
@@ -310,7 +411,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
               Auto-reply: {autoReplyEnabled ? 'On' : 'Off'}
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-brand-text-muted">Min stars:</span>
+              <span className="text-xs text-brand-text-muted">Auto-reply min stars:</span>
               {[3, 4, 5].map(stars => (
                 <button
                   key={stars}
@@ -375,7 +476,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         </div>
       )}
 
-      {/* Manual Input (Always shown if no reviews, or on toggle) */}
+      {/* Manual Input */}
       {(showManualInput || reviews.length === 0) && (
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
           <h3 className="text-lg font-bold text-brand-text mb-4">
@@ -425,7 +526,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         </div>
       )}
 
-      {/* Generate Reply Button (when review is selected from list) */}
+      {/* Generate Reply Button (for selected review) */}
       {selectedReview && !showManualInput && (
         <div className="mb-6">
           <button
@@ -438,6 +539,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
         </div>
       )}
 
+      {/* Loading + Suggested Reply */}
       {loading && (
         <div className="mt-6 bg-brand-card p-8 rounded-xl shadow-lg text-center">
           <Loader />
@@ -456,18 +558,29 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
             </div>
           )}
           <p className="text-brand-text whitespace-pre-wrap bg-brand-light p-4 rounded-lg border border-brand-border mb-4">{reply}</p>
-          <div className="flex gap-3">
+          {error && <p className="text-red-500 text-xs mb-3">{error}</p>}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button 
               onClick={handleCopyToClipboard} 
               className="flex-1 bg-accent-purple hover:bg-accent-purple/90 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
             >
               {copied ? '✓ Copied!' : 'Copy to Clipboard'}
             </button>
+            {hasGoogleConnection && selectedReview?.googleReviewName && (
+              <button
+                onClick={() => handlePostReplyToGoogle(selectedReview, reply)}
+                disabled={postingReply}
+                className="flex-1 bg-accent-blue hover:bg-accent-blue/90 text-white font-bold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50"
+              >
+                {postingReply ? 'Posting to Google...' : 'Post to Google Now'}
+              </button>
+            )}
             <button
               onClick={() => {
                 setReply('');
                 setSelectedReview(null);
                 setManualReview('');
+                setError('');
               }}
               className="px-4 py-2 bg-brand-light hover:bg-gray-200 text-brand-text font-semibold rounded-lg transition"
             >
