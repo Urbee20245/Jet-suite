@@ -5,7 +5,7 @@ import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, Spar
 import { Loader } from './Loader';
 import { SocialAccountsStep } from './SocialAccountsStep';
 import { ALL_TOOLS } from '../constants';
-import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 // --- Types ---
 interface BusinessDetailsProps { profileData: ProfileData; onUpdate: (data: ProfileData) => void; setActiveTool: (tool: Tool | null) => void; }
