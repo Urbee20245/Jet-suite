@@ -30,6 +30,7 @@ import { JetAds } from './tools/JetAds'; // Import JetAds
 import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
 import UserSupportTickets from './tools/UserSupportTickets'; // Import UserSupportTickets
 import { AdminPanel } from './tools/AdminPanel'; // Import AdminPanel
+import { Planner } from './tools/Planner'; // Import Planner
 import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types'; // Import types
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
@@ -379,6 +380,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
     switch (activeTool.id) {
       case 'businessdetails': return <BusinessDetails profileData={profileData} onUpdate={handleUpdateProfileData} setActiveTool={setActiveTool} />;
+      case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
       case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
