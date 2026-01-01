@@ -47,6 +47,32 @@ const DnaReviewAndSaved: React.FC<{ visualDna: BusinessDna; detailedDna: BrandDn
 };
 
 // --- Sub-components for GBP Workflow ---
+const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed: boolean; onConfirm: () => void; onReject: () => void; }> = ({ detectedGbp, isConfirmed, onConfirm, onReject }) => (
+    <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg mb-4">
+        <div className="flex items-start justify-between">
+            <div className="flex items-start">
+                <InformationCircleIcon className="w-6 h-6 mr-3 mt-0.5 flex-shrink-0" />
+                <div>
+                    <p className="font-bold">Google Business Profile Detected</p>
+                    <p className="text-sm">We found a potential match for your business during DNA extraction:</p>
+                    <div className="mt-2 bg-white p-3 rounded-lg border border-yellow-200">
+                        <p className="font-semibold text-brand-text">{detectedGbp.name}</p>
+                        <p className="text-xs text-brand-text-muted">{detectedGbp.address}</p>
+                        <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
+                            <StarIcon className="w-3 h-3 text-yellow-400" /> {detectedGbp.rating} ({detectedGbp.reviewCount} reviews)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <button onClick={onReject} className="text-sm font-semibold text-red-500 hover:underline">Ignore</button>
+        </div>
+        <div className="mt-4 flex justify-end gap-3">
+            <button onClick={onConfirm} className={`text-sm font-bold py-2 px-4 rounded-lg transition-colors ${isConfirmed ? 'bg-green-500 text-white' : 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500'}`}>
+                {isConfirmed ? '✓ Confirmed' : 'Confirm & Connect'}
+            </button>
+        </div>
+    </div>
+);
 const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
@@ -66,7 +92,7 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-brand-text flex items-center gap-3">
-                            {title} 
+                            {number}. {title} 
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
                         </h2>
                     </div>
@@ -123,8 +149,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const step1Completed = !!business.name && !!business.websiteUrl;
   const step2Completed = business.isDnaApproved;
-  const step3Completed = true; // Social Accounts is optional, always considered complete
-  const step4Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped;
+  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped; // GBP is now step 3
+  const step4Completed = true; // Social Accounts is now step 4 (optional, always considered complete)
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
   
@@ -196,7 +222,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
       default: return null;
     }
   };
-  const renderGbpContent = () => { if (step4Completed && !isGbpSkipped) { return (<div>{googleBusiness.placeId?.startsWith('detected_') && (<p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>)}<GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} /></div>); } const onUpdateStatus = (s: GbpStatus) => { const newGbp = {...googleBusiness, status: s}; setGoogleBusiness(newGbp); }; switch (googleBusiness.status) { case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; default: return <p className="text-brand-text-muted">Select a status to continue.</p>; } };
+  const renderGbpContent = () => { if (step3Completed && !isGbpSkipped) { return (<div>{googleBusiness.placeId?.startsWith('detected_') && (<p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>)}<GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} /></div>); } const onUpdateStatus = (s: GbpStatus) => { const newGbp = {...googleBusiness, status: s}; setGoogleBusiness(newGbp); }; switch (googleBusiness.status) { case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; default: return <p className="text-brand-text-muted">Select a status to continue.</p>; } };
+  const renderSocialContent = () => { if (step4Completed) { return <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />; } return <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div>; };
 
   return (
     <div className="space-y-6">
@@ -240,24 +267,24 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
         </StepCard>
 
-        <StepCard number={3} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed}>
-            {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />}
-        </StepCard>
-
-        <StepCard number={4} title="Google Business Profile" badge={step4Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step4Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step4Completed} isLocked={!step2Completed} defaultOpen={step3Completed && !step4Completed}>
+        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed}>
             <div className="flex justify-between items-start mb-4">
                 <div><p className="text-brand-text-muted">Critical for local visibility and map rankings.</p></div>
-                {step4Completed && !isGbpSkipped && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}
+                {step3Completed && !isGbpSkipped && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}
             </div>
             <div className="mt-4">
                 <label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label>
-                <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step4Completed && !isGbpSkipped}>
+                <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step3Completed && !isGbpSkipped}>
                     <option value="Not Created">I don't have a profile yet</option>
                     <option value="Not Verified">I have a profile, but it's not verified</option>
                     <option value="Verified">My profile is verified</option>
                 </select>
                 {renderGbpContent()}
             </div>
+        </StepCard>
+
+        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed} defaultOpen={step3Completed && !step4Completed}>
+            {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : renderSocialContent()}
         </StepCard>
 
         {allStepsComplete && <CompletionCard onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} />}
