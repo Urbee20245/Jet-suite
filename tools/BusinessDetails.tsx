@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
-import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';
+import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../../services/geminiService';
 import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon } from '../components/icons/MiniIcons';
 import { Loader } from '../components/Loader';
 import { SocialAccountsStep } from '../../components/SocialAccountsStep';
@@ -79,11 +79,49 @@ const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconn
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
 const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => {
+    const [autoDetectState, setAutoDetectState] = useState<'loading' | 'found' | 'manual'>('loading');
+    const [detectedBusiness, setDetectedBusiness] = useState<BusinessSearchResult | null>(null);
+    
     const [searchMethod, setSearchMethod] = useState<'name' | 'url' | 'code'>('name');
     const [inputValue, setInputValue] = useState('');
     const [results, setResults] = useState<BusinessSearchResult[]>([]);
     const [selected, setSelected] = useState<BusinessSearchResult | null>(null);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const autoDetect = async () => {
+            const query = `${profileData.business.name}, ${profileData.business.location}`;
+            try {
+                const res = await searchGoogleBusiness(query);
+                if (res && res.length > 0) {
+                    setDetectedBusiness(res[0]);
+                    setAutoDetectState('found');
+                } else {
+                    setAutoDetectState('manual');
+                }
+            } catch (error) {
+                console.error("Auto-detection failed:", error);
+                setAutoDetectState('manual');
+            }
+        };
+        autoDetect();
+    }, [profileData.business.name, profileData.business.location]);
+
+    const handleConfirmDetected = () => {
+        if (detectedBusiness) {
+            onConnect({
+                profileName: detectedBusiness.name,
+                address: detectedBusiness.address,
+                rating: detectedBusiness.rating,
+                reviewCount: detectedBusiness.reviewCount,
+            });
+        }
+    };
+
+    const handleRejectDetected = () => {
+        setAutoDetectState('manual');
+        setDetectedBusiness(null);
+    };
 
     const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,6 +153,26 @@ const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<
                 <div className="flex gap-4 justify-center">
                     <button onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button>
                     <button onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button>
+                </div>
+            </div>
+        );
+    }
+
+    if (autoDetectState === 'loading') {
+        return <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Searching for your business on Google...</p></div>;
+    }
+
+    if (autoDetectState === 'found' && detectedBusiness) {
+        return (
+            <div className="bg-brand-light p-6 rounded-lg border text-center">
+                <h4 className="font-bold">Is this your business?</h4>
+                <div className="bg-white my-4 p-4 rounded-lg border">
+                    <p className="font-bold">{detectedBusiness.name}</p>
+                    <p className="text-sm text-brand-text-muted">{detectedBusiness.address}</p>
+                </div>
+                <div className="flex gap-4 justify-center">
+                    <button onClick={handleRejectDetected} className="text-sm font-semibold">No, search manually</button>
+                    <button onClick={handleConfirmDetected} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button>
                 </div>
             </div>
         );
@@ -249,7 +307,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
   
-  const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult, gbpResult] = await Promise.all([extractWebsiteDna(business.websiteUrl), extractBrandDnaProfile(business), detectGbpOnWebsite(business.websiteUrl, business.name)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); if (gbpResult) { setDetectedGbp(gbpResult); } setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
+  const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([extractWebsiteDna(business.websiteUrl), extractBrandDnaProfile(business)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
   const handleInitialSaveDna = () => { if (!editableDna || !editableBrandProfile) return; setExtractionStage('saving'); let newGbpData = profileData.googleBusiness; if (detectedGbp && isGbpConfirmed) { newGbpData = { ...profileData.googleBusiness, profileName: detectedGbp.name, address: detectedGbp.address, rating: detectedGbp.rating, reviewCount: detectedGbp.reviewCount, status: 'Verified' as GbpStatus, placeId: `detected_${Date.now()}` }; } setTimeout(() => { const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile, googleBusiness: newGbpData }); setExtractionStage('idle'); setDetectedGbp(null); setIsGbpConfirmed(false); }, 1000); };
   const handleUpdateDna = () => { if (!editableDna || !editableBrandProfile) return; const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile }); setIsDnaEditing(false); };
 
