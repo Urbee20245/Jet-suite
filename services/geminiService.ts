@@ -613,26 +613,59 @@ export const findKeywords = async (service: string, location: string, descriptiv
     }
 };
 
-export const generateImage = async (prompt: string, imageSize: '1K' | '2K' | '4K', aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1") => {
+export const generateImage = async (
+  prompt: string,
+  imageSize: '1K' | '2K' | '4K',
+  aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1",
+  inputImage?: { base64: string; mimeType: string }
+) => {
     try {
         const ai = getAiClient();
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-image-preview',
-            contents: {
-              parts: [{ text: prompt }],
-            },
-            config: {
-              imageConfig: {
+
+        const parts: any[] = [];
+        
+        // Add image first if it exists
+        if (inputImage) {
+            parts.push({
+                inlineData: {
+                    data: inputImage.base64,
+                    mimeType: inputImage.mimeType,
+                },
+            });
+        }
+        
+        // Then add the text prompt
+        parts.push({ text: prompt });
+
+        // Use a multimodal model if an image is provided, otherwise use the dedicated image model
+        const modelName = inputImage ? 'gemini-1.5-flash' : 'gemini-3-pro-image-preview';
+
+        const config: any = {};
+        // The imageConfig is specific to the image generation model
+        if (modelName === 'gemini-3-pro-image-preview') {
+            config.imageConfig = {
                 imageSize: imageSize,
                 aspectRatio: aspectRatio
-              },
+            };
+        }
+
+        const response = await ai.models.generateContent({
+            model: modelName,
+            contents: {
+              parts: parts,
             },
+            config: config,
         });
 
         for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
+            if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
               return part.inlineData.data; // Return the base64 string
             }
+        }
+
+        const textResponse = response.text;
+        if (textResponse) {
+            throw new Error(`AI returned text instead of an image: "${textResponse.substring(0, 100)}..."`);
         }
 
         throw new Error('No image data found in the response.');
