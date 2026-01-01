@@ -163,31 +163,31 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleSaveInfo = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-        alert('Database service is unavailable. Cannot save changes.');
-        return;
-    }
-    
     try {
-        // Sync to Database (using UUID)
+        // Sync to Database via API route
         const locationParts = business.location.split(',').map(s => s.trim());
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
 
-        const { error: dbError } = await supabase
-            .from('business_profiles')
-            .upsert({
-                user_id: profileData.user.id,
-                business_name: business.name,
-                business_website: business.websiteUrl,
+        const response = await fetch('/api/business/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: profileData.user.id,
+                businessName: business.name,
+                websiteUrl: business.websiteUrl,
                 industry: business.category,
                 city: city,
                 state: state,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+                isPrimary: true,
+                isComplete: true,
+            }),
+        });
 
-        if (dbError) throw dbError;
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'API route failed to save business profile.');
+        }
 
         // Update local state
         onUpdate({ ...profileData, business }); 
@@ -195,7 +195,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         setTimeout(() => setSaveSuccess(''), 3000); 
     } catch (err: any) {
         console.error('[BusinessDetails] Database save failed:', err);
-        alert('Failed to save business details. Check your connection.');
+        alert(`Failed to save business details. Check your connection. Details: ${err.message}`);
     }
   };
 
