@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const CheckCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -299,4 +298,10 @@ export const PaletteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.435-.435 1.133-.435 1.568 0l3.72 3.72a1.105 1.105 0 001.568 0l2.88-2.88c.435-.435.435-1.133 0-1.568l-3.72-3.72a1.105 1.105 0 00-1.568 0l-2.88 2.88c-.435.435-1.133.435-1.568 0l-3.72-3.72a1.105 1.105 0 00-1.568 0l-2.88 2.88c-.435.435-.435 1.133 0 1.568l3.72 3.72a1.105 1.105 0 001.568 0z" />
   </svg>
+);
+
+export const CalendarDaysIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0h18M12 12.75h.008v.008H12v-.008Z" />
+    </svg>
 );

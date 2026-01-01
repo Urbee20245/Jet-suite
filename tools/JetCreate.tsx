@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import type { Tool, ProfileData, CampaignIdea, CreativeAssets, SocialPostAsset, AdCopyAsset } from '../types';
+import type { Tool, ProfileData, CampaignIdea, CreativeAssets, SocialPostAsset, AdCopyAsset, SocialConnection } from '../types';
 import { generateCampaignIdeas, generateCreativeAssets, generateImage } from '../services/geminiService';
+import { getSocialConnections, createScheduledPost, PLATFORM_INFO } from '../services/socialMediaService';
 import { Loader } from '../components/Loader';
 import { 
     SparklesIcon, 
@@ -11,9 +11,12 @@ import {
     TrashIcon,
     PencilIcon,
     ChevronLeftIcon,
-    PhotoIcon
+    PhotoIcon,
+    CalendarDaysIcon,
+    XMarkIcon
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
+import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
 
 interface JetCreateProps {
   tool: Tool;
@@ -21,6 +24,113 @@ interface JetCreateProps {
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   onUpdateProfile?: (newProfileData: ProfileData, persist?: boolean) => void;
 }
+
+const ScheduleModal: React.FC<{
+    asset: SocialPostAsset | AdCopyAsset;
+    connections: SocialConnection[];
+    userId: string;
+    onClose: () => void;
+    onSuccess: (message: string) => void;
+}> = ({ asset, connections, userId, onClose, onSuccess }) => {
+    const [selectedConnectionIds, setSelectedConnectionIds] = useState<string[]>([]);
+    const [date, setDate] = useState(getTomorrowDate());
+    const [time, setTime] = useState('09:00');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSchedule = async (postNow = false) => {
+        if (selectedConnectionIds.length === 0) {
+            setError('Please select at least one social account to post to.');
+            return;
+        }
+        setIsSubmitting(true);
+        setError('');
+
+        try {
+            const postData = {
+                post_text: 'copy' in asset ? asset.copy : `${asset.headline}\n\n${asset.description}`,
+                hashtags: '', // Hashtags are part of the copy in JetCreate
+                visual_suggestion: 'visual_suggestion' in asset ? asset.visual_suggestion : '',
+                image_url: asset.imageUrl || null,
+                scheduled_date: postNow ? new Date().toISOString().split('T')[0] : date,
+                scheduled_time: postNow ? new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : time,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                platforms: selectedConnectionIds.map(connId => {
+                    const conn = connections.find(c => c.id === connId)!;
+                    return { platform: conn.platform, connection_id: conn.id };
+                }),
+                status: 'scheduled' as const,
+            };
+
+            await createScheduledPost(userId, postData);
+            onSuccess(`Post successfully scheduled for ${postNow ? 'now' : `${date} at ${time}`}!`);
+            onClose();
+        } catch (err: any) {
+            setError(err.message || 'Failed to schedule post.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+            <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-lg w-full">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-brand-text">Schedule Post</h3>
+                    <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-brand-text-muted" /></button>
+                </div>
+
+                <div className="bg-brand-light p-4 rounded-lg mb-4 border border-brand-border">
+                    <p className="text-xs font-semibold text-brand-text-muted mb-1">Content Preview:</p>
+                    <p className="text-sm text-brand-text line-clamp-3">
+                        {'copy' in asset ? asset.copy : `${asset.headline}: ${asset.description}`}
+                    </p>
+                </div>
+
+                {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-brand-text mb-2">1. Select Accounts to Post To</label>
+                        <div className="space-y-2">
+                            {connections.length > 0 ? connections.map(conn => (
+                                <label key={conn.id} className="flex items-center gap-3 p-2 bg-white rounded-lg border border-brand-border cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedConnectionIds.includes(conn.id)}
+                                        onChange={() => setSelectedConnectionIds(prev => 
+                                            prev.includes(conn.id) ? prev.filter(id => id !== conn.id) : [...prev, conn.id]
+                                        )}
+                                        className="h-4 w-4 rounded border-gray-300 text-accent-purple focus:ring-accent-purple"
+                                    />
+                                    <span className="text-lg">{PLATFORM_INFO[conn.platform]?.icon || '🔗'}</span>
+                                    <span className="text-sm font-semibold text-brand-text">{PLATFORM_INFO[conn.platform]?.name}</span>
+                                    <span className="text-xs text-brand-text-muted ml-auto">@{conn.platform_username}</span>
+                                </label>
+                            )) : <p className="text-sm text-brand-text-muted">No social accounts connected. Connect them in JetPost.</p>}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-brand-text mb-2">2. Select Date</label>
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} min={getMinDate()} max={getMaxDate(30)} className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-brand-text mb-2">3. Select Time</label>
+                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                    <button onClick={() => handleSchedule(true)} disabled={isSubmitting} className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50">Post Now</button>
+                    <button onClick={() => handleSchedule(false)} disabled={isSubmitting} className="flex-1 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50">Schedule Post</button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActiveTool }) => {
     const [campaignIdeas, setCampaignIdeas] = useState<CampaignIdea[]>([]);
@@ -34,6 +144,24 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     const [isLoadingAssets, setIsLoadingAssets] = useState(false);
     const [error, setError] = useState('');
     const [showWhy, setShowWhy] = useState(false);
+
+    const [connections, setConnections] = useState<SocialConnection[]>([]);
+    const [schedulingAsset, setSchedulingAsset] = useState<SocialPostAsset | AdCopyAsset | null>(null);
+    const [scheduleSuccess, setScheduleSuccess] = useState('');
+
+    useEffect(() => {
+        const loadConnections = async () => {
+            if (profileData.user.id) {
+                try {
+                    const userConnections = await getSocialConnections(profileData.user.id);
+                    setConnections(userConnections);
+                } catch (e) {
+                    console.error("Failed to load social connections", e);
+                }
+            }
+        };
+        loadConnections();
+    }, [profileData.user.id]);
 
     // Generate campaign images using Business DNA
     const generateCampaignImage = async (campaign: CampaignIdea): Promise<string> => {
@@ -311,6 +439,23 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
 
     return (
         <div className="h-full w-full bg-brand-darker flex flex-col">
+            {scheduleSuccess && (
+                <div className="fixed top-20 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-all animate-in fade-in slide-in-from-top-4">
+                    {scheduleSuccess}
+                </div>
+            )}
+            {schedulingAsset && (
+                <ScheduleModal
+                    asset={schedulingAsset}
+                    connections={connections}
+                    userId={profileData.user.id}
+                    onClose={() => setSchedulingAsset(null)}
+                    onSuccess={(message) => {
+                        setScheduleSuccess(message);
+                        setTimeout(() => setScheduleSuccess(''), 3000);
+                    }}
+                />
+            )}
             {/* Header with Back Button */}
             <header className="bg-brand-card border-b border-brand-border px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -484,32 +629,10 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                                                         {post.platform}
                                                     </label>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => handleRegenerateImage(i, 'social')}
-                                                            disabled={generatingImageFor === post.id}
-                                                            title="Generate image"
-                                                            className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50"
-                                                        >
-                                                            {generatingImageFor === post.id ? (
-                                                                <div className="w-4 h-4"><Loader /></div>
-                                                            ) : (
-                                                                <PhotoIcon className="w-4 h-4" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDownloadAsset(post.copy, `${post.platform}_post.txt`)}
-                                                            title="Download"
-                                                            className="p-1.5 rounded hover:bg-accent-blue hover:text-white transition-colors"
-                                                        >
-                                                            <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteAsset(i, 'social')}
-                                                            title="Delete"
-                                                            className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"
-                                                        >
-                                                            <TrashIcon className="w-4 h-4" />
-                                                        </button>
+                                                        <button onClick={() => setSchedulingAsset(post)} title="Schedule post" className="p-1.5 rounded hover:bg-green-500 hover:text-white transition-colors"><CalendarDaysIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleRegenerateImage(i, 'social')} disabled={generatingImageFor === post.id} title="Generate image" className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50">{generatingImageFor === post.id ? (<div className="w-4 h-4"><Loader /></div>) : (<PhotoIcon className="w-4 h-4" />)}</button>
+                                                        <button onClick={() => handleDownloadAsset(post.copy, `${post.platform}_post.txt`)} title="Download" className="p-1.5 rounded hover:bg-accent-blue hover:text-white transition-colors"><ArrowDownTrayIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleDeleteAsset(i, 'social')} title="Delete" className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"><TrashIcon className="w-4 h-4" /></button>
                                                     </div>
                                                 </div>
 
@@ -551,35 +674,10 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                                                         Ad Variant {i + 1}
                                                     </label>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button
-                                                            onClick={() => handleRegenerateImage(i, 'ad')}
-                                                            disabled={generatingImageFor === ad.id}
-                                                            title="Generate image"
-                                                            className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50"
-                                                        >
-                                                            {generatingImageFor === ad.id ? (
-                                                                <div className="w-4 h-4"><Loader /></div>
-                                                            ) : (
-                                                                <PhotoIcon className="w-4 h-4" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDownloadAsset(
-                                                                `${ad.headline}\n\n${ad.description}\n\nCTA: ${ad.cta}`,
-                                                                `ad_${i + 1}.txt`
-                                                            )}
-                                                            title="Download"
-                                                            className="p-1.5 rounded hover:bg-accent-blue hover:text-white transition-colors"
-                                                        >
-                                                            <ArrowDownTrayIcon className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteAsset(i, 'ad')}
-                                                            title="Delete"
-                                                            className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"
-                                                        >
-                                                            <TrashIcon className="w-4 h-4" />
-                                                        </button>
+                                                        <button onClick={() => setSchedulingAsset(ad)} title="Schedule post" className="p-1.5 rounded hover:bg-green-500 hover:text-white transition-colors"><CalendarDaysIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleRegenerateImage(i, 'ad')} disabled={generatingImageFor === ad.id} title="Generate image" className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50">{generatingImageFor === ad.id ? (<div className="w-4 h-4"><Loader /></div>) : (<PhotoIcon className="w-4 h-4" />)}</button>
+                                                        <button onClick={() => handleDownloadAsset(`${ad.headline}\n\n${ad.description}\n\nCTA: ${ad.cta}`, `ad_${i + 1}.txt`)} title="Download" className="p-1.5 rounded hover:bg-accent-blue hover:text-white transition-colors"><ArrowDownTrayIcon className="w-4 h-4" /></button>
+                                                        <button onClick={() => handleDeleteAsset(i, 'ad')} title="Delete" className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"><TrashIcon className="w-4 h-4" /></button>
                                                     </div>
                                                 </div>
 
