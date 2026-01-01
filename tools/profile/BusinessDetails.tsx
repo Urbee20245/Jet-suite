@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ProfileData, BusinessDna, Tool, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';
-import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon } from '../../components/icons/MiniIcons';
+import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon } from '../../components/icons/MiniIcons';
 import { Loader } from '../../components/Loader';
 import { SocialAccountsStep } from '../../components/SocialAccountsStep';
 import { ALL_TOOLS } from '../../constants';
@@ -51,7 +51,7 @@ const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed
     <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg mb-4">
         <div className="flex items-start justify-between">
             <div className="flex items-start">
-                <InformationCircleIcon className="w-6 h-6 mr-3 mt-0.5 flex-shrink-0" />
+                <InfoIcon className="w-6 h-6 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
                     <p className="font-bold">Google Business Profile Detected</p>
                     <p className="text-sm">We found a potential match for your business during DNA extraction:</p>
@@ -79,13 +79,21 @@ const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => voi
 const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => { const [searchTerm, setSearchTerm] = useState(''); const [results, setResults] = useState<BusinessSearchResult[]>([]); const [selected, setSelected] = useState<BusinessSearchResult | null>(null); const [loading, setLoading] = useState(false); const handleSearch = async (e: React.FormEvent) => { e.preventDefault(); if (!searchTerm) return; setLoading(true); setResults([]); setSelected(null); const res = await searchGoogleBusiness(searchTerm); setResults(res); setLoading(false); }; if (selected) return ( <div className="bg-brand-light p-6 rounded-lg border text-center"><h4 className="font-bold">Is this your business?</h4><div className="bg-white my-4 p-4 rounded-lg border"><p className="font-bold">{selected.name}</p><p className="text-sm text-brand-text-muted">{selected.address}</p></div><div className="flex gap-4 justify-center"><button onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button><button onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button></div></div> ); return ( <div className="bg-brand-light p-6 rounded-lg border space-y-4"> <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4> <form onSubmit={handleSearch} className="space-y-4"> <div><label className="text-xs font-semibold">1. Paste Google Share or Maps URL</label><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="https://share.google/... or https://maps.app.goo.gl/..." className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <div className="text-center text-xs font-semibold">OR</div> <div><label className="text-xs font-semibold">2. Search by Name & Location</label><input type="text" onChange={e => setSearchTerm(e.target.value)} placeholder={`${profileData.business.name}, ${profileData.business.location}`} className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">{loading ? '...' : 'Find & Connect'}</button> </form> {loading && <Loader />} <div className="space-y-2 mt-4">{results.map(r => <button key={r.name+r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"><p className="font-semibold">{r.name}</p><p className="text-xs text-brand-text-muted">{r.address}</p></button>)}</div> </div> ); };
 const CompletionCard: React.FC<{ onNext: () => void }> = ({ onNext }) => ( <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl"> <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" /> <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Business Profile Complete!</h2> <p className="text-brand-text-muted my-4 max-w-md mx-auto">Great work! Your business identity is set up. Now let's analyze your local presence and find growth opportunities.</p> <button onClick={onNext} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center gap-2 mx-auto">Continue to JetBiz <ArrowRightIcon className="w-5 h-5" /></button> <button className="text-sm text-brand-text-muted hover:underline mt-4">Stay here and review my details</button> </div> );
 
-const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen }) => { 
+const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick }) => { 
     const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
+    const handleClick = () => {
+        if (isLocked) {
+            onLockedClick(number);
+        } else {
+            setIsOpen(!isOpen);
+        }
+    };
+
     return (
         <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''}`}>
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between p-6 sm:p-8 text-left">
+            <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left">
                 <div className="flex items-center gap-4">
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>
                         {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
@@ -133,6 +141,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [isDnaEditing, setIsDnaEditing] = useState(false);
   const [detectedGbp, setDetectedGbp] = useState<BusinessSearchResult | null>(null);
   const [isGbpConfirmed, setIsGbpConfirmed] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
   // Get userId from localStorage
   const [userId, setUserId] = useState<string>('');
@@ -225,12 +234,38 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const renderGbpContent = () => { if (step3Completed && !isGbpSkipped) { return (<div>{googleBusiness.placeId?.startsWith('detected_') && (<p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>)}<GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} /></div>); } const onUpdateStatus = (s: GbpStatus) => { const newGbp = {...googleBusiness, status: s}; setGoogleBusiness(newGbp); }; switch (googleBusiness.status) { case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; default: return <p className="text-brand-text-muted">Select a status to continue.</p>; } };
   const renderSocialContent = () => { if (step4Completed) { return <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />; } return <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div>; };
 
+  const handleLockedClick = (stepNumber: number) => {
+    let message = '';
+    switch (stepNumber) {
+        case 2:
+            message = 'Please complete Step 1 (Business Information) first.';
+            break;
+        case 3:
+            message = 'Please complete Step 2 (Business DNA) first.';
+            break;
+        case 4:
+            message = 'Please complete Step 3 (Google Business Profile) first.';
+            break;
+        default:
+            message = 'This step is locked until the previous step is complete.';
+    }
+    setNotification({ message, type: 'info' });
+    setTimeout(() => setNotification(null), 3000);
+  };
+
   return (
     <div className="space-y-6">
+        {notification && (
+            <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-xl flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${notification.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
+                <InfoIcon className="w-6 h-6" />
+                <p className="font-semibold">{notification.message}</p>
+                <button onClick={() => setNotification(null)}><XMarkIcon className="w-5 h-5" /></button>
+            </div>
+        )}
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
         
-        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed}>
+        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick}>
             <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
             {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
             <form onSubmit={handleSaveInfo} className="space-y-4">
@@ -263,11 +298,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </form>
         </StepCard>
 
-        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed} defaultOpen={step1Completed && !step2Completed}>
+        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick}>
             {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
         </StepCard>
 
-        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed}>
+        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick}>
             <div className="flex justify-between items-start mb-4">
                 <div><p className="text-brand-text-muted">Critical for local visibility and map rankings.</p></div>
                 {step3Completed && !isGbpSkipped && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}
@@ -283,7 +318,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </div>
         </StepCard>
 
-        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed} defaultOpen={step3Completed && !step4Completed}>
+        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
             {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : renderSocialContent()}
         </StepCard>
 
