@@ -1024,3 +1024,45 @@ export const generateCreativeAssets = async (campaign: CampaignIdea, profileData
         throw error;
     }
 };
+
+// NEW: Function to get trending image styles
+export const getTrendingImageStyles = async (): Promise<{ name: string; description: string; prompt: string; }[]> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `You are a social media trend analyst. Identify the top 5 current, trending styles for AI-generated images on platforms like Instagram, TikTok, and Pinterest. For each style, provide a name, a short description, and a sample prompt template that a user could adapt. Your entire output must be a single JSON object with a "styles" array.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        styles: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    name: { type: Type.STRING },
+                                    description: { type: Type.STRING },
+                                    prompt: { type: Type.STRING, description: "A template prompt with a placeholder like [your subject]." }
+                                },
+                                required: ["name", "description", "prompt"]
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText).styles || [];
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            return [];
+        }
+        throw error;
+    }
+};

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool } from '../types';
-import { generateImage } from '../services/geminiService';
+import { generateImage, getTrendingImageStyles } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon } from '../components/icons/MiniIcons';
@@ -12,33 +12,11 @@ interface JetImageProps {
 
 type ImageSize = '1K' | '2K' | '4K';
 
-const trendingStyles = [
-  {
-    name: 'Cinematic Photorealism',
-    description: 'High-end, professional photos with dramatic lighting.',
-    prompt: 'A cinematic, hyperrealistic photo of a [your subject], dramatic lighting, sharp focus, 8k',
-  },
-  {
-    name: '90s Anime & Retro',
-    description: 'Nostalgic style mimicking classic anime or vintage film.',
-    prompt: '90s anime aesthetic drawing of a [your subject], retro-futurism, lo-fi, vintage film look',
-  },
-  {
-    name: '3D Claymation Style',
-    description: 'Cute, tactile-looking characters and scenes.',
-    prompt: 'A cute 3D claymation character of a [your subject], Pixar style, soft studio lighting',
-  },
-  {
-    name: 'Surreal & Dreamlike',
-    description: 'Impossible, beautiful scenes that blend reality with fantasy.',
-    prompt: 'A surreal, dreamlike painting of a [your subject], ethereal, fantasy art, magical',
-  },
-  {
-    name: 'Minimalist Line Art',
-    description: 'Clean, simple, and modern graphics with bold lines.',
-    prompt: 'Minimalist one-line drawing of a [your subject] on a clean white background, vector art',
-  },
-];
+interface Style {
+  name: string;
+  description: string;
+  prompt: string;
+}
 
 export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
   const [prompt, setPrompt] = useState('');
@@ -53,6 +31,40 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
 
   const USAGE_LIMIT = 2;
   const [usage, setUsage] = useState({ count: 0, date: getCurrentDate() });
+
+  const [trendingStyles, setTrendingStyles] = useState<Style[]>([]);
+  const [isLoadingStyles, setIsLoadingStyles] = useState(true);
+
+  useEffect(() => {
+    const fetchStyles = async () => {
+      setIsLoadingStyles(true);
+      try {
+        const cached = localStorage.getItem('jetimage_trending_styles');
+        const now = new Date().getTime();
+
+        if (cached) {
+          const { timestamp, styles } = JSON.parse(cached);
+          if (now - timestamp < 24 * 60 * 60 * 1000) { // 24 hours
+            setTrendingStyles(styles);
+            setIsLoadingStyles(false);
+            return;
+          }
+        }
+
+        const styles = await getTrendingImageStyles();
+        setTrendingStyles(styles);
+        localStorage.setItem('jetimage_trending_styles', JSON.stringify({ timestamp: now, styles }));
+      } catch (e) {
+        console.error("Failed to fetch trending styles:", e);
+        // Fallback to a default or empty array
+        setTrendingStyles([]);
+      } finally {
+        setIsLoadingStyles(false);
+      }
+    };
+
+    fetchStyles();
+  }, []);
 
   useEffect(() => {
     const savedUsage = localStorage.getItem('jetsuite_jetimage_usage');
@@ -187,20 +199,32 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
           {/* Trending Styles Section */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-brand-text mb-2">Trending Styles</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-              {trendingStyles.map(style => (
-                <button
-                  key={style.name}
-                  type="button"
-                  onClick={() => setPrompt(style.prompt)}
-                  className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full"
-                  title={style.description}
-                >
-                  <p className="text-xs font-bold text-brand-text">{style.name}</p>
-                  <p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p>
-                </button>
-              ))}
-            </div>
+            {isLoadingStyles ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-24 animate-pulse">
+                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-2 bg-gray-200 rounded w-full"></div>
+                    <div className="h-2 bg-gray-200 rounded w-5/6 mt-1"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                {trendingStyles.map(style => (
+                  <button
+                    key={style.name}
+                    type="button"
+                    onClick={() => setPrompt(style.prompt)}
+                    className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full"
+                    title={style.description}
+                  >
+                    <p className="text-xs font-bold text-brand-text">{style.name}</p>
+                    <p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="mb-6">
