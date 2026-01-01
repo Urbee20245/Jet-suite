@@ -597,7 +597,7 @@ export const findKeywords = async (service: string, location: string, descriptiv
                   primary_keywords: { ...keywordSchema, description: "High-volume, general service keywords combined with the location." },
                   long_tail_keywords: { ...keywordSchema, description: "More specific, multi-word phrases indicating higher user intent." },
                   question_keywords: { ...keywordSchema, description: "Common questions users search for, ideal for blog posts or FAQ pages." },
-                  local_modifier_keywords: { ...keywordSchema, description: "Keywords with local modifiers like 'near me' or specific neighborhoods." }
+                  local_modifier_keywords: { ...keywordSchema, description: "Keywords with a local modifier like 'near me' or specific neighborhoods." }
                 }
               }
             }
@@ -854,59 +854,6 @@ Analyze the live website and return a complete, structured Brand DNA profile. Yo
     } catch (error) {
         if (error instanceof Error && error.message === "AI_KEY_MISSING") {
             throw new Error("AI features are disabled due to missing API key.");
-        }
-        throw error;
-    }
-};
-
-export const detectGbpOnWebsite = async (websiteUrl: string, businessName: string): Promise<BusinessSearchResult | null> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `You are an expert web analyst and local SEO specialist. Analyze the live website at ${websiteUrl} for a business named "${businessName}". Your goal is to find its official Google Business Profile and return its details.
-
-Follow these steps in order:
-1.  Scan the HTML for any \`<a>\` tags with an \`href\` attribute pointing to Google Maps (e.g., includes 'google.com/maps', 'g.page', 'goo.gl/maps', 'business.google.com').
-2.  If no direct link is found, scan for JSON-LD schema (\`<script type="application/ld+json">\`) with \`@type\` of "LocalBusiness" or a subtype, and look for a 'hasMap' or 'sameAs' property pointing to a Google Maps URL.
-3.  If no link is found, scan for an embedded Google Maps \`<iframe>\`.
-4.  If you find a URL through any of these methods, use it to find the definitive business details using search.
-5.  If no URL is found, as a fallback, search Google using the business name "${businessName}" and any address or phone number you can find on the website's contact page or footer to locate the correct profile.
-
-Once you have confidently identified the correct Google Business Profile, return its details as a single JSON object. The details must include: business name, full address, star rating, total review count, and primary category.
-
-If you cannot find a confident match for the Google Business Profile after trying all methods, your entire output must be a single JSON object with a single key "business" set to \`null\`. Do not guess.`;
-
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: prompt,
-            config: {
-                tools: [{ googleSearch: {} }],
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        business: {
-                            type: Type.OBJECT,
-                            nullable: true,
-                            properties: {
-                                name: { type: Type.STRING },
-                                address: { type: Type.STRING },
-                                rating: { type: Type.NUMBER },
-                                reviewCount: { type: Type.INTEGER },
-                                category: { type: Type.STRING },
-                            }
-                        }
-                    },
-                    required: ["business"]
-                }
-            },
-        });
-
-        const jsonText = response.text.trim();
-        const result = JSON.parse(jsonText);
-        return result.business || null;
-    } catch (error) {
-        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
-            return null;
         }
         throw error;
     }
