@@ -1,11 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Check for required environment variables
+if (!supabaseUrl || !supabaseServiceKey) {
+  // This should ideally be caught during deployment, but we handle it defensively here.
+  console.error('CRITICAL: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+}
 
 // Server-side client with service role (bypasses RLS)
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(supabaseUrl || '', supabaseServiceKey || '');
 
 export default async function handler(
   req: VercelRequest,
@@ -13,6 +19,14 @@ export default async function handler(
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Defensive check for missing keys at runtime
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return res.status(500).json({
+      error: 'Server configuration error',
+      message: 'Supabase environment variables are missing on the server.',
+    });
   }
 
   try {
