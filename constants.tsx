@@ -81,7 +81,7 @@ export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Engage & Convert', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
-export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase', 'support'];
+export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['growthplan', 'knowledgebase', 'support', 'account'];
 
 export const ADMIN_SIDEBAR_TOOLS = ['adminpanel'];
 

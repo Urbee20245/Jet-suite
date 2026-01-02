@@ -18,6 +18,15 @@ interface AdminPanelProps {
     onImpersonate: (userId: string) => void;
 }
 
+interface AdminUser {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  first_name: string;
+  last_name: string;
+}
+
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <h2 className="text-xl font-bold text-brand-text mb-6">{title}</h2>
@@ -41,6 +50,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     // ===== EXISTING ADMIN PANEL STATE =====
     const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support'>('overview');
     
+    // ===== NEW ADMIN DATA STATE =====
+    const [allUsers, setAllUsers] = useState<AdminUser[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [stats, setStats] = useState({ userCount: 0, mrr: 0 });
+    const [loadingStats, setLoadingStats] = useState(false);
+
     // ===== SUPPORT TICKET STATE =====
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [filteredTickets, setFilteredTickets] = useState<SupportTicket[]>([]);
@@ -52,12 +67,53 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
 
-    // ===== LOAD SUPPORT TICKETS =====
+    // ===== DATA FETCHING =====
     useEffect(() => {
+        if (activeTab === 'overview') {
+            loadStats();
+        }
+        if (activeTab === 'users') {
+            loadUsers();
+        }
         if (activeTab === 'support') {
             loadTickets();
         }
     }, [activeTab]);
+
+    const loadStats = async () => {
+        setLoadingStats(true);
+        try {
+            const [userRes, stripeRes] = await Promise.all([
+                fetch('/api/admin/get-all-users'),
+                fetch('/api/admin/get-stripe-metrics')
+            ]);
+            const userData = await userRes.json();
+            const stripeData = await stripeRes.json();
+            setStats({
+                userCount: userData.users?.length || 0,
+                mrr: stripeData.mrr || 0,
+            });
+        } catch (error) {
+            console.error("Failed to load admin stats:", error);
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    const loadUsers = async () => {
+        setLoadingUsers(true);
+        try {
+            const res = await fetch('/api/admin/get-all-users');
+            const data = await res.json();
+            if (data.users) {
+                setAllUsers(data.users);
+            }
+        } catch (error) {
+            console.error("Failed to load users:", error);
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
 
     // ===== FILTER TICKETS =====
     useEffect(() => {
@@ -321,20 +377,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                     {/* Stats Overview */}
                     <AdminSection title="System Overview">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                <div className="text-3xl font-bold text-blue-700">{allProfiles.length}</div>
-                                <div className="text-sm text-blue-600">Total Businesses</div>
+                        {loadingStats ? <p>Loading stats...</p> : (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                    <div className="text-3xl font-bold text-blue-700">{stats.userCount}</div>
+                                    <div className="text-sm text-blue-600">Total Registered Users</div>
+                                </div>
+                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                    <div className="text-3xl font-bold text-green-700">${stats.mrr.toFixed(2)}</div>
+                                    <div className="text-sm text-green-600">Monthly Recurring Revenue</div>
+                                </div>
+                                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                    <div className="text-3xl font-bold text-purple-700">{ticketStats.total}</div>
+                                    <div className="text-sm text-purple-600">Support Tickets</div>
+                                </div>
                             </div>
-                            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                                <div className="text-3xl font-bold text-green-700">{allProfiles.length}</div>
-                                <div className="text-sm text-green-600">Active Users</div>
-                            </div>
-                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                                <div className="text-3xl font-bold text-purple-700">{ticketStats.total}</div>
-                                <div className="text-sm text-purple-600">Support Tickets</div>
-                            </div>
-                        </div>
+                        )}
                     </AdminSection>
                 </>
             )}
@@ -376,34 +434,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* USERS TAB */}
             {activeTab === 'users' && (
                 <AdminSection title="User Management">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-brand-text-muted">
-                            <thead className="text-xs text-brand-text uppercase bg-brand-light">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3">User Email</th>
-                                    <th scope="col" className="px-6 py-3">Name</th>
-                                    <th scope="col" className="px-6 py-3">Role</th>
-                                    <th scope="col" className="px-6 py-3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {allProfiles.map(profile => (
-                                    <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
-                                        <td className="px-6 py-4 font-medium text-brand-text">{profile.user.email}</td>
-                                        <td className="px-6 py-4">{profile.user.firstName} {profile.user.lastName}</td>
-                                        <td className="px-6 py-4">{profile.user.email === 'theivsightcompany@gmail.com' ? 'Admin' : 'Owner'}</td>
-                                        <td className="px-6 py-4 flex items-center space-x-2">
-                                            {profile.user.email !== 'theivsightcompany@gmail.com' &&
-                                                <button onClick={() => onImpersonate(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
-                                            }
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
-                                        </td>
+                    {loadingUsers ? <p>Loading users...</p> : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-brand-text-muted">
+                                <thead className="text-xs text-brand-text uppercase bg-brand-light">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3">User Email</th>
+                                        <th scope="col" className="px-6 py-3">Name</th>
+                                        <th scope="col" className="px-6 py-3">Role</th>
+                                        <th scope="col" className="px-6 py-3">Created Date</th>
+                                        <th scope="col" className="px-6 py-3">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {allUsers.map(user => (
+                                        <tr key={user.id} className="bg-white border-b hover:bg-brand-light">
+                                            <td className="px-6 py-4 font-medium text-brand-text">{user.email}</td>
+                                            <td className="px-6 py-4">{user.first_name} {user.last_name}</td>
+                                            <td className="px-6 py-4">{user.email === 'theivsightcompany@gmail.com' ? 'Admin' : user.role}</td>
+                                            <td className="px-6 py-4">{new Date(user.created_at).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4 flex items-center space-x-2">
+                                                {user.email !== 'theivsightcompany@gmail.com' &&
+                                                    <button onClick={() => onImpersonate(user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
+                                                }
+                                                <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
+                                                <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </AdminSection>
             )}
 
