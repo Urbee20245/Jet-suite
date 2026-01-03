@@ -693,29 +693,69 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             </div>
                         </div>
 
-                        {/* Trust Score Visualization */}
-                        <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-sm text-white font-medium">Trust Score Impact</span>
-                                <span className="text-xs text-pink-300 bg-pink-500/20 px-2 py-1 rounded">+45%</span>
-                            </div>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-400">Before JetTrust</span>
-                                    <span className="text-xs text-gray-400">After JetTrust</span>
-                                </div>
-                                <div className="h-8 rounded-lg bg-slate-800 overflow-hidden flex trust-increase">
-                                    <div className="h-full w-1/3 bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center">
-                                        <span className="text-xs text-white">2.8%</span>
-                                    </div>
-                                    <div className="h-full w-2/3 bg-gradient-to-r from-pink-500 to-rose-600 flex items-center justify-center">
-                                        <span className="text-xs text-white">4.1% Conversion</span>
-                                    </div>
-                                </div>
-                                <div className="text-xs text-gray-500 text-center">Showing reviews boosts customer trust</div>
-                            </div>
-                        </div>
-                     </div>
+                       {/* Trust Score Visualization with Animation */}
+<div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-pink-500/30 transition-colors duration-300">
+  <div className="flex items-center justify-between mb-3">
+    <span className="text-sm text-white font-medium">Trust Score Impact</span>
+    <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-pink-500/20 to-rose-600/20 text-pink-300 px-3 py-1 rounded-full border border-pink-500/30">
+      +45% Increase
+    </span>
+  </div>
+  <div className="space-y-3">
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-gray-400">Before JetTrust: <span className="text-slate-300">2.8%</span></span>
+      <span className="text-gray-400">After JetTrust: <span className="text-pink-300 font-medium">4.1%</span></span>
+    </div>
+    
+    {/* Animated Progress Bar */}
+    <div className="relative">
+      <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative group cursor-pointer">
+        {/* Background bar showing full width */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
+        
+        {/* Animated fill bar */}
+        <div className="h-full trust-increase-animated rounded-lg relative">
+          {/* Percentage text that changes during animation */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="trust-percent-changing text-xs font-bold text-white transition-all duration-1000"></div>
+          </div>
+          
+          {/* Final percentage overlay */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 animate-fade-in-scale delay-2000">
+            <span className="text-xs font-bold text-white bg-pink-600/80 backdrop-blur-sm px-3 py-1 rounded-full">
+              4.1% Conversion Rate
+            </span>
+          </div>
+        </div>
+        
+        {/* Marker points */}
+        <div className="absolute left-1/3 top-0 bottom-0 w-px bg-slate-600/50">
+          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
+          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
+        </div>
+        
+        <div className="absolute left-2/3 top-0 bottom-0 w-px bg-pink-500/30">
+          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-pink-500"></div>
+        </div>
+      </div>
+      
+      {/* Labels */}
+      <div className="flex justify-between mt-2 text-xs">
+        <span className="text-slate-400">Low Trust</span>
+        <span className="text-pink-300 font-medium">High Conversion</span>
+      </div>
+    </div>
+    
+    {/* Animation trigger hint */}
+    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+      <div className="flex items-center gap-1">
+        <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+        <span>Watch conversion increase</span>
+      </div>
+    </div>
+  </div>
+</div>
                 </div>
             </div>
         </div>
