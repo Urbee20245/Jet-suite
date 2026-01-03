@@ -35,9 +35,70 @@ const faqs = [
     { q: "How many businesses can I manage?", a: "Your base subscription includes one business profile. You can add additional locations or businesses for just $99/month each from your dashboard." }
 ];
 
+const testimonials = [
+    {
+        quote: "JetSuite found issues three other agencies missed. Finally have a clear path forward.",
+        author: "Mark P.",
+        role: "Plumbing Contractor",
+        stars: 5,
+        businessType: "Home Services"
+    },
+    {
+        quote: "The weekly tasks keep me focused. My Google ranking has already jumped from page 3 to page 1.",
+        author: "Dr. Sarah K.",
+        role: "Dentist",
+        stars: 5,
+        businessType: "Healthcare"
+    },
+    {
+        quote: "I love being able to track my own progress with the Growth Score. It's motivating and simple.",
+        author: "David L.",
+        role: "Real Estate Agent",
+        stars: 5,
+        businessType: "Real Estate"
+    },
+    {
+        quote: "Saved me over $2,000/month in agency fees. The AI content generator alone is worth it.",
+        author: "Lisa M.",
+        role: "Boutique Owner",
+        stars: 5,
+        businessType: "Retail"
+    },
+    {
+        quote: "My Google reviews went from 3.2 to 4.8 stars in just 3 months. JetReply is a game-changer.",
+        author: "James R.",
+        role: "Restaurant Owner",
+        stars: 5,
+        businessType: "Food & Beverage"
+    },
+    {
+        quote: "As a solo lawyer, I don't have time for marketing. JetSuite does it all for me automatically.",
+        author: "Robert T.",
+        role: "Attorney",
+        stars: 5,
+        businessType: "Legal Services"
+    },
+    {
+        quote: "Went from 2 to 12 leads per week. The Growth Plan actually tells me what to do each week.",
+        author: "Maria S.",
+        role: "Fitness Trainer",
+        stars: 5,
+        businessType: "Fitness"
+    },
+    {
+        quote: "Finally an all-in-one tool that works. Canceled 4 different subscriptions and saved $400/month.",
+        author: "Tom W.",
+        role: "Contractor",
+        stars: 5,
+        businessType: "Construction"
+    }
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   const videoRef = useRef<HTMLDivElement>(null);
+  const testimonialsRef = useRef<HTMLDivElement>(null);
   const [starsAnimated, setStarsAnimated] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   
   // Handle video placeholder click
   const handleVideoClick = () => {
@@ -50,6 +111,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
     const timer = setTimeout(() => setStarsAnimated(true), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-scroll testimonials
+  useEffect(() => {
+    if (!testimonialsRef.current || isPaused) return;
+
+    const container = testimonialsRef.current;
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+    let scrollPosition = 0;
+    let direction = 1;
+    const speed = 0.5; // pixels per frame
+
+    const scroll = () => {
+      if (isPaused) return;
+      
+      scrollPosition += speed * direction;
+      
+      // Reverse direction at ends
+      if (scrollPosition >= scrollWidth - clientWidth) {
+        direction = -1;
+      } else if (scrollPosition <= 0) {
+        direction = 1;
+      }
+      
+      container.scrollLeft = scrollPosition;
+      requestAnimationFrame(scroll);
+    };
+
+    const animationId = requestAnimationFrame(scroll);
+    
+    return () => cancelAnimationFrame(animationId);
+  }, [isPaused]);
 
   // Scroll animation observer
   useEffect(() => {
@@ -89,81 +182,80 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
             {/* Left Column: Text Content */}
-     <div className="lg:w-1/2 text-left">
-  {/* Compact Trust Badge with Shield */}
-  <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
-    
-    {/* Subtle Animated Background */}
-    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
-    </div>
-    
-    {/* Shield Icon with Tiny Glow */}
-    <div className="relative">
-      <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-      </svg>
-    </div>
-    
-    {/* Text */}
-    <span className="relative">
-      Trusted by <span className="font-semibold text-white">360+</span> local businesses
-    </span>
-    
-    {/* Live Indicator Dot */}
-    <div className="relative ml-1">
-      <span className="relative flex h-1.5 w-1.5">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
-        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
-      </span>
-    </div>
-  </div>
-  
-  <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">             
-                <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
-                    Get Found First on Google.
-                    <br className="hidden md:block"/>
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
-                        Get More Customers.
-                    </span>
-                </h1>
+            <div className="lg:w-1/2 text-left">
+              {/* Compact Trust Badge with Shield */}
+              <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
                 
-                <p className="mt-6 max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed">
-                    JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
-                </p>
-                
-                <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                    <button 
-                      onClick={() => navigate('/get-started')} 
-                      className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
-                      aria-label="Get Started with JetSuite"
-                    >
-                        Get Started
-                    </button>
-                    <button 
-                      onClick={handleVideoClick}
-                      className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
-                      aria-label="Watch 2 minute demo video"
-                    >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                        Watch 2-Min Demo
-                    </button>
+                {/* Subtle Animated Background */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
                 </div>
                 
-                {/* Trust Badges */}
-                <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
-                  <span>Featured in:</span>
-                  <div className="flex items-center gap-4 opacity-70">
-                    <span className="font-semibold text-gray-400">Forbes</span>
-                    <span className="text-gray-500">•</span>
-                    <span className="font-semibold text-gray-400">TechCrunch</span>
-                    <span className="text-gray-500">•</span>
-                    <span className="font-semibold text-gray-400">Entrepreneur</span>
-                  </div>
+                {/* Shield Icon with Tiny Glow */}
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                  </svg>
                 </div>
+                
+                {/* Text */}
+                <span className="relative">
+                  Trusted by <span className="font-semibold text-white">360+</span> local businesses
+                </span>
+                
+                {/* Live Indicator Dot */}
+                <div className="relative ml-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                  </span>
+                </div>
+              </div>
+              
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+                  Get Found First on Google.
+                  <br className="hidden md:block"/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
+                      Get More Customers.
+                  </span>
+              </h1>
+              
+              <p className="mt-6 max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed">
+                  JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
+              </p>
+              
+              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+                  <button 
+                    onClick={() => navigate('/get-started')} 
+                    className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
+                    aria-label="Get Started with JetSuite"
+                  >
+                      Get Started
+                  </button>
+                  <button 
+                    onClick={handleVideoClick}
+                    className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
+                    aria-label="Watch 2 minute demo video"
+                  >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                      Watch 2-Min Demo
+                  </button>
+              </div>
+              
+              {/* Trust Badges */}
+              <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                <span>Featured in:</span>
+                <div className="flex items-center gap-4 opacity-70">
+                  <span className="font-semibold text-gray-400">Forbes</span>
+                  <span className="text-gray-500">•</span>
+                  <span className="font-semibold text-gray-400">TechCrunch</span>
+                  <span className="text-gray-500">•</span>
+                  <span className="font-semibold text-gray-400">Entrepreneur</span>
+                </div>
+              </div>
             </div>
 
             {/* Right Column: Video */}
@@ -738,11 +830,99 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 7. SOCIAL PROOF */}
+      {/* 7. SOCIAL PROOF - SCROLLING TESTIMONIALS */}
       <section className="section-animate py-24 px-4 bg-brand-darker">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-bold text-white text-center mb-16">What Local Business Owners Are Saying</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div className="bg-slate-800/30 p-4 rounded-xl text-center">
+              <div className="text-3xl font-bold text-white">360+</div>
+              <div className="text-sm text-gray-400">Businesses</div>
+            </div>
+            <div className="bg-slate-800/30 p-4 rounded-xl text-center">
+              <div className="text-3xl font-bold text-white">4.9★</div>
+              <div className="text-sm text-gray-400">Avg Rating</div>
+            </div>
+            <div className="bg-slate-800/30 p-4 rounded-xl text-center">
+              <div className="text-3xl font-bold text-white">94%</div>
+              <div className="text-sm text-gray-400">Satisfaction</div>
+            </div>
+            <div className="bg-slate-800/30 p-4 rounded-xl text-center">
+              <div className="text-3xl font-bold text-white">$5K+</div>
+              <div className="text-sm text-gray-400">Monthly Savings</div>
+            </div>
+          </div>
+
+          {/* Scrolling Testimonials Container */}
+          <div className="relative">
+            {/* Gradient Overlays */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-brand-darker to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-brand-darker to-transparent z-10 pointer-events-none"></div>
+            
+            {/* Scroll Controls */}
+            <div className="absolute -top-16 right-0 flex items-center gap-2 z-20">
+              <button
+                onClick={() => setIsPaused(!isPaused)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-gray-300 transition-colors"
+                aria-label={isPaused ? "Resume scrolling" : "Pause scrolling"}
+              >
+                {isPaused ? "▶ Resume" : "⏸ Pause"}
+              </button>
+              <span className="text-sm text-gray-500">Auto-scroll</span>
+            </div>
+            
+            {/* Scrolling Testimonials */}
+            <div 
+              ref={testimonialsRef}
+              className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {/* Duplicate testimonials for seamless scrolling */}
+              {[...testimonials, ...testimonials].map((testimonial, index) => (
+                <div 
+                  key={index} 
+                  className="flex-shrink-0 w-80 md:w-96 bg-slate-800/30 p-6 rounded-2xl border border-slate-700 hover:border-blue-500/50 transition-colors duration-300"
+                >
+                  {/* Stars */}
+                  <div className="flex mb-4">
+                    {[...Array(testimonial.stars)].map((_, i) => (
+                      <StarIcon key={i} className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    ))}
+                  </div>
+                  
+                  {/* Quote */}
+                  <p className="text-gray-300 text-lg italic mb-6">"{testimonial.quote}"</p>
+                  
+                  {/* Author Info */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-teal-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {testimonial.author.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-white">{testimonial.author}</div>
+                      <div className="text-sm text-gray-400">{testimonial.role}</div>
+                      <div className="text-xs text-blue-400 mt-1">{testimonial.businessType}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Scroll Indicator */}
+            <div className="flex justify-center mt-6">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                <div className="text-sm text-gray-500">Scroll horizontally to see more reviews</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Static Testimonials Grid (Fallback for mobile) */}
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8 md:hidden">
             <TestimonialCard 
                 quote="JetSuite found issues three other agencies missed. Finally have a clear path forward." 
                 author="Mark P." 
