@@ -144,7 +144,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
     Join hundreds of businesses growing with JetSuite
     <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 rotate-45"></div>
   </div>
-                
+   </div>             
                 <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
                     Get Found First on Google.
                     <br className="hidden md:block"/>
