@@ -113,7 +113,7 @@
 
 /* ===== NEW ANIMATIONS FOR AI CONTENT SECTION ===== */
 
-/* Trust Score Increase Animation */
+/* Trust Score Increase Animation - FIXED VERSION */
 @keyframes trust-increase-fill {
   0% { 
     width: 33%;
@@ -129,29 +129,37 @@
   }
 }
 
-@keyframes trust-number-increase {
+@keyframes trust-number-change {
   0% { 
-    content: "2.8%";
-    color: #94a3b8;
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% { 
-    content: "4.1%";
-    color: #ec4899;
+  49% {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-}
-
-@keyframes trust-percent-change {
-  0% { 
+  51% {
     opacity: 0;
     transform: translateY(10px);
   }
-  50% {
+  100% { 
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes trust-badge-appear {
+  0% { 
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  80% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 
@@ -159,17 +167,12 @@
   animation: trust-increase-fill 3s ease-in-out forwards;
 }
 
-.trust-percent-changing {
-  position: relative;
-}
-
-.trust-percent-changing::after {
-  content: "2.8%";
-  animation: trust-number-increase 3s ease-in-out forwards;
+.trust-number-animated {
+  animation: trust-number-change 3s ease-in-out forwards;
 }
 
 .trust-percent-badge {
-  animation: trust-percent-change 1.5s ease-out 1.5s forwards;
+  animation: trust-badge-appear 3.5s ease-out forwards;
   opacity: 0;
 }
 
