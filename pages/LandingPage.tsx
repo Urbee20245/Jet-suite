@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FaqItem } from '../components/marketing/FaqItem';
 import { TestimonialCard } from '../components/marketing/TestimonialCard';
 import { 
@@ -36,17 +36,57 @@ const faqs = [
 ];
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
+  const videoRef = useRef<HTMLDivElement>(null);
+  const [starsAnimated, setStarsAnimated] = useState(false);
+  
+  // Handle video placeholder click
+  const handleVideoClick = () => {
+    // Open demo video or modal
+    window.open("https://www.youtube.com/watch?v=demo", "_blank");
+  };
+
+  // Animation for stars in testimonials
+  useEffect(() => {
+    const timer = setTimeout(() => setStarsAnimated(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll animation observer
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in-up');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    document.querySelectorAll('.section-animate').forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="bg-brand-darker text-gray-300 overflow-x-hidden font-sans">
       
-      {/* 1. HERO SECTION - REVISED with video */}
-      <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden">
+      {/* 1. HERO SECTION - ENHANCED */}
+      <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden section-animate">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.02] bg-grid-pattern"></div>
+        
         {/* Background Gradients */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50 animate-pulse-subtle"></div>
         <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-teal-500/10 rounded-full blur-[120px] -z-10 opacity-30"></div>
 
         <div className="max-w-7xl mx-auto">
-          {/* Main content and video side-by-side on desktop */}
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
             {/* Left Column: Text Content */}
             <div className="lg:w-1/2 text-left">
@@ -66,7 +106,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     </span>
                 </h1>
                 
-                {/* REVISED SUBTITLE - More benefit-focused */}
                 <p className="mt-6 max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed">
                     JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
                 </p>
@@ -74,32 +113,59 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <div className="mt-10 flex flex-col sm:flex-row gap-4">
                     <button 
                       onClick={() => navigate('/get-started')} 
-                      className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1"
+                      className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
+                      aria-label="Get Started with JetSuite"
                     >
                         Get Started
                     </button>
                     <button 
-                      onClick={() => navigate('/demo')}
-                      className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
+                      onClick={handleVideoClick}
+                      className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
+                      aria-label="Watch 2 minute demo video"
                     >
-                        Watch 2-Min Demo <span>→</span>
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        Watch 2-Min Demo
                     </button>
+                </div>
+                
+                {/* Trust Badges */}
+                <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                  <span>Featured in:</span>
+                  <div className="flex items-center gap-4 opacity-70">
+                    <span className="font-semibold text-gray-400">Forbes</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="font-semibold text-gray-400">TechCrunch</span>
+                    <span className="text-gray-500">•</span>
+                    <span className="font-semibold text-gray-400">Entrepreneur</span>
+                  </div>
                 </div>
             </div>
 
-            {/* Right Column: VIDEO PLACEHOLDER - NEW */}
+            {/* Right Column: Video */}
             <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
-                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group cursor-pointer relative">
-                    {/* This is the video placeholder. Replace with an actual <video> or <iframe> for YouTube/Vimeo */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-900/40 to-purple-900/40">
+                <div 
+                  ref={videoRef}
+                  onClick={handleVideoClick}
+                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group cursor-pointer relative"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
+                  aria-label="Play demo video: See how JetSuite works"
+                >
+                    {/* Video Preview Image */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
                         {/* Play Button */}
-                        <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                            <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                                <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                            </div>
                         </div>
                     </div>
                     
-                    {/* Optional: Overlay label */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20">
+                    {/* Video Stats Overlay */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
                         See how it works in 2 minutes
                     </div>
                 </div>
@@ -110,7 +176,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 2. THE PROBLEM SECTION */}
-      <section className="py-24 px-4 bg-[#0B1121]">
+      <section className="section-animate py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Is Your Online Presence Costing You Customers?</h2>
@@ -120,7 +186,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </div>
             
             <div className="grid md:grid-cols-3 gap-8">
-                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                <div className="glow-card glow-card-rounded-2xl bg-slate-800/30 p-8 rounded-2xl border border-slate-700">
                     <div className="bg-red-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                         <EyeSlashIcon className="w-7 h-7 text-red-400" />
                     </div>
@@ -130,7 +196,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     </p>
                 </div>
 
-                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                <div className="glow-card glow-card-rounded-2xl bg-slate-800/30 p-8 rounded-2xl border border-slate-700">
                     <div className="bg-yellow-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                         <ExclamationTriangleIcon className="w-7 h-7 text-yellow-400" />
                     </div>
@@ -140,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     </p>
                 </div>
 
-                <div className="bg-slate-800/30 p-8 rounded-2xl border border-slate-700 hover:border-slate-600 transition-colors">
+                <div className="glow-card glow-card-rounded-2xl bg-slate-800/30 p-8 rounded-2xl border border-slate-700">
                     <div className="bg-blue-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                         <CreditCardIcon className="w-7 h-7 text-blue-400" />
                     </div>
@@ -154,29 +220,29 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 3. VALUE PROPOSITION GRID */}
-      <section className="py-24 px-4 bg-slate-900">
+      <section className="section-animate py-24 px-4 bg-slate-900">
         <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-4xl font-bold text-white">Everything You Need to Dominate Local Search</h2>
             </div>
             
             <div className="grid md:grid-cols-4 gap-6">
-                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-blue-500 shadow-xl">
+                <div className="glow-card glow-card-rounded-xl p-6 bg-brand-darker rounded-xl border-t-4 border-blue-500 shadow-xl">
                     <div className="mb-4"><JetVizIcon className="w-10 h-10 text-blue-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Analyze & Diagnose</h3>
                     <p className="text-gray-400 text-sm">Audit your Google Business Profile, website, and competitors instantly.</p>
                 </div>
-                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-teal-400 shadow-xl">
+                <div className="glow-card glow-card-rounded-xl p-6 bg-brand-darker rounded-xl border-t-4 border-teal-400 shadow-xl">
                     <div className="mb-4"><JetCreateIcon className="w-10 h-10 text-teal-400"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Create & Publish</h3>
                     <p className="text-gray-400 text-sm">AI generates your marketing content, images, and ads in seconds.</p>
                 </div>
-                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-purple-500 shadow-xl">
+                <div className="glow-card glow-card-rounded-xl p-6 bg-brand-darker rounded-xl border-t-4 border-purple-500 shadow-xl">
                     <div className="mb-4"><ChatBubbleLeftRightIcon className="w-10 h-10 text-purple-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Engage & Convert</h3>
                     <p className="text-gray-400 text-sm">Manage reviews, capture leads, and build trust automatically.</p>
                 </div>
-                <div className="p-6 bg-brand-darker rounded-xl border-t-4 border-pink-500 shadow-xl">
+                <div className="glow-card glow-card-rounded-xl p-6 bg-brand-darker rounded-xl border-t-4 border-pink-500 shadow-xl">
                     <div className="mb-4"><RocketLaunchIcon className="w-10 h-10 text-pink-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Execute & Grow</h3>
                     <p className="text-gray-400 text-sm">Weekly prioritized action plan that actually gets done.</p>
@@ -185,8 +251,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
       </section>
     
-      {/* "VIEW ALL TOOLS" BUTTON SECTION - ADD THIS */}
-      <section className="py-12 px-4 bg-slate-900 border-y border-slate-800">
+      {/* "VIEW ALL TOOLS" BUTTON SECTION */}
+      <section className="section-animate py-12 px-4 bg-slate-900 border-y border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-900/30 border border-blue-500/30 text-blue-300 text-sm font-medium mb-6">
             <span className="relative flex h-2 w-2">
@@ -205,7 +271,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           
           <button 
             onClick={() => window.open("https://www.getjetsuite.com/features", "_blank")}
-            className="group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-1"
+            className="glow-card glow-card-rounded-xl group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
+            aria-label="View all 20+ tools available in JetSuite"
           >
             <span>View All 20+ Tools</span>
             <span className="group-hover:translate-x-2 transition-transform">→</span>
@@ -216,14 +283,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           </p>
         </div>
       </section>
-      {/* END OF "VIEW ALL TOOLS" SECTION */}
     
-      {/* 4. FEATURES SHOWCASE - WITH ENHANCED ANIMATIONS FOR ALL TOOLS */}
-      <section className="py-24 px-4 bg-[#0B1121]">
+      {/* 4. FEATURES SHOWCASE - WITH YOUR ANIMATIONS */}
+      <section className="section-animate py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto space-y-20">
             {/* Foundation Tools */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="order-2 md:order-1">
+                <div>
                     <span className="text-blue-500 font-bold uppercase tracking-wider text-sm">Foundation</span>
                     <h3 className="text-3xl font-bold text-white mt-2 mb-6">Build a Rock-Solid Presence</h3>
                     <div className="space-y-6">
@@ -250,7 +316,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         </div>
                     </div>
                 </div>
-                <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
+                <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
                      <div className="absolute inset-0 bg-blue-500/5 blur-3xl rounded-full"></div>
                      <div className="relative z-10 space-y-4">
                         <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center hover:border-blue-500/50 transition-colors">
@@ -287,16 +353,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
             </div>
 
-            {/* Creation Tools - ENHANCED with animated AI section */}
+            {/* Creation Tools - ENHANCED with your animations */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
+                <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
                     <div className="absolute -right-20 -top-20 bg-teal-500/20 w-64 h-64 blur-3xl rounded-full"></div>
                     
                     {/* Animated AI Content Generator */}
                     <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="relative">
-                                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-blue-500 rounded-lg flex items-center justify-center ai-thinking">
                                     <BoltIcon className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-teal-400 rounded-full">
@@ -340,10 +406,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         
                         {/* Generated Content Preview Grid */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-teal-500/50 transition-colors group ai-content-card">
+                            <div className="ai-content-card bg-slate-950 p-3 rounded-lg border border-slate-700 group">
                                 <div className="flex items-center justify-between mb-2">
                                     <JetCreateIcon className="w-5 h-5 text-teal-400" />
-                                    <span className="text-xs bg-teal-500/20 text-teal-300 px-2 py-1 rounded ai-status-ready">Ready</span>
+                                    <span className="ai-status-ready text-xs bg-teal-500/20 text-teal-300 px-2 py-1 rounded">Ready</span>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-xs text-gray-400 block">Social Post</span>
@@ -351,10 +417,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                 </div>
                             </div>
                             
-                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-700 hover:border-purple-500/50 transition-colors group ai-content-card">
+                            <div className="ai-content-card bg-slate-950 p-3 rounded-lg border border-slate-700 group">
                                 <div className="flex items-center justify-between mb-2">
                                     <JetImageIcon className="w-5 h-5 text-purple-400" />
-                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded ai-status-ready">Ready</span>
+                                    <span className="ai-status-ready text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">Ready</span>
                                 </div>
                                 <div className="text-center">
                                     <span className="text-xs text-gray-400 block">Ad Creative</span>
@@ -411,9 +477,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
             </div>
             
-            {/* Engagement Tools - ENHANCED with animated JetReply & JetTrust */}
+            {/* Engagement Tools - ENHANCED with your animations */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
-                <div className="order-2 md:order-1">
+                <div>
                     <span className="text-purple-500 font-bold uppercase tracking-wider text-sm">Engagement</span>
                     <h3 className="text-3xl font-bold text-white mt-2 mb-6">Turn Visitors into Loyal Customers</h3>
                     <div className="space-y-6">
@@ -445,18 +511,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         </div>
                     </div>
                 </div>
-                 <div className="order-1 md:order-2 bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
+                 <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
                      <div className="space-y-6">
                         {/* Animated Review Stream */}
-                        <div className="relative">
+                        <div className="relative review-pulse">
                             <div className="absolute -top-3 -left-3 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
                                 <ChatBubbleLeftRightIcon className="w-3 h-3 text-white" />
                             </div>
-                            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700">
+                            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700 sentiment-glow">
                                 <div className="flex items-center gap-2 mb-2">
                                     <div className="flex">
                                         {[...Array(5)].map((_, i) => (
-                                            <StarIcon key={i} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                            <StarIcon 
+                                                key={i} 
+                                                className={`w-4 h-4 text-yellow-400 fill-yellow-400 ${starsAnimated ? 'star-pop' : ''}`}
+                                                style={{ animationDelay: `${i * 0.1}s` }}
+                                            />
                                         ))}
                                     </div>
                                     <span className="text-xs text-gray-400">New review • Just now</span>
@@ -483,25 +553,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                     <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Generating...</span>
                                 </div>
                                 
-                                {/* AI Typing Response */}
-                                <div className="space-y-2">
+                                {/* AI Typing Response - using your typing-wave animation */}
+                                <div className="typing-wave space-y-2">
                                     <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></div>
-                                        <div className="h-2 w-12 bg-blue-400/30 rounded-full animate-pulse delay-100"></div>
+                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                                        <div className="h-2 w-12 bg-blue-400/30 rounded-full"></div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse delay-200"></div>
-                                        <div className="h-2 w-20 bg-blue-400/30 rounded-full animate-pulse delay-300"></div>
+                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                                        <div className="h-2 w-20 bg-blue-400/30 rounded-full"></div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400 animate-pulse delay-400"></div>
-                                        <div className="h-2 w-16 bg-blue-400/30 rounded-full animate-pulse delay-500"></div>
+                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                                        <div className="h-2 w-16 bg-blue-400/30 rounded-full"></div>
                                     </div>
                                 </div>
                                 
                                 <div className="mt-3 pt-3 border-t border-blue-500/20">
                                     <div className="text-xs text-blue-200 opacity-70 flex items-center justify-between">
-                                        <span>Personalized for: Plumbing business</span>
+                                        <span className="brand-pulse">Personalized for: Plumbing business</span>
                                         <span className="text-blue-300">✓ Brand voice matched</span>
                                     </div>
                                 </div>
@@ -519,7 +589,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                     <span className="text-xs text-gray-400">Before JetTrust</span>
                                     <span className="text-xs text-gray-400">After JetTrust</span>
                                 </div>
-                                <div className="h-8 rounded-lg bg-slate-800 overflow-hidden flex">
+                                <div className="h-8 rounded-lg bg-slate-800 overflow-hidden flex trust-increase">
                                     <div className="h-full w-1/3 bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center">
                                         <span className="text-xs text-white">2.8%</span>
                                     </div>
@@ -537,7 +607,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 5. HOW IT WORKS */}
-      <section className="py-24 px-4 bg-slate-900">
+      <section className="section-animate py-24 px-4 bg-slate-900">
          <div className="max-w-6xl mx-auto text-center">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-16">Your Path to More Customers in 10 Minutes/Day</h2>
             
@@ -545,7 +615,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                  {/* Connecting Line (Desktop) */}
                 <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 -z-10"></div>
                 
-                <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
                     <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-blue-600/30 text-2xl font-bold ring-8 ring-brand-darker">
                         <BoltIcon className="w-8 h-8"/>
                     </div>
@@ -553,7 +623,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     <p className="text-gray-400">Connect your business. Our AI audits everything in minutes.</p>
                 </div>
                 
-                 <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                 <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
                     <div className="bg-teal-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-teal-500/30 text-2xl font-bold ring-8 ring-brand-darker">
                         <CheckCircleIcon className="w-8 h-8"/>
                     </div>
@@ -561,7 +631,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     <p className="text-gray-400">Complete 3-5 simple weekly actions from your Growth Plan.</p>
                 </div>
                 
-                 <div className="bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group hover:-translate-y-2 transition-transform">
+                 <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
                     <div className="bg-purple-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-purple-500/30 text-2xl font-bold ring-8 ring-brand-darker">
                         <GrowthScoreIcon className="w-8 h-8"/>
                     </div>
@@ -573,7 +643,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 6. PRICING & VALUE SHOCK */}
-      <section className="py-24 px-4 bg-[#0B1121]">
+      <section className="section-animate py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
             <div className="text-center mb-16">
                 <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Replace $15,000/Month in Services</h2>
@@ -582,7 +652,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
             <div className="grid md:grid-cols-2 gap-12 items-center">
                 {/* Comparison Table */}
-                <div className="bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
+                <div className="glow-card glow-card-rounded-2xl bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
                     <div className="p-6 border-b border-slate-800 bg-slate-900/50">
                         <h3 className="text-lg font-bold text-white">The Old Way (Hiring Pros)</h3>
                     </div>
@@ -615,9 +685,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
 
                 {/* JetSuite Pricing Card */}
-                <div className="relative bg-gradient-to-b from-blue-900 to-slate-900 rounded-2xl border border-blue-500 shadow-2xl shadow-blue-900/50 p-8 text-center overflow-hidden transform md:scale-105">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-teal-400"></div>
-                    <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">BEST VALUE</div>
+                <div className="relative glow-card glow-card-rounded-2xl bg-gradient-to-b from-blue-900 to-slate-900 rounded-2xl border border-blue-500 shadow-2xl shadow-blue-900/50 p-8 text-center overflow-hidden transform md:scale-105">
+                    <div className="absolute top-0 left-0 w-full h-2 gradient-border-animated"></div>
+                    <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 brand-pulse">
+                        BEST VALUE
+                    </div>
                     
                     <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
                     <div className="flex items-baseline justify-center my-8">
@@ -632,7 +704,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Transparent Pricing</li>
                     </ul>
                     
-                    <button onClick={() => navigate('/get-started')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4">
+                    <button onClick={() => navigate('/get-started')} 
+                      className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4"
+                      aria-label="Get started with JetSuite for $149/month">
                         Get Started
                     </button>
                     <p className="text-xs text-gray-500">Get instant access to all 20 growth tools</p>
@@ -642,7 +716,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 7. SOCIAL PROOF */}
-      <section className="py-24 px-4 bg-brand-darker">
+      <section className="section-animate py-24 px-4 bg-brand-darker">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-bold text-white text-center mb-16">What Local Business Owners Are Saying</h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -666,7 +740,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 8. GROWTH SCORE */}
-      <section className="py-24 px-4 bg-slate-900 border-y border-slate-800">
+      <section className="section-animate py-24 px-4 bg-slate-900 border-y border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Track Your Progress With One Number</h2>
             <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
@@ -674,8 +748,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </p>
             
             <div className="relative inline-block">
-                 <div className="w-64 h-64 rounded-full border-[12px] border-slate-800 flex items-center justify-center relative">
-                    <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-l-transparent rotate-45"></div>
+                 <div className="glow-card w-64 h-64 rounded-full border-[12px] border-slate-800 flex items-center justify-center relative">
+                    <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-l-transparent rotate-45 animate-spin-slow"></div>
                     <div className="text-center">
                         <span className="block text-7xl font-bold text-white">82</span>
                         <span className="block text-sm text-gray-400 uppercase tracking-widest mt-2">Excellent</span>
@@ -686,7 +760,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 9. FAQ */}
-      <section className="py-24 px-4 bg-brand-darker">
+      <section className="section-animate py-24 px-4 bg-brand-darker">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-3xl sm:text-5xl font-bold text-center text-white mb-16">Frequently Asked Questions</h2>
           <div className="space-y-4">
@@ -696,7 +770,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       </section>
 
       {/* 10. FINAL CTA */}
-      <section className="py-24 sm:py-32 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker relative overflow-hidden">
+      <section className="section-animate py-24 sm:py-32 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker relative overflow-hidden">
           {/* Background Effects */}
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
           
@@ -706,15 +780,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   Join 360+ local businesses growing with JetSuite. Start growing today.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
+                <button onClick={() => navigate('/get-started')} 
+                  className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30"
+                  aria-label="Start your free trial of JetSuite">
                   Get Started
                 </button>
-               <button 
-  onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
-  className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
->
-  Schedule a Personalized Demo
-</button>
+                <button 
+                  onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
+                  className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
+                  aria-label="Schedule a personalized demo with our team">
+                  Schedule a Personalized Demo
+                </button>
               </div>
           </div>
       </section>
