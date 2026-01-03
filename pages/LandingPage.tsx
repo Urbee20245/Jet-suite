@@ -626,136 +626,137 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         </div>
                     </div>
                 </div>
-                 <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
-                     <div className="space-y-6">
-                        {/* Animated Review Stream */}
-                        <div className="relative review-pulse">
-                            <div className="absolute -top-3 -left-3 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                                <ChatBubbleLeftRightIcon className="w-3 h-3 text-white" />
-                            </div>
-                            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700 sentiment-glow">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="flex">
-                                        {[...Array(5)].map((_, i) => (
-                                            <StarIcon 
-                                                key={i} 
-                                                className={`w-4 h-4 text-yellow-400 fill-yellow-400 ${starsAnimated ? 'star-pop' : ''}`}
-                                                style={{ animationDelay: `${i * 0.1}s` }}
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-xs text-gray-400">New review • Just now</span>
-                                </div>
-                                <p className="text-sm text-white">"The service was incredible. Highly recommend to everyone in the area!"</p>
-                                <div className="mt-3 flex items-center gap-2 text-xs">
-                                    <span className="text-gray-500">Sentiment:</span>
-                                    <span className="text-green-400 font-medium">Very Positive</span>
-                                    <div className="h-1 w-16 bg-slate-700 rounded-full overflow-hidden ml-auto">
-                                        <div className="h-full w-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                                    </div>
-                                </div>
-                            </div>
+                <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative">
+                  <div className="space-y-6">
+                    {/* Animated Review Stream */}
+                    <div className="relative review-pulse">
+                      <div className="absolute -top-3 -left-3 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+                        <ChatBubbleLeftRightIcon className="w-3 h-3 text-white" />
+                      </div>
+                      <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-700 sentiment-glow">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <StarIcon 
+                                key={i} 
+                                className={`w-4 h-4 text-yellow-400 fill-yellow-400 ${starsAnimated ? 'star-pop' : ''}`}
+                                style={{ animationDelay: `${i * 0.1}s` }}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-400">New review • Just now</span>
                         </div>
+                        <p className="text-sm text-white">"The service was incredible. Highly recommend to everyone in the area!"</p>
+                        <div className="mt-3 flex items-center gap-2 text-xs">
+                          <span className="text-gray-500">Sentiment:</span>
+                          <span className="text-green-400 font-medium">Very Positive</span>
+                          <div className="h-1 w-16 bg-slate-700 rounded-full overflow-hidden ml-auto">
+                            <div className="h-full w-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                        {/* AI Response Animation */}
+                    {/* AI Response Animation */}
+                    <div className="relative">
+                      <div className="absolute -top-3 -left-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                      </div>
+                      <div className="bg-gradient-to-r from-blue-900/30 to-slate-900/30 p-4 rounded-xl border border-blue-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs text-blue-300 font-medium">AI Suggested Reply</span>
+                          <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Generating...</span>
+                        </div>
+                        
+                        {/* AI Typing Response - using your typing-wave animation */}
+                        <div className="typing-wave space-y-2">
+                          <div className="flex items-center gap-1">
+                            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                            <div className="h-2 w-12 bg-blue-400/30 rounded-full"></div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                            <div className="h-2 w-20 bg-blue-400/30 rounded-full"></div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="h-2 w-2 rounded-full bg-blue-400"></div>
+                            <div className="h-2 w-16 bg-blue-400/30 rounded-full"></div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t border-blue-500/20">
+                          <div className="text-xs text-blue-200 opacity-70 flex items-center justify-between">
+                            <span className="brand-pulse">Personalized for: Plumbing business</span>
+                            <span className="text-blue-300">✓ Brand voice matched</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Trust Score Visualization with Animation */}
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-pink-500/30 transition-colors duration-300">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-white font-medium">Trust Score Impact</span>
+                        <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-pink-500/20 to-rose-600/20 text-pink-300 px-3 py-1 rounded-full border border-pink-500/30">
+                          +45% Increase
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Before JetTrust: <span className="text-slate-300">2.8%</span></span>
+                          <span className="text-gray-400">After JetTrust: <span className="text-pink-300 font-medium">4.1%</span></span>
+                        </div>
+                        
+                        {/* Animated Progress Bar */}
                         <div className="relative">
-                            <div className="absolute -top-3 -left-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                                <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                          <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative group cursor-pointer">
+                            {/* Background bar showing full width */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
+                            
+                            {/* Animated fill bar */}
+                            <div className="h-full trust-increase-animated rounded-lg relative">
+                              {/* Percentage text that changes during animation */}
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="trust-percent-changing text-xs font-bold text-white transition-all duration-1000"></div>
+                              </div>
+                              
+                              {/* Final percentage overlay */}
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 animate-fade-in-scale delay-2000">
+                                <span className="text-xs font-bold text-white bg-pink-600/80 backdrop-blur-sm px-3 py-1 rounded-full">
+                                  4.1% Conversion Rate
+                                </span>
+                              </div>
                             </div>
-                            <div className="bg-gradient-to-r from-blue-900/30 to-slate-900/30 p-4 rounded-xl border border-blue-500/30">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-xs text-blue-300 font-medium">AI Suggested Reply</span>
-                                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded">Generating...</span>
-                                </div>
-                                
-                                {/* AI Typing Response - using your typing-wave animation */}
-                                <div className="typing-wave space-y-2">
-                                    <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
-                                        <div className="h-2 w-12 bg-blue-400/30 rounded-full"></div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
-                                        <div className="h-2 w-20 bg-blue-400/30 rounded-full"></div>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        <div className="h-2 w-2 rounded-full bg-blue-400"></div>
-                                        <div className="h-2 w-16 bg-blue-400/30 rounded-full"></div>
-                                    </div>
-                                </div>
-                                
-                                <div className="mt-3 pt-3 border-t border-blue-500/20">
-                                    <div className="text-xs text-blue-200 opacity-70 flex items-center justify-between">
-                                        <span className="brand-pulse">Personalized for: Plumbing business</span>
-                                        <span className="text-blue-300">✓ Brand voice matched</span>
-                                    </div>
-                                </div>
+                            
+                            {/* Marker points */}
+                            <div className="absolute left-1/3 top-0 bottom-0 w-px bg-slate-600/50">
+                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
+                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
                             </div>
+                            
+                            <div className="absolute left-2/3 top-0 bottom-0 w-px bg-pink-500/30">
+                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-pink-500"></div>
+                            </div>
+                          </div>
+                          
+                          {/* Labels */}
+                          <div className="flex justify-between mt-2 text-xs">
+                            <span className="text-slate-400">Low Trust</span>
+                            <span className="text-pink-300 font-medium">High Conversion</span>
+                          </div>
                         </div>
-
-                       {/* Trust Score Visualization with Animation */}
-<div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-pink-500/30 transition-colors duration-300">
-  <div className="flex items-center justify-between mb-3">
-    <span className="text-sm text-white font-medium">Trust Score Impact</span>
-    <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-pink-500/20 to-rose-600/20 text-pink-300 px-3 py-1 rounded-full border border-pink-500/30">
-      +45% Increase
-    </span>
-  </div>
-  <div className="space-y-3">
-    <div className="flex items-center justify-between text-xs">
-      <span className="text-gray-400">Before JetTrust: <span className="text-slate-300">2.8%</span></span>
-      <span className="text-gray-400">After JetTrust: <span className="text-pink-300 font-medium">4.1%</span></span>
-    </div>
-    
-    {/* Animated Progress Bar */}
-    <div className="relative">
-      <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative group cursor-pointer">
-        {/* Background bar showing full width */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
-        
-        {/* Animated fill bar */}
-        <div className="h-full trust-increase-animated rounded-lg relative">
-          {/* Percentage text that changes during animation */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="trust-percent-changing text-xs font-bold text-white transition-all duration-1000"></div>
-          </div>
-          
-          {/* Final percentage overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 animate-fade-in-scale delay-2000">
-            <span className="text-xs font-bold text-white bg-pink-600/80 backdrop-blur-sm px-3 py-1 rounded-full">
-              4.1% Conversion Rate
-            </span>
-          </div>
-        </div>
-        
-        {/* Marker points */}
-        <div className="absolute left-1/3 top-0 bottom-0 w-px bg-slate-600/50">
-          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
-          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
-        </div>
-        
-        <div className="absolute left-2/3 top-0 bottom-0 w-px bg-pink-500/30">
-          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-pink-500"></div>
-        </div>
-      </div>
-      
-      {/* Labels */}
-      <div className="flex justify-between mt-2 text-xs">
-        <span className="text-slate-400">Low Trust</span>
-        <span className="text-pink-300 font-medium">High Conversion</span>
-      </div>
-    </div>
-    
-    {/* Animation trigger hint */}
-    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-      <div className="flex items-center gap-1">
-        <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-        <span>Watch conversion increase</span>
-      </div>
-    </div>
-  </div>
-</div>
+                        
+                        {/* Animation trigger hint */}
+                        <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
+                            <span>Watch conversion increase</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -763,110 +764,110 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
       {/* 5. HOW IT WORKS */}
       <section className="section-animate py-24 px-4 bg-slate-900">
-         <div className="max-w-6xl mx-auto text-center">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-16">Your Path to More Customers in 10 Minutes/Day</h2>
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-16">Your Path to More Customers in 10 Minutes/Day</h2>
+          
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connecting Line (Desktop) */}
+            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 -z-10"></div>
             
-            <div className="grid md:grid-cols-3 gap-8 relative">
-                 {/* Connecting Line (Desktop) */}
-                <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-blue-900 via-blue-700 to-blue-900 -z-10"></div>
-                
-                <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
-                    <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-blue-600/30 text-2xl font-bold ring-8 ring-brand-darker">
-                        <BoltIcon className="w-8 h-8"/>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">1. Connect & Analyze</h3>
-                    <p className="text-gray-400">Connect your business. Our AI audits everything in minutes.</p>
-                </div>
-                
-                 <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
-                    <div className="bg-teal-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-teal-500/30 text-2xl font-bold ring-8 ring-brand-darker">
-                        <CheckCircleIcon className="w-8 h-8"/>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">2. Execute Tasks</h3>
-                    <p className="text-gray-400">Complete 3-5 simple weekly actions from your Growth Plan.</p>
-                </div>
-                
-                 <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
-                    <div className="bg-purple-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-purple-500/30 text-2xl font-bold ring-8 ring-brand-darker">
-                        <GrowthScoreIcon className="w-8 h-8"/>
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-3">3. Track Growth</h3>
-                    <p className="text-gray-400">Watch your Google ranking, reviews, and leads increase.</p>
-                </div>
+            <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
+              <div className="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-blue-600/30 text-2xl font-bold ring-8 ring-brand-darker">
+                <BoltIcon className="w-8 h-8"/>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">1. Connect & Analyze</h3>
+              <p className="text-gray-400">Connect your business. Our AI audits everything in minutes.</p>
             </div>
-         </div>
+            
+            <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
+              <div className="bg-teal-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-teal-500/30 text-2xl font-bold ring-8 ring-brand-darker">
+                <CheckCircleIcon className="w-8 h-8"/>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">2. Execute Tasks</h3>
+              <p className="text-gray-400">Complete 3-5 simple weekly actions from your Growth Plan.</p>
+            </div>
+            
+            <div className="glow-card glow-card-rounded-2xl bg-brand-darker p-8 rounded-2xl border border-slate-800 relative group">
+              <div className="bg-purple-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 text-white shadow-lg shadow-purple-500/30 text-2xl font-bold ring-8 ring-brand-darker">
+                <GrowthScoreIcon className="w-8 h-8"/>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-3">3. Track Growth</h3>
+              <p className="text-gray-400">Watch your Google ranking, reviews, and leads increase.</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* 6. PRICING & VALUE SHOCK */}
       <section className="section-animate py-24 px-4 bg-[#0B1121]">
         <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Replace $15,000/Month in Services</h2>
-                <p className="text-xl text-gray-400">Get the power of an entire agency for less than the cost of lunch.</p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Replace $15,000/Month in Services</h2>
+            <p className="text-xl text-gray-400">Get the power of an entire agency for less than the cost of lunch.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Comparison Table */}
+            <div className="glow-card glow-card-rounded-2xl bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
+              <div className="p-6 border-b border-slate-800 bg-slate-900/50">
+                <h3 className="text-lg font-bold text-white">The Old Way (Hiring Pros)</h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                  <span className="text-gray-400">Web Design Agency</span>
+                  <span className="text-white font-mono">$2,000-5,000/mo</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                  <span className="text-gray-400">Graphic Designer</span>
+                  <span className="text-white font-mono">$1,000-3,000/mo</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                  <span className="text-gray-400">SEO Consultant</span>
+                  <span className="text-white font-mono">$1,000-3,000/mo</span>
+                </div>
+                <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
+                  <span className="text-gray-400">Content Writer</span>
+                  <span className="text-white font-mono">$500-2,000/mo</span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-400">Review Management</span>
+                  <span className="text-white font-mono">$200-800/mo</span>
+                </div>
+                <div className="bg-red-900/20 p-4 rounded-lg flex justify-between items-center mt-4">
+                  <span className="text-red-200 font-bold">Total Cost</span>
+                  <span className="text-red-300 font-bold font-mono text-xl">$5,000 - $16,000/mo</span>
+                </div>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-                {/* Comparison Table */}
-                <div className="glow-card glow-card-rounded-2xl bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
-                    <div className="p-6 border-b border-slate-800 bg-slate-900/50">
-                        <h3 className="text-lg font-bold text-white">The Old Way (Hiring Pros)</h3>
-                    </div>
-                    <div className="p-6 space-y-4">
-                        <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                            <span className="text-gray-400">Web Design Agency</span>
-                            <span className="text-white font-mono">$2,000-5,000/mo</span>
-                        </div>
-                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                            <span className="text-gray-400">Graphic Designer</span>
-                            <span className="text-white font-mono">$1,000-3,000/mo</span>
-                        </div>
-                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                            <span className="text-gray-400">SEO Consultant</span>
-                            <span className="text-white font-mono">$1,000-3,000/mo</span>
-                        </div>
-                         <div className="flex justify-between items-center py-2 border-b border-slate-800/50">
-                            <span className="text-gray-400">Content Writer</span>
-                            <span className="text-white font-mono">$500-2,000/mo</span>
-                        </div>
-                         <div className="flex justify-between items-center py-2">
-                            <span className="text-gray-400">Review Management</span>
-                            <span className="text-white font-mono">$200-800/mo</span>
-                        </div>
-                        <div className="bg-red-900/20 p-4 rounded-lg flex justify-between items-center mt-4">
-                            <span className="text-red-200 font-bold">Total Cost</span>
-                            <span className="text-red-300 font-bold font-mono text-xl">$5,000 - $16,000/mo</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* JetSuite Pricing Card */}
-                <div className="relative glow-card glow-card-rounded-2xl bg-gradient-to-b from-blue-900 to-slate-900 rounded-2xl border border-blue-500 shadow-2xl shadow-blue-900/50 p-8 text-center overflow-hidden transform md:scale-105">
-                    <div className="absolute top-0 left-0 w-full h-2 gradient-border-animated"></div>
-                    <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 brand-pulse">
-                        BEST VALUE
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
-                    <div className="flex items-baseline justify-center my-8">
-                        <span className="text-6xl font-extrabold text-white">$149</span>
-                        <span className="text-xl text-gray-400 ml-2">/month</span>
-                    </div>
-                    
-                    <ul className="text-left space-y-4 mb-8 max-w-xs mx-auto text-gray-300">
-                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
-                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Unlimited Usage</li>
-                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> No Contracts</li>
-                        <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Transparent Pricing</li>
-                    </ul>
-                    
-                    <button onClick={() => navigate('/get-started')} 
-                      className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4"
-                      aria-label="Get started with JetSuite for $149/month">
-                        Get Started
-                    </button>
-                    <p className="text-xs text-gray-500">Get instant access to all 20 growth tools</p>
-                </div>
+            {/* JetSuite Pricing Card */}
+            <div className="relative glow-card glow-card-rounded-2xl bg-gradient-to-b from-blue-900 to-slate-900 rounded-2xl border border-blue-500 shadow-2xl shadow-blue-900/50 p-8 text-center overflow-hidden transform md:scale-105">
+              <div className="absolute top-0 left-0 w-full h-2 gradient-border-animated"></div>
+              <div className="absolute top-4 right-4 bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 brand-pulse">
+                BEST VALUE
+              </div>
+              
+              <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
+              <div className="flex items-baseline justify-center my-8">
+                <span className="text-6xl font-extrabold text-white">$149</span>
+                <span className="text-xl text-gray-400 ml-2">/month</span>
+              </div>
+              
+              <ul className="text-left space-y-4 mb-8 max-w-xs mx-auto text-gray-300">
+                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
+                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Unlimited Usage</li>
+                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> No Contracts</li>
+                <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Transparent Pricing</li>
+              </ul>
+              
+              <button onClick={() => navigate('/get-started')} 
+                className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4"
+                aria-label="Get started with JetSuite for $149/month">
+                Get Started
+              </button>
+              <p className="text-xs text-gray-500">Get instant access to all 20 growth tools</p>
             </div>
+          </div>
         </div>
       </section>
 
@@ -964,19 +965,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           {/* Static Testimonials Grid (Fallback for mobile) */}
           <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8 md:hidden">
             <TestimonialCard 
-                quote="JetSuite found issues three other agencies missed. Finally have a clear path forward." 
-                author="Mark P." 
-                role="Plumbing Contractor" 
+              quote="JetSuite found issues three other agencies missed. Finally have a clear path forward." 
+              author="Mark P." 
+              role="Plumbing Contractor" 
             />
             <TestimonialCard 
-                quote="The weekly tasks keep me focused. My Google ranking has already jumped from page 3 to page 1." 
-                author="Dr. Sarah K." 
-                role="Dentist" 
+              quote="The weekly tasks keep me focused. My Google ranking has already jumped from page 3 to page 1." 
+              author="Dr. Sarah K." 
+              role="Dentist" 
             />
             <TestimonialCard 
-                quote="I love being able to track my own progress with the Growth Score. It's motivating and simple." 
-                author="David L." 
-                role="Real Estate Agent" 
+              quote="I love being able to track my own progress with the Growth Score. It's motivating and simple." 
+              author="David L." 
+              role="Real Estate Agent" 
             />
           </div>
         </div>
@@ -985,20 +986,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       {/* 8. GROWTH SCORE */}
       <section className="section-animate py-24 px-4 bg-slate-900 border-y border-slate-800">
         <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Track Your Progress With One Number</h2>
-            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-                Your Growth Score (0-99) measures your online presence strength and shows exactly what to improve next.
-            </p>
-            
-            <div className="relative inline-block">
-                 <div className="glow-card w-64 h-64 rounded-full border-[12px] border-slate-800 flex items-center justify-center relative">
-                    <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-l-transparent rotate-45 animate-spin-slow"></div>
-                    <div className="text-center">
-                        <span className="block text-7xl font-bold text-white">82</span>
-                        <span className="block text-sm text-gray-400 uppercase tracking-widest mt-2">Excellent</span>
-                    </div>
-                 </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">Track Your Progress With One Number</h2>
+          <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+            Your Growth Score (0-99) measures your online presence strength and shows exactly what to improve next.
+          </p>
+          
+          <div className="relative inline-block">
+            <div className="glow-card w-64 h-64 rounded-full border-[12px] border-slate-800 flex items-center justify-center relative">
+              <div className="absolute inset-0 rounded-full border-[12px] border-blue-500 border-l-transparent rotate-45 animate-spin-slow"></div>
+              <div className="text-center">
+                <span className="block text-7xl font-bold text-white">82</span>
+                <span className="block text-sm text-gray-400 uppercase tracking-widest mt-2">Excellent</span>
+              </div>
             </div>
+          </div>
         </div>
       </section>
 
@@ -1014,28 +1015,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
       {/* 10. FINAL CTA */}
       <section className="section-animate py-24 sm:py-32 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker relative overflow-hidden">
-          {/* Background Effects */}
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-          
-          <div className="relative z-10 max-w-4xl mx-auto">
-              <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
-              <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-                  Join 360+ local businesses growing with JetSuite. Start growing today.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => navigate('/get-started')} 
-                  className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30"
-                  aria-label="Start your free trial of JetSuite">
-                  Get Started
-                </button>
-                <button 
-                  onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
-                  className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
-                  aria-label="Schedule a personalized demo with our team">
-                  Schedule a Personalized Demo
-                </button>
-              </div>
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+        
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
+          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+            Join 360+ local businesses growing with JetSuite. Start growing today.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button onClick={() => navigate('/get-started')} 
+              className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30"
+              aria-label="Start your free trial of JetSuite">
+              Get Started
+            </button>
+            <button 
+              onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
+              className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
+              aria-label="Schedule a personalized demo with our team">
+              Schedule a Personalized Demo
+            </button>
           </div>
+        </div>
       </section>
       
     </div>
