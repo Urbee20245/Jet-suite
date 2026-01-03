@@ -89,62 +89,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
             {/* Left Column: Text Content */}
-            <div className="lg:w-1/2 text-left">
-                {/* Glowing Trust Badge */}
-<div className="relative group mb-8">
-  {/* Outer Glow Effect */}
-  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-teal-400 rounded-full blur opacity-30 group-hover:opacity-70 transition-all duration-500 animate-pulse"></div>
-  
-  {/* Trust Badge Container */}
-  <div className="relative flex items-center gap-3 px-4 py-3 bg-slate-900/90 backdrop-blur-sm rounded-full border border-slate-700 group-hover:border-blue-400/50 transition-all duration-300 overflow-hidden">
+     <div className="lg:w-1/2 text-left">
+  {/* Compact Trust Badge with Shield */}
+  <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
     
-    {/* Animated Background Pattern */}
-    <div className="absolute inset-0 opacity-10">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-teal-500/20 animate-gradient-background"></div>
+    {/* Subtle Animated Background */}
+    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
     </div>
     
-    {/* Trust Shield Icon */}
+    {/* Shield Icon with Tiny Glow */}
     <div className="relative">
-      <div className="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-30 animate-pulse-subtle"></div>
-      <div className="relative w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-        {/* Shield SVG Icon */}
-        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-        </svg>
-      </div>
-      
-      {/* Verified Checkmark */}
-      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-teal-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
-        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/>
-        </svg>
-      </div>
+      <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+      </svg>
     </div>
     
-    {/* Text Content */}
-    <div className="flex flex-col items-start">
-      <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">TRUSTED BY</span>
-      <div className="flex items-baseline gap-1">
-        <span className="text-lg font-bold text-white">360+</span>
-        <span className="text-sm font-medium text-slate-300">Local Businesses</span>
-      </div>
-    </div>
+    {/* Text */}
+    <span className="relative">
+      Trusted by <span className="font-semibold text-white">360+</span> local businesses
+    </span>
     
-    {/* Animated Indicator */}
-    <div className="ml-2 flex items-center">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+    {/* Live Indicator Dot */}
+    <div className="relative ml-1">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
+        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
       </span>
     </div>
   </div>
   
-  {/* Tooltip on Hover */}
-  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 px-3 py-2 bg-slate-800/95 backdrop-blur-sm text-xs text-slate-300 rounded-lg border border-slate-700 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50">
-    Join hundreds of businesses growing with JetSuite
-    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 border-l border-t border-slate-700 rotate-45"></div>
-  </div>
-   </div>             
+  <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">             
                 <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
                     Get Found First on Google.
                     <br className="hidden md:block"/>
