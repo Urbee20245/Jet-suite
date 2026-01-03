@@ -140,7 +140,7 @@
   }
 }
 
-@keytrust-percent-change {
+@keyframes trust-percent-change {
   0% { 
     opacity: 0;
     transform: translateY(10px);
@@ -172,6 +172,7 @@
   animation: trust-percent-change 1.5s ease-out 1.5s forwards;
   opacity: 0;
 }
+
 /* AI Progress Bar Animation */
 @keyframes progress {
   0% { width: 0%; }
@@ -274,6 +275,7 @@
   background-size: 300% 300%;
   animation: gradient-border 3s ease infinite;
 }
+
 /* ===== ADDITIONAL ANIMATIONS FOR JETREPLY & JETTRUST ===== */
 
 /* Review Pulse Animation */
@@ -308,16 +310,6 @@
 
 .typing-wave div {
   animation: typing-wave 1.5s ease-in-out infinite;
-}
-
-/* Trust Score Increase Animation */
-@keyframes trust-increase {
-  0% { width: 33%; }
-  100% { width: 66%; }
-}
-
-.trust-increase {
-  animation: trust-increase 2s ease-out forwards;
 }
 
 /* Star Rating Animation */
@@ -792,7 +784,10 @@
   .sentiment-glow,
   .trust-increase,
   .star-pop,
-  .brand-pulse {
+  .brand-pulse,
+  .trust-increase-animated,
+  .trust-percent-changing::after,
+  .trust-percent-badge {
     animation: none !important;
     transition: none !important;
   }
@@ -842,6 +837,7 @@
 .animation-fill-both {
   animation-fill-mode: both;
 }
+
 /* Trust Badge Specific Animations */
 @keyframes shield-pulse {
   0%, 100% {
@@ -964,6 +960,7 @@
   -webkit-text-fill-color: transparent;
   animation: gradient-shift 3s ease infinite;
 }
+
 /* Add to your existing index.css file */
 
 /* Hide scrollbar for testimonials */
