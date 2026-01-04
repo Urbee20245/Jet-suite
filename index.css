@@ -229,7 +229,7 @@
 }
 
 .trust-number-animated::after {
-  content: "99999.1%";
+  content: "4.1%";
   opacity: 0;
 }
 
