@@ -122,16 +122,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                       console.warn(`[Webhook] User already exists for ${email}. Attempting to retrieve existing user.`);
                       
                       // FIX: Use listUsers and filter manually as getUserByEmail is not available on GoTrueAdminApi
-                      const { data: { users }, error: fetchUserError } = await supabase.auth.admin.listUsers();
-                      
-                      if (fetchUserError) {
-                          throw new Error(`Failed to retrieve existing user list: ${fetchUserError.message}`);
+                      const { data: listData, error: fetchUserError } = await supabase.auth.admin.listUsers();
+
+                      if (fetchUserError || !listData?.users) {
+                          throw new Error(`Failed to list users: ${fetchUserError?.message}`);
                       }
                       
-                      const existingUser = users?.find(u => u.email === email);
+                      const existingUser = listData.users.find((u: any) => u.email === email);
                       
                       if (!existingUser) {
-                          throw new Error(`User with email ${email} not found after listUsers call.`);
+                          throw new Error(`User with email ${email} not found`);
                       }
                       
                       userId = existingUser.id;
