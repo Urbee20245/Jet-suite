@@ -269,7 +269,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                       onClick={() => handleSeatsChange(1)}
                       className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
                     >
-                      PlusIcon className="w-5 h-5" />
+                      <PlusIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
