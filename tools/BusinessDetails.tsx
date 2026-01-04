@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
-import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../../services/geminiService';
+import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
 import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon } from '../components/icons/MiniIcons';
 import { Loader } from '../components/Loader';
-import { SocialAccountsStep } from '../../components/SocialAccountsStep';
-import { ALL_TOOLS } from '../../constants';
-import { getSupabaseClient } from '../../integrations/supabase/client'; // Import centralized client function
+import { SocialAccountsStep } from '../components/SocialAccountsStep';
+import { ALL_TOOLS } from '../constants';
+import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
 
 // --- Types ---
 interface BusinessDetailsProps { profileData: ProfileData; onUpdate: (data: ProfileData) => void; setActiveTool: (tool: Tool | null) => void; }
