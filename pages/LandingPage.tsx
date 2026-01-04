@@ -911,17 +911,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-brand-darker to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-brand-darker to-transparent z-10 pointer-events-none"></div>
             
-            {/* Scroll Controls */}
-            <div className="absolute -top-16 right-0 flex items-center gap-2 z-20">
-              <button
-                onClick={() => setIsPaused(!isPaused)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-gray-300 transition-colors"
-                aria-label={isPaused ? "Resume scrolling" : "Pause scrolling"}
-              >
-                {isPaused ? "▶ Resume" : "⏸ Pause"}
-              </button>
-              <span className="text-sm text-gray-500">Auto-scroll</span>
-            </div>
+        
             
             {/* Scrolling Testimonials */}
             <div 
