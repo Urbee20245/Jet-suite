@@ -385,7 +385,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           </p>
           
           <button 
-            onClick={() => window.open("https://www.getjetsuite.com/features", "_blank")}
+            onClick={() => navigate('/features')}
             className="glow-card glow-card-rounded-xl group inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-teal-500 hover:from-blue-500 hover:to-teal-400 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
             aria-label="View all 20+ tools available in JetSuite"
           >
