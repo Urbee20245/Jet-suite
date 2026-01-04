@@ -39,15 +39,15 @@ export const BillingSuccessPage: React.FC<BillingSuccessPageProps> = ({ navigate
             <ol className="space-y-3 text-gray-300">
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-accent-purple/20 text-accent-purple rounded-full flex items-center justify-center text-sm font-semibold">1</span>
-                <span>We are synchronizing your subscription with your profile</span>
+                <span>We are synchronizing your subscription and creating your account</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-accent-purple/20 text-accent-purple rounded-full flex items-center justify-center text-sm font-semibold">2</span>
-                <span>You'll get a confirmation email with your billing receipt</span>
+                <span>Check your email for your login credentials and welcome message</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-accent-purple/20 text-accent-purple rounded-full flex items-center justify-center text-sm font-semibold">3</span>
-                <span>Click the button below to start building your foundation</span>
+                <span>Click the button below to log in and start building your foundation</span>
               </li>
             </ol>
           </div>
@@ -62,7 +62,7 @@ export const BillingSuccessPage: React.FC<BillingSuccessPageProps> = ({ navigate
               onClick={() => navigate('/login')}
               className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-12 rounded-lg transition-opacity text-lg shadow-lg"
             >
-              Go to Dashboard
+              Go to Login
             </button>
           )}
 

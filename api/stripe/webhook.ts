@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { sendWelcomeEmail } from '../utils/emailService'; // Import email service
 
 // Check for required environment variables
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -198,7 +199,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       console.log(`[Webhook] Initial business profile upserted for user: ${userId}`);
 
-      // TODO: Send welcome email with temporary password (Next step)
+      // 3. Send welcome email if a temporary password was generated
+      if (tempPassword) {
+          try {
+              await sendWelcomeEmail({
+                  email: email,
+                  firstName: metadata.first_name || '',
+                  lastName: metadata.last_name || '',
+                  businessName: businessName,
+                  tempPassword: tempPassword,
+              });
+              console.log(`[Webhook] Successfully logged welcome email content for ${email}`);
+          } catch (e) {
+              console.error(`[Webhook] FAILED to send welcome email to ${email}:`, e);
+          }
+      }
       
     } catch (error: any) {
       console.error('[Webhook] Error processing checkout:', error);
