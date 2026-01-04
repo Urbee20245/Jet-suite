@@ -726,11 +726,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         </div>
         
         {/* Marker points */}
-        <div className="absolute left-1/3 top-0 bottom-0 w-px bg-red-500/30 z-0">
-          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-red-500"></div>
-          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-red-500"></div>
-        </div>
         
+    
         <div className="absolute left-2/3 top-0 bottom-0 w-px bg-green-500/30 z-0">
           <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-green-500"></div>
