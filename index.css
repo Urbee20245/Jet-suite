@@ -225,7 +225,7 @@
 
 .trust-number-animated::before {
   content: "2.8%";
-  opacity: 0;
+  opacity: 100;
 }
 
 .trust-number-animated::after {
