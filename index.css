@@ -137,7 +137,7 @@
   }
 }
 
-/* Trust Score Increase Animation - RED TO GREEN VERSION - FIXED */
+/* Trust Score Increase Animation - RED TO GREEN VERSION - NO TEXT */
 @keyframes trust-increase-fill {
   0% { 
     width: 33%;
@@ -161,33 +161,6 @@
   }
 }
 
-@keyframes trust-number-change {
-  0% { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-  45% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  48% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  52% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  55% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes trust-badge-appear {
   0% { 
     opacity: 0;
@@ -204,39 +177,15 @@
 }
 
 .trust-increase-animated {
-  animation: trust-increase-fill 5s ease-in-out forwards;
-}
-
-.trust-number-animated {
-  position: relative;
-  display: inline-block;
-  min-width: 40px;
-  text-align: center;
-}
-
-.trust-number-animated::before,
-.trust-number-animated::after {
-  position: absolute;
-  left: 0;
-  right: 0;
-  text-align: center;
-  animation: trust-number-change 3s ease-in-out forwards;
-}
-
-.trust-number-animated::before {
-  content: "2.8%";
-  opacity: 0;
-}
-
-.trust-number-animated::after {
-  content: "4.1%";
-  opacity: 0;
+  animation: trust-increase-fill 3s ease-in-out forwards;
 }
 
 .trust-percent-badge {
   animation: trust-badge-appear 3.5s ease-out forwards;
   opacity: 0;
 }
+
+/* REMOVE ALL trust-number-animated related styles */
 
 /* AI Progress Bar Animation */
 @keyframes progress {
