@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 // Check for required environment variables
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -35,6 +36,19 @@ async function buffer(readable: any) {
   return Buffer.concat(chunks);
 }
 
+// Function to generate a secure temporary password
+function generateTemporaryPassword(): string {
+  const length = 16;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+  let password = "";
+  const randomBytes = crypto.randomBytes(length);
+
+  for (let i = 0; i < length; i++) {
+    password += charset[randomBytes[i] % charset.length];
+  }
+  return password;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -60,13 +74,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const session = event.data.object as Stripe.Checkout.Session;
     
     try {
-      const userId = session.client_reference_id || session.metadata?.user_id;
-      
-      if (!userId) {
-        console.error('[Webhook] Missing identity in session:', session.id);
-        return res.status(200).json({ received: true });
-      }
-
       // Safe subscription retrieval
       let subscription;
       try {
@@ -77,12 +84,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const metadata = subscription.metadata;
-      const email = session.customer_email || session.metadata?.email || '';
+      const email = session.customer_email || metadata.email || '';
+      const isNewUser = metadata.is_new_user === 'true';
+      
+      let userId = session.client_reference_id || metadata.user_id;
+      let tempPassword = ''; // Store temp password here
+
+      if (!email) {
+          console.error('[Webhook] CRITICAL: Missing email in session metadata or customer email.', session.id);
+          return res.status(200).json({ received: true });
+      }
+
+      // 1. Handle New User Creation (if unauthenticated user paid)
+      if (isNewUser && !userId) {
+          console.log(`[Webhook] Detected new user signup for email: ${email}. Attempting to create Supabase user.`);
+          tempPassword = generateTemporaryPassword();
+          console.log(`[Webhook] Generated temporary password: ${tempPassword}`); // Log for testing
+
+          try {
+              const { data: newUserData, error: createUserError } = await supabase.auth.admin.createUser({
+                  email: email,
+                  password: tempPassword,
+                  email_confirm: true, // Auto-confirm email
+                  user_metadata: {
+                      first_name: metadata.first_name || '',
+                      last_name: metadata.last_name || '',
+                      business_name: metadata.business_name || '',
+                      phone: metadata.phone || '',
+                      website: metadata.website || '',
+                  },
+              });
+
+              if (createUserError) {
+                  // If creation fails (e.g., user already exists), try to retrieve existing user
+                  if (createUserError.message.includes('User already exists')) {
+                      console.warn(`[Webhook] User already exists for ${email}. Attempting to retrieve existing user.`);
+                      const { data: existingUser, error: fetchUserError } = await supabase.auth.admin.getUserByEmail(email);
+                      if (fetchUserError || !existingUser?.user) {
+                          throw new Error(`Failed to retrieve existing user: ${fetchUserError?.message}`);
+                      }
+                      userId = existingUser.user.id;
+                      console.log(`[Webhook] Using existing user ID: ${userId}`);
+                  } else {
+                      throw createUserError;
+                  }
+              } else {
+                  userId = newUserData?.user?.id;
+                  console.log(`[Webhook] Successfully created new user with ID: ${userId}`);
+              }
+          } catch (e) {
+              console.error('[Webhook] CRITICAL: Failed to create or retrieve user:', e);
+              return res.status(200).json({ received: true }); // Cannot proceed without a valid userId
+          }
+      }
+      
+      if (!userId) {
+          console.error('[Webhook] CRITICAL: Final userId is missing after all attempts.', session.id);
+          return res.status(200).json({ received: true });
+      }
+
+      // 2. Continue with database upserts using the determined userId
+      
+      const phone = metadata.phone || '';
       const businessName = metadata.business_name || '';
       const website = metadata.website || '';
-      const phone = metadata.phone || '';
-      const seatCount = parseInt(metadata.seat_count || '0');
-      const businessCount = parseInt(metadata.business_count || '1');
+      const pricingTier = metadata.pricing_tier || 'standard';
+      
+      // Calculate total seats and businesses from metadata
+      const additionalSeatCount = parseInt(metadata.seat_count || '0');
+      const totalBusinessCount = parseInt(metadata.business_count || '1');
+      const totalSeatCount = 1 + additionalSeatCount; // Assuming 1 base seat is included
 
       // Check if we need to cancel a previous subscription (from upgrade flow)
       if (metadata.previous_subscription_id) {
@@ -94,6 +165,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      // Upsert billing account
       const { error: billingError } = await supabase
         .from('billing_accounts')
         .upsert({
@@ -101,23 +173,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           user_email: email,
           subscription_status: 'active',
           stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          seat_count: seatCount,
-          business_count: businessCount,
+          stripe_subscription_id: subscription.id,
+          seat_count: totalSeatCount,
+          business_count: totalBusinessCount,
+          subscription_plan: pricingTier,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
       if (billingError) throw billingError;
+      console.log(`[Webhook] Billing account upserted for user: ${userId}`);
 
+      // Upsert initial business profile
       await supabase
         .from('business_profiles')
         .upsert({
           user_id: userId,
           business_name: businessName,
-          website_url: website,
-          phone: phone,
+          business_website: website,
+          business_phone: phone,
+          is_primary: true, // Set as primary business
+          is_complete: false, // User still needs to complete onboarding steps
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
+      
+      console.log(`[Webhook] Initial business profile upserted for user: ${userId}`);
+
+      // TODO: Send welcome email with temporary password (Next step)
       
     } catch (error: any) {
       console.error('[Webhook] Error processing checkout:', error);
