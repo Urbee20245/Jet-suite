@@ -693,7 +693,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                       </div>
                     </div>
 
-                    {/* Trust Score Visualization with Animation - FIXED OVERLAP */}
+                    {/* Trust Score Visualization with Animation - COMPLETE FIX */}
 <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-green-500/30 transition-colors duration-300">
   <div className="flex items-center justify-between mb-3">
     <span className="text-sm text-white font-medium">Trust Score Impact</span>
@@ -707,27 +707,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
       <span className="text-gray-400">After JetTrust: <span className="text-green-300 font-medium">4.1%</span></span>
     </div>
     
-    {/* Animated Progress Bar - FIXED OVERLAP */}
+    {/* Animated Progress Bar */}
     <div className="relative">
       <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative">
         {/* Background bar showing full width */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
         
-        {/* Animated fill bar - SINGLE TEXT ELEMENT */}
+        {/* Animated fill bar */}
         <div className="h-full rounded-lg relative">
           <div className="h-full trust-increase-animated rounded-lg"></div>
           
-          {/* FIXED: Single text element with proper z-index */}
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="relative">
-              {/* Using a span with data attributes for animation */}
-              <span 
-                className="text-xs font-bold text-white trust-number-animated"
-                data-start="2.8%"
-                data-end="4.1%"
-              >
-                2.8%
-              </span>
+          {/* Animated percentage text - BOTH BEFORE AND AFTER */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative h-5 w-12">
+              <span className="trust-number-animated text-xs font-bold text-white"></span>
             </div>
           </div>
         </div>
