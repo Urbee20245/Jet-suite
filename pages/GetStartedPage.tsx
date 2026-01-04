@@ -54,24 +54,21 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
     // Get userId from localStorage (set by App.tsx if already logged in)
     const userId = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userId') : null;
     
-    // REQUIRE AUTHENTICATION: We must have a Supabase UUID to proceed.
-    // Passing an email as a userId will cause a database failure in the webhook.
-    if (!userId) {
-      setError('Please sign in or create an account to start your subscription. Redirecting to login...');
-      setTimeout(() => navigate('/login'), 2500);
-      setIsProcessing(false);
-      return;
-    }
+    // Add isNewUser flag
+    const isNewUser = !userId;
+    
+    // Removed authentication check/redirect. Proceed to checkout.
 
     try {
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId, // Definitively passing a valid UUID
+          userId: userId, // Pass null if not logged in
           email,
           seatCount: seats,
           additionalBusinessCount,
+          isNewUser, // Pass the flag
           metadata: { firstName, lastName, businessName, phone, website }
         }),
       });
@@ -272,7 +269,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                       onClick={() => handleSeatsChange(1)}
                       className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
                     >
-                      <PlusIcon className="w-5 h-5" />
+                      PlusIcon className="w-5 h-5" />
                     </button>
                   </div>
                 </div>

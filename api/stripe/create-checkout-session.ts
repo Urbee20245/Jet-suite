@@ -24,28 +24,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const {
-      userId, // Supabase UUID
+      userId, // Supabase UUID (optional)
       email,
       seatCount = 0,
       additionalBusinessCount = 0,
       isFounder = true,
+      isNewUser = false, // NEW: Flag indicating if user is unauthenticated
       metadata = {},
     } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: 'User ID (UUID) is required' });
-    }
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // 1. DEDUPLICATION: Check for existing customer ID for this UUID
-    const { data: account } = await supabase
-      .from('billing_accounts')
-      .select('stripe_customer_id')
-      .eq('user_id', userId)
-      .single();
+    // 1. DEDUPLICATION: Check for existing customer ID only if user is authenticated
+    let account: { stripe_customer_id: string | null } | null = null;
+    if (userId) {
+        const { data: existingAccount } = await supabase
+            .from('billing_accounts')
+            .select('stripe_customer_id')
+            .eq('user_id', userId)
+            .single();
+        account = existingAccount;
+    }
 
     // Select correct price set
     const basePriceId = isFounder
@@ -91,16 +92,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ...(account?.stripe_customer_id 
         ? { customer: account.stripe_customer_id } 
         : { customer_email: email }),
-      client_reference_id: userId,
+      
+      // Only include client_reference_id if userId is present (authenticated user)
+      ...(userId ? { client_reference_id: userId } : {}),
+      
       payment_method_types: ['card'],
       allow_promotion_codes: true,
       line_items: lineItems,
       metadata: {
-        user_id: userId,
+        user_id: userId || 'unauthenticated', // Pass user ID or placeholder
+        is_new_user: String(isNewUser), // NEW
+        email: email, // Always include email
       },
       subscription_data: {
         metadata: {
-          user_id: userId,
+          user_id: userId || 'unauthenticated',
           seat_count: String(seatCount),
           business_count: String(additionalBusinessCount + 1),
           first_name: metadata.firstName || '',
@@ -109,6 +115,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           phone: metadata.phone || '',
           website: metadata.website || '',
           pricing_tier: isFounder ? 'founder' : 'standard',
+          is_new_user: String(isNewUser), // NEW
+          email: email, // Always include email
         },
       },
       success_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
