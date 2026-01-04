@@ -113,19 +113,27 @@
 
 /* ===== NEW ANIMATIONS FOR AI CONTENT SECTION ===== */
 
-/* Trust Score Increase Animation - FIXED VERSION */
+/* Trust Score Increase Animation - RED TO GREEN VERSION */
 @keyframes trust-increase-fill {
   0% { 
     width: 33%;
-    background: linear-gradient(to right, #94a3b8, #64748b);
+    background: linear-gradient(to right, #ef4444, #dc2626); /* Bright Red */
+  }
+  25% {
+    width: 41%;
+    background: linear-gradient(to right, #f97316, #ea580c); /* Orange */
   }
   50% {
     width: 50%;
-    background: linear-gradient(to right, #94a3b8 50%, #ec4899 50%);
+    background: linear-gradient(to right, #eab308, #ca8a04); /* Yellow */
+  }
+  75% {
+    width: 58%;
+    background: linear-gradient(to right, #84cc16, #65a30d); /* Lime Green */
   }
   100% { 
     width: 66%;
-    background: linear-gradient(to right, #ec4899, #f43f5e);
+    background: linear-gradient(to right, #22c55e, #16a34a); /* Bright Green */
   }
 }
 
@@ -133,6 +141,7 @@
   0% { 
     opacity: 1;
     transform: translateY(0);
+    content: "2.8%";
   }
   49% {
     opacity: 0;
@@ -141,10 +150,12 @@
   51% {
     opacity: 0;
     transform: translateY(10px);
+    content: "4.1%";
   }
   100% { 
     opacity: 1;
     transform: translateY(0);
+    content: "4.1%";
   }
 }
 
@@ -168,6 +179,13 @@
 }
 
 .trust-number-animated {
+  position: relative;
+  animation: trust-number-change 3s ease-in-out forwards;
+}
+
+.trust-number-animated::before {
+  content: "2.8%";
+  position: absolute;
   animation: trust-number-change 3s ease-in-out forwards;
 }
 
@@ -331,6 +349,7 @@
 .star-pop:nth-child(3) { animation-delay: 0.2s; }
 .star-pop:nth-child(4) { animation-delay: 0.3s; }
 .star-pop:nth-child(5) { animation-delay: 0.4s; }
+}
 
 /* Brand Voice Match Pulse */
 @keyframes brand-pulse {
