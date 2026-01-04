@@ -704,6 +704,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   <div className="space-y-3">
     <div className="flex items-center justify-between text-xs">
       <span className="text-gray-400">Before JetTrust: <span 
+      
       <span className="text-gray-400">After JetTrust: <span className="text-green-300 font-medium">4.1%</span></span>
     </div>
     
