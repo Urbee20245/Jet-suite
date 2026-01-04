@@ -751,7 +751,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
     <div className="flex items-center justify-center gap-4 mt-4 text-xs">
       <div className="flex items-center gap-1">
         <div className="w-3 h-3 rounded bg-red-500"></div>
-        <span className="text-red-300">2.8% Start</span>
+        
       </div>
       <div className="flex items-center gap-1">
         <div className="w-3 h-3 rounded bg-gradient-to-r from-red-500 to-green-500"></div>
