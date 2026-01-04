@@ -1014,7 +1014,7 @@ export const getTrendingImageStyles = async (): Promise<{ name: string; descript
     }
 };
 // TEMP safety export to unblock Vite cache
-export const detectGbpOnWebsite = async () => {
+export const detectGbpOnWebsite = async (websiteUrl: string, businessName: string) => {
   throw new Error(
     'detectGbpOnWebsite is deprecated. Use searchGoogleBusiness instead.'
   );
