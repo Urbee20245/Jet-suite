@@ -693,65 +693,84 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                       </div>
                     </div>
 
-                    {/* Trust Score Visualization with Animation */}
-                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-pink-500/30 transition-colors duration-300">
+                    {/* Trust Score Visualization with Animation - RED TO GREEN */}
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-green-500/30 transition-colors duration-300">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-sm text-white font-medium">Trust Score Impact</span>
-                        <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-pink-500/20 to-rose-600/20 text-pink-300 px-3 py-1 rounded-full border border-pink-500/30">
+                        <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
                           +45% Increase
                         </span>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-400">Before JetTrust: <span className="text-slate-300">2.8%</span></span>
-                          <span className="text-gray-400">After JetTrust: <span className="text-pink-300 font-medium">4.1%</span></span>
+                          <span className="text-gray-400">Before JetTrust: <span className="text-red-300">2.8%</span></span>
+                          <span className="text-gray-400">After JetTrust: <span className="text-green-300 font-medium">4.1%</span></span>
                         </div>
                         
-                        {/* Animated Progress Bar */}
+                        {/* Animated Progress Bar - RED TO GREEN */}
                         <div className="relative">
-                          <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative group cursor-pointer">
+                          <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative">
                             {/* Background bar showing full width */}
                             <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
                             
-                            {/* Animated fill bar */}
-                            <div className="h-full trust-increase-animated rounded-lg relative">
+                            {/* Animated fill bar - RED TO GREEN */}
+                            <div className="h-full rounded-lg relative">
+                              <div className="h-full trust-increase-animated rounded-lg"></div>
+                              
                               {/* Percentage text that changes during animation */}
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="trust-percent-changing text-xs font-bold text-white transition-all duration-1000"></div>
-                              </div>
-                              
-                              {/* Final percentage overlay */}
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 animate-fade-in-scale delay-2000">
-                                <span className="text-xs font-bold text-white bg-pink-600/80 backdrop-blur-sm px-3 py-1 rounded-full">
-                                  4.1% Conversion Rate
-                                </span>
+                                <div className="relative">
+                                  <span className="trust-number-animated text-xs font-bold text-white">2.8%</span>
+                                </div>
                               </div>
                             </div>
                             
-                            {/* Marker points */}
-                            <div className="absolute left-1/3 top-0 bottom-0 w-px bg-slate-600/50">
-                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
-                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-slate-500"></div>
+                            {/* Marker points - UPDATED COLORS */}
+                            <div className="absolute left-1/3 top-0 bottom-0 w-px bg-red-500/30">
+                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-red-500"></div>
+                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-red-500"></div>
                             </div>
                             
-                            <div className="absolute left-2/3 top-0 bottom-0 w-px bg-pink-500/30">
-                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-pink-500"></div>
+                            <div className="absolute left-2/3 top-0 bottom-0 w-px bg-green-500/30">
+                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-green-500"></div>
                             </div>
                           </div>
                           
-                          {/* Labels */}
+                          {/* Labels with color indicators */}
                           <div className="flex justify-between mt-2 text-xs">
-                            <span className="text-slate-400">Low Trust</span>
-                            <span className="text-pink-300 font-medium">High Conversion</span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                              <span className="text-red-300">Low Trust</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                              <span className="text-green-300 font-medium">High Conversion</span>
+                            </div>
                           </div>
                         </div>
                         
                         {/* Animation trigger hint */}
                         <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
                           <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-                            <span>Watch conversion increase</span>
+                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                            <span>Watch conversion increase from red to green</span>
+                          </div>
+                        </div>
+                        
+                        {/* Color Legend */}
+                        <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-red-500"></div>
+                            <span className="text-red-300">2.8% Start</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-gradient-to-r from-red-500 to-green-500"></div>
+                            <span className="text-yellow-300">Transition</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-green-500"></div>
+                            <span className="text-green-300">4.1% Target</span>
                           </div>
                         </div>
                       </div>
