@@ -349,7 +349,6 @@
 .star-pop:nth-child(3) { animation-delay: 0.2s; }
 .star-pop:nth-child(4) { animation-delay: 0.3s; }
 .star-pop:nth-child(5) { animation-delay: 0.4s; }
-}
 
 /* Brand Voice Match Pulse */
 @keyframes brand-pulse {
