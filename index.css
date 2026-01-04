@@ -137,25 +137,54 @@
   }
 }
 
+/* Trust Score Increase Animation - RED TO GREEN VERSION - FIXED */
+@keyframes trust-increase-fill {
+  0% { 
+    width: 33%;
+    background: linear-gradient(to right, #ef4444, #dc2626); /* Bright Red */
+  }
+  25% {
+    width: 41%;
+    background: linear-gradient(to right, #f97316, #ea580c); /* Orange */
+  }
+  50% {
+    width: 50%;
+    background: linear-gradient(to right, #eab308, #ca8a04); /* Yellow */
+  }
+  75% {
+    width: 58%;
+    background: linear-gradient(to right, #84cc16, #65a30d); /* Lime Green */
+  }
+  100% { 
+    width: 66%;
+    background: linear-gradient(to right, #22c55e, #16a34a); /* Bright Green */
+  }
+}
+
 @keyframes trust-number-change {
   0% { 
     opacity: 1;
     transform: translateY(0);
-    content: "2.8%";
   }
-  49% {
+  45% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  48% {
     opacity: 0;
     transform: translateY(-10px);
   }
-  51% {
+  52% {
     opacity: 0;
     transform: translateY(10px);
-    content: "4.1%";
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(0);
   }
   100% { 
     opacity: 1;
     transform: translateY(0);
-    content: "4.1%";
   }
 }
 
@@ -180,13 +209,28 @@
 
 .trust-number-animated {
   position: relative;
+  display: inline-block;
+  min-width: 40px;
+  text-align: center;
+}
+
+.trust-number-animated::before,
+.trust-number-animated::after {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
   animation: trust-number-change 3s ease-in-out forwards;
 }
 
 .trust-number-animated::before {
   content: "2.8%";
-  position: absolute;
-  animation: trust-number-change 3s ease-in-out forwards;
+  opacity: 1;
+}
+
+.trust-number-animated::after {
+  content: "4.1%";
+  opacity: 0;
 }
 
 .trust-percent-badge {
