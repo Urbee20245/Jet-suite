@@ -517,7 +517,17 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
       case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
       case 'jetbiz': return <JetBiz tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis('jetbiz', report)} profileData={profileData} setActiveTool={setActiveTool} growthPlanTasks={growthPlanTasks} onTaskStatusChange={handleTaskStatusChange} />;
-      case 'jetviz': return <JetViz tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis('jetviz', report)} profileData={profileData} setActiveTool={setActiveTool} growthPlanTasks={growthPlanTasks} onTaskStatusChange={handleTaskStatusChange} />;
+      case 'jetviz': return <JetViz 
+        tool={activeTool} 
+        addTasksToGrowthPlan={addTasksToGrowthPlan} 
+        onSaveAnalysis={(report) => handleSaveAnalysis('jetviz', report)} 
+        profileData={profileData} 
+        setActiveTool={setActiveTool} 
+        growthPlanTasks={growthPlanTasks} 
+        onTaskStatusChange={handleTaskStatusChange} 
+        userId={activeUserId}
+        activeBusinessId={activeBusinessId}
+      />;
       case 'jetcompete': return <JetCompete tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetkeywords': return <JetKeywords tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetpost': return <JetPost tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;

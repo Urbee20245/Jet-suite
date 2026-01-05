@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon, ArrowDownTrayIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetVizProps {
   tool: Tool;
@@ -13,6 +14,8 @@ interface JetVizProps {
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   growthPlanTasks: GrowthPlanTask[];
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
+  userId: string;
+  activeBusinessId: string | null;
 }
 
 const LoadingState: React.FC = () => {
@@ -194,12 +197,26 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
   );
 };
 
-export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSaveAnalysis, profileData, setActiveTool, growthPlanTasks, onTaskStatusChange }) => {
+export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSaveAnalysis, profileData, setActiveTool, growthPlanTasks, onTaskStatusChange, userId, activeBusinessId }) => {
   const [urlToAnalyze, setUrlToAnalyze] = useState('');
   const [result, setResult] = useState<LiveWebsiteAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPromo, setShowPromo] = useState(true);
+  
+  // ADDED STATE FOR PERSISTENCE
+  const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSavedList, setShowSavedList] = useState(false);
+  
+  const supabase = getSupabaseClient();
+
+  // ADDED EFFECT TO LOAD SAVED ANALYSES
+  useEffect(() => {
+    if (userId && activeBusinessId) {
+      loadSavedAnalyses();
+    }
+  }, [userId, activeBusinessId]);
 
   useEffect(() => {
     if (profileData.jetvizAnalysis) {
@@ -213,6 +230,70 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   if (!profileData.business.websiteUrl && !result) {
     return (<div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center"><InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" /><h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2><p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p><button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button></div>);
   }
+
+  // ADDED FUNCTION TO LOAD SAVED ANALYSES
+  const loadSavedAnalyses = async () => {
+    if (!supabase || !userId || !activeBusinessId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('analysis_results')
+        .select('id, created_at, target_url, results')
+        .eq('user_id', userId)
+        .eq('business_id', activeBusinessId)
+        .eq('tool_name', 'jetviz')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      if (data) setSavedAnalyses(data);
+    } catch (error) {
+      console.error('Error loading saved analyses:', error);
+    }
+  };
+
+  // ADDED FUNCTION TO SAVE ANALYSIS
+  const handleSaveAnalysis = async () => {
+    if (!supabase || !userId || !activeBusinessId || !result) return;
+    
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('analysis_results')
+        .insert({
+          user_id: userId,
+          business_id: activeBusinessId,
+          tool_name: 'jetviz',
+          analysis_type: 'full_audit',
+          target_url: urlToAnalyze,
+          results: result // Save the full LiveWebsiteAnalysis object
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      alert('Analysis saved successfully!');
+      loadSavedAnalyses();
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+      alert('Failed to save analysis. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ADDED FUNCTION TO LOAD PREVIOUS ANALYSIS
+  const handleLoadAnalysis = (analysis: any) => {
+    // The full LiveWebsiteAnalysis object is stored in the 'results' field
+    const loadedReport = analysis.results as LiveWebsiteAnalysis;
+    
+    setUrlToAnalyze(loadedReport.businessAddress); // Assuming businessAddress holds the URL
+    setResult(loadedReport);
+    
+    // Note: We don't need to call onSaveAnalysis here as it's already saved.
+    setShowSavedList(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent, rerunUrl?: string) => {
     e.preventDefault();
@@ -268,7 +349,63 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       {loading && <LoadingState />}
       
       {!loading && result && (
-        <JetVizResultDisplay report={result} onRerun={(e) => handleSubmit(e, result.businessAddress)} isRunning={loading} growthPlanTasks={growthPlanTasks} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
+        <>
+          <JetVizResultDisplay report={result} onRerun={(e) => handleSubmit(e, result.businessAddress)} isRunning={loading} growthPlanTasks={growthPlanTasks} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
+          
+          {/* Save Analysis Button */}
+          <div className="mt-6 flex gap-4">
+            <button
+              onClick={handleSaveAnalysis}
+              disabled={isSaving}
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md"
+            >
+              {isSaving ? 'Saving...' : '💾 Save Analysis'}
+            </button>
+            
+            <button
+              onClick={() => setShowSavedList(!showSavedList)}
+              className="px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md"
+            >
+              📂 View Saved Analyses ({savedAnalyses.length})
+            </button>
+            
+            <button
+              onClick={handleStartOver}
+              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+            >
+              Start New Scan
+            </button>
+          </div>
+
+          {/* Saved Analyses List */}
+          {showSavedList && savedAnalyses.length > 0 && (
+            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
+              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
+              <div className="space-y-3">
+                {savedAnalyses.map((analysis) => (
+                  <div
+                    key={analysis.id}
+                    className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
+                      <div className="text-sm text-brand-text-muted">
+                        {new Date(analysis.created_at).toLocaleDateString()} at{' '}
+                        {new Date(analysis.created_at).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadAnalysis(analysis)}
+                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Load
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {!loading && !result && (
@@ -283,6 +420,45 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
               {loading ? 'Auditing...' : 'Audit Website'}
             </button>
           </form>
+          
+          {savedAnalyses.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-brand-border">
+              <button
+                onClick={() => setShowSavedList(!showSavedList)}
+                className="w-full px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                📂 View Saved Analyses ({savedAnalyses.length})
+              </button>
+            </div>
+          )}
+          
+          {showSavedList && savedAnalyses.length > 0 && (
+            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
+              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
+              <div className="space-y-3">
+                {savedAnalyses.map((analysis) => (
+                  <div
+                    key={analysis.id}
+                    className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
+                      <div className="text-sm text-brand-text-muted">
+                        {new Date(analysis.created_at).toLocaleDateString()} at{' '}
+                        {new Date(analysis.created_at).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadAnalysis(analysis)}
+                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Load
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
