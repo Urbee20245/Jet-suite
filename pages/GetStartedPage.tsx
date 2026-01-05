@@ -87,13 +87,13 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 py-20 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 py-12 sm:py-20 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
             Get Started with JetSuite
           </h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-lg sm:text-xl text-gray-400">
             Complete the form below to proceed to secure payment
           </p>
         </div>
@@ -228,7 +228,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                       type="button"
                       onClick={() => handleBusinessChange(-1)}
                       disabled={businesses <= 1}
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors border border-slate-600"
+                      className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors border border-slate-600"
                     >
                       <MinusIcon className="w-5 h-5" />
                     </button>
@@ -239,7 +239,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                     <button
                       type="button"
                       onClick={() => handleBusinessChange(1)}
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
+                      className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
                     >
                       <PlusIcon className="w-5 h-5" />
                     </button>
@@ -256,7 +256,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                       type="button"
                       onClick={() => handleSeatsChange(-1)}
                       disabled={seats <= 0}
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors border border-slate-600"
+                      className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-colors border border-slate-600"
                     >
                       <MinusIcon className="w-5 h-5" />
                     </button>
@@ -267,7 +267,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                     <button
                       type="button"
                       onClick={() => handleSeatsChange(1)}
-                      className="w-12 h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
+                      className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg bg-slate-900 hover:bg-slate-700 text-white transition-colors border border-slate-600"
                     >
                       <PlusIcon className="w-5 h-5" />
                     </button>
@@ -306,8 +306,8 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                   <div className="border-t border-slate-600 pt-3 mt-3">
                     <div className="flex justify-between items-baseline">
                       <span className="font-bold text-white text-lg">Monthly Total</span>
-                      <span className="text-3xl font-extrabold text-white">
-                        ${total}<span className="text-lg font-normal text-gray-400">/mo</span>
+                      <span className="text-2xl sm:text-3xl font-extrabold text-white">
+                        ${total}<span className="text-base sm:text-lg font-normal text-gray-400">/mo</span>
                       </span>
                     </div>
                   </div>
