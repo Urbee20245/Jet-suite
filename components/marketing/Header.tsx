@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               onClick={() => navigate('/savings')}
               className="text-accent-cyan hover:text-accent-purple font-semibold"
             >
-              Calculate Savings
+              💰 Calculate Savings
             </button>
             <button
               onClick={() => navigate('/faq')}
@@ -240,7 +240,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
 
               <button onClick={() => { navigate('/savings'); closeMobile(); }}
                 className="mobile-item">
-                <Calculator size={18} /> Calculate Savings
+                <Calculator size={18} /> 💰 Calculate Savings
               </button>
 
               <button onClick={() => { navigate('/faq'); closeMobile(); }}
