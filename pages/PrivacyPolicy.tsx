@@ -3,6 +3,28 @@ import React from 'react';
 export const PrivacyPolicy: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Header */}
+      <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center gap-2">
+              <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
+              <span className="text-xl font-bold text-white">JetSuite</span>
+            </div>
+            
+            {/* Back to Home Button */}
+            
+              <a
+                href="/"
+                className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors text-sm"
+              >
+                ← Back to Home
+              </a>
+            
+          </div>
+        </div>
+      </div>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
