@@ -1,4 +1,5 @@
-import React, { useState } => 'react';
+' to 'from').">
+import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState } from '../types';
 import { ArrowRightIcon } from '../components/icons/MiniIcons';
