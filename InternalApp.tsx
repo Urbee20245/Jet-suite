@@ -64,7 +64,22 @@ interface InternalAppProps {
 
 const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
-    business: { id: 'temp-biz-id', name: '', category: '', description: '', websiteUrl: '', location: '', serviceArea: '', phone: '', email: '', dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, dnaLastUpdatedAt: undefined },
+    business: { 
+      id: 'temp-biz-id', 
+      name: '', 
+      category: '', 
+      description: '', 
+      websiteUrl: '', 
+      location: '', 
+      serviceArea: '', 
+      phone: '', 
+      email: '', 
+      dna: { logo: '', colors: [], fonts: '', style: '' }, 
+      isDnaApproved: false, 
+      dnaLastUpdatedAt: undefined,
+      is_primary: true, // ADDED
+      is_complete: false // ADDED
+    },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
     brandDnaProfile: undefined,
@@ -130,6 +145,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
               description: profile.business_description,
               isDnaApproved: profile.is_dna_approved,
               dnaLastUpdatedAt: profile.dna_last_updated_at,
+              is_primary: profile.is_primary, // ADDED
+              is_complete: profile.is_complete, // ADDED
             },
             isProfileActive: !!profile.is_complete,
             // Note: brandDnaProfile, jetbizAnalysis, etc. are loaded separately or lazily
