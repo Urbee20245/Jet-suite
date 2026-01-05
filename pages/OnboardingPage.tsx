@@ -43,6 +43,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
     }
 
     try {
+      // Use INSERT for initial creation. If a record already exists (e.g., from webhook), 
+      // this will fail, but the user should be redirected to /app anyway.
       const { error: dbError } = await supabase
         .from('business_profiles')
         .insert({
@@ -52,13 +54,48 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
           industry: formData.industry,
           city: formData.city,
           state: formData.state,
-          is_primary: true,
+          is_primary: true, // CRITICAL: Mark as primary
           is_active: true,
-          is_complete: true,
+          is_complete: true, // Mark as complete since they filled out the form
           updated_at: new Date().toISOString()
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        // If insert fails (e.g., duplicate key from webhook), we assume the profile exists.
+        // We should still attempt to update the existing primary profile if possible.
+        // However, for simplicity in the onboarding flow, we assume success and redirect.
+        // If the user is here, they should be able to proceed.
+        console.warn('[Onboarding] Initial INSERT failed, attempting to proceed/update:', dbError);
+        
+        // Fallback: Attempt to update the existing primary profile if it exists
+        const { data: existingPrimary, error: fetchError } = await supabase
+          .from('business_profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_primary', true)
+          .maybeSingle();
+          
+        if (fetchError) throw fetchError;
+
+        if (existingPrimary) {
+            const { error: updateError } = await supabase
+                .from('business_profiles')
+                .update({
+                    business_name: formData.business_name,
+                    business_website: website,
+                    industry: formData.industry,
+                    city: formData.city,
+                    state: formData.state,
+                    is_complete: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existingPrimary.id);
+            if (updateError) throw updateError;
+        } else {
+            // If we failed to insert and failed to find an existing primary, something is wrong.
+            throw dbError;
+        }
+      }
 
       // Use a hard redirect to ensure the main App router re-verifies the 
       // newly created business profile from the database on refresh.

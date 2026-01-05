@@ -193,6 +193,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 state: state,
                 isPrimary: true,
                 isComplete: true,
+                businessDescription: business.description, // Pass description
             }),
         });
 

@@ -43,10 +43,25 @@ export default async function handler(
       state,
       isPrimary = true,
       isComplete = true,
+      businessDescription, // Added description field
     } = req.body;
 
     if (!userId || !businessName || !websiteUrl || !industry || !city || !state) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // --- SAFER UPDATE/INSERT LOGIC ---
+    
+    // 1. Check if a primary business profile already exists for this user
+    const { data: existingPrimary, error: fetchError } = await supabase
+      .from('business_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('is_primary', true)
+      .maybeSingle();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
     }
 
     const businessData = {
@@ -56,32 +71,41 @@ export default async function handler(
       industry: industry,
       city: city,
       state: state,
+      business_description: businessDescription,
       is_primary: isPrimary,
       is_active: true,
       is_complete: isComplete,
       updated_at: new Date().toISOString(),
     };
 
-    // --- CRITICAL DATABASE OPERATION ---
-    const { data, error: dbError } = await supabase
-      .from('business_profiles')
-      .upsert(businessData, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false,
-      })
-      .select()
-      .single();
+    let result;
+    if (existingPrimary) {
+      // 2. Update existing primary business
+      result = await supabase
+        .from('business_profiles')
+        .update(businessData)
+        .eq('id', existingPrimary.id)
+        .select()
+        .single();
+    } else {
+      // 3. Insert new primary business
+      result = await supabase
+        .from('business_profiles')
+        .insert(businessData)
+        .select()
+        .single();
+    }
 
-    if (dbError) {
-      console.error('Supabase upsert error:', dbError);
+    if (result.error) {
+      console.error('Supabase upsert/insert error:', result.error);
       // Return a structured error response for database failure
       return res.status(500).json({
         error: 'Database operation failed',
-        message: `Failed to save business profile: ${dbError.message} (Code: ${dbError.code})`,
+        message: `Failed to save business profile: ${result.error.message} (Code: ${result.error.code})`,
       });
     }
 
-    return res.status(200).json({ businessProfile: data });
+    return res.status(200).json({ businessProfile: result.data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
     // Return a structured error response to the client for unexpected errors
