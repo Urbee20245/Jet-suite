@@ -8,6 +8,7 @@ import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
+import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -212,7 +213,11 @@ const App: React.FC = () => {
         currentPath.startsWith('/demo') ||
         currentPath.startsWith('/get-started') ||
         currentPath.startsWith('/privacy') ||
-        currentPath.startsWith('/terms');
+        currentPath.startsWith('/terms') ||
+        currentPath.startsWith('/savings') ||
+        currentPath.startsWith('/features') ||
+        currentPath.startsWith('/how-it-works') ||
+        currentPath.startsWith('/faq');
 
       if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
@@ -286,7 +291,19 @@ const App: React.FC = () => {
       );
     }
     
-    return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+    // Check if the path is a known marketing path handled by MarketingWebsite
+    const isKnownMarketingPath = [
+        '/', '/how-it-works', '/features', '/pricing', '/savings', '/get-started', '/faq', 
+        '/demo/jetbiz', '/demo/jetviz', '/login', '/billing/success', '/billing/locked'
+    ].includes(normalizedPath);
+
+    if (isKnownMarketingPath) {
+        return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+    }
+    
+    // Default fallback for unknown paths when not logged in
+    return <NotFoundPage navigate={navigate} />;
+
   } catch (error) {
     console.error('[App] Critical render error:', error);
     return <div className="p-10 text-white">Application crashed. Please check console.</div>;

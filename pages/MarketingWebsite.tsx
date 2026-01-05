@@ -15,6 +15,7 @@ import { BillingSuccessPage } from './BillingSuccessPage';
 import { BillingLockedPage } from './BillingLockedPage';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
+import { NotFoundPage } from './NotFoundPage'; // Import NotFoundPage
 import JethelperApp from '../jethelper/JethelperApp';
 
 interface MarketingWebsiteProps {
@@ -55,7 +56,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
             case '/terms':
                 return <TermsOfService />;
             default:
-                return <LandingPage navigate={navigate} />;
+                // Handle 404 Not Found
+                return <NotFoundPage navigate={navigate} />;
         }
     };
 
