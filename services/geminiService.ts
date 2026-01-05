@@ -77,6 +77,51 @@ export const searchGoogleBusiness = async (query: string): Promise<BusinessSearc
     }
 }
 
+/**
+ * Detects the Google Business Profile associated with a website URL and business name.
+ */
+export const detectGbpOnWebsite = async (websiteUrl: string, businessName: string): Promise<BusinessSearchResult | null> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `You are a Google Business Profile detection specialist. A user provided their website URL: "${websiteUrl}" and business name: "${businessName}". Use Google Search to find the EXACT corresponding Google Business Profile (GBP) listing. Prioritize results where the website URL matches the listing's website or the name/address is an exact match. Return the single best matching result. If no exact match is found, return null.`;
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  business: {
+                    type: Type.OBJECT,
+                    properties: {
+                        name: { type: Type.STRING },
+                        address: { type: Type.STRING },
+                        rating: { type: Type.NUMBER },
+                        reviewCount: { type: Type.INTEGER },
+                        category: { type: Type.STRING },
+                    },
+                    required: ["name", "address", "rating", "reviewCount", "category"]
+                  }
+                }
+              }
+            },
+        });
+
+        const jsonText = response.text.trim();
+        const parsed = JSON.parse(jsonText);
+        return parsed.business || null;
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            return null;
+        }
+        throw error;
+    }
+};
+
 
 const auditReportSchema = {
     type: Type.OBJECT,
