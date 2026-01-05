@@ -1,4 +1,3 @@
-business_name).">
 import React, { useState } from 'react';
 import type { Tool, AuditReport, GrowthPlanTask, ProfileData } from '../types';
 import { analyzeCompetitor } from '../services/geminiService';
