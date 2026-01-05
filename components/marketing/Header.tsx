@@ -129,24 +129,12 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               </div>
             </div>
 
-            {/* LOGIN (TEXT ONLY) */}
+            {/* LOGIN (PRIMARY CTA) */}
             <button
               onClick={() => navigate('/login')}
-              className="text-white font-medium hover:text-gray-200"
+              className="px-6 py-2.5 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold rounded-lg transition-opacity shadow-lg shadow-accent-purple/20"
             >
               Login
-            </button>
-
-            {/* GET STARTED (ICON OK) */}
-            <button
-              onClick={() => navigate('/get-started')}
-              className="bg-gradient-to-r from-accent-purple to-accent-pink
-                         hover:opacity-90 text-white font-bold
-                         py-2.5 px-6 rounded-lg transition-opacity
-                         shadow-lg flex items-center gap-2"
-            >
-              <Rocket className="w-5 h-5" />
-              Get Started
             </button>
           </div>
 
@@ -219,18 +207,18 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                 </div>
               )}
 
-              {/* GET STARTED */}
+              {/* LOGIN (PRIMARY MOBILE CTA) */}
               <button
                 onClick={() => {
-                  navigate('/get-started');
+                  navigate('/login');
                   closeMobile();
                 }}
                 className="w-full bg-gradient-to-r from-accent-purple to-accent-pink
                            text-white font-bold px-4 py-3 rounded-xl
                            flex items-center justify-center gap-2"
               >
-                <Rocket className="w-5 h-5" />
-                Get Started
+                <LogIn className="w-5 h-5" />
+                Login
               </button>
 
               {/* NAV ITEMS (WITH ICONS ON MOBILE) */}
@@ -259,11 +247,6 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                 <HelpCircle size={18} /> FAQ
               </button>
 
-              <button onClick={() => { navigate('/login'); closeMobile(); }}
-                className="mobile-item">
-                <LogIn size={18} /> Login
-              </button>
-
               <div className="pt-2 text-center text-xs text-gray-400">
                 JetSuite <span className="text-gray-500">by Jet Automations</span>
               </div>
@@ -274,4 +257,3 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
     </header>
   );
 };
-
