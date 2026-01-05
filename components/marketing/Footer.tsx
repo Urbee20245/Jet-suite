@@ -15,7 +15,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
           <button onClick={() => navigate('/privacy')} className="hover:text-white">Privacy</button>
           <button onClick={() => navigate('/terms')} className="hover:text-white">Terms</button>
-          <button onClick={() => navigate('/login')} className="hover:text-white">Support</button>
+          <button onClick={() => navigate('/contact')} className="hover:text-white">Contact</button>
           <button onClick={() => navigate('/login')} className="hover:text-white">Login</button>
         </div>
         <p className="mt-8 text-sm text-gray-500">

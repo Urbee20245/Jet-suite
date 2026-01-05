@@ -12,6 +12,7 @@ import {
   Calculator,
   PlayCircle,
   LogIn,
+  Mail, // Import Mail icon for Contact
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -245,6 +246,12 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               <button onClick={() => { navigate('/faq'); closeMobile(); }}
                 className="mobile-item">
                 <HelpCircle size={18} /> FAQ
+              </button>
+              
+              {/* NEW CONTACT LINK */}
+              <button onClick={() => { navigate('/contact'); closeMobile(); }}
+                className="mobile-item">
+                <Mail size={18} /> Contact Us
               </button>
 
               <div className="pt-2 text-center text-xs text-gray-400">
