@@ -59,11 +59,14 @@ export default async function handler(
       return res.status(401).json({ error: 'Unauthorized: Admin access required' });
     }
 
-    // 2. Query active subscriptions
+    // 2. Query active subscriptions, excluding admin test accounts
+    const ADMIN_EMAILS_TO_EXCLUDE = ['theivsightcompany@gmail.com', 'kage.holmes@gmail.com'];
+
     const { data: subscriptions, error } = await supabase
       .from('billing_accounts')
       .select('user_email, subscription_plan, seat_count, business_count, is_founder, subscription_status')
-      .eq('subscription_status', 'active');
+      .eq('subscription_status', 'active')
+      .not('user_email', 'in', `(${ADMIN_EMAILS_TO_EXCLUDE.map(e => `"${e}"`).join(',')})`);
 
     if (error) {
       throw error;
