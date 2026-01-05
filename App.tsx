@@ -9,6 +9,7 @@ import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
+import { ContactPage } from './pages/ContactPage'; // Import ContactPage
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -200,7 +201,7 @@ const App: React.FC = () => {
       }
 
       if (!isOnboardingComplete) {
-        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms')) {
+        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact')) {
           navigate('/onboarding');
         }
         return;
@@ -217,7 +218,8 @@ const App: React.FC = () => {
         currentPath.startsWith('/savings') ||
         currentPath.startsWith('/features') ||
         currentPath.startsWith('/how-it-works') ||
-        currentPath.startsWith('/faq');
+        currentPath.startsWith('/faq') ||
+        currentPath.startsWith('/contact'); // ADDED /contact here
 
       if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
@@ -260,6 +262,7 @@ const App: React.FC = () => {
     
     if (normalizedPath === '/privacy') return <PrivacyPolicy />;
     if (normalizedPath === '/terms') return <TermsOfService />;
+    if (normalizedPath === '/contact') return <ContactPage />; // ADDED ROUTE CHECK
 
     if (!sessionChecked) {
       return (
@@ -291,7 +294,7 @@ const App: React.FC = () => {
       );
     }
 
-    // Valid marketing routes
+    // Check if current path is valid marketing route (handled by MarketingWebsite)
     const validMarketingRoutes = [
       '/',
       '/features',
@@ -304,7 +307,8 @@ const App: React.FC = () => {
       '/savings',
       '/login',
       '/billing/success',
-      '/billing/locked'
+      '/billing/locked',
+      '/contact' // Included here for completeness, though MarketingWebsite handles it
     ];
 
     // Check if current path is valid
