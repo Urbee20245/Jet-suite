@@ -104,6 +104,9 @@ export interface BusinessProfile {
   dna: BusinessDna;
   isDnaApproved: boolean;
   dnaLastUpdatedAt?: string;
+  // ADDED PROPERTIES:
+  is_primary: boolean;
+  is_complete: boolean;
 }
 
 export type GbpStatus = 'Not Created' | 'Not Verified' | 'Verified';
