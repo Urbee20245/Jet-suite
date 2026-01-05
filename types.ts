@@ -91,22 +91,27 @@ export interface UserProfile {
   role: 'Owner' | 'Manager' | 'Marketing' | 'Marketing Director' | '';
 }
 
+// UPDATED BusinessProfile to match database schema
 export interface BusinessProfile {
   id: string; // Business UUID
-  name: string;
-  category: string;
-  description: string;
-  websiteUrl: string;
-  location: string;
-  serviceArea: string;
+  user_id: string;
+  business_name: string;
+  business_website: string;
+  business_description: string;
+  industry: string;
+  city: string;
+  state: string;
+  location: string; // Combined field for display
+  service_area: string;
   phone: string;
   email: string;
   dna: BusinessDna;
   isDnaApproved: boolean;
   dnaLastUpdatedAt?: string;
-  // ADDED PROPERTIES:
   is_primary: boolean;
   is_complete: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export type GbpStatus = 'Not Created' | 'Not Verified' | 'Verified';

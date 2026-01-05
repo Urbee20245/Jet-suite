@@ -66,19 +66,24 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
     business: { 
       id: 'temp-biz-id', 
-      name: '', 
-      category: '', 
-      description: '', 
-      websiteUrl: '', 
+      user_id: id,
+      business_name: '', 
+      industry: '', 
+      business_description: '', 
+      business_website: '', 
       location: '', 
-      serviceArea: '', 
+      service_area: '', 
       phone: '', 
       email: '', 
+      city: '',
+      state: '',
       dna: { logo: '', colors: [], fonts: '', style: '' }, 
       isDnaApproved: false, 
       dnaLastUpdatedAt: undefined,
-      is_primary: true, // ADDED
-      is_complete: false // ADDED
+      is_primary: true,
+      is_complete: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
@@ -136,18 +141,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           const syncedProfile = {
             ...updated[index],
             business: {
-              ...updated[index].business,
-              id: profile.id,
-              name: profile.business_name,
-              websiteUrl: profile.business_website,
-              category: profile.industry,
-              location: `${profile.city}, ${profile.state}`,
-              description: profile.business_description,
+              ...profile, // Use the full profile data from DB (snake_case)
+              location: `${profile.city}, ${profile.state}`, // Derive location for display
               isDnaApproved: profile.is_dna_approved,
               dnaLastUpdatedAt: profile.dna_last_updated_at,
-              is_primary: profile.is_primary, // ADDED
-              is_complete: profile.is_complete, // ADDED
-            },
+            } as BusinessProfile,
             isProfileActive: !!profile.is_complete,
             // Note: brandDnaProfile, jetbizAnalysis, etc. are loaded separately or lazily
           };
@@ -269,13 +267,22 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
     if (dbProfiles && dbProfiles.length > 0) {
       console.log('[InternalApp] Loaded businesses:', dbProfiles);
-      setBusinesses(dbProfiles as BusinessProfile[]);
+      
+      // Map DB results to BusinessProfile interface (which now uses snake_case)
+      const mappedBusinesses = dbProfiles.map(p => ({
+          ...p,
+          location: `${p.city}, ${p.state}`,
+          isDnaApproved: p.is_dna_approved,
+          dnaLastUpdatedAt: p.dna_last_updated_at,
+      })) as BusinessProfile[];
+      
+      setBusinesses(mappedBusinesses);
       
       // Determine active business ID
       const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
-      const primaryBusiness = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
+      const primaryBusiness = mappedBusinesses.find(b => b.is_primary) || mappedBusinesses[0];
       
-      const activeId = savedActiveId && dbProfiles.some(b => b.id === savedActiveId)
+      const activeId = savedActiveId && mappedBusinesses.some(b => b.id === savedActiveId)
         ? savedActiveId
         : primaryBusiness.id;
       
@@ -442,9 +449,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const completedTasks = growthPlanTasks.filter(t => t.status === 'completed').length;
     const inProgressTasks = growthPlanTasks.filter(t => t.status === 'in_progress').length;
     
-    if (business.name && business.location && business.websiteUrl) {
+    if (business.business_name && business.location && business.business_website) {
       score += 10;
-    } else if (business.name || business.location || business.websiteUrl) {
+    } else if (business.business_name || business.location || business.business_website) {
       score += 3;
     }
     
@@ -475,8 +482,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   }, [profileData, growthPlanTasks]);
 
   const handleUpdateProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
-    const { name, location, websiteUrl } = newProfileData.business;
-    if (name && location && websiteUrl && !newProfileData.isProfileActive) { setProfileData({ ...newProfileData, isProfileActive: true }, persist); } else { setProfileData(newProfileData, persist); }
+    const { business_name, location, business_website } = newProfileData.business;
+    if (business_name && location && business_website && !newProfileData.isProfileActive) { setProfileData({ ...newProfileData, isProfileActive: true }, persist); } else { setProfileData(newProfileData, persist); }
   };
 
   const addTasksToGrowthPlan = (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
@@ -500,7 +507,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const activeBusinessName = businesses.find(b => b.id === activeBusinessId)?.business_name || 'Loading Business...';
 
 
-  const isStep1Complete = !!(profileData.business.name && profileData.business.location && profileData.business.websiteUrl);
+  const isStep1Complete = !!(profileData.business.business_name && profileData.business.location && profileData.business.business_website);
   const isStep2Complete = profileData.business.isDnaApproved;
 
   let readinessState: ReadinessState = 'Setup Incomplete';
@@ -585,7 +592,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           <SupportChatbot context={{ 
             user_id: userId,
             user_email: userEmail,
-            business_name: profileData.business.name,
+            business_name: profileData.business.business_name,
             current_page: activeTool?.id || 'home',
             subscription_status: 'active',
             conversation_turns: 0,
