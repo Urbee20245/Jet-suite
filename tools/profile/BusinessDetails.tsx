@@ -1,3 +1,4 @@
+business_name).">
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../../services/geminiService';

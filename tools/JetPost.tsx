@@ -1,3 +1,4 @@
+industry).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, SocialConnection } from '../types';
 import { generateSocialPosts, generateImage } from '../services/geminiService';

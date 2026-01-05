@@ -1,3 +1,4 @@
+business_name).">
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool } from '../types';
 import { generateImage, getTrendingImageStyles } from '../services/geminiService';
@@ -268,7 +269,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                {trendingStyles.map(style => (<button key={style.name} type="button" onClick={() => setPrompt(style.prompt)} className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full" title={style.description}><p className="text-xs font-bold text-brand-text">{style.name}</p><p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p></button>))}
+                {trendingStyles.map(style => (<button type="button" key={style.name} onClick={() => setPrompt(style.prompt)} className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full" title={style.description}><p className="text-xs font-bold text-brand-text">{style.name}</p><p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p></button>))}
               </div>
             )}
           </div>

@@ -1,3 +1,4 @@
+industry).">
 import React, { useState } from 'react';
 import type { Tool, ProfileData } from '../types';
 import { findLeads } from '../services/geminiService';
@@ -14,7 +15,7 @@ interface JetLeadsProps {
 }
 
 export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActiveTool }) => {
-  const { industry: service, location: area } = profileData.business;
+  const { industry: service, location } = profileData.business;
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +27,7 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
     setLoading(true);
     setResult('');
     try {
-      const analysis = await findLeads(service, area);
+      const analysis = await findLeads(service, location);
       setResult(analysis);
     } catch (err) {
       setError('Failed to find leads. Please try again.');
@@ -36,7 +37,7 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
     }
   };
 
-  if (!service || !area) {
+  if (!service || !location) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
@@ -77,7 +78,7 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
             </div>
             <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
                 <span className="text-sm font-medium text-brand-text mr-2">Service Area:</span>
-                <span className="font-semibold text-brand-text">{area}</span>
+                <span className="font-semibold text-brand-text">{location}</span>
             </div>
           </div>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}

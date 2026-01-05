@@ -1,4 +1,4 @@
-
+business_name).">
 import React from 'react';
 import { GrowthScoreIcon } from '../../components/icons/ToolIcons';
 import { BoltIcon, CheckCircleIcon, InformationCircleIcon } from '../../components/icons/MiniIcons';
@@ -149,7 +149,7 @@ export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthSc
                     </p>
                     <div className="space-y-2 text-xs">
                         <div className="flex items-center gap-2">
-                            <CheckCircleIcon className={`w-4 h-4 ${profileData.business.name && profileData.business.location && profileData.business.websiteUrl ? 'text-green-500' : 'text-gray-300'}`} />
+                            <CheckCircleIcon className={`w-4 h-4 ${profileData.business.business_name && profileData.business.location && profileData.business.business_website ? 'text-green-500' : 'text-gray-300'}`} />
                             <span className="text-brand-text-muted">Business Profile Complete (+10)</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export const GrowthScoreHistory: React.FC<GrowthScoreHistoryProps> = ({ growthSc
                     <li><strong>0-19 points:</strong> Just beginning - Focus on foundation setup</li>
                     <li><strong>20-39 points:</strong> Foundation ready - Start completing growth plan tasks</li>
                     <li><strong>40-59 points:</strong> Building momentum - Keep up the task completion</li>
-                    <li><strong>60-79 points:</strong> Strong foundation - Excellent consistency</li>
+                    <li><strong>60-79 points:</strong> Strong foundation - Consistent task completion</li>
                     <li><strong>80-99 points:</strong> Growth optimized - You're in the zone! 🎉</li>
                 </ul>
                 <p className="text-xs text-brand-text-muted mt-3">

@@ -1,3 +1,4 @@
+business_name).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, BusinessReview } from '../types';
 import { fetchBusinessReviews } from '../services/geminiService';
@@ -220,7 +221,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           setReviews(formattedReviews);
         } catch (err) {
           console.error('Failed to fetch reviews:', err);
-          setError('Could not fetch reviews. Please try again or check your Google Business Profile connection.');
+          setError('Could not fetch reviews. You can still paste reviews manually below.');
         } finally {
           clearInterval(progressInterval);
           setTimeout(() => setLoading(false), 300);

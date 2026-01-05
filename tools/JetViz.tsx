@@ -1,3 +1,4 @@
+business_website).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
@@ -173,13 +174,6 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
     return (
     <div className="space-y-8 mt-6">
        <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg"><div className="flex"><div className="py-1"><InformationCircleIcon className="w-6 h-6 mr-3"/></div><div><p className="font-bold">Your Action Plan is Ready!</p><p className="text-sm">All tasks from this analysis have been added to your Growth Plan. When you leave this page, you can find them there to track your progress and start executing. <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button></p></div></div></div>
-        
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-             <div className="flex justify-between items-start mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">Live Analysis Results <span className="ml-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800">🟢 Live Scan</span></h2><p className="text-xs text-brand-text-muted mt-1">Scanned: {new Date(report.timestamp).toLocaleString()}</p></div>
-                <button onClick={onRerun} disabled={isRunning} className="flex items-center bg-white hover:bg-brand-light border border-brand-border text-brand-text font-semibold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50"><ArrowPathIcon className={`w-5 h-5 mr-2 ${isRunning ? 'animate-spin' : ''}`} />{isRunning ? 'Re-scanning...' : 'Re-run Scan'}</button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="bg-brand-light p-4 rounded-lg border"><h3 className="font-bold text-lg mb-4 text-center">Mobile Performance</h3><div className="flex justify-around"><div className="text-center"><ScoreCircle score={report.mobile.performance} /><p className="text-xs mt-1 font-semibold">Performance</p></div><div className="text-center"><ScoreCircle score={report.mobile.seo} /><p className="text-xs mt-1 font-semibold">SEO</p></div></div></div><div className="bg-brand-light p-4 rounded-lg border"><h3 className="font-bold text-lg mb-4 text-center">Desktop Performance</h3><div className="flex justify-around"><div className="text-center"><ScoreCircle score={report.desktop.performance} /><p className="text-xs mt-1 font-semibold">Performance</p></div><div className="text-center"><ScoreCircle score={report.desktop.seo} /><p className="text-xs mt-1 font-semibold">SEO</p></div></div></div></div>
-        </div>
         
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2><p className="text-brand-text-muted mt-1">Focus on these high-impact tasks to see the fastest results.</p></div></div>

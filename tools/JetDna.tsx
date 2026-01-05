@@ -1,4 +1,4 @@
-
+business_website).">
 import React, { useState } from 'react';
 import type { Tool, ProfileData, BrandDnaProfile } from '../types';
 import { extractBrandDnaProfile } from '../services/geminiService';
@@ -90,7 +90,7 @@ export const JetDna: React.FC<JetDnaProps> = ({ tool, profileData, onUpdate, set
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
 
-  if (!profileData.business.websiteUrl) {
+  if (!profileData.business.business_website) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
@@ -141,7 +141,7 @@ export const JetDna: React.FC<JetDnaProps> = ({ tool, profileData, onUpdate, set
                             <div className="py-1"><CheckCircleIcon className="w-6 h-6 mr-3"/></div>
                             <div>
                                 <p className="font-bold">Using your active business profile</p>
-                                <p className="text-sm">Ready to analyze the website for '{profileData.business.name}'.</p>
+                                <p className="text-sm">Ready to analyze the website for '{profileData.business.business_name}'.</p>
                             </div>
                         </div>
                     </div>

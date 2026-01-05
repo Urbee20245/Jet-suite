@@ -1,4 +1,4 @@
-
+industry).">
 import React, { useState } from 'react';
 import type { Tool } from '../types';
 import { generateEventIdeas } from '../services/geminiService';

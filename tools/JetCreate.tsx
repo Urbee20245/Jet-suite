@@ -1,3 +1,4 @@
+business_name).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, CampaignIdea, CreativeAssets, SocialPostAsset, AdCopyAsset, SocialConnection } from '../types';
 import { generateCampaignIdeas, generateCreativeAssets, generateImage } from '../services/geminiService';
