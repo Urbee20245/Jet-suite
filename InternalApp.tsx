@@ -86,12 +86,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
   const activeUserId = impersonatedUserId || userId;
 
-  const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>(() => {
-      try { const savedTasks = localStorage.getItem(`jetsuite_growthPlanTasks_${activeUserId}`); return savedTasks ? JSON.parse(savedTasks) : []; } catch (e) { return []; }
-  });
-  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>(() => {
-      try { const saved = localStorage.getItem(`jetsuite_savedKeywords_${activeUserId}`); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
-  });
+  const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>([]);
+  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
   const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
   const [growthScore, setGrowthScore] = useState(150);
@@ -102,6 +98,61 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
       return [adminProfile, testProfile];
   });
+
+  // Helper function to load business-specific data
+  const loadBusinessData = async (businessId: string) => {
+    if (!supabase || !activeUserId) return;
+    
+    try {
+      // 1. Load business profile details
+      const { data: profile, error: profileError } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('id', businessId)
+        .single();
+      
+      if (profileError) throw profileError;
+      
+      // 2. Update the active profile data in allProfiles state
+      setAllProfiles(prev => {
+        const updated = [...prev];
+        const index = updated.findIndex(p => p.user.id === activeUserId);
+        if (index !== -1) {
+          const syncedProfile = {
+            ...updated[index],
+            business: {
+              ...updated[index].business,
+              id: profile.id,
+              name: profile.business_name,
+              websiteUrl: profile.business_website,
+              category: profile.industry,
+              location: `${profile.city}, ${profile.state}`,
+              description: profile.business_description,
+              isDnaApproved: profile.is_dna_approved,
+              dnaLastUpdatedAt: profile.dna_last_updated_at,
+            },
+            isProfileActive: !!profile.is_complete,
+            // Note: brandDnaProfile, jetbizAnalysis, etc. are loaded separately or lazily
+          };
+          updated[index] = syncedProfile;
+        }
+        return updated;
+      });
+      
+      // 3. Load business-specific saved data (tasks, keywords) from localStorage
+      const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
+      const savedTasks = localStorage.getItem(`jetsuite_tasks_${businessId}`);
+      
+      setSavedKeywords(savedKeywords ? JSON.parse(savedKeywords) : []);
+      setGrowthPlanTasks(savedTasks ? JSON.parse(savedTasks) : []);
+      
+    } catch (error) {
+      console.error('Error loading business data:', error);
+      // Fallback to empty state if loading fails
+      setSavedKeywords([]);
+      setGrowthPlanTasks([]);
+    }
+  };
 
   // Function to fetch profile from DB and merge with local/default state
   const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
@@ -180,93 +231,147 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     loadProfiles();
   }, [userId, userEmail]); // Only run once on mount/user change
 
-  // 1. Fetch all accessible businesses
+  // 1. Fetch all accessible businesses and set active one
   useEffect(() => {
     const fetchBusinesses = async () => {
-      if (!userId || !supabase) return;
+      if (!supabase || !activeUserId) return;
 
-      // Fetch owned businesses + shared seats
-      const { data: dbProfiles } = await supabase
+      // Fetch owned businesses
+      const { data: dbProfiles, error } = await supabase
         .from('business_profiles')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', activeUserId)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching businesses:', error);
+        return;
+      }
 
       if (dbProfiles && dbProfiles.length > 0) {
-        const formatted = dbProfiles.map(p => ({
-          id: p.id,
-          name: p.business_name,
-          category: p.industry,
-          websiteUrl: p.business_website,
-          location: `${p.city}, ${p.state}`,
-          description: '',
-          serviceArea: '',
-          phone: '',
-          email: '',
-          dna: { logo: '', colors: [], fonts: '', style: '' },
-          isDnaApproved: false
-        }));
-
-        setBusinesses(formatted);
+        setBusinesses(dbProfiles as BusinessProfile[]);
         
-        // Default to primary or first available
-        if (!activeBusinessId) {
-          const primary = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
-          setActiveBusinessId(primary.id);
-          localStorage.setItem('jetsuite_active_biz_id', primary.id);
+        // Determine active business ID
+        const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
+        const primaryBusiness = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
+        
+        const activeId = savedActiveId && dbProfiles.some(b => b.id === savedActiveId)
+          ? savedActiveId
+          : primaryBusiness.id;
+        
+        if (activeId) {
+          setActiveBusinessId(activeId);
+          localStorage.setItem('jetsuite_active_biz_id', activeId);
+          loadBusinessData(activeId);
         }
+      } else {
+        // If no businesses exist, ensure activeBusinessId is null
+        setActiveBusinessId(null);
+        setBusinesses([]);
       }
     };
 
     fetchBusinesses();
-  }, [userId, supabase, activeBusinessId]);
+  }, [activeUserId, supabase]);
 
-  // 🔄 Sync Active Business Details into Profile State
-  useEffect(() => {
-    const syncActiveBusiness = async () => {
-      if (!activeBusinessId || !userId || !supabase) return;
-
-      const { data: biz } = await supabase
+  // --- Business Switching Logic ---
+  const handleBusinessSwitch = async (businessId: string) => {
+    if (activeBusinessId === businessId) return;
+    
+    // 1. Save current business ID to localStorage
+    localStorage.setItem('jetsuite_active_biz_id', businessId);
+    
+    // 2. Update active business state
+    setActiveBusinessId(businessId);
+    
+    // 3. Reload business-specific data
+    await loadBusinessData(businessId);
+    
+    // 4. Clear tool-specific state so it reloads for new business
+    setSavedKeywords([]);
+    setGrowthPlanTasks([]);
+    setJetContentInitialProps(null);
+  };
+  
+  // --- Add New Business Logic ---
+  const handleAddBusiness = async () => {
+    if (!supabase || !activeUserId) return;
+    
+    // Check if user has reached business limit (assuming billing_accounts exists)
+    const { data: billingAccount } = await supabase
+      .from('billing_accounts')
+      .select('business_count')
+      .eq('user_id', activeUserId)
+      .maybeSingle();
+    
+    const limit = billingAccount?.business_count || 1;
+    
+    if (businesses.length >= limit) {
+      alert(`You have reached your business limit (${limit}). Please upgrade your plan to add more businesses.`);
+      return;
+    }
+    
+    try {
+      // Create new business profile
+      const { data: newBusiness, error } = await supabase
         .from('business_profiles')
-        .select('*')
-        .eq('id', activeBusinessId)
-        .maybeSingle();
-
-      if (biz) {
-        setAllProfiles(prev => {
-          const updated = [...prev];
-          const index = updated.findIndex(p => p.user.id === userId);
-          if (index !== -1) {
-            const syncedProfile = {
-              ...updated[index],
-              business: {
-                ...updated[index].business,
-                id: biz.id,
-                name: biz.business_name,
-                websiteUrl: biz.business_website,
-                category: biz.industry,
-                location: `${biz.city}, ${biz.state}`
-              },
-              isProfileActive: !!biz.is_complete
-            };
-            updated[index] = syncedProfile;
-          }
-          return updated;
-        });
+        .insert({
+          user_id: activeUserId,
+          business_name: 'New Business Profile',
+          business_website: 'https://new-business.com',
+          industry: 'General',
+          city: 'City',
+          state: 'State',
+          is_primary: false,
+          is_complete: false,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      if (newBusiness) {
+        // Add to businesses list
+        setBusinesses(prev => [...prev, newBusiness as BusinessProfile]);
+        
+        // Switch to new business
+        handleBusinessSwitch(newBusiness.id);
+        
+        // Navigate to business details to complete setup
+        setActiveTool(ALL_TOOLS['businessdetails']);
       }
-    };
-
-    syncActiveBusiness();
-  }, [activeBusinessId, userId, supabase]);
-
-  const handleSwitchBusiness = (id: string) => {
-    setActiveBusinessId(id);
-    localStorage.setItem('jetsuite_active_biz_id', id);
-    // Tool UI will naturally refresh via profileData changes
+    } catch (error) {
+      console.error('Error creating business:', error);
+      alert('Failed to create new business. Please try again.');
+    }
   };
 
   const isAdmin = userEmail === ADMIN_EMAIL;
   const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
   
+  // Ensure profileData reflects the active business if one is selected
+  useEffect(() => {
+    if (activeBusinessId && businesses.length > 0) {
+      const activeBiz = businesses.find(b => b.id === activeBusinessId);
+      if (activeBiz) {
+        setAllProfiles(prev => {
+          const updated = [...prev];
+          const index = updated.findIndex(p => p.user.id === activeUserId);
+          if (index !== -1) {
+            updated[index] = {
+              ...updated[index],
+              business: activeBiz,
+              isProfileActive: !!activeBiz.is_complete,
+            };
+          }
+          return updated;
+        });
+      }
+    }
+  }, [activeBusinessId, businesses, activeUserId]);
+
+
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
         const isSelf = newProfileData.user.id === userId;
@@ -285,13 +390,18 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     });
   };
 
+  // 2. Save business-specific state to localStorage
   useEffect(() => {
-      try { localStorage.setItem(`jetsuite_growthPlanTasks_${activeUserId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks", e); }
-  }, [growthPlanTasks, activeUserId]);
+      if (activeBusinessId) {
+          try { localStorage.setItem(`jetsuite_tasks_${activeBusinessId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks", e); }
+      }
+  }, [growthPlanTasks, activeBusinessId]);
   
   useEffect(() => {
-      try { localStorage.setItem(`jetsuite_savedKeywords_${activeUserId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords", e); }
-  }, [savedKeywords, activeUserId]);
+      if (activeBusinessId) {
+          try { localStorage.setItem(`jetsuite_keywords_${activeBusinessId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords", e); }
+      }
+  }, [savedKeywords, activeBusinessId]);
 
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
@@ -416,7 +526,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             growthScore={growthScore} 
             businesses={businesses}
             activeBusinessId={activeBusinessId}
-            onSwitchBusiness={handleSwitchBusiness}
+            onSwitchBusiness={handleBusinessSwitch}
+            onAddBusiness={handleAddBusiness} // Pass the new handler
             setActiveTool={setActiveTool}
           />
         )}

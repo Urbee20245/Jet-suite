@@ -9,6 +9,7 @@ interface HeaderProps {
   businesses: BusinessProfile[];
   activeBusinessId: string | null;
   onSwitchBusiness: (id: string) => void;
+  onAddBusiness: () => void; // NEW PROP
   setActiveTool: (tool: Tool | null) => void;
 }
 
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   businesses, 
   activeBusinessId, 
   onSwitchBusiness,
+  onAddBusiness, // Use new prop
   setActiveTool
 }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
@@ -93,10 +95,10 @@ export const Header: React.FC<HeaderProps> = ({
                 ))}
               </div>
 
-              {/* ✅ FIXED: Wire to existing business creation tool */}
+              {/* WIRING: Call the onAddBusiness handler */}
               <button 
                 onClick={() => {
-                  setActiveTool(ALL_TOOLS['business_creation'] || null);
+                  onAddBusiness();
                   setIsSwitcherOpen(false);
                 }}
                 className="w-full p-3 text-center text-xs font-bold text-accent-purple bg-brand-light hover:bg-brand-border transition-colors border-t border-brand-border"
