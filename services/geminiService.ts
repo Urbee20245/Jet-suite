@@ -871,3 +871,125 @@ export const getTrendingImageStyles = async (): Promise<Array<{ name: string; de
         { name: "Neon Noir", description: "Dark, moody, illuminated by neon lights.", prompt: "A neon noir scene with dark shadows and bright neon accents." },
     ];
 };
+
+export const generateCampaignIdeas = async (profileData: ProfileData): Promise<CampaignIdea[]> => {
+    try {
+        const ai = getAiClient();
+        const business = profileData.business;
+        const brandDna = profileData.brandDnaProfile;
+        
+        const basePrompt = `You are the AI Creative Director for JetSuite. Generate 5 unique, high-impact marketing campaign ideas for the business: '${business.business_name}' (${business.industry}) located in ${business.location}.
+        
+        The campaigns should leverage the business's Brand DNA (Tone: ${brandDna?.brand_tone.primary_tone}, Style: ${brandDna?.visual_identity.layout_style}, Value Prop: ${brandDna?.brand_positioning.value_proposition}).
+        
+        For each idea, provide:
+        - A catchy name.
+        - A brief, compelling description of the campaign's goal and execution.
+        - The primary marketing channels it should target (e.g., 'Social Media', 'Ads', 'Email').
+        
+        Your entire output MUST be a single JSON object with a "campaigns" array matching the provided schema.`;
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  campaigns: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        id: { type: Type.STRING },
+                        name: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        channels: { type: Type.ARRAY, items: { type: Type.STRING } }
+                      },
+                      required: ["id", "name", "description", "channels"]
+                    }
+                  }
+                }
+              }
+            }
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText).campaigns || [];
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
+
+export const generateCreativeAssets = async (campaign: CampaignIdea, profileData: ProfileData, refinement?: string): Promise<CreativeAssets> => {
+    try {
+        const ai = getAiClient();
+        const business = profileData.business;
+        const brandDna = profileData.brandDnaProfile;
+        
+        const refinementText = refinement ? `\n\nREFINEMENT INSTRUCTION: ${refinement}` : '';
+        
+        const basePrompt = `You are the AI Creative Asset Generator for JetSuite. Generate a full suite of creative assets for the campaign: '${campaign.name}' (Goal: ${campaign.description}).
+        
+        Business: '${business.business_name}' (${business.industry}).
+        Brand DNA: Tone: ${brandDna?.brand_tone.primary_tone}, Style: ${brandDna?.visual_identity.layout_style}, Value Prop: ${brandDna?.brand_positioning.value_proposition}.
+        
+        Generate 3 distinct social media posts (for Instagram, Facebook, and LinkedIn) and 3 distinct ad copy variations (for Google/Facebook Ads).
+        
+        Ensure all copy is perfectly on-brand and persuasive. The output MUST strictly adhere to the CreativeAssets JSON schema. ${refinementText}`;
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  social_posts: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        platform: { type: Type.STRING },
+                        copy: { type: Type.STRING },
+                        visual_suggestion: { type: Type.STRING }
+                      },
+                      required: ["platform", "copy", "visual_suggestion"]
+                    }
+                  },
+                  ad_copy: {
+                    type: Type.ARRAY,
+                    items: {
+                      type: Type.OBJECT,
+                      properties: {
+                        headline: { type: Type.STRING },
+                        description: { type: Type.STRING },
+                        cta: { type: Type.STRING }
+                      },
+                      required: ["headline", "description", "cta"]
+                    }
+                  }
+                },
+                required: ["social_posts", "ad_copy"]
+              }
+            }
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText) as CreativeAssets;
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
