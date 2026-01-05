@@ -182,7 +182,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
             {/* Left Column: Text Content */}
-            <div className="lg:w-1/2 text-left">
+            <div className="lg:w-1/2 w-full text-left">
               {/* Compact Trust Badge with Shield */}
               <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
                 
@@ -213,7 +213,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
               </div>
               
-              <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
                   Get Found First on Google.
                   <br className="hidden md:block"/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
@@ -221,11 +221,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   </span>
               </h1>
               
-              <p className="mt-6 max-w-2xl text-lg sm:text-xl text-gray-400 leading-relaxed">
+              <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
                   JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
               </p>
               
-              <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
                   <button 
                     onClick={() => navigate('/get-started')} 
                     className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
@@ -300,7 +300,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </p>
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                 <div className="glow-card glow-card-rounded-2xl bg-slate-800/30 p-8 rounded-2xl border border-slate-700">
                     <div className="bg-red-500/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                         <EyeSlashIcon className="w-7 h-7 text-red-400" />
@@ -341,7 +341,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <h2 className="text-3xl md:text-4xl font-bold text-white">Everything You Need to Dominate Local Search</h2>
             </div>
             
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
                 <div className="glow-card glow-card-rounded-xl p-6 bg-brand-darker rounded-xl border-t-4 border-blue-500 shadow-xl">
                     <div className="mb-4"><JetVizIcon className="w-10 h-10 text-blue-500"/></div>
                     <h3 className="text-xl font-bold text-white mb-2">Analyze & Diagnose</h3>
@@ -460,7 +460,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                     <div className="w-6 h-6 bg-blue-900/50 rounded-full flex items-center justify-center">
                                         <span className="text-xs text-blue-300">+3</span>
                                     </div>
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full animate-pulse"></div>
                                 </div>
                             </div>
                         </div>
@@ -815,7 +815,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             <p className="text-xl text-gray-400">Get the power of an entire agency for less than the cost of lunch.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {/* Comparison Table */}
             <div className="glow-card glow-card-rounded-2xl bg-slate-800/20 rounded-2xl border border-slate-800 overflow-hidden">
               <div className="p-6 border-b border-slate-800 bg-slate-900/50">
