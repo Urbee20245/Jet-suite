@@ -50,16 +50,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Select correct price set
     const basePriceId = isFounder
-      ? process.env.STRIPE_PRICE_FOUNDER_BASE
-      : process.env.STRIPE_PRICE_BASE_149;
+      ? process.env.STRIPE_PRICE_BASE_FOUNDER
+      : process.env.STRIPE_PRICE_BASE_STANDARD;
 
     const additionalBusinessPriceId = isFounder
-      ? process.env.STRIPE_PRICE_FOUNDER_BUSINESS
-      : process.env.STRIPE_PRICE_BUSINESS_49;
+      ? process.env.STRIPE_PRICE_BUSINESS_FOUNDER
+      : process.env.STRIPE_PRICE_BUSINESS_STANDARD;
 
     const seatPriceId = isFounder
-      ? process.env.STRIPE_PRICE_FOUNDER_SEAT
-      : process.env.STRIPE_PRICE_SEAT_15;
+      ? process.env.STRIPE_PRICE_SEAT_FOUNDER
+      : process.env.STRIPE_PRICE_SEAT_STANDARD;
 
     if (!basePriceId) {
       throw new Error(`Missing Stripe base price env var for ${isFounder ? 'founder' : 'standard'} tier`);

@@ -15,14 +15,14 @@
  * Environment Variables Required:
  * 
  * Standard Pricing:
- * - STRIPE_PRICE_BASE_149: Base plan price ID ($149/mo)
- * - STRIPE_PRICE_BUSINESS_49: Additional business price ID ($49/mo)
- * - STRIPE_PRICE_SEAT_15: Team seat price ID ($15/mo)
+ * - STRIPE_PRICE_BASE_STANDARD: Base plan price ID ($149/mo)
+ * - STRIPE_PRICE_BUSINESS_STANDARD: Additional business price ID ($49/mo)
+ * - STRIPE_PRICE_SEAT_STANDARD: Team seat price ID ($15/mo)
  * 
  * Founder Pricing (optional - if not set, falls back to standard):
- * - STRIPE_PRICE_FOUNDER_BASE: Founder base plan price ID
- * - STRIPE_PRICE_FOUNDER_BUSINESS: Founder additional business price ID
- * - STRIPE_PRICE_FOUNDER_SEAT: Founder team seat price ID
+ * - STRIPE_PRICE_BASE_FOUNDER: Founder base plan price ID
+ * - STRIPE_PRICE_BUSINESS_FOUNDER: Founder additional business price ID
+ * - STRIPE_PRICE_SEAT_FOUNDER: Founder team seat price ID
  * 
  * Usage:
  * ```typescript
@@ -53,19 +53,19 @@ export const STANDARD_PRICES = {
    * Default: $149/month
    * Includes: 1 business profile, 1 user seat, all tools
    */
-  BASE_PRICE_ID: getServerEnv('STRIPE_PRICE_BASE_149') || '',
+  BASE_PRICE_ID: getServerEnv('STRIPE_PRICE_BASE_STANDARD') || '',
   
   /**
    * Additional Business Profile Price ID
    * Default: $49/month per additional business
    */
-  BUSINESS_ADDON_PRICE_ID: getServerEnv('STRIPE_PRICE_BUSINESS_49') || '',
+  BUSINESS_ADDON_PRICE_ID: getServerEnv('STRIPE_PRICE_BUSINESS_STANDARD') || '',
   
   /**
    * Team Seat Price ID
    * Default: $15/month per seat
    */
-  SEAT_PRICE_ID: getServerEnv('STRIPE_PRICE_SEAT_15') || '',
+  SEAT_PRICE_ID: getServerEnv('STRIPE_PRICE_SEAT_STANDARD') || '',
 } as const;
 
 /**
@@ -79,17 +79,17 @@ export const FOUNDER_PRICES = {
    * Founder Base Plan Price ID
    * Special founder pricing (set in Stripe Dashboard)
    */
-  BASE_PRICE_ID: getServerEnv('STRIPE_PRICE_FOUNDER_BASE') || '',
+  BASE_PRICE_ID: getServerEnv('STRIPE_PRICE_BASE_FOUNDER') || '',
   
   /**
    * Founder Additional Business Profile Price ID
    */
-  BUSINESS_ADDON_PRICE_ID: getServerEnv('STRIPE_PRICE_FOUNDER_BUSINESS') || '',
+  BUSINESS_ADDON_PRICE_ID: getServerEnv('STRIPE_PRICE_BUSINESS_FOUNDER') || '',
   
   /**
    * Founder Team Seat Price ID
    */
-  SEAT_PRICE_ID: getServerEnv('STRIPE_PRICE_FOUNDER_SEAT') || '',
+  SEAT_PRICE_ID: getServerEnv('STRIPE_PRICE_SEAT_FOUNDER') || '',
 } as const;
 
 /**
@@ -123,15 +123,15 @@ export function validateStripePrices(): void {
   const missing: string[] = [];
   
   if (!STANDARD_PRICES.BASE_PRICE_ID) {
-    missing.push('STRIPE_PRICE_BASE_149');
+    missing.push('STRIPE_PRICE_BASE_STANDARD');
   }
   
   if (!STANDARD_PRICES.BUSINESS_ADDON_PRICE_ID) {
-    missing.push('STRIPE_PRICE_BUSINESS_49');
+    missing.push('STRIPE_PRICE_BUSINESS_STANDARD');
   }
   
   if (!STANDARD_PRICES.SEAT_PRICE_ID) {
-    missing.push('STRIPE_PRICE_SEAT_15');
+    missing.push('STRIPE_PRICE_SEAT_STANDARD');
   }
   
   if (missing.length > 0) {
