@@ -17,9 +17,30 @@ interface BusinessDetailsProps {
 type ExtractionStage = 'idle' | 'extracting' | 'reviewing' | 'saving';
 
 // --- Helper Functions ---
-const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result as string); reader.onerror = error => reject(error); });
+const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+});
 const isBase64 = (str: string) => str.startsWith('data:image');
-const imageURLToBase64 = async (url: string): Promise<string> => { if (!url || isBase64(url)) return url; try { const response = await fetch(url); if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`); const blob = await response.blob(); return new Promise((resolve, reject) => { const reader.onloadend = () => resolve(reader.result as string); reader.onerror = reject; reader.readAsDataURL(blob); }); } catch (error) { console.error("CORS error fetching image:", error); return ""; } };
+const imageURLToBase64 = async (url: string): Promise<string> => {
+    if (!url || isBase64(url)) return url;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error("CORS error fetching image:", error);
+        return "";
+    }
+};
 
 // --- Sub-components for DNA Workflow ---
 
