@@ -290,20 +290,31 @@ const App: React.FC = () => {
         </SubscriptionGuard>
       );
     }
-    
-    // Check if the path is a known marketing path handled by MarketingWebsite
-    const isKnownMarketingPath = [
-        '/', '/how-it-works', '/features', '/pricing', '/savings', '/get-started', '/faq', 
-        '/demo/jetbiz', '/demo/jetviz', '/login', '/billing/success', '/billing/locked'
-    ].includes(normalizedPath);
 
-    if (isKnownMarketingPath) {
-        return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+    // Valid marketing routes
+    const validMarketingRoutes = [
+      '/',
+      '/features',
+      '/how-it-works',
+      '/pricing',
+      '/faq',
+      '/get-started',
+      '/demo/jetviz',
+      '/demo/jetbiz',
+      '/savings',
+      '/login',
+      '/billing/success',
+      '/billing/locked'
+    ];
+
+    // Check if current path is valid
+    if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
+      return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
     }
-    
-    // Default fallback for unknown paths when not logged in
-    return <NotFoundPage navigate={navigate} />;
 
+    // 404 - Invalid route
+    return <NotFoundPage navigate={navigate} />;
+    
   } catch (error) {
     console.error('[App] Critical render error:', error);
     return <div className="p-10 text-white">Application crashed. Please check console.</div>;
