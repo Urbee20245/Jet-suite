@@ -24,7 +24,7 @@ import { JetImage } from './tools/JetImage'; // Import JetImage
 import { JetCreate } from './tools/JetCreate'; // Import JetCreate
 import { JetReply } from './tools/JetReply'; // Import JetReply
 import { JetTrust } from './tools/JetTrust'; // Import JetTrust
-import { JetLeads } from './tools/JetLeads'; // Import JetLeads
+import { JetLeads } // Import JetLeads
 import { JetEvents } from './tools/JetEvents'; // Import JetEvents
 import { JetAds } from './tools/JetAds'; // Import JetAds
 import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
@@ -253,6 +253,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const fetchBusinesses = async () => {
       if (!supabase || !activeUserId) return;
 
+      console.log('[InternalApp] Fetching businesses for active user:', activeUserId);
+
       // Fetch owned businesses
       const { data: dbProfiles, error } = await supabase
         .from('business_profiles')
@@ -262,11 +264,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error fetching businesses:', error);
+        console.error('[InternalApp] Error fetching businesses:', error);
         return;
       }
 
       if (dbProfiles && dbProfiles.length > 0) {
+        console.log('[InternalApp] Loaded businesses:', dbProfiles);
         setBusinesses(dbProfiles as BusinessProfile[]);
         
         // Determine active business ID
@@ -278,11 +281,13 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           : primaryBusiness.id;
         
         if (activeId) {
+          console.log('[InternalApp] Setting active business ID:', activeId);
           setActiveBusinessId(activeId);
           localStorage.setItem('jetsuite_active_biz_id', activeId);
           loadBusinessData(activeId);
         }
       } else {
+        console.log('[InternalApp] No businesses found for user');
         // If no businesses exist, ensure activeBusinessId is null
         setActiveBusinessId(null);
         setBusinesses([]);
