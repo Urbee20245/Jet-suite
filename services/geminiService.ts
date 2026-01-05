@@ -442,7 +442,6 @@ export const generateSocialPosts = async (businessType: string, topic: string, t
     }
 };
 
-
 export const fetchBusinessReviews = async (businessName: string, businessAddress: string): Promise<any[]> => {
     try {
         const ai = getAiClient();
@@ -852,4 +851,23 @@ export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; 
         }
         throw error;
     }
+};
+
+/**
+ * MOCK: Generates a list of trending image styles for JetImage inspiration.
+ */
+export const getTrendingImageStyles = async (): Promise<Array<{ name: string; description: string; prompt: string }>> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    return [
+        { name: "Cinematic", description: "Dramatic lighting, shallow depth of field.", prompt: "A cinematic photograph with dramatic lighting and shallow depth of field." },
+        { name: "Minimalist", description: "Clean lines, ample white space, simple composition.", prompt: "A minimalist design with clean lines and ample white space." },
+        { name: "Watercolor", description: "Soft edges, blended colors, artistic feel.", prompt: "A watercolor painting with soft edges and blended colors." },
+        { name: "3D Render", description: "Hyper-realistic 3D rendering, smooth textures.", prompt: "A hyper-realistic 3D render with smooth textures and vibrant colors." },
+        { name: "Vibrant Pop", description: "High contrast, saturated colors, energetic.", prompt: "A vibrant pop art style image with high contrast and saturated colors." },
+        { name: "Editorial", description: "Magazine quality, professional, sophisticated.", prompt: "An editorial photograph suitable for a high-end magazine." },
+        { name: "Flat Design", description: "Simple 2D graphics, modern, clean shapes.", prompt: "A flat design illustration with simple 2D graphics and clean shapes." },
+        { name: "Neon Noir", description: "Dark, moody, illuminated by neon lights.", prompt: "A neon noir scene with dark shadows and bright neon accents." },
+    ];
 };
