@@ -24,7 +24,7 @@ import { JetImage } from './tools/JetImage'; // Import JetImage
 import { JetCreate } from './tools/JetCreate'; // Import JetCreate
 import { JetReply } from './tools/JetReply'; // Import JetReply
 import { JetTrust } from './tools/JetTrust'; // Import JetTrust
-import { JetLeads } // Import JetLeads
+import { JetLeads } from './tools/JetLeads'; // Import JetLeads
 import { JetEvents } from './tools/JetEvents'; // Import JetEvents
 import { JetAds } from './tools/JetAds'; // Import JetAds
 import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
