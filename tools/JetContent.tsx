@@ -1,4 +1,3 @@
-industry).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, KeywordData } from '../types';
 import { generateLocalContent } from '../services/geminiService';

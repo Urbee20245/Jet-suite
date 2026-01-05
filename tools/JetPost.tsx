@@ -1,8 +1,7 @@
-industry).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, SocialConnection } from '../types';
 import { generateSocialPosts, generateImage } from '../services/geminiService';
-import { getSocialConnections, createScheduledPost } from '../services/socialMediaService';
+import { getSocialConnections, createScheduledPost, PLATFORM_INFO } from '../services/socialMediaService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon } from '../components/icons/MiniIcons';

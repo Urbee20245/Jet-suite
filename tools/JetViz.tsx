@@ -1,4 +1,3 @@
-business_website).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';

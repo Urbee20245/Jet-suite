@@ -1,4 +1,3 @@
-business_name).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, AuditReport, BusinessSearchResult, ConfirmedBusiness, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { searchGoogleBusiness, analyzeBusinessListing } from '../services/geminiService';

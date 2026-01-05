@@ -1,4 +1,3 @@
-industry).">
 import React, { useState } from 'react';
 import type { Tool, ProfileData } from '../types';
 import { findLeads } from '../services/geminiService';

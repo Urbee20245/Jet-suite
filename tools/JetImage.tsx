@@ -1,4 +1,3 @@
-business_name).">
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool } from '../types';
 import { generateImage, getTrendingImageStyles } from '../services/geminiService';

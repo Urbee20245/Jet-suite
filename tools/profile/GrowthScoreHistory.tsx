@@ -1,4 +1,3 @@
-business_name).">
 import React from 'react';
 import { GrowthScoreIcon } from '../../components/icons/ToolIcons';
 import { BoltIcon, CheckCircleIcon, InformationCircleIcon } from '../../components/icons/MiniIcons';

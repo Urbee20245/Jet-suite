@@ -1,4 +1,3 @@
-industry).">
 import React, { useState } from 'react';
 import type { Tool, ProfileData, KeywordAnalysisResult, KeywordSearchResult } from '../types';
 import { findKeywords } from '../services/geminiService';

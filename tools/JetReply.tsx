@@ -1,4 +1,3 @@
-industry).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, ReadinessState, BusinessReview } from '../types';
 import { generateReviewReply, fetchBusinessReviews } from '../services/geminiService';

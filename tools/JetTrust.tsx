@@ -1,4 +1,3 @@
-business_name).">
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, BusinessReview } from '../types';
 import { fetchBusinessReviews } from '../services/geminiService';
@@ -760,83 +759,6 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               />
             )}
           </div>
-        </div>
-      )}
-
-      {/* Embed Code & Social Media Export */}
-      {showCode && widgetCode && (
-        <div className="space-y-6">
-          {/* Widget Embed Code */}
-          <div className="bg-brand-card p-6 rounded-xl shadow-lg border-2 border-accent-purple/20">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-brand-text flex items-center gap-2">
-                  <CodeBracketIcon className="w-6 h-6 text-accent-purple" />
-                  Widget Embed Code
-                </h3>
-                <p className="text-sm text-brand-text-muted mt-1">Add this to your website</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCopyCode}
-                  className="flex items-center gap-2 bg-accent-purple hover:bg-accent-purple/90 text-white font-semibold py-2 px-4 rounded-lg transition"
-                >
-                  {copied ? '✓ Copied!' : 'Copy Code'}
-                </button>
-                <button
-                  onClick={handleDownloadWidget}
-                  className="flex items-center gap-2 bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition"
-                >
-                  <ArrowDownTrayIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-              <pre className="text-sm"><code>{widgetCode}</code></pre>
-            </div>
-            <div className="mt-4 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
-              <p className="text-sm text-brand-text">
-                <strong className="text-accent-blue">How to Use:</strong> Copy the code above and paste it into your website's HTML where you want the reviews to appear. 
-                The widget is fully self-contained and will display automatically.
-              </p>
-            </div>
-          </div>
-
-          {/* Social Media Export */}
-          {filteredReviews.length > 0 && (
-            <div className="bg-gradient-to-br from-accent-pink/5 to-accent-purple/5 p-6 rounded-xl shadow-lg border-2 border-accent-pink/20">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-brand-text flex items-center gap-2">
-                    ✨ Social Media Post
-                  </h3>
-                  <p className="text-sm text-brand-text-muted mt-1">Share your best reviews on social</p>
-                </div>
-                <button
-                  onClick={handleExportForSocial}
-                  className="flex items-center gap-2 bg-gradient-to-r from-accent-pink to-accent-purple hover:opacity-90 text-white font-semibold py-2 px-4 rounded-lg transition"
-                >
-                  {socialCopied ? '✓ Copied!' : 'Copy for Social Media'}
-                </button>
-              </div>
-              <div className="bg-white p-4 rounded-lg border border-brand-border">
-                <div className="text-sm text-gray-700 whitespace-pre-wrap font-sans">
-                  <p className="font-bold mb-2">⭐ What Our Customers Are Saying! ⭐</p>
-                  {filteredReviews.slice(0, 3).map((review, idx) => (
-                    <div key={idx} className="mb-3">
-                      <p className="text-yellow-500">{'⭐'.repeat(review.rating)}</p>
-                      <p className="italic">"{review.text.slice(0, 100)}{review.text.length > 100 ? '...' : ''}"</p>
-                      <p className="text-xs text-gray-500">- {review.author}</p>
-                    </div>
-                  ))}
-                  <p className="text-xs text-gray-500 mt-3">See more reviews: {reviewUrl}</p>
-                </div>
-              </div>
-              <p className="text-xs text-brand-text-muted mt-3">
-                💡 <strong>Pro Tip:</strong> Perfect for Instagram, Facebook, Twitter, or LinkedIn posts
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

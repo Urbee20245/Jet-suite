@@ -1,4 +1,3 @@
-industry).">
 import React, { useState, useEffect } from 'react';
 import type { Tool } from '../types';
 import { generateAdCopy, generateImage } from '../services/geminiService';
