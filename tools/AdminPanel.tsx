@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, BusinessDna } from '../types';
 import type { SupportTicket, SupportMessage, TicketStatus, TicketPriority } from '../Types/supportTypes';
-import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon } from '../components/icons/MiniIcons';
 import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Search } from '../components/SupportIcons';
 import supportService from '../services/supportService';
 
@@ -39,7 +39,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onImpersonate 
 }) => {
     // ===== EXISTING ADMIN PANEL STATE =====
-    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue'>('overview');
     
     // ===== SUPPORT TICKET STATE =====
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -52,10 +52,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
 
+    // ===== REVENUE STATE (NEW) =====
+    const [revenueData, setRevenueData] = useState<{
+        totalActiveSubscriptions: number;
+        monthlyRecurringRevenue: number;
+        founderRevenue: number;
+        standardRevenue: number;
+        subscriptions: any[];
+    } | null>(null);
+    const [isLoadingRevenue, setIsLoadingRevenue] = useState(false);
+
     // ===== LOAD SUPPORT TICKETS =====
     useEffect(() => {
         if (activeTab === 'support') {
             loadTickets();
+        }
+    }, [activeTab]);
+    
+    // ===== LOAD REVENUE DATA (NEW) =====
+    useEffect(() => {
+        if (activeTab === 'revenue') {
+            loadRevenueData();
         }
     }, [activeTab]);
 
@@ -99,6 +116,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             console.error('Error loading tickets:', error);
         } finally {
             setIsLoadingTickets(false);
+        }
+    };
+    
+    const loadRevenueData = async () => {
+        setIsLoadingRevenue(true);
+        try {
+            // Pass current admin email for authorization check on the server
+            const response = await fetch(`/api/admin/revenue?userEmail=${currentUserProfile.user.email}`);
+            if (response.ok) {
+                const data = await response.json();
+                setRevenueData(data);
+            } else {
+                console.error('Failed to load revenue data:', response.status);
+            }
+        } catch (error) {
+            console.error('Error loading revenue:', error);
+        } finally {
+            setIsLoadingRevenue(false);
         }
     };
 
@@ -291,6 +326,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 {ticketStats.open}
                             </span>
                         )}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('revenue')}
+                        className={`flex-1 px-6 py-3 text-sm font-semibold transition-colors ${
+                            activeTab === 'revenue'
+                                ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                                : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                        💰 Revenue
                     </button>
                 </div>
             </div>
@@ -510,6 +555,112 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </div>
                         )}
                     </AdminSection>
+                </div>
+            )}
+            
+            {/* REVENUE TAB (NEW) */}
+            {activeTab === 'revenue' && (
+                <div className="space-y-6">
+                    <AdminSection title="Revenue Overview">
+                        {isLoadingRevenue ? (
+                            <div className="text-center py-8 text-gray-400">Loading revenue data...</div>
+                        ) : revenueData ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                {/* MRR Card */}
+                                <div className="bg-brand-darker p-6 rounded-lg border border-slate-700">
+                                    <div className="text-sm text-gray-400 mb-2">Monthly Recurring Revenue</div>
+                                    <div className="text-3xl font-bold text-green-400">
+                                        ${revenueData.monthlyRecurringRevenue.toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">Total MRR</div>
+                                </div>
+
+                                {/* Active Subscriptions */}
+                                <div className="bg-brand-darker p-6 rounded-lg border border-slate-700">
+                                    <div className="text-sm text-gray-400 mb-2">Active Subscriptions</div>
+                                    <div className="text-3xl font-bold text-blue-400">
+                                        {revenueData.totalActiveSubscriptions}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">Paying customers</div>
+                                </div>
+
+                                {/* Average Revenue */}
+                                <div className="bg-brand-darker p-6 rounded-lg border border-slate-700">
+                                    <div className="text-sm text-gray-400 mb-2">Average Per Customer</div>
+                                    <div className="text-3xl font-bold text-purple-400">
+                                        ${revenueData.totalActiveSubscriptions > 0 
+                                        ? Math.round(revenueData.monthlyRecurringRevenue / revenueData.totalActiveSubscriptions)
+                                        : 0}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">Per month</div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-gray-400">No revenue data available</div>
+                        )}
+                    </AdminSection>
+
+                    {/* Revenue Breakdown */}
+                    {revenueData && (
+                        <AdminSection title="Revenue Breakdown">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div className="bg-brand-darker p-4 rounded-lg border border-slate-700">
+                                    <div className="text-sm text-gray-400 mb-1">Founder Tier Revenue</div>
+                                    <div className="text-2xl font-bold text-green-400">
+                                        ${revenueData.founderRevenue.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div className="bg-brand-darker p-4 rounded-lg border border-slate-700">
+                                    <div className="text-sm text-gray-400 mb-1">Standard Tier Revenue</div>
+                                    <div className="text-2xl font-bold text-blue-400">
+                                        ${revenueData.standardRevenue.toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Subscriptions Table */}
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-brand-darker">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">User</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Plan</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Businesses</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Seats</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Monthly Value</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700">
+                                        {revenueData.subscriptions.map((sub, idx) => (
+                                            <tr key={idx} className="hover:bg-brand-darker/50">
+                                                <td className="px-4 py-3 text-sm text-gray-300">{sub.user_email}</td>
+                                                <td className="px-4 py-3 text-sm">
+                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                                        sub.subscription_plan === 'founder' 
+                                                        ? 'bg-purple-900/50 text-purple-300' 
+                                                        : 'bg-blue-900/50 text-blue-300'
+                                                    }`}>
+                                                        {sub.subscription_plan}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-300">{sub.business_count}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-300">{sub.seat_count}</td>
+                                                <td className="px-4 py-3 text-sm font-semibold text-green-400">
+                                                    ${sub.monthly_value}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm">
+                                                    <span className="px-2 py-1 rounded text-xs font-medium bg-green-900/50 text-green-300">
+                                                        {sub.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </AdminSection>
+                    )}
                 </div>
             )}
 
