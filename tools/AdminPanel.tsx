@@ -39,7 +39,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onImpersonate 
 }) => {
     // ===== EXISTING ADMIN PANEL STATE =====
-    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements'>('overview');
     
     // ===== SUPPORT TICKET STATE =====
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -61,6 +61,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         subscriptions: any[];
     } | null>(null);
     const [isLoadingRevenue, setIsLoadingRevenue] = useState(false);
+    
+    // ===== ANNOUNCEMENT STATE (NEW) =====
+    const [announcements, setAnnouncements] = useState<any[]>([]);
+    const [isLoadingAnnouncements, setIsLoadingAnnouncements] = useState(false);
+    const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+    const [announcementForm, setAnnouncementForm] = useState({
+      title: '',
+      message: '',
+      type: 'info' as 'info' | 'warning' | 'success' | 'update',
+      target_audience: 'all' as 'all' | 'founder' | 'standard',
+      priority: 1,
+      end_date: ''
+    });
 
     // ===== LOAD SUPPORT TICKETS =====
     useEffect(() => {
@@ -74,6 +87,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         if (activeTab === 'revenue') {
             loadRevenueData();
         }
+    }, [activeTab]);
+    
+    // ===== LOAD ANNOUNCEMENTS (NEW) =====
+    useEffect(() => {
+      if (activeTab === 'announcements') {
+        loadAnnouncements();
+      }
     }, [activeTab]);
 
     // ===== FILTER TICKETS =====
@@ -135,6 +155,97 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         } finally {
             setIsLoadingRevenue(false);
         }
+    };
+    
+    const loadAnnouncements = async () => {
+      setIsLoadingAnnouncements(true);
+      try {
+        const response = await fetch('/api/admin/announcements', {
+          headers: {
+            'x-user-email': currentUserProfile.user.email
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        console.error('Error loading announcements:', error);
+      } finally {
+        setIsLoadingAnnouncements(false);
+      }
+    };
+
+    const handleCreateAnnouncement = async () => {
+      try {
+        const response = await fetch('/api/admin/announcements', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-email': currentUserProfile.user.email
+          },
+          body: JSON.stringify(announcementForm)
+        });
+
+        if (response.ok) {
+          setShowAnnouncementForm(false);
+          setAnnouncementForm({
+            title: '',
+            message: '',
+            type: 'info',
+            target_audience: 'all',
+            priority: 1,
+            end_date: ''
+          });
+          loadAnnouncements();
+        }
+      } catch (error) {
+        console.error('Error creating announcement:', error);
+      }
+    };
+
+    const handleDeleteAnnouncement = async (id: string) => {
+      if (!confirm('Delete this announcement?')) return;
+      
+      try {
+        const response = await fetch('/api/admin/announcements', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-email': currentUserProfile.user.email
+          },
+          body: JSON.stringify({ id })
+        });
+
+        if (response.ok) {
+          loadAnnouncements();
+        }
+      } catch (error) {
+        console.error('Error deleting announcement:', error);
+      }
+    };
+
+    const handleToggleActive = async (announcement: any) => {
+      try {
+        const response = await fetch('/api/admin/announcements', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-email': currentUserProfile.user.email
+          },
+          body: JSON.stringify({
+            id: announcement.id,
+            ...announcement,
+            is_active: !announcement.is_active
+          })
+        });
+
+        if (response.ok) {
+          loadAnnouncements();
+        }
+      } catch (error) {
+        console.error('Error toggling announcement:', error);
+      }
     };
 
     const loadMessages = async (ticketId: string) => {
@@ -336,6 +447,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         }`}
                     >
                         💰 Revenue
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('announcements')}
+                        className={`flex-1 px-6 py-3 text-sm font-semibold transition-colors ${
+                            activeTab === 'announcements'
+                                ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                                : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                        📢 Announcements
                     </button>
                 </div>
             </div>
@@ -600,7 +721,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         )}
                     </AdminSection>
 
-                    {/* Revenue Breakdown */}
                     {revenueData && (
                         <AdminSection title="Revenue Breakdown">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -662,6 +782,173 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </AdminSection>
                     )}
                 </div>
+            )}
+            
+            {/* ANNOUNCEMENTS TAB (NEW) */}
+            {activeTab === 'announcements' && (
+              <div className="space-y-6">
+                <AdminSection title="Manage Announcements">
+                  <button
+                    onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
+                    className="mb-6 px-6 py-3 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    {showAnnouncementForm ? 'Cancel' : '+ Create New Announcement'}
+                  </button>
+
+                  {/* Announcement Form */}
+                  {showAnnouncementForm && (
+                    <div className="bg-brand-darker p-6 rounded-lg border border-slate-700 mb-6">
+                      <h3 className="text-lg font-semibold text-white mb-4">New Announcement</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                          <input
+                            type="text"
+                            value={announcementForm.title}
+                            onChange={(e) => setAnnouncementForm({...announcementForm, title: e.target.value})}
+                            className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white"
+                            placeholder="Announcement title..."
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                          <textarea
+                            value={announcementForm.message}
+                            onChange={(e) => setAnnouncementForm({...announcementForm, message: e.target.value})}
+                            className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white h-32"
+                            placeholder="Announcement message..."
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Type</label>
+                            <select
+                              value={announcementForm.type}
+                              onChange={(e) => setAnnouncementForm({...announcementForm, type: e.target.value as any})}
+                              className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white"
+                            >
+                              <option value="info">Info</option>
+                              <option value="success">Success</option>
+                              <option value="warning">Warning</option>
+                              <option value="update">Update</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Target Audience</label>
+                            <select
+                              value={announcementForm.target_audience}
+                              onChange={(e) => setAnnouncementForm({...announcementForm, target_audience: e.target.value as any})}
+                              className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white"
+                            >
+                              <option value="all">All Users</option>
+                              <option value="founder">Founder Tier</option>
+                              <option value="standard">Standard Tier</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={announcementForm.priority}
+                              onChange={(e) => setAnnouncementForm({...announcementForm, priority: parseInt(e.target.value)})}
+                              className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">End Date (Optional)</label>
+                          <input
+                            type="datetime-local"
+                            value={announcementForm.end_date}
+                            onChange={(e) => setAnnouncementForm({...announcementForm, end_date: e.target.value})}
+                            className="w-full bg-brand-dark border border-slate-600 rounded-lg px-4 py-2 text-white"
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleCreateAnnouncement}
+                          className="w-full px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                        >
+                          Create Announcement
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Announcements List */}
+                  {isLoadingAnnouncements ? (
+                    <div className="text-center py-8 text-gray-400">Loading announcements...</div>
+                  ) : announcements.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">No announcements yet</div>
+                  ) : (
+                    <div className="space-y-4">
+                      {announcements.map((announcement) => (
+                        <div
+                          key={announcement.id}
+                          className="bg-brand-darker p-6 rounded-lg border border-slate-700"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-semibold text-white">{announcement.title}</h3>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  announcement.type === 'info' ? 'bg-blue-900/50 text-blue-300' :
+                                  announcement.type === 'success' ? 'bg-green-900/50 text-green-300' :
+                                  announcement.type === 'warning' ? 'bg-yellow-900/50 text-yellow-300' :
+                                  'bg-purple-900/50 text-purple-300'
+                                }`}>
+                                  {announcement.type}
+                                </span>
+                                <span className="px-2 py-1 rounded text-xs font-medium bg-gray-900/50 text-gray-300">
+                                  {announcement.target_audience}
+                                </span>
+                                {announcement.is_active ? (
+                                  <span className="px-2 py-1 rounded text-xs font-medium bg-green-900/50 text-green-300">
+                                    Active
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 rounded text-xs font-medium bg-red-900/50 text-red-300">
+                                    Inactive
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-gray-300 mb-3">{announcement.message}</p>
+                              <div className="text-xs text-gray-500">
+                                Created: {new Date(announcement.created_at).toLocaleDateString()} | 
+                                Priority: {announcement.priority}
+                                {announcement.end_date && ` | Ends: ${new Date(announcement.end_date).toLocaleDateString()}`}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleToggleActive(announcement)}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                              >
+                                {announcement.is_active ? 'Deactivate' : 'Activate'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAnnouncement(announcement.id)}
+                                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </AdminSection>
+              </div>
             )}
 
             {/* TICKET DETAIL MODAL */}
