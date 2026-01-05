@@ -298,10 +298,10 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 <div className="space-y-4">
                     <h3 className="font-bold text-brand-text">Business Profiles</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {profileData.business.name && (
+                        {profileData.business.business_name && (
                             <div className="bg-brand-light p-4 rounded-lg border border-brand-border flex items-center justify-between">
                                 <div>
-                                    <h4 className="font-bold text-brand-text">{profileData.business.name}</h4>
+                                    <h4 className="font-bold text-brand-text">{profileData.business.business_name}</h4>
                                     <p className="text-sm text-brand-text-muted">{profileData.business.location}</p>
                                 </div>
                                 <span className="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Primary</span>

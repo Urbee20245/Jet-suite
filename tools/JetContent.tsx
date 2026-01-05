@@ -15,7 +15,7 @@ interface JetContentProps {
 }
 
 export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, profileData, setActiveTool }) => {
-  const [businessType] = useState(profileData.business.category || '');
+  const [businessType] = useState(profileData.business.industry || '');
   const [topic, setTopic] = useState(initialProps?.keyword?.keyword || '');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);

@@ -74,7 +74,7 @@ const ScheduleModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-            <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-lg w-full">
+            <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-lg w-full my-8">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-brand-text">Schedule Post</h3>
                     <button onClick={onClose}><XMarkIcon className="w-6 h-6 text-brand-text-muted" /></button>
@@ -83,7 +83,7 @@ const ScheduleModal: React.FC<{
                 <div className="bg-brand-light p-4 rounded-lg mb-4 border border-brand-border">
                     <p className="text-xs font-semibold text-brand-text-muted mb-1">Content Preview:</p>
                     <p className="text-sm text-brand-text line-clamp-3">
-                        {'copy' in asset ? asset.copy : `${asset.headline}: ${asset.description}`}
+                        {'copy' in asset ? asset.copy : `${asset.headline}\n\n${asset.description}`}
                     </p>
                 </div>
 
@@ -150,17 +150,17 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     const [scheduleSuccess, setScheduleSuccess] = useState('');
 
     useEffect(() => {
-        const loadConnections = async () => {
-            if (profileData.user.id) {
+        if (profileData.user.id) {
+            const loadConnections = async () => {
                 try {
                     const userConnections = await getSocialConnections(profileData.user.id);
                     setConnections(userConnections);
                 } catch (e) {
                     console.error("Failed to load social connections", e);
                 }
-            }
-        };
-        loadConnections();
+            };
+            loadConnections();
+        }
     }, [profileData.user.id]);
 
     // Generate campaign images using Business DNA
@@ -173,7 +173,7 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
         const tone = brandDna?.brand_tone?.primary_tone || 'professional';
         
         const imagePrompt = `Create a premium marketing campaign visual for "${campaign.name}". 
-Business: ${business.name} (${business.category}).
+Business: ${business.business_name} (${business.industry}).
 Style: ${style}, ${tone} tone.
 Colors: ${colorPalette}.
 Design: Editorial, sophisticated, minimalist. NOT clip art or amateur.
@@ -343,7 +343,7 @@ The image should feel like it was designed by a professional brand agency.`;
             const style = brandDna?.visual_identity?.layout_style || 'modern';
             
             const imagePrompt = `Create a premium ${type === 'social' ? 'social media post' : 'advertisement'} image for: ${description}.
-Business: ${business.name} (${business.category}).
+Business: ${business.business_name} (${business.industry}).
 Style: ${style}. Colors: ${colorPalette}.
 Design: Editorial, sophisticated, brand-focused. Professional quality.`;
             
@@ -476,7 +476,7 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                 </div>
                 <div className="flex items-center gap-2 text-xs text-brand-text-muted">
                     <div className="w-2 h-2 rounded-full bg-accent-purple animate-pulse"></div>
-                    <span>Using {profileData.business.name} Brand DNA</span>
+                    <span>Using {profileData.business.business_name} Brand DNA</span>
                 </div>
             </header>
 

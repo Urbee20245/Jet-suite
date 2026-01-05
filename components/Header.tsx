@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   const title = activeTool ? activeTool.name : 'Command Center';
   
   // Derived value for display
-  const activeBusinessName = activeBusiness?.name || 'Loading Business...';
+  const activeBusinessName = activeBusiness?.business_name || 'Loading Business...';
 
   return (
     <header className="bg-brand-card shadow-sm border-b border-brand-border p-4 flex items-center justify-between h-16 flex-shrink-0 relative z-50">

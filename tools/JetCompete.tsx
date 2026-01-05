@@ -21,7 +21,7 @@ export const JetCompete: React.FC<JetCompeteProps> = ({ tool, addTasksToGrowthPl
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
 
-  if (!profileData.business.name) {
+  if (!profileData.business.business_name) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />

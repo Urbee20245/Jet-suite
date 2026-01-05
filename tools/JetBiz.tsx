@@ -364,9 +364,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   };
   // --- END PERSISTENCE EFFECTS ---
 
-  const businessQuery = `${profileData.business.name}, ${profileData.business.location}`;
+  const businessQuery = `${profileData.business.business_name}, ${profileData.business.location}`;
 
-  if (!profileData.business.name || !profileData.business.location) {
+  if (!profileData.business.business_name || !profileData.business.location) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
@@ -494,6 +494,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                   <div
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
+                    onClick={() => handleLoadAnalysis(analysis)}
                   >
                     <div className="flex-1">
                       <div className="font-semibold text-brand-text">{analysis.target_url}</div>

@@ -175,8 +175,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
        <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg"><div className="flex"><div className="py-1"><InformationCircleIcon className="w-6 h-6 mr-3"/></div><div><p className="font-bold">Your Action Plan is Ready!</p><p className="text-sm">All tasks from this analysis have been added to your Growth Plan. When you leave this page, you can find them there to track your progress and start executing. <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button></p></div></div></div>
         
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-             <div className="flex justify-between items-start mb-4">
-                <div><h2 className="text-2xl font-extrabold text-brand-text flex items-center">Live Analysis Results <span className="ml-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800">🟢 Live Scan</span></h2><p className="text-xs text-brand-text-muted mt-1">Scanned: {new Date(report.timestamp).toLocaleString()}</p></div>
+             <div className="flex justify-between items-start mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">Live Analysis Results <span className="ml-3 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800">🟢 Live Scan</span></h2><p className="text-xs text-brand-text-muted mt-1">Scanned: {new Date(report.timestamp).toLocaleString()}</p></div>
                 <button onClick={onRerun} disabled={isRunning} className="flex items-center bg-white hover:bg-brand-light border border-brand-border text-brand-text font-semibold py-2 px-4 rounded-lg transition duration-300 disabled:opacity-50"><ArrowPathIcon className={`w-5 h-5 mr-2 ${isRunning ? 'animate-spin' : ''}`} />{isRunning ? 'Re-scanning...' : 'Re-run Scan'}</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div className="bg-brand-light p-4 rounded-lg border"><h3 className="font-bold text-lg mb-4 text-center">Mobile Performance</h3><div className="flex justify-around"><div className="text-center"><ScoreCircle score={report.mobile.performance} /><p className="text-xs mt-1 font-semibold">Performance</p></div><div className="text-center"><ScoreCircle score={report.mobile.seo} /><p className="text-xs mt-1 font-semibold">SEO</p></div></div></div><div className="bg-brand-light p-4 rounded-lg border"><h3 className="font-bold text-lg mb-4 text-center">Desktop Performance</h3><div className="flex justify-around"><div className="text-center"><ScoreCircle score={report.desktop.performance} /><p className="text-xs mt-1 font-semibold">Performance</p></div><div className="text-center"><ScoreCircle score={report.desktop.seo} /><p className="text-xs mt-1 font-semibold">SEO</p></div></div></div></div>
@@ -222,12 +221,12 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     if (profileData.jetvizAnalysis) {
       setResult(profileData.jetvizAnalysis);
       setUrlToAnalyze(profileData.jetvizAnalysis.businessAddress);
-    } else if (profileData.business.websiteUrl) {
-      setUrlToAnalyze(profileData.business.websiteUrl);
+    } else if (profileData.business.business_website) {
+      setUrlToAnalyze(profileData.business.business_website);
     }
   }, [profileData]);
 
-  if (!profileData.business.websiteUrl && !result) {
+  if (!profileData.business.business_website && !result) {
     return (<div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center"><InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" /><h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2><p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p><button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button></div>);
   }
 
@@ -314,7 +313,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const handleStartOver = () => {
       onSaveAnalysis(null);
       setResult(null);
-      setUrlToAnalyze(profileData.business.websiteUrl || '');
+      setUrlToAnalyze(profileData.business.business_website || '');
       setError('');
   };
 

@@ -831,10 +831,10 @@ export const extractBrandDnaProfile = async (business: BusinessProfile): Promise
         const ai = getAiClient();
         const basePrompt = `You are an expert brand strategist analyzing a business website to extract its Brand and Business DNA. This is a one-time analysis to create an authoritative brand profile that will be reused across all marketing tools. Be accurate, neutral, and consistent. Do NOT generate any marketing content or ideas. Focus ONLY on brand identity extraction.
 
-Business Name: ${business.name}
-Business Category: ${business.category}
+Business Name: ${business.business_name}
+Business Category: ${business.industry}
 Business Location: ${business.location}
-Business Website URL: ${business.websiteUrl}
+Business Website URL: ${business.business_website}
 
 Analyze the live website and return a complete, structured Brand DNA profile. Your entire output must be a single JSON object matching the provided schema.`;
         const prompt = injectDateContext(basePrompt);
@@ -885,8 +885,8 @@ export const generateCampaignIdeas = async (profileData: ProfileData): Promise<C
         const ai = getAiClient();
         const basePrompt = `You are a creative director inside JetSuite. Your task is to generate 3-5 distinct, on-brand campaign ideas for the following business. The ideas should be relevant to the business category and location. Use the provided Brand DNA to ensure the concepts align with the brand's tone, style, and positioning.
 
-Business Name: ${profileData.business.name}
-Business Category: ${profileData.business.category}
+Business Name: ${profileData.business.business_name}
+Business Category: ${profileData.business.industry}
 Location: ${profileData.business.location}
 Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}`.trim();
         const prompt = injectDateContext(basePrompt);
@@ -948,8 +948,8 @@ export const generateCreativeAssets = async (campaign: CampaignIdea, profileData
         const prompt = `You are a creative engine inside JetCreate. Your task is to generate a full suite of on-brand creative assets for the selected marketing campaign. You must adhere strictly to the provided Brand DNA.
 
 **Business & Brand DNA Context:**
-- Business Name: ${profileData.business.name}
-- Business Category: ${profileData.business.category}
+- Business Name: ${profileData.business.business_name}
+- Business Category: ${profileData.business.industry}
 - Location: ${profileData.business.location}
 - Brand DNA Profile: ${JSON.stringify(profileData.brandDnaProfile)}`.trim();
 
@@ -1013,10 +1013,128 @@ export const getTrendingImageStyles = async (): Promise<{ name: string; descript
         throw error;
     }
 };
-// TEMP safety export to unblock Vite cache
+
 export const detectGbpOnWebsite = async (websiteUrl: string, businessName: string) => {
-  throw new Error(
-    'detectGbpOnWebsite is deprecated. Use searchGoogleBusiness instead.'
-  );
+  try {
+    const ai = getAiClient();
+    const prompt = `You are a Google Business Profile detection specialist. Use Google Search to determine if the business "${businessName}" has a verified Google Business Profile (GBP) associated with the website URL: "${websiteUrl}". Return the most likely GBP match. If found, provide the name, address, rating, reviewCount, and category. If not found, return null.`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-3-pro-preview',
+        contents: prompt,
+        config: {
+            tools: [{ googleSearch: {} }],
+            responseMimeType: "application/json",
+            responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                    business: {
+                        type: Type.OBJECT,
+                        properties: {
+                            name: { type: Type.STRING },
+                            address: { type: Type.STRING },
+                            rating: { type: Type.NUMBER },
+                            reviewCount: { type: Type.INTEGER },
+                            category: { type: Type.STRING },
+                        },
+                        required: ["name", "address", "rating", "reviewCount", "category"]
+                    }
+                }
+            }
+        },
+    });
+
+    const jsonText = response.text.trim();
+    const parsed = JSON.parse(jsonText);
+    return parsed.business || null;
+  } catch (error) {
+    if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+        return null;
+    }
+    console.error('Error detecting GBP:', error);
+    return null;
+  }
 };
 
+
+export const generateBusinessDescription = async (url: string): Promise<string> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `You are a concise marketing copywriter. Analyze the content of the website at ${url}. Based on the content, generate a compelling 2-3 sentence business description (max 500 characters). Focus on what the business does, who it serves, and its key value proposition. Output only the description text.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+
+        // FIX: Ensure response.text is not undefined before trimming to prevent type errors.
+        return response.text ?? '';
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            return "AI features are disabled due to missing API key.";
+        }
+        throw error;
+    }
+};
+
+export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string; faviconUrl: string;}> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `You are an expert web asset extractor. Analyze the live website at the URL: '${url}'. Your task is to extract its 'Business DNA'. Your entire output must be a single JSON object with keys: "logoUrl", "colors", "fonts", "style", and "faviconUrl".
+
+1.  **Logo URL**: Find the primary logo on the page. You MUST return a full, absolute URL. Follow this priority order strictly:
+    1.  First, look for an \`<img>\` tag where \`src\`, \`alt\`, \`class\`, or \`id\` contains "logo".
+    2.  If none, look for an \`<img>\` tag inside a \`<header>\` or \`<nav>\` element that is one of the first prominent images.
+    3.  If none, look for an SVG element with "logo" in its \`class\` or \`id\`.
+    4.  If none, check for a \`<meta property="og:image" content="...">\` tag and use its content URL.
+    5.  If none, check for a \`<meta name="twitter:image" content="...">\` tag.
+    6.  If none, check for a \`<link rel="apple-touch-icon" href="...">\` tag.
+    
+    *Rules for logo selection*:
+    - The URL MUST be absolute (start with http or https). If you find a relative URL, resolve it based on the site's base URL.
+    - Prefer SVG or PNG formats.
+    - Ignore images smaller than 40x40 pixels.
+    - Ignore social media icons (e.g., facebook.svg, twitter.png).
+    - If after all these steps no logo is found, return an empty string "".
+
+2.  **Colors**: Identify up to 8 primary and secondary colors used on the site (buttons, headers, backgrounds). Return them as an array of hex codes. Be comprehensive.
+3.  **Fonts**: Identify the main font-family used for headings and body text. Return a string like 'Inter, sans-serif'.
+4.  **Style**: Describe the overall visual style in a short phrase (e.g., 'Clean and corporate', 'Vibrant and playful', 'Minimalist and modern').
+5.  **Favicon URL**: Find the favicon URL. Look for \`<link rel="icon" href="...">\` or \`<link rel="shortcut icon" href="...">\`. Return the full, absolute URL. If none is found, return an empty string "".`;
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        logoUrl: { type: Type.STRING },
+                        colors: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        },
+                        fonts: { type: Type.STRING },
+                        style: { type: Type.STRING },
+                        faviconUrl: { type: Type.STRING } // NEW FIELD
+                    },
+                    required: ["logoUrl", "colors", "fonts", "style", "faviconUrl"]
+                }
+            },
+        });
+
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};

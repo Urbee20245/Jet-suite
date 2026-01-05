@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, ReadinessState, BusinessReview } from '../types';
 import { generateReviewReply, fetchBusinessReviews } from '../services/geminiService';
@@ -73,13 +72,13 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
   useEffect(() => {
     const fetchReviews = async () => {
       if (profileData.googleBusiness.status === 'Verified' && 
-          profileData.business.name && 
+          profileData.business.business_name && 
           profileData.googleBusiness.address) {
         setFetchingReviews(true);
         setError('');
         try {
           const fetchedReviews = await fetchBusinessReviews(
-            profileData.business.name,
+            profileData.business.business_name,
             profileData.googleBusiness.address
           );
           
@@ -104,7 +103,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
     };
     
     fetchReviews();
-  }, [profileData.googleBusiness, profileData.business.name]);
+  }, [profileData.googleBusiness, profileData.business.business_name]);
 
   const handleSelectReview = (review: BusinessReview) => {
     setSelectedReview(review);
@@ -150,7 +149,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
     setError('');
     try {
       const fetchedReviews = await fetchBusinessReviews(
-        profileData.business.name,
+        profileData.business.business_name,
         profileData.googleBusiness.address || ''
       );
       
@@ -348,7 +347,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
               disabled={loading || (!selectedReview && !manualReview)} 
               className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
             >
-              {loading ? 'Drafting Reply...' : 'Draft Reply'}
+              {loading ? 'Drafting Reply...' : 'Draft Reply for Selected Review'}
             </button>
           </form>
         </div>

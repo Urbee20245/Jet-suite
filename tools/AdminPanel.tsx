@@ -523,7 +523,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     const status = dnaStatus(profile.business.dna);
                                     return (
                                     <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
-                                        <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">{profile.business.name || '(No Name)'}</th>
+                                        <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">{profile.business.business_name || '(No Name)'}</th>
                                         <td className="px-6 py-4">{profile.user.email}</td>
                                         <td className="px-6 py-4"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>{status.text}</span></td>
                                         <td className="px-6 py-4 flex items-center space-x-2">

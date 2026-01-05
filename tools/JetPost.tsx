@@ -47,7 +47,7 @@ const platformNameToPlatformId: { [key: string]: string } = {
 type ViewMode = 'generate' | 'planner' | 'connections';
 
 export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTool }) => {
-  const { category: businessType } = profileData.business;
+  const { industry: businessType } = profileData.business;
   
   // Get userId from localStorage (matching App.tsx pattern)
   const [userId, setUserId] = useState<string>('');
@@ -57,8 +57,8 @@ export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTo
     if (storedUserId) {
       setUserId(storedUserId);
     }
-  }, []);
-  
+  }, [userId]);
+
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('generate');
   

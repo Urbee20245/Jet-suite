@@ -51,7 +51,7 @@ const WidgetPreview: React.FC<{
 
   const WidgetHeader = () => (
     <div className="text-center mb-6">
-      <h2 className="text-2xl font-bold mb-2" style={{ color: colors.text }}>What Our Customers Say</h2>
+      <h2 className="text-2xl font-bold" style={{ color: colors.text }}>What Our Customers Say</h2>
       <div className="flex items-center justify-center gap-2">
         <StarRating rating={parseFloat(averageRating)} />
         <span className="font-semibold" style={{ color: colors.text }}>{averageRating}</span>
@@ -165,7 +165,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   useEffect(() => {
     const fetchReviews = async () => {
       if (profileData.googleBusiness.status === 'Verified' && 
-          profileData.business.name && 
+          profileData.business.business_name && 
           profileData.googleBusiness.address) {
         setLoading(true);
         setError('');
@@ -201,7 +201,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         
         try {
           const fetchedReviews = await fetchBusinessReviews(
-            profileData.business.name,
+            profileData.business.business_name,
             profileData.googleBusiness.address
           );
           
@@ -229,7 +229,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     };
     
     fetchReviews();
-  }, [profileData.googleBusiness, profileData.business.name]);
+  }, [profileData.googleBusiness, profileData.business.business_name]);
 
   // Filter reviews based on star rating
   useEffect(() => {
@@ -240,7 +240,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   // Generate widget embed code
   const generateWidgetCode = () => {
     const widgetData = {
-      businessName: profileData.business.name,
+      businessName: profileData.business.business_name,
       reviews: filteredReviews,
       layout,
       reviewUrl,
@@ -343,7 +343,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${profileData.business.name.replace(/\s+/g, '_')}_reviews_widget.html`;
+    a.download = `${profileData.business.business_name.replace(/\s+/g, '_')}_reviews_widget.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -381,7 +381,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     
     try {
       const fetchedReviews = await fetchBusinessReviews(
-        profileData.business.name,
+        profileData.business.business_name,
         profileData.googleBusiness.address || ''
       );
       
@@ -425,7 +425,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     });
     
     socialText += `See more reviews and leave yours: ${reviewUrl}\n\n`;
-    socialText += `#CustomerReviews #${profileData.business.name.replace(/\s+/g, '')}`;
+    socialText += `#CustomerReviews #${profileData.business.business_name.replace(/\s+/g, '')}`;
     
     navigator.clipboard.writeText(socialText);
     setSocialCopied(true);
@@ -511,7 +511,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
             className="flex items-center gap-2 text-sm text-accent-purple hover:text-accent-pink font-semibold transition-colors disabled:opacity-50"
           >
             <ArrowPathIcon className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Fetching...' : 'Refresh Reviews'}
+            {loading ? 'Refresh Reviews' : 'Refresh Reviews'}
           </button>
         </div>
       </div>
@@ -753,7 +753,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               <WidgetPreview
                 reviews={filteredReviews.slice(0, layout === 'list' ? 5 : 6)}
                 layout={layout}
-                businessName={profileData.business.name}
+                businessName={profileData.business.business_name}
                 reviewUrl={reviewUrl}
                 colors={{ primary: primaryColor, text: textColor, background: backgroundColor, card: cardColor }}
               />

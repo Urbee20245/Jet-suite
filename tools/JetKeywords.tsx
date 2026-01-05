@@ -48,7 +48,7 @@ const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[]
 };
 
 export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, setActiveTool }) => {
-  const { category: service, location } = profileData.business;
+  const { industry: service, location } = profileData.business;
   const [descriptiveKeywords, setDescriptiveKeywords] = useState('');
   const [result, setResult] = useState<KeywordAnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);

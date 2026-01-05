@@ -14,7 +14,7 @@ interface JetLeadsProps {
 }
 
 export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActiveTool }) => {
-  const { category: service, location: area } = profileData.business;
+  const { industry: service, location: area } = profileData.business;
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
