@@ -1,4 +1,3 @@
-' to 'from').">
 import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState } from '../types';
@@ -144,7 +143,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
                     {nextAction.ctaText} <ArrowRightIcon className="w-5 h-5" />
                 </button>
                  <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-sm font-semibold underline underline-offset-2">
-                    Why start here?
+                    Why this matters
                 </button>
             </div>
         </div>
