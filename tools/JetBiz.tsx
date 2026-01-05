@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, AuditReport, BusinessSearchResult, ConfirmedBusiness, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { searchGoogleBusiness, analyzeBusinessListing } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon } from '../components/icons/MiniIcons';
+import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon, ArrowDownTrayIcon, XMarkIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetBizProps {
   tool: Tool;
@@ -13,6 +14,8 @@ interface JetBizProps {
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   growthPlanTasks: GrowthPlanTask[];
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
+  userId: string; // Added for persistence
+  activeBusinessId: string | null; // Added for persistence
 }
 
 const gbpFacts = [
@@ -248,7 +251,7 @@ const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: Grow
         </div>
         <div className="flex justify-between items-center mt-4">
             <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
-            <p className="text-xs text-brand-text-muted">Analysis run on: {new Date(report.timestamp).toLocaleString()}</p>
+            <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
         </div>
       </div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
@@ -264,7 +267,7 @@ const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: Grow
   );
 };
 
-export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSaveAnalysis, profileData, setActiveTool, growthPlanTasks, onTaskStatusChange }) => {
+export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSaveAnalysis, profileData, setActiveTool, growthPlanTasks, onTaskStatusChange, userId, activeBusinessId }) => {
   const [step, setStep] = useState<'initial' | 'select' | 'confirm' | 'result'>('initial');
   const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessSearchResult | null>(null);
@@ -272,6 +275,13 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [auditReport, setAuditReport] = useState<AuditReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // --- PERSISTENCE STATE ---
+  const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSavedList, setShowSavedList] = useState(false);
+  
+  const supabase = getSupabaseClient();
 
   useEffect(() => {
     if (profileData.jetbizAnalysis) {
@@ -280,6 +290,80 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   }, [profileData.jetbizAnalysis]);
   
+  // --- PERSISTENCE EFFECTS ---
+  useEffect(() => {
+    if (userId && activeBusinessId) {
+      loadSavedAnalyses();
+    }
+  }, [userId, activeBusinessId]);
+
+  const loadSavedAnalyses = async () => {
+    if (!supabase || !userId || !activeBusinessId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('analysis_results')
+        .select('id, created_at, target_url, results')
+        .eq('user_id', userId)
+        .eq('business_id', activeBusinessId)
+        .eq('tool_name', 'jetbiz')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      if (data) setSavedAnalyses(data);
+    } catch (error) {
+      console.error('Error loading saved analyses:', error);
+    }
+  };
+
+  const handleSaveAnalysis = async () => {
+    if (!supabase || !userId || !activeBusinessId || !auditReport) return;
+    
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('analysis_results')
+        .insert({
+          user_id: userId,
+          business_id: activeBusinessId,
+          tool_name: 'jetbiz',
+          analysis_type: 'full_audit',
+          target_url: auditReport.businessAddress,
+          results: auditReport // Save the full AuditReport object
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      alert('Analysis saved successfully!');
+      loadSavedAnalyses();
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+      alert('Failed to save analysis. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadAnalysis = (analysis: any) => {
+    // The full AuditReport object is stored in the 'results' field
+    const loadedReport = analysis.results as AuditReport;
+    
+    setAuditReport(loadedReport);
+    setSelectedBusiness({
+        name: loadedReport.businessName,
+        address: loadedReport.businessAddress,
+        rating: 0, // Placeholder
+        reviewCount: 0, // Placeholder
+        category: '' // Placeholder
+    });
+    setStep('result');
+    setShowSavedList(false);
+  };
+  // --- END PERSISTENCE EFFECTS ---
+
   const businessQuery = `${profileData.business.name}, ${profileData.business.location}`;
 
   if (!profileData.business.name || !profileData.business.location) {
@@ -357,6 +441,24 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             </div>
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay report={auditReport} growthPlanTasks={growthPlanTasks} onRerun={handleRerun} isRunning={loading} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
+            
+            {/* Save Analysis Button */}
+            <div className="mt-6 flex gap-4">
+                <button
+                  onClick={handleSaveAnalysis}
+                  disabled={isSaving}
+                  className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md"
+                >
+                  {isSaving ? 'Saving...' : '💾 Save Analysis'}
+                </button>
+                
+                <button
+                  onClick={() => setShowSavedList(!showSavedList)}
+                  className="px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md"
+                >
+                  📂 View Saved Analyses ({savedAnalyses.length})
+                </button>
+            </div>
           </>
         );
     }
@@ -382,6 +484,35 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         {error && <p className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</p>}
         {loading && step === 'initial' && <Loader />}
         {renderContent()}
+        
+        {/* Saved Analyses List */}
+        {showSavedList && savedAnalyses.length > 0 && (
+            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
+              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
+              <div className="space-y-3">
+                {savedAnalyses.map((analysis) => (
+                  <div
+                    key={analysis.id}
+                    className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
+                      <div className="text-sm text-brand-text-muted">
+                        {new Date(analysis.created_at).toLocaleDateString()} at{' '}
+                        {new Date(analysis.created_at).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleLoadAnalysis(analysis)}
+                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Load
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
     </div>
     );
 };
