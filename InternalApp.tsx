@@ -249,51 +249,51 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   }, [userId, userEmail]); // Only run once on mount/user change
 
   // 1. Fetch all accessible businesses and set active one
+  const fetchBusinesses = async () => {
+    if (!supabase || !activeUserId) return;
+
+    console.log('[InternalApp] Fetching businesses for active user:', activeUserId);
+
+    // Fetch owned businesses
+    const { data: dbProfiles, error } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .eq('user_id', activeUserId)
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('[InternalApp] Error fetching businesses:', error);
+      return;
+    }
+
+    if (dbProfiles && dbProfiles.length > 0) {
+      console.log('[InternalApp] Loaded businesses:', dbProfiles);
+      setBusinesses(dbProfiles as BusinessProfile[]);
+      
+      // Determine active business ID
+      const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
+      const primaryBusiness = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
+      
+      const activeId = savedActiveId && dbProfiles.some(b => b.id === savedActiveId)
+        ? savedActiveId
+        : primaryBusiness.id;
+      
+      if (activeId) {
+        console.log('[InternalApp] Setting active business ID:', activeId);
+        setActiveBusinessId(activeId);
+        localStorage.setItem('jetsuite_active_biz_id', activeId);
+        loadBusinessData(activeId);
+      }
+    } else {
+      console.log('[InternalApp] No businesses found - user needs to complete onboarding');
+      // If no businesses exist, ensure activeBusinessId is null
+      setActiveBusinessId(null);
+      setBusinesses([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchBusinesses = async () => {
-      if (!supabase || !activeUserId) return;
-
-      console.log('[InternalApp] Fetching businesses for active user:', activeUserId);
-
-      // Fetch owned businesses
-      const { data: dbProfiles, error } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('user_id', activeUserId)
-        .order('is_primary', { ascending: false })
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('[InternalApp] Error fetching businesses:', error);
-        return;
-      }
-
-      if (dbProfiles && dbProfiles.length > 0) {
-        console.log('[InternalApp] Loaded businesses:', dbProfiles);
-        setBusinesses(dbProfiles as BusinessProfile[]);
-        
-        // Determine active business ID
-        const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
-        const primaryBusiness = dbProfiles.find(p => p.is_primary) || dbProfiles[0];
-        
-        const activeId = savedActiveId && dbProfiles.some(b => b.id === savedActiveId)
-          ? savedActiveId
-          : primaryBusiness.id;
-        
-        if (activeId) {
-          console.log('[InternalApp] Setting active business ID:', activeId);
-          setActiveBusinessId(activeId);
-          localStorage.setItem('jetsuite_active_biz_id', activeId);
-          loadBusinessData(activeId);
-        }
-      } else {
-        console.log('[InternalApp] No businesses found for user');
-        // If no businesses exist, ensure activeBusinessId is null
-        setActiveBusinessId(null);
-        setBusinesses([]);
-      }
-    };
-
     fetchBusinesses();
   }, [activeUserId, supabase]);
 
@@ -495,6 +495,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       const newProfileData = { ...profileData, [`${type}Analysis`]: report };
       handleUpdateProfileData(newProfileData, true); 
   };
+  
+  // Derived value for Header display
+  const activeBusinessName = businesses.find(b => b.id === activeBusinessId)?.business_name || 'Loading Business...';
+
 
   const isStep1Complete = !!(profileData.business.name && profileData.business.location && profileData.business.websiteUrl);
   const isStep2Complete = profileData.business.isDnaApproved;
@@ -511,7 +515,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
     }
     switch (activeTool.id) {
-      case 'businessdetails': return <BusinessDetails profileData={profileData} onUpdate={handleUpdateProfileData} setActiveTool={setActiveTool} />;
+      case 'businessdetails': return <BusinessDetails profileData={profileData} onUpdate={handleUpdateProfileData} setActiveTool={setActiveTool} onBusinessUpdated={fetchBusinesses} />;
       case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;

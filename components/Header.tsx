@@ -25,6 +25,9 @@ export const Header: React.FC<HeaderProps> = ({
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const activeBusiness = businesses.find(b => b.id === activeBusinessId);
   const title = activeTool ? activeTool.name : 'Command Center';
+  
+  // Derived value for display
+  const activeBusinessName = activeBusiness?.name || 'Loading Business...';
 
   return (
     <header className="bg-brand-card shadow-sm border-b border-brand-border p-4 flex items-center justify-between h-16 flex-shrink-0 relative z-50">
@@ -43,8 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setIsSwitcherOpen(!isSwitcherOpen)}
             className="flex items-center gap-2 px-3 py-1.5 bg-brand-light hover:bg-brand-border rounded-lg border border-brand-border transition-colors group"
           >
-            <span className="text-sm font-bold text-brand-text">
-              {activeBusiness?.name || 'Loading Business...'}
+            <span className="text-sm font-bold text-brand-text truncate max-w-[150px]">
+              {activeBusinessName}
             </span>
             <ChevronDownIcon
               className={`w-4 h-4 text-brand-text-muted transition-transform ${
@@ -81,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
                             : 'text-brand-text'
                         }`}
                       >
-                        {biz.name}
+                        {biz.business_name}
                       </p>
                       <p className="text-xs text-brand-text-muted">
                         {biz.location}
