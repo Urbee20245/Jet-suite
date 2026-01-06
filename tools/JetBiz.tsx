@@ -14,8 +14,8 @@ interface JetBizProps {
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   growthPlanTasks: GrowthPlanTask[];
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
-  userId: string; // Added for persistence
-  activeBusinessId: string | null; // Added for persistence
+  userId: string;
+  activeBusinessId: string | null;
 }
 
 const gbpFacts = [
@@ -33,7 +33,7 @@ const AnalysisLoading: React.FC = () => {
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentFactIndex(prev => (prev + 1) % gbpFacts.length);
-        }, 3500); // Change fact every 3.5 seconds
+        }, 3500);
         return () => clearInterval(interval);
     }, []);
 
@@ -102,8 +102,6 @@ const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}>
         </div>
     </div>
 );
-
-// --- New Result Display Components for JetBiz ---
 
 const priorityStyles = {
   High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200', iconColor: 'text-red-500' },
@@ -207,7 +205,6 @@ const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask
   );
 };
 
-
 const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: GrowthPlanTask[], onRerun: (e: React.FormEvent) => Promise<void>, isRunning: boolean, onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void, setActiveTool: (tool: Tool | null) => void }> = ({ report, growthPlanTasks, onRerun, isRunning, onTaskStatusChange, setActiveTool }) => {
   const [showCompleted, setShowCompleted] = useState(false);
 
@@ -276,7 +273,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // --- PERSISTENCE STATE ---
   const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedList, setShowSavedList] = useState(false);
@@ -290,7 +286,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   }, [profileData.jetbizAnalysis]);
   
-  // --- PERSISTENCE EFFECTS ---
   useEffect(() => {
     if (userId && activeBusinessId) {
       loadSavedAnalyses();
@@ -330,7 +325,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
           tool_name: 'jetbiz',
           analysis_type: 'full_audit',
           target_url: auditReport.businessAddress,
-          results: auditReport // Save the full AuditReport object
+          results: auditReport
         })
         .select()
         .single();
@@ -348,21 +343,41 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   };
 
   const handleLoadAnalysis = (analysis: any) => {
-    // The full AuditReport object is stored in the 'results' field
     const loadedReport = analysis.results as AuditReport;
     
     setAuditReport(loadedReport);
     setSelectedBusiness({
         name: loadedReport.businessName,
         address: loadedReport.businessAddress,
-        rating: 0, // Placeholder
-        reviewCount: 0, // Placeholder
-        category: '' // Placeholder
+        rating: 0,
+        reviewCount: 0,
+        category: ''
     });
     setStep('result');
     setShowSavedList(false);
   };
-  // --- END PERSISTENCE EFFECTS ---
+
+  // ✅ NEW: Delete analysis function
+  const handleDeleteAnalysis = async (analysisId: string) => {
+    if (!confirm('Are you sure you want to delete this saved analysis?')) return;
+    
+    if (!supabase) return;
+    
+    try {
+      const { error } = await supabase
+        .from('analysis_results')
+        .delete()
+        .eq('id', analysisId);
+      
+      if (error) throw error;
+      
+      alert('Analysis deleted successfully!');
+      loadSavedAnalyses();
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      alert('Failed to delete analysis. Please try again.');
+    }
+  };
 
   const businessQuery = `${profileData.business.business_name}, ${profileData.business.location}`;
 
@@ -418,7 +433,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
   
   const handleStartOver = () => {
-      onSaveAnalysis(null); // Clear persisted analysis
+      onSaveAnalysis(null);
       setStep('initial');
       setSelectedBusiness(null);
       setAuditReport(null);
@@ -442,7 +457,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay report={auditReport} growthPlanTasks={growthPlanTasks} onRerun={handleRerun} isRunning={loading} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
             
-            {/* Save Analysis Button */}
             <div className="mt-6 flex gap-4">
                 <button
                   onClick={handleSaveAnalysis}
@@ -485,35 +499,58 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         {loading && step === 'initial' && <Loader />}
         {renderContent()}
         
-        {/* Saved Analyses List */}
-        {showSavedList && savedAnalyses.length > 0 && (
-            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
-              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
+        {/* ✅ UPDATED: Saved Analyses List with Delete Button */}
+        {showSavedList && (
+          <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-brand-text">Saved Analyses</h3>
+              <button
+                onClick={() => setShowSavedList(false)}
+                className="text-brand-text-muted hover:text-brand-text"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {savedAnalyses.length === 0 ? (
+              <p className="text-brand-text-muted text-center py-8">No saved analyses yet.</p>
+            ) : (
               <div className="space-y-3">
                 {savedAnalyses.map((analysis) => (
                   <div
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
-                    onClick={() => handleLoadAnalysis(analysis)}
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
                       <div className="font-semibold text-brand-text">{analysis.target_url}</div>
                       <div className="text-sm text-brand-text-muted">
                         {new Date(analysis.created_at).toLocaleDateString()} at{' '}
                         {new Date(analysis.created_at).toLocaleTimeString()}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleLoadAnalysis(analysis)}
-                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      Load
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleLoadAnalysis(analysis)}
+                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAnalysis(analysis.id);
+                        }}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        )}
     </div>
     );
 };
