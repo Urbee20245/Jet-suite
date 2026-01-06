@@ -95,8 +95,8 @@ const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed
             <button onClick={onReject} className="text-sm font-semibold text-red-500 hover:underline">Ignore</button>
         </div>
         <div className="mt-4 flex justify-end gap-3">
-            <button onClick={onConfirm} className={`text-sm font-bold py-2 px-4 rounded-lg transition-colors ${isGbpConfirmed ? 'bg-green-500 text-white' : 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500'}`}>
-                {isGbpConfirmed ? '✓ Confirmed' : 'Confirm & Connect'}
+            <button onClick={onConfirm} className={`text-sm font-bold py-2 px-4 rounded-lg transition-colors ${isConfirmed ? 'bg-green-500 text-white' : 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500'}`}>
+                {isConfirmed ? '✓ Confirmed' : 'Confirm & Connect'}
             </button>
         </div>
     </div>
