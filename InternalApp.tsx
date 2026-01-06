@@ -10,7 +10,7 @@ import { getSupabaseClient } from './integrations/supabase/client'; // Import ce
 import { Sidebar } from './components/Sidebar'; // Import Sidebar
 import { Header } from './components/Header'; // Import Header
 import { Welcome } from './tools/Welcome'; // Import Welcome
-import { BusinessDetails } from './tools/profile/BusinessDetails'; // Import BusinessDetails
+import { BusinessDetails } from './tools/BusinessDetails'; // Import BusinessDetails
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory'; // Import GrowthScoreHistory
 import { Account } from './tools/Account'; // Import Account
 import { KnowledgeBase } from './tools/KnowledgeBase'; // Import KnowledgeBase
@@ -522,7 +522,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
     }
     switch (activeTool.id) {
-      case 'businessdetails': return <BusinessDetails profileData={profileData} onUpdate={handleUpdateProfileData} setActiveTool={setActiveTool} onBusinessUpdated={fetchBusinesses} />;
+      case 'businessdetails': return <BusinessDetails 
+        profileData={profileData} 
+        onUpdate={handleUpdateProfileData} 
+        setActiveTool={setActiveTool} 
+        onBusinessUpdated={fetchBusinesses} 
+      />;
       case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
       case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
