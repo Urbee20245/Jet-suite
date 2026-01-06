@@ -261,7 +261,26 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   
   const renderDnaContent = () => {
     if (business.isDnaApproved && profileData.brandDnaProfile) {
-        return <DnaReviewAndSaved visualDna={isDnaEditing ? editableDna! : business.dna} detailedDna={isDnaEditing ? editableBrandProfile! : profileData.brandDnaProfile} isEditable={isDnaEditing} onVisualDnaChange={setEditableDna} onDetailedDnaChange={setEditableBrandProfile} onSave={handleUpdateDna} onCancel={() => setIsDnaEditing(false)} onRestart={handleAnalyzeDna} onEdit={() => { setEditableDna(JSON.parse(JSON.stringify(business.dna))); setEditableBrandProfile(JSON.parse(JSON.stringify(profileData.brandDnaProfile!))); setIsDnaEditing(true); }} dnaLastUpdatedAt={business.dnaLastUpdatedAt} detectedGbp={null} isGbpConfirmed={false} onConfirmGbp={()=>{}} onRejectGbp={()=>{}}/>;
+        return <DnaReviewAndSaved 
+            visualDna={isDnaEditing ? editableDna! : business.dna} 
+            detailedDna={isDnaEditing ? editableBrandProfile! : profileData.brandDnaProfile} 
+            isEditable={isDnaEditing} 
+            onVisualDnaChange={setEditableDna} 
+            onDetailedDnaChange={setEditableBrandProfile} 
+            onSave={handleUpdateDna} 
+            onCancel={() => setIsDnaEditing(false)} 
+            onRestart={handleAnalyzeDna} 
+            onEdit={() => { 
+                setEditableDna(JSON.parse(JSON.stringify(business.dna))); 
+                setEditableBrandProfile(JSON.parse(JSON.stringify(profileData.brandDnaProfile!))); 
+                setIsDnaEditing(true); 
+            }} 
+            dnaLastUpdatedAt={business.dnaLastUpdatedAt} 
+            detectedGbp={detectedGbp} 
+            isGbpConfirmed={isGbpConfirmed} 
+            onConfirmGbp={() => setIsGbpConfirmed(true)} 
+            onRejectGbp={() => setDetectedGbp(null)}
+        />;
     }
     switch (extractionStage) {
       case 'idle': return (<><p className="text-brand-text-muted mb-4">Analyze your website to automatically pull your logo, colors, fonts, and full brand profile.</p>{analysisError && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-semibold">{analysisError}<div className="mt-2"><button onClick={handleAnalyzeDna} className="font-bold underline">Try again</button></div></div>}<div className="text-center p-4 rounded-xl"><p className="text-brand-text-muted mb-4">We'll analyze: <a href={business.business_website} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-blue">{business.business_website}</a></p><button type="button" onClick={handleAnalyzeDna} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity duration-300 text-lg shadow-lg">Extract Business DNA</button></div></>);
