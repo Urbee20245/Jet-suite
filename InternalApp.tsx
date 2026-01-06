@@ -6,35 +6,36 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
-import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
-import { Sidebar } from './components/Sidebar'; // Import Sidebar
-import { Header } from './components/Header'; // Import Header
-import { Welcome } from './tools/Welcome'; // Import Welcome
-import { BusinessDetails } from './tools/BusinessDetails'; // Import BusinessDetails
-import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory'; // Import GrowthScoreHistory
-import { Account } from './tools/Account'; // Import Account
-import { KnowledgeBase } from './tools/KnowledgeBase'; // Import KnowledgeBase
-import { JetBiz } from './tools/JetBiz'; // Import JetBiz
-import { JetViz } from './tools/JetViz'; // Import JetViz
-import { JetCompete } from './tools/JetCompete'; // Import JetCompete
-import { JetKeywords } from './tools/JetKeywords'; // Import JetKeywords
-import { JetPost } from './tools/JetPost'; // Import JetPost
-import { JetContent } from './tools/JetContent'; // Import JetContent
-import { JetImage } from './tools/JetImage'; // Import JetImage
-import { JetCreate } from './tools/JetCreate'; // Import JetCreate
-import { JetReply } from './tools/JetReply'; // Import JetReply
-import { JetTrust } from './tools/JetTrust'; // Import JetTrust
-import { JetLeads } from './tools/JetLeads'; // Import JetLeads
-import { JetEvents } from './tools/JetEvents'; // Import JetEvents
-import { JetAds } from './tools/JetAds'; // Import JetAds
-import { GrowthPlan } from './tools/GrowthPlan'; // Import GrowthPlan
-import UserSupportTickets from './tools/UserSupportTickets'; // Import UserSupportTickets
-import { AdminPanel } from './tools/AdminPanel'; // Import AdminPanel
-import { Planner } from './tools/Planner'; // Import Planner
-import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types'; // Import types
+import { getSupabaseClient } from './integrations/supabase/client';
+import { syncToSupabase, loadFromSupabase } from './utils/syncService'; // Import sync utilities
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { Welcome } from './tools/Welcome';
+import { BusinessDetails } from './tools/BusinessDetails';
+import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
+import { Account } from './tools/Account';
+import { KnowledgeBase } from './tools/KnowledgeBase';
+import { JetBiz } from './tools/JetBiz';
+import { JetViz } from './tools/JetViz';
+import { JetCompete } from './tools/JetCompete';
+import { JetKeywords } from './tools/JetKeywords';
+import { JetPost } from './tools/JetPost';
+import { JetContent } from './tools/JetContent';
+import { JetImage } from './tools/JetImage';
+import { JetCreate } from './tools/JetCreate';
+import { JetReply } from './tools/JetReply';
+import { JetTrust } from './tools/JetTrust';
+import { JetLeads } from './tools/JetLeads';
+import { JetEvents } from './tools/JetEvents';
+import { JetAds } from './tools/JetAds';
+import { GrowthPlan } from './tools/GrowthPlan';
+import UserSupportTickets from './tools/UserSupportTickets';
+import { AdminPanel } from './tools/AdminPanel';
+import { Planner } from './tools/Planner';
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
-import SupportChatbot from './components/SupportChatbot'; // Import SupportChatbot
+import SupportChatbot from './components/SupportChatbot';
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -112,14 +113,14 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const [growthScore, setGrowthScore] = useState(150);
   
-  // Initialize allProfiles with default structure, will be updated in useEffect
+  // Initialize allProfiles with default structure
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
       const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
       const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
       return [adminProfile, testProfile];
   });
 
-  // Helper function to load business-specific data
+  // UNIVERSAL LOAD FUNCTION - Loads ALL data from Supabase
   const loadBusinessData = async (businessId: string) => {
     if (!supabase || !activeUserId) return;
     
@@ -133,7 +134,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       
       if (profileError) throw profileError;
       
-      // 2. Update the active profile data in allProfiles state
+      // 2. Update the active profile data
       setAllProfiles(prev => {
         const updated = [...prev];
         const index = updated.findIndex(p => p.user.id === activeUserId);
@@ -141,96 +142,67 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           const syncedProfile = {
             ...updated[index],
             business: {
-              ...profile, // Use the full profile data from DB (snake_case)
-              location: `${profile.city}, ${profile.state}`, // Derive location for display
+              ...profile,
+              location: `${profile.city}, ${profile.state}`,
               isDnaApproved: profile.is_dna_approved,
               dnaLastUpdatedAt: profile.dna_last_updated_at,
             } as BusinessProfile,
             isProfileActive: !!profile.is_complete,
-            // Note: brandDnaProfile, jetbizAnalysis, etc. are loaded separately or lazily
           };
           updated[index] = syncedProfile;
         }
         return updated;
       });
       
-      // 3. Load tasks from Supabase instead of localStorage
-      try {
-        const tasksResponse = await fetch(`/api/tasks/load?userId=${activeUserId}&businessId=${businessId}`);
-        if (tasksResponse.ok) {
-          const { tasks } = await tasksResponse.json();
-          setGrowthPlanTasks(tasks || []);
-        } else {
-          console.warn('No tasks found for this business');
-          setGrowthPlanTasks([]);
-        }
-      } catch (err) {
-        console.error('Error loading tasks:', err);
-        setGrowthPlanTasks([]);
+      // 3. Load tasks from Supabase
+      const tasks = await loadFromSupabase(activeUserId, businessId, 'tasks');
+      setGrowthPlanTasks(tasks || []);
+      
+      // 4. Load keywords from Supabase
+      const keywords = await loadFromSupabase(activeUserId, businessId, 'keywords');
+      setSavedKeywords(keywords || []);
+      
+      // 5. Load JetBiz report
+      const jetbizReport = await loadFromSupabase(activeUserId, businessId, 'jetbiz');
+      if (jetbizReport) {
+        setAllProfiles(prev => {
+          const updated = [...prev];
+          const index = updated.findIndex(p => p.user.id === activeUserId);
+          if (index !== -1) {
+            updated[index] = { ...updated[index], jetbizAnalysis: jetbizReport };
+          }
+          return updated;
+        });
       }
       
-      // 4. Load saved keywords from localStorage (can migrate to Supabase later)
-      const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
-      setSavedKeywords(savedKeywords ? JSON.parse(savedKeywords) : []);
-      
-      // 5. Load JetBiz report if exists
-      try {
-        const jetbizResponse = await fetch(`/api/reports/load?userId=${activeUserId}&businessId=${businessId}&reportType=jetbiz`);
-        if (jetbizResponse.ok) {
-          const { report } = await jetbizResponse.json();
-          setAllProfiles(prev => {
-            const updated = [...prev];
-            const index = updated.findIndex(p => p.user.id === activeUserId);
-            if (index !== -1) {
-              updated[index] = {
-                ...updated[index],
-                jetbizAnalysis: report
-              };
-            }
-            return updated;
-          });
-        }
-      } catch (err) {
-        console.log('No JetBiz report found');
+      // 6. Load JetViz report
+      const jetvizReport = await loadFromSupabase(activeUserId, businessId, 'jetviz');
+      if (jetvizReport) {
+        setAllProfiles(prev => {
+          const updated = [...prev];
+          const index = updated.findIndex(p => p.user.id === activeUserId);
+          if (index !== -1) {
+            updated[index] = { ...updated[index], jetvizAnalysis: jetvizReport };
+          }
+          return updated;
+        });
       }
       
-      // 6. Load JetViz report if exists
-      try {
-        const jetvizResponse = await fetch(`/api/reports/load?userId=${activeUserId}&businessId=${businessId}&reportType=jetviz`);
-        if (jetvizResponse.ok) {
-          const { report } = await jetvizResponse.json();
-          setAllProfiles(prev => {
-            const updated = [...prev];
-            const index = updated.findIndex(p => p.user.id === activeUserId);
-            if (index !== -1) {
-              updated[index] = {
-                ...updated[index],
-                jetvizAnalysis: report
-              };
-            }
-            return updated;
-          });
-        }
-      } catch (err) {
-        console.log('No JetViz report found');
-      }
+      console.log('✅ All business data loaded from Supabase');
       
     } catch (error) {
       console.error('Error loading business data:', error);
-      // Fallback to empty state if loading fails
       setSavedKeywords([]);
       setGrowthPlanTasks([]);
     }
   };
 
-  // Function to fetch profile from DB and merge with local/default state
+  // Function to fetch profile from DB
   const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
     let defaultProfile: ProfileData;
-    // Use generic defaults for current user or test defaults
     defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
 
     try {
-        // 1. Fetch profile from the new API endpoint
         const response = await fetch(`/api/user/get-profile?userId=${uid}`);
         if (!response.ok) throw new Error('Failed to fetch profile from API');
         
@@ -239,7 +211,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         let mergedProfile = defaultProfile;
         
         if (dbProfile) {
-            // Merge DB data into the user part of the profile
             mergedProfile = {
                 ...defaultProfile,
                 user: {
@@ -254,42 +225,18 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             };
         }
         
-        // 2. Attempt to load other data (business, dna, etc.) from localStorage
-        try {
-            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
-            if (savedLocal) {
-                const localProfile = JSON.parse(savedLocal);
-                // Merge DB user data with local business/dna data
-                mergedProfile = {
-                    ...localProfile,
-                    user: mergedProfile.user, // Prioritize fresh DB user data
-                };
-            }
-        } catch (e) {
-            console.warn(`Failed to parse local storage for user ${uid}`);
-        }
-        
         return mergedProfile;
 
     } catch (error) {
         console.error(`Error fetching profile for ${uid}:`, error);
-        // Fallback to local storage or default if DB fetch fails
-        try {
-            const savedLocal = localStorage.getItem(`jetsuite_profile_${uid}`);
-            return savedLocal ? JSON.parse(savedLocal) : defaultProfile;
-        } catch (e) {
-            return defaultProfile;
-        }
+        return defaultProfile;
     }
   };
 
-  // 0. Initial Profile Load (DB + Local Storage)
+  // Initial Profile Load
   useEffect(() => {
     const loadProfiles = async () => {
-        // Load current user profile
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
-        
-        // Load test user profile (for admin impersonation)
         const testUserEmail = 'test.user@example.com';
         const testUserId = 'test-user-uuid';
         const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
@@ -298,15 +245,14 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     };
     
     loadProfiles();
-  }, [userId, userEmail]); // Only run once on mount/user change
+  }, [userId, userEmail]);
 
-  // 1. Fetch all accessible businesses and set active one
+  // Fetch all accessible businesses
   const fetchBusinesses = async () => {
     if (!supabase || !activeUserId) return;
 
     console.log('[InternalApp] Fetching businesses for active user:', activeUserId);
 
-    // Fetch owned businesses
     const { data: dbProfiles, error } = await supabase
       .from('business_profiles')
       .select('*')
@@ -322,7 +268,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     if (dbProfiles && dbProfiles.length > 0) {
       console.log('[InternalApp] Loaded businesses:', dbProfiles);
       
-      // Map DB results to BusinessProfile interface (which now uses snake_case)
       const mappedBusinesses = dbProfiles.map(p => ({
           ...p,
           location: `${p.city}, ${p.state}`,
@@ -332,7 +277,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       
       setBusinesses(mappedBusinesses);
       
-      // Determine active business ID
       const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
       const primaryBusiness = mappedBusinesses.find(b => b.is_primary) || mappedBusinesses[0];
       
@@ -347,8 +291,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         loadBusinessData(activeId);
       }
     } else {
-      console.log('[InternalApp] No businesses found - user needs to complete onboarding');
-      // If no businesses exist, ensure activeBusinessId is null
+      console.log('[InternalApp] No businesses found');
       setActiveBusinessId(null);
       setBusinesses([]);
     }
@@ -358,30 +301,23 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     fetchBusinesses();
   }, [activeUserId, supabase]);
 
-  // --- Business Switching Logic ---
+  // Business Switching
   const handleBusinessSwitch = async (businessId: string) => {
     if (activeBusinessId === businessId) return;
     
-    // 1. Save current business ID to localStorage
     localStorage.setItem('jetsuite_active_biz_id', businessId);
-    
-    // 2. Update active business state
     setActiveBusinessId(businessId);
-    
-    // 3. Reload business-specific data
     await loadBusinessData(businessId);
     
-    // 4. Clear tool-specific state so it reloads for new business
     setSavedKeywords([]);
     setGrowthPlanTasks([]);
     setJetContentInitialProps(null);
   };
   
-  // --- Add New Business Logic ---
+  // Add New Business
   const handleAddBusiness = async () => {
     if (!supabase || !activeUserId) return;
     
-    // Check if user has reached business limit (assuming billing_accounts exists)
     const { data: billingAccount } = await supabase
       .from('billing_accounts')
       .select('business_count')
@@ -396,7 +332,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
     
     try {
-      // Create new business profile
       const { data: newBusiness, error } = await supabase
         .from('business_profiles')
         .insert({
@@ -415,13 +350,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       if (error) throw error;
       
       if (newBusiness) {
-        // Add to businesses list
         setBusinesses(prev => [...prev, newBusiness as BusinessProfile]);
-        
-        // Switch to new business
         handleBusinessSwitch(newBusiness.id);
-        
-        // Navigate to business details to complete setup
         setActiveTool(ALL_TOOLS['businessdetails']);
       }
     } catch (error) {
@@ -433,7 +363,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const isAdmin = userEmail === ADMIN_EMAIL;
   const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
   
-  // Ensure profileData reflects the active business if one is selected
+  // Ensure profileData reflects the active business
   useEffect(() => {
     if (activeBusinessId && businesses.length > 0) {
       const activeBiz = businesses.find(b => b.id === activeBusinessId);
@@ -454,59 +384,29 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   }, [activeBusinessId, businesses, activeUserId]);
 
-
   const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
     setAllProfiles(prev => {
         const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : 1;
         const updatedProfiles = [...prev];
         updatedProfiles[index] = newProfileData;
-
-        if (persist) {
-            try { 
-              localStorage.setItem(`jetsuite_profile_${newProfileData.user.id}`, JSON.stringify(newProfileData)); 
-            } catch (e) { 
-              console.warn("Could not save profile to localStorage", e); 
-            }
-        }
         return updatedProfiles;
     });
   };
 
-  // 2. Save business-specific state to localStorage
-  useEffect(() => {
-      if (activeBusinessId) {
-          try { localStorage.setItem(`jetsuite_tasks_${activeBusinessId}`, JSON.stringify(growthPlanTasks)); } catch(e) { console.warn("Could not save tasks", e); }
-      }
-  }, [growthPlanTasks, activeBusinessId]);
-  
-  useEffect(() => {
-      if (activeBusinessId) {
-          try { localStorage.setItem(`jetsuite_keywords_${activeBusinessId}`, JSON.stringify(savedKeywords)); } catch(e) { console.warn("Could not save keywords", e); }
-      }
-  }, [savedKeywords, activeBusinessId]);
-
-  // Save tasks to Supabase whenever they change
+  // UNIVERSAL AUTO-SYNC: Save tasks to Supabase whenever they change
   useEffect(() => {
     if (activeBusinessId && activeUserId && growthPlanTasks.length >= 0) {
-      const saveTasksToSupabase = async () => {
-        try {
-          await fetch('/api/tasks/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: activeUserId,
-              businessId: activeBusinessId,
-              tasks: growthPlanTasks,
-            }),
-          });
-        } catch (err) {
-          console.error('Error saving tasks to Supabase:', err);
-        }
-      };
-      saveTasksToSupabase();
+      syncToSupabase(activeUserId, activeBusinessId, 'tasks', growthPlanTasks);
     }
   }, [growthPlanTasks, activeBusinessId, activeUserId]);
+
+  // UNIVERSAL AUTO-SYNC: Save keywords to Supabase whenever they change
+  useEffect(() => {
+    if (activeBusinessId && activeUserId && savedKeywords.length >= 0) {
+      syncToSupabase(activeUserId, activeBusinessId, 'keywords', savedKeywords);
+    }
+  }, [savedKeywords, activeBusinessId, activeUserId]);
 
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
@@ -518,6 +418,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
+  // Growth Score Calculation
   useEffect(() => {
     let score = 0;
     const { business, googleBusiness } = profileData;
@@ -559,48 +460,49 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const handleUpdateProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
     const { business_name, location, business_website } = newProfileData.business;
-    if (business_name && location && business_website && !newProfileData.isProfileActive) { setProfileData({ ...newProfileData, isProfileActive: true }, persist); } else { setProfileData(newProfileData, persist); }
+    if (business_name && location && business_website && !newProfileData.isProfileActive) { 
+      setProfileData({ ...newProfileData, isProfileActive: true }, persist); 
+    } else { 
+      setProfileData(newProfileData, persist); 
+    }
   };
 
   const addTasksToGrowthPlan = (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
     setGrowthPlanTasks(prevTasks => {
       const existingTitles = new Set(prevTasks.map(t => t.title));
-      const tasksToAdd = newTasks.filter(newTask => !existingTitles.has(newTask.title)).map(task => ({ ...task, id: `${task.sourceModule.toLowerCase()}_${Math.random().toString(36).substr(2, 9)}`, status: 'to_do' as const, createdAt: new Date().toISOString() }));
+      const tasksToAdd = newTasks
+        .filter(newTask => !existingTitles.has(newTask.title))
+        .map(task => ({ 
+          ...task, 
+          id: `${task.sourceModule.toLowerCase()}_${Math.random().toString(36).substr(2, 9)}`, 
+          status: 'to_do' as const, 
+          createdAt: new Date().toISOString() 
+        }));
       return [...prevTasks, ...tasksToAdd];
     });
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: GrowthPlanTask['status']) => {
-      setGrowthPlanTasks(prevTasks => prevTasks.map(task => task.id === taskId ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } : task ));
+      setGrowthPlanTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
+            : task
+        )
+      );
   };
 
+  // UNIVERSAL SAVE: Save analysis reports to Supabase
   const handleSaveAnalysis = async (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
-    // Save to local state
     const newProfileData = { ...profileData, [`${type}Analysis`]: report };
     handleUpdateProfileData(newProfileData, true);
     
-    // Save to Supabase
     if (report && activeBusinessId) {
-      try {
-        await fetch('/api/reports/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: activeUserId,
-            businessId: activeBusinessId,
-            reportType: type,
-            reportData: report,
-          }),
-        });
-      } catch (err) {
-        console.error(`Error saving ${type} report:`, err);
-      }
+      await syncToSupabase(activeUserId, activeBusinessId, type, report);
     }
   };
   
-  // Derived value for Header display
   const activeBusinessName = businesses.find(b => b.id === activeBusinessId)?.business_name || 'Loading Business...';
-
 
   const isStep1Complete = !!(profileData.business.business_name && profileData.business.location && profileData.business.business_website);
   const isStep2Complete = profileData.business.isDnaApproved;
@@ -672,7 +574,13 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     <div className="flex h-screen text-brand-text font-sans bg-brand-light">
       {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} onLogout={onLogout} />}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {impersonatedUserId && ( <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> <EyeIcon className="w-5 h-5"/> Viewing as {profileData.user.email}. <button onClick={() => setImpersonatedUserId(null)} className="underline ml-2">Return to Admin</button> </div> )}
+        {impersonatedUserId && ( 
+          <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> 
+            <EyeIcon className="w-5 h-5"/> 
+            Viewing as {profileData.user.email}. 
+            <button onClick={() => setImpersonatedUserId(null)} className="underline ml-2">Return to Admin</button> 
+          </div> 
+        )}
         {!isJetCreateActive && (
           <Header 
             activeTool={activeTool} 
@@ -680,7 +588,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             businesses={businesses}
             activeBusinessId={activeBusinessId}
             onSwitchBusiness={handleBusinessSwitch}
-            onAddBusiness={handleAddBusiness} // Pass the new handler
+            onAddBusiness={handleAddBusiness}
             setActiveTool={setActiveTool}
           />
         )}
