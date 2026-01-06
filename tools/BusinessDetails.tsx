@@ -207,6 +207,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
 
+        // Validate location format
+        if (!city || !state) {
+            alert('Please enter location in format: City, State (e.g., Atlanta, Georgia)');
+            return;
+        }
+
         // Validate required fields before API call
         if (!business.business_name || !business.business_website || !business.industry || !city || !state) {
             alert('Failed to save business details. Check your connection: details missing required fields.\n\nPlease ensure all required fields are filled:\n- Business Name\n- Website URL\n- Business Category\n- Primary Location (must be in format: City, State)');
