@@ -120,18 +120,64 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   });
 
   // Helper function to load business-specific data
-  const loadBusinessData = async (businessId: string) => {
-    if (!supabase || !activeUserId) return;
+const loadBusinessData = async (businessId: string) => {
+  if (!supabase || !activeUserId) return;
+  
+  try {
+    // 1. Load business profile details
+    const { data: profile, error: profileError } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .eq('id', businessId)
+      .single();
     
+    if (profileError) throw profileError;
+    
+    // 2. Update the active profile data in allProfiles state
+    setAllProfiles(prev => {
+      const updated = [...prev];
+      const index = updated.findIndex(p => p.user.id === activeUserId);
+      if (index !== -1) {
+        const syncedProfile = {
+          ...updated[index],
+          business: {
+            ...profile,
+            location: `${profile.city}, ${profile.state}`,
+            isDnaApproved: profile.is_dna_approved,
+            dnaLastUpdatedAt: profile.dna_last_updated_at,
+          } as BusinessProfile,
+          isProfileActive: !!profile.is_complete,
+        };
+        updated[index] = syncedProfile;
+      }
+      return updated;
+    });
+    
+    // 3. Load tasks from Supabase instead of localStorage
     try {
-      // 1. Load business profile details
-      const { data: profile, error: profileError } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('id', businessId)
-        .single();
-      
-      if (profileError) throw profileError;
+      const tasksResponse = await fetch(`/api/tasks/load?userId=${activeUserId}&businessId=${businessId}`);
+      if (tasksResponse.ok) {
+        const { tasks } = await tasksResponse.json();
+        setGrowthPlanTasks(tasks || []);
+      } else {
+        console.warn('No tasks found for this business');
+        setGrowthPlanTasks([]);
+      }
+    } catch (err) {
+      console.error('Error loading tasks:', err);
+      setGrowthPlanTasks([]);
+    }
+    
+    // 4. Load saved keywords from localStorage (can migrate to Supabase later)
+    const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
+    setSavedKeywords(savedKeywords ? JSON.parse(savedKeywords) : []);
+    
+  } catch (error) {
+    console.error('Error loading business data:', error);
+    setSavedKeywords([]);
+    setGrowthPlanTasks([]);
+  }
+};
       
       // 2. Update the active profile data in allProfiles state
       setAllProfiles(prev => {
