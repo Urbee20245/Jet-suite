@@ -120,64 +120,18 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   });
 
   // Helper function to load business-specific data
-const loadBusinessData = async (businessId: string) => {
-  if (!supabase || !activeUserId) return;
-  
-  try {
-    // 1. Load business profile details
-    const { data: profile, error: profileError } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .eq('id', businessId)
-      .single();
+  const loadBusinessData = async (businessId: string) => {
+    if (!supabase || !activeUserId) return;
     
-    if (profileError) throw profileError;
-    
-    // 2. Update the active profile data in allProfiles state
-    setAllProfiles(prev => {
-      const updated = [...prev];
-      const index = updated.findIndex(p => p.user.id === activeUserId);
-      if (index !== -1) {
-        const syncedProfile = {
-          ...updated[index],
-          business: {
-            ...profile,
-            location: `${profile.city}, ${profile.state}`,
-            isDnaApproved: profile.is_dna_approved,
-            dnaLastUpdatedAt: profile.dna_last_updated_at,
-          } as BusinessProfile,
-          isProfileActive: !!profile.is_complete,
-        };
-        updated[index] = syncedProfile;
-      }
-      return updated;
-    });
-    
-    // 3. Load tasks from Supabase instead of localStorage
     try {
-      const tasksResponse = await fetch(`/api/tasks/load?userId=${activeUserId}&businessId=${businessId}`);
-      if (tasksResponse.ok) {
-        const { tasks } = await tasksResponse.json();
-        setGrowthPlanTasks(tasks || []);
-      } else {
-        console.warn('No tasks found for this business');
-        setGrowthPlanTasks([]);
-      }
-    } catch (err) {
-      console.error('Error loading tasks:', err);
-      setGrowthPlanTasks([]);
-    }
-    
-    // 4. Load saved keywords from localStorage (can migrate to Supabase later)
-    const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
-    setSavedKeywords(savedKeywords ? JSON.parse(savedKeywords) : []);
-    
-  } catch (error) {
-    console.error('Error loading business data:', error);
-    setSavedKeywords([]);
-    setGrowthPlanTasks([]);
-  }
-};
+      // 1. Load business profile details
+      const { data: profile, error: profileError } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('id', businessId)
+        .single();
+      
+      if (profileError) throw profileError;
       
       // 2. Update the active profile data in allProfiles state
       setAllProfiles(prev => {
@@ -200,12 +154,66 @@ const loadBusinessData = async (businessId: string) => {
         return updated;
       });
       
-      // 3. Load business-specific saved data (tasks, keywords) from localStorage
-      const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
-      const savedTasks = localStorage.getItem(`jetsuite_tasks_${businessId}`);
+      // 3. Load tasks from Supabase instead of localStorage
+      try {
+        const tasksResponse = await fetch(`/api/tasks/load?userId=${activeUserId}&businessId=${businessId}`);
+        if (tasksResponse.ok) {
+          const { tasks } = await tasksResponse.json();
+          setGrowthPlanTasks(tasks || []);
+        } else {
+          console.warn('No tasks found for this business');
+          setGrowthPlanTasks([]);
+        }
+      } catch (err) {
+        console.error('Error loading tasks:', err);
+        setGrowthPlanTasks([]);
+      }
       
+      // 4. Load saved keywords from localStorage (can migrate to Supabase later)
+      const savedKeywords = localStorage.getItem(`jetsuite_keywords_${businessId}`);
       setSavedKeywords(savedKeywords ? JSON.parse(savedKeywords) : []);
-      setGrowthPlanTasks(savedTasks ? JSON.parse(savedTasks) : []);
+      
+      // 5. Load JetBiz report if exists
+      try {
+        const jetbizResponse = await fetch(`/api/reports/load?userId=${activeUserId}&businessId=${businessId}&reportType=jetbiz`);
+        if (jetbizResponse.ok) {
+          const { report } = await jetbizResponse.json();
+          setAllProfiles(prev => {
+            const updated = [...prev];
+            const index = updated.findIndex(p => p.user.id === activeUserId);
+            if (index !== -1) {
+              updated[index] = {
+                ...updated[index],
+                jetbizAnalysis: report
+              };
+            }
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.log('No JetBiz report found');
+      }
+      
+      // 6. Load JetViz report if exists
+      try {
+        const jetvizResponse = await fetch(`/api/reports/load?userId=${activeUserId}&businessId=${businessId}&reportType=jetviz`);
+        if (jetvizResponse.ok) {
+          const { report } = await jetvizResponse.json();
+          setAllProfiles(prev => {
+            const updated = [...prev];
+            const index = updated.findIndex(p => p.user.id === activeUserId);
+            if (index !== -1) {
+              updated[index] = {
+                ...updated[index],
+                jetvizAnalysis: report
+              };
+            }
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.log('No JetViz report found');
+      }
       
     } catch (error) {
       console.error('Error loading business data:', error);
@@ -478,6 +486,28 @@ const loadBusinessData = async (businessId: string) => {
       }
   }, [savedKeywords, activeBusinessId]);
 
+  // Save tasks to Supabase whenever they change
+  useEffect(() => {
+    if (activeBusinessId && activeUserId && growthPlanTasks.length >= 0) {
+      const saveTasksToSupabase = async () => {
+        try {
+          await fetch('/api/tasks/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: activeUserId,
+              businessId: activeBusinessId,
+              tasks: growthPlanTasks,
+            }),
+          });
+        } catch (err) {
+          console.error('Error saving tasks to Supabase:', err);
+        }
+      };
+      saveTasksToSupabase();
+    }
+  }, [growthPlanTasks, activeBusinessId, activeUserId]);
+
   const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
 
   const setActiveTool = (tool: Tool | null, articleId?: string) => {
@@ -544,9 +574,28 @@ const loadBusinessData = async (businessId: string) => {
       setGrowthPlanTasks(prevTasks => prevTasks.map(task => task.id === taskId ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } : task ));
   };
 
-  const handleSaveAnalysis = (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
-      const newProfileData = { ...profileData, [`${type}Analysis`]: report };
-      handleUpdateProfileData(newProfileData, true); 
+  const handleSaveAnalysis = async (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
+    // Save to local state
+    const newProfileData = { ...profileData, [`${type}Analysis`]: report };
+    handleUpdateProfileData(newProfileData, true);
+    
+    // Save to Supabase
+    if (report && activeBusinessId) {
+      try {
+        await fetch('/api/reports/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: activeUserId,
+            businessId: activeBusinessId,
+            reportType: type,
+            reportData: report,
+          }),
+        });
+      } catch (err) {
+        console.error(`Error saving ${type} report:`, err);
+      }
+    }
   };
   
   // Derived value for Header display
