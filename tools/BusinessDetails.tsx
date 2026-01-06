@@ -206,7 +206,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         const locationParts = business.location.split(',').map(s => s.trim());
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
-
+// Validate location format before API call
+if (!city || !state) {
+    alert('Please enter location in format: City, State (e.g., Atlanta, Georgia)');
+    return;
+}
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
