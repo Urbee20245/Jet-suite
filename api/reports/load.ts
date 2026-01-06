@@ -56,18 +56,3 @@ export default async function handler(
     return res.status(500).json({ error: error.message });
   }
 }
-```
-
----
-
-## Upload Instructions
-
-Create these folders and files in your repo:
-```
-api/
-├── tasks/
-│   ├── save.ts
-│   └── load.ts
-└── reports/
-    ├── save.ts
-    └── load.ts
