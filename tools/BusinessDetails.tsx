@@ -5,14 +5,14 @@ import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, Spar
 import { Loader } from '../components/Loader';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
 import { ALL_TOOLS } from '../constants';
-import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 // --- Types ---
 interface BusinessDetailsProps { 
     profileData: ProfileData; 
     onUpdate: (data: ProfileData) => void; 
     setActiveTool: (tool: Tool | null) => void; 
-    onBusinessUpdated: () => void; // NEW PROP
+    onBusinessUpdated: () => void;
 }
 type ExtractionStage = 'idle' | 'extracting' | 'reviewing' | 'saving';
 
@@ -171,7 +171,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [isGbpConfirmed, setIsGbpConfirmed] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
-  // Get userId from localStorage
   const [userId, setUserId] = useState<string>('');
   
   useEffect(() => {
@@ -186,8 +185,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const step1Completed = !!business.business_name && !!business.business_website;
   const step2Completed = business.isDnaApproved;
-  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped; // GBP is now step 3
-  const step4Completed = true; // Social Accounts is now step 4 (optional, always considered complete)
+  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped;
+  const step4Completed = true;
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
   
@@ -195,22 +194,123 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
   
   const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult, gbpResult] = await Promise.all([extractWebsiteDna(business.business_website), extractBrandDnaProfile(business), detectGbpOnWebsite(business.business_website, business.business_name)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); if (gbpResult) { setDetectedGbp(gbpResult); } setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
-  const handleInitialSaveDna = () => { if (!editableDna || !editableBrandProfile) return; setExtractionStage('saving'); let newGbpData = profileData.googleBusiness; if (detectedGbp && isGbpConfirmed) { newGbpData = { ...profileData.googleBusiness, profileName: detectedGbp.name, address: detectedGbp.address, rating: detectedGbp.rating, reviewCount: detectedGbp.reviewCount, status: 'Verified' as GbpStatus, placeId: `detected_${Date.now()}` }; } setTimeout(() => { const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile, googleBusiness: newGbpData }); setExtractionStage('idle'); setDetectedGbp(null); setIsGbpConfirmed(false); }, 1000); };
-  const handleUpdateDna = () => { if (!editableDna || !editableBrandProfile) return; const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString() }; onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile }); setIsDnaEditing(false); };
+  
+  // ✅ UPDATED: Save initial DNA extraction to Supabase
+  const handleInitialSaveDna = async () => { 
+    if (!editableDna || !editableBrandProfile) return; 
+    setExtractionStage('saving'); 
+    
+    let newGbpData = profileData.googleBusiness; 
+    if (detectedGbp && isGbpConfirmed) { 
+      newGbpData = { 
+        ...profileData.googleBusiness, 
+        profileName: detectedGbp.name, 
+        address: detectedGbp.address, 
+        rating: detectedGbp.rating, 
+        reviewCount: detectedGbp.reviewCount, 
+        status: 'Verified' as GbpStatus, 
+        placeId: `detected_${Date.now()}` 
+      }; 
+    } 
+    
+    try {
+      // Save to Supabase
+      const response = await fetch('/api/business/save-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          dna: editableDna,
+          brandDnaProfile: editableBrandProfile,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save DNA to database');
+      }
+
+      // Update local state
+      const updatedBusiness = { 
+        ...business, 
+        dna: editableDna, 
+        isDnaApproved: true, 
+        dnaLastUpdatedAt: new Date().toISOString() 
+      };
+      
+      onUpdate({ 
+        ...profileData, 
+        business: updatedBusiness, 
+        brandDnaProfile: editableBrandProfile, 
+        googleBusiness: newGbpData 
+      });
+      
+      setExtractionStage('idle'); 
+      setDetectedGbp(null); 
+      setIsGbpConfirmed(false);
+      
+      alert('✅ Business DNA saved successfully!');
+    } catch (error) {
+      console.error('Error saving DNA:', error);
+      alert('Failed to save DNA. Please try again.');
+      setExtractionStage('reviewing');
+    }
+  };
+
+  // ✅ UPDATED: Save DNA edits to Supabase
+  const handleUpdateDna = async () => { 
+    if (!editableDna || !editableBrandProfile) return; 
+    
+    try {
+      // Save to Supabase
+      const response = await fetch('/api/business/save-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: business.id,
+          dna: editableDna,
+          brandDnaProfile: editableBrandProfile,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save DNA to database');
+      }
+
+      // Update local state
+      const updatedBusiness = { 
+        ...business, 
+        dna: editableDna, 
+        isDnaApproved: true, 
+        dnaLastUpdatedAt: new Date().toISOString() 
+      }; 
+      
+      onUpdate({ 
+        ...profileData, 
+        business: updatedBusiness, 
+        brandDnaProfile: editableBrandProfile 
+      }); 
+      
+      setIsDnaEditing(false);
+      alert('✅ Business DNA updated successfully!');
+    } catch (error) {
+      console.error('Error updating DNA:', error);
+      alert('Failed to update DNA. Please try again.');
+    }
+  };
 
   const handleSaveInfo = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     
     try {
-        // Sync to Database via API route
         const locationParts = business.location.split(',').map(s => s.trim());
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
-// Validate location format before API call
-if (!city || !state) {
-    alert('Please enter location in format: City, State (e.g., Atlanta, Georgia)');
-    return;
-}
+        
+        if (!city || !state) {
+            alert('Please enter location in format: City, State (e.g., Atlanta, Georgia)');
+            return;
+        }
+        
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -223,7 +323,7 @@ if (!city || !state) {
                 state: state,
                 isPrimary: true,
                 isComplete: true,
-                businessDescription: business.business_description, // Pass description
+                businessDescription: business.business_description,
             }),
         });
 
@@ -238,12 +338,9 @@ if (!city || !state) {
             throw new Error(errorData.message || errorData.error || 'API route failed to save business profile.');
         }
 
-        // Update local state
         onUpdate({ ...profileData, business }); 
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
-        
-        // CRITICAL FIX: Call callback to refresh business list in parent
         onBusinessUpdated();
 
     } catch (err: any) {
