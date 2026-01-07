@@ -243,7 +243,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               onClick={() => navigate('/get-started')}
               className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
             >
-              Start 7-Day Free Trial
+              Start Free Trial
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">

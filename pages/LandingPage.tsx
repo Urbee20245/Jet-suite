@@ -230,9 +230,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   <button 
                     onClick={() => navigate('/get-started')} 
                     className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
-                    aria-label="Start 7-Day Free Trial"
+                    aria-label="Start Free Trial"
                   >
-                      Start 7-Day Free Trial
+                      Start Free Trial
                       <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
                           🎉 7 Days Free
                       </span>
@@ -878,8 +878,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               <button onClick={() => navigate('/get-started')} 
                 className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4 relative"
-                aria-label="Start 7-Day Free Trial">
-                Start 7-Day Free Trial
+                aria-label="Start Free Trial">
+                Start Free Trial
                 <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
                     🎉 7 Days Free
                 </span>
@@ -1035,8 +1035,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate('/get-started')} 
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
-              aria-label="Start your 7-day free trial of JetSuite">
-              Start 7-Day Free Trial
+              aria-label="Start Free Trial">
+              Start Free Trial
               <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
                   🎉 7 Days Free
               </span>

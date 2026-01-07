@@ -92,7 +92,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-            Start Your 7-Day Free Trial
+            Start Your Free Trial
           </h1>
           <p className="text-lg sm:text-xl text-gray-400">
             Complete the form below to start your free trial - no charge until {getTrialEndDateDisplay()}
@@ -364,7 +364,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                   </>
                 ) : (
                   <>
-                    Start My Free Trial
+                    Start Free Trial
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -373,7 +373,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
               </button>
 
               <p className="text-center text-xs text-gray-500 mt-4">
-                Credit card required. No charge during trial period. Cancel anytime during your trial period.
+                Credit card required. No charge during trial period. Cancel anytime.
               </p>
             </div>
           </div>
