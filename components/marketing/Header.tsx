@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                            flex items-center gap-2 transition-all"
               >
                 <Zap className="w-5 h-5" />
-                Start 7-Day Free Trial
+                Try Free Tools
               </button>
             </div>
 
@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                            flex items-center justify-center gap-2"
               >
                 <Zap className="w-5 h-5" />
-                Start 7-Day Free Trial
+                Try Free Tools
               </button>
 
               {/* LOGIN (PRIMARY MOBILE CTA) */}
