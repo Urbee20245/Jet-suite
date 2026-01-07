@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ConversationStartersProps {
@@ -17,7 +16,6 @@ const starters: Starter[] = [
     { text: "Show me the Jetbiz Demo", type: 'link', url: 'https://www.getjetsuite.com/demo/jetbiz' },
     { text: "Show me the Jetviz Demo", type: 'link', url: 'https://www.getjetsuite.com/demo/jetviz' },
     { text: "Book a Live Demo Session", type: 'link', url: 'https://tidycal.com/team/jetsuit/jetsuite-demo' },
-    { text: "I'd like the 20% discount!", type: 'prompt' },
 ];
 
 const ExternalLinkIcon = () => (
