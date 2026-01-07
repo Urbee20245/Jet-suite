@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Menu,
   X,
@@ -22,11 +22,30 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ navigate }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [freeToolsOpen, setFreeToolsOpen] = useState(false); // 1. ADD STATE
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const closeMobile = () => {
     setMobileOpen(false);
     setToolsOpen(false);
+    setFreeToolsOpen(false); // Close free tools dropdown too
   };
+  
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFreeToolsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
+
 
   return (
     <header className="sticky top-0 z-50 bg-brand-darker/80 backdrop-blur-lg border-b border-slate-800">
@@ -88,10 +107,10 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
           {/* DESKTOP CTAs */}
           <div className="hidden md:flex items-center gap-4">
 
-            {/* START 7-DAY FREE TRIAL (ICON OK) */}
-            <div className="relative group">
+            {/* 2. REPLACE DESKTOP "Try Free Tools" button with dropdown */}
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => navigate('/get-started')}
+                onClick={() => setFreeToolsOpen(!freeToolsOpen)}
                 className="bg-gradient-to-r from-accent-cyan to-accent-purple hover:opacity-90
                            text-white font-bold px-4 py-2.5 rounded-lg
                            shadow-lg shadow-accent-cyan/30
@@ -99,7 +118,46 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               >
                 <Zap className="w-5 h-5" />
                 Try Free Tools
+                <ChevronDown className={`w-4 h-4 transition-transform ${freeToolsOpen ? 'rotate-180' : ''}`} />
               </button>
+              
+              {freeToolsOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-2">
+                    <button
+                      onClick={() => {
+                        navigate('/demo/jetbiz');
+                        setFreeToolsOpen(false);
+                      }}
+                      className="w-full text-left p-3 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <LayoutDashboard className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">JetBiz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze Google Business Profile</div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        navigate('/demo/jetviz');
+                        setFreeToolsOpen(false);
+                      }}
+                      className="w-full text-left p-3 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Workflow className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">JetViz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze website performance</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* LOGIN (PRIMARY CTA) */}
@@ -125,19 +183,57 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
           <div className="md:hidden pb-6">
             <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900/90 p-4 space-y-3">
 
-              {/* START 7-DAY FREE TRIAL (PRIMARY) */}
-              <button
-                onClick={() => {
-                  navigate('/get-started');
-                  closeMobile();
-                }}
-                className="w-full bg-gradient-to-r from-accent-cyan to-accent-purple
-                           text-white font-bold px-4 py-3 rounded-xl
-                           flex items-center justify-center gap-2"
-              >
-                <Zap className="w-5 h-5" />
-                Try Free Tools
-              </button>
+              {/* 3. REPLACE MOBILE "Try Free Tools" button with dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setFreeToolsOpen(!freeToolsOpen)}
+                  className="w-full bg-gradient-to-r from-accent-cyan to-accent-purple
+                             text-white font-bold px-4 py-3 rounded-xl
+                             flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Try Free Tools
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${freeToolsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {freeToolsOpen && (
+                  <div className="mt-2 space-y-2 pl-4">
+                    <button
+                      onClick={() => {
+                        navigate('/demo/jetbiz');
+                        closeMobile();
+                      }}
+                      className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <LayoutDashboard className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">JetBiz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze GBP</div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        navigate('/demo/jetviz');
+                        closeMobile();
+                      }}
+                      className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+                        <Workflow className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">JetViz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze website</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* LOGIN (PRIMARY MOBILE CTA) */}
               <button
