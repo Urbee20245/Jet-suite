@@ -214,7 +214,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     } 
     
     try {
-      // Save to Supabase
+      // ✅ NEW: Save to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -261,7 +261,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     if (!editableDna || !editableBrandProfile) return; 
     
     try {
-      // Save to Supabase
+      // ✅ NEW: Save to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -324,6 +324,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isPrimary: true,
                 isComplete: true,
                 businessDescription: business.business_description,
+                googleBusiness: googleBusiness, // ✅ ADD THIS LINE
             }),
         });
 
@@ -338,7 +339,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || errorData.error || 'API route failed to save business profile.');
         }
 
-        onUpdate({ ...profileData, business }); 
+        // ✅ ADD googleBusiness here
+        onUpdate({ ...profileData, business, googleBusiness }); 
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
         onBusinessUpdated();
