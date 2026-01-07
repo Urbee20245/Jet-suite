@@ -222,7 +222,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               </h1>
               
               <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
-                  Start your 7-day free trial today. JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
+                  Start your 7-day free trial today.
+                  JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
               </p>
               
               <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
