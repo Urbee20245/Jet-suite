@@ -150,7 +150,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
       
         <div className="space-y-8">
             <GrowthPhaseSection 
-                title="1. Build Your Business Foundation"
+                title="1. Build Your Foundation"
                 description="Get found and build trust by optimizing your online presence."
                 recommendedToolId="jetbiz"
                 otherToolIds={['jetviz', 'jetkeywords', 'jetcompete']}
@@ -158,7 +158,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
                 setActiveTool={setActiveTool}
             />
             <GrowthPhaseSection 
-                title="2. Marketing and Brand Strategy"
+                title="2. Create & Publish"
                 description="Turn strategy into on-brand content that attracts customers."
                 recommendedToolId="jetcreate"
                 otherToolIds={['jetpost', 'jetimage', 'jetcontent']}
@@ -166,7 +166,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
                 setActiveTool={setActiveTool}
             />
              <GrowthPhaseSection 
-                title="3. Customer Engagement"
+                title="3. Engage & Convert"
                 description="Turn visibility into revenue by engaging leads and customers."
                 recommendedToolId="jetreply"
                 otherToolIds={['jetleads', 'jettrust', 'jetevents', 'jetads']}

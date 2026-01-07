@@ -1,4 +1,3 @@
-Business Foundation, Create & Publish -> Marketing and Brand Strategy, Engage & Convert -> Customer Engagement.">
 import type { Tool } from './types';
 import { 
   JetBizIcon, 
@@ -77,9 +76,9 @@ export const TOOLS: Tool[] = Object.values(ALL_TOOLS);
 export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', 'growthscore'];
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
-  { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
-  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent'] },
-  { name: 'Customer Engagement', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
+  { name: 'Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
+  { name: 'Create & Publish', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent'] },
+  { name: 'Engage & Convert', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
 export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase', 'support'];
