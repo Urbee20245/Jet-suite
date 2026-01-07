@@ -12,7 +12,6 @@ export default async function handler(
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  // Defensive check for missing keys at runtime
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('CRITICAL: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
     return res.status(500).json({
@@ -21,7 +20,6 @@ export default async function handler(
     });
   }
 
-  // Initialize Supabase client inside the handler
   let supabase: SupabaseClient;
   try {
     supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -43,16 +41,15 @@ export default async function handler(
       state,
       isPrimary = true,
       isComplete = true,
-      businessDescription, // Added description field
+      businessDescription,
+      googleBusiness, // ✅ NEW: Google Business Profile data
     } = req.body;
 
     if (!userId || !businessName || !websiteUrl || !industry || !city || !state) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // --- SAFER UPDATE/INSERT LOGIC ---
-    
-    // 1. Check if a primary business profile already exists for this user
+    // Check if a primary business profile already exists for this user
     const { data: existingPrimary, error: fetchError } = await supabase
       .from('business_profiles')
       .select('id')
@@ -75,12 +72,13 @@ export default async function handler(
       is_primary: isPrimary,
       is_active: true,
       is_complete: isComplete,
+      google_business_profile: googleBusiness || null, // ✅ NEW: Save GBP data
       updated_at: new Date().toISOString(),
     };
 
     let result;
     if (existingPrimary) {
-      // 2. Update existing primary business
+      // Update existing primary business
       result = await supabase
         .from('business_profiles')
         .update(businessData)
@@ -88,7 +86,7 @@ export default async function handler(
         .select()
         .single();
     } else {
-      // 3. Insert new primary business
+      // Insert new primary business
       result = await supabase
         .from('business_profiles')
         .insert(businessData)
@@ -98,7 +96,6 @@ export default async function handler(
 
     if (result.error) {
       console.error('Supabase upsert/insert error:', result.error);
-      // Return a structured error response for database failure
       return res.status(500).json({
         error: 'Database operation failed',
         message: `Failed to save business profile: ${result.error.message} (Code: ${result.error.code})`,
@@ -108,7 +105,6 @@ export default async function handler(
     return res.status(200).json({ businessProfile: result.data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
-    // Return a structured error response to the client for unexpected errors
     return res.status(500).json({
       error: 'Failed to update business profile',
       message: error.message,
