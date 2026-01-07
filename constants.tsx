@@ -1,3 +1,4 @@
+Business Foundation, Create & Publish -> Marketing and Brand Strategy, Engage & Convert -> Customer Engagement.">
 import type { Tool } from './types';
 import { 
   JetBizIcon, 
@@ -76,9 +77,9 @@ export const TOOLS: Tool[] = Object.values(ALL_TOOLS);
 export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', 'growthscore'];
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
-  { name: 'Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
-  { name: 'Create & Publish', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent'] },
-  { name: 'Engage & Convert', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
+  { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
+  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent'] },
+  { name: 'Customer Engagement', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
 export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'growthplan', 'knowledgebase', 'support'];
@@ -128,11 +129,11 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
   },
    'getting-started/growth-score': {
     title: 'Understanding Your Growth Score',
-    what: 'Your Growth Score (0-99 max) measures your actual progress by tracking completed tasks in your Growth Plan. Foundation setup (35 points) unlocks the platform, but Task Completion (65 points) is the main driver. 100 is the benchmark but is intentionally unachievable because marketing requires continuous effort.',
+    what: 'Your Growth Score (0-99 max) measures your actual marketing execution, not just setup. Foundation setup (35 points) unlocks the platform, but Task Completion (65 points) is the main driver. 100 is the benchmark but is intentionally unachievable because marketing requires continuous effort.',
     why: 'It provides honest, real-time feedback on your actual work, not just setup. A score of 80+ means you\'re consistently completing tasks and driving growth. If you haven\'t completed any tasks, your score stays low—even with perfect setup. This keeps you accountable and active.',
     when: 'Check your score daily in the header. Low score? Open your Growth Plan and start completing tasks. High score dropping? You\'re becoming inactive—get back to completing weekly tasks to maintain momentum.',
     skip: 'Ignoring your score means you\'re not completing tasks. The score is brutally honest: no tasks completed = low score, regardless of setup. This is intentional—it forces engagement with the system, which is what actually drives business growth.',
-    how: 'Start at 0. Earn points for: Business profile (+10), Brand DNA (+10), Google Business verified (+15). But the real points come from Growth Plan tasks: each completed task adds +5 points (up to 50 total), in-progress tasks add +2 (up to 10), and consistent completion earns a +5 bonus. Target 80+ for optimal performance.',
+    how: 'Start at 0. Earn points for: Business profile (+10), Brand DNA (+10), Google Business verified (+15). But the real points come from Growth Plan tasks: each completed task adds +5 points (up to 50 total), in-progress tasks adds +2 (up to 10), and consistent completion earns a +5 bonus. Target 80+ for optimal performance.',
     next: { text: 'Learn How Your Score is Calculated', articleId: 'getting-started/score-calculation' }
   },
   'getting-started/score-calculation': {
@@ -198,7 +199,7 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
     why: 'Displaying reviews on your website builds trust and increases conversions. Social proof is one of the most powerful marketing tools. JetTrust replaces paid review widget services ($50-200/mo) and gives you a shareable review link for easy customer feedback collection.',
     when: 'Set up JetTrust as soon as your Google Business Profile is connected—even if you have zero reviews. The widget will encourage customers to leave your first review. Update the widget monthly as new reviews come in.',
     skip: 'Without visible reviews on your website, you\'re missing easy conversions. Visitors want to see social proof before buying. The "Leave a Review" button in the widget also increases your review volume over time.',
-    how: 'Open JetTrust, choose your layout style, select minimum star rating, and preview the widget. Click "Generate Widget Code" for website embedding, or "Copy for Social Media" to share reviews on social platforms. You can also copy the quick review link to share via email, text, or QR codes.',
+    how: 'Open JetTrust, choose your layout style, select minimum star rating, and preview the widget. Click "Generate Widget Code" for website embedding, or "Copy for Social Media" to share reviews on social platforms. Mark reviews as complete to track your progress.',
     next: { text: 'Learn about lead generation with JetLeads', articleId: 'engage-convert/jetleads' }
   },
   'engage-convert/jetleads': {
@@ -219,3 +220,40 @@ export const KNOWLEDGE_BASE_ARTICLES: { [key: string]: KbArticle } = {
     how: 'JetSuite replaces: Local SEO consultants, SEO tool subscriptions, social media managers, content writers, graphic designers, marketing agencies, reputation management, review widgets, lead generation, competitor research, and more. Every tool you use increases your effective savings.',
   }
 };
+
+// --- KB Navigation Data ---
+export const KB_SECTIONS = [
+  {
+    name: 'Getting Started',
+    articles: [
+      { id: 'getting-started/how-jetsuite-works', title: 'How JetSuite Works' },
+      { id: 'getting-started/why-order-matters', title: 'Why Order Matters' },
+      { id: 'getting-started/setup-profile', title: 'Setting Up Your Profile' },
+      { id: 'getting-started/growth-score', title: 'Your Growth Score' },
+      { id: 'getting-started/score-calculation', title: 'How Your Score is Calculated' },
+      { id: 'getting-started/cost-savings', title: 'Understanding Your Cost Savings' },
+    ],
+  },
+  {
+    name: 'Business Foundation',
+    articles: [
+      { id: 'foundation/jetbiz', title: 'JetBiz: Google Business' },
+      { id: 'foundation/jetviz', title: 'JetViz: Website Audit' },
+    ],
+  },
+  {
+    name: 'Marketing and Brand Strategy',
+    articles: [
+      { id: 'create-publish/jetcreate', title: 'JetCreate: Campaigns' },
+      { id: 'create-publish/content-tools', title: 'Content Creation Tools Overview' },
+    ],
+  },
+  {
+    name: 'Customer Engagement',
+    articles: [
+      { id: 'engage-convert/jetreply', title: 'JetReply: Review Response' },
+      { id: 'engage-convert/jettrust', title: 'JetTrust: Review Widgets' },
+      { id: 'engage-convert/jetleads', title: 'JetLeads: Local Lead Discovery' },
+    ],
+  },
+];
