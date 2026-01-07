@@ -13,6 +13,7 @@ export default async function handler(
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -21,30 +22,43 @@ export default async function handler(
   try {
     const { businessId, dna, brandDnaProfile } = req.body;
 
-    if (!businessId || !dna) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!businessId || !dna || !brandDnaProfile) {
+      return res.status(400).json({ error: 'Missing required fields: businessId, dna, brandDnaProfile' });
     }
 
-    // Update business profile with DNA data
-    const { error } = await supabase
+    // Update business_profiles with DNA data
+    const { data, error } = await supabase
       .from('business_profiles')
       .update({
-        dna: dna,
-        brand_dna_profile: brandDnaProfile || null,
+        dna: dna, // Visual DNA (logo, colors, fonts)
+        brand_dna_profile: brandDnaProfile, // Detailed brand profile
         is_dna_approved: true,
         dna_last_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
-      .eq('id', businessId);
+      .eq('id', businessId)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Error saving DNA:', error);
-      return res.status(500).json({ error: 'Failed to save DNA data' });
+      console.error('Supabase DNA save error:', error);
+      return res.status(500).json({ 
+        error: 'Failed to save DNA', 
+        message: error.message 
+      });
     }
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ 
+      success: true, 
+      message: 'DNA saved successfully',
+      data 
+    });
+
   } catch (error: any) {
-    console.error('Save DNA error:', error);
-    return res.status(500).json({ error: error.message });
+    console.error('DNA save error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to save DNA', 
+      message: error.message 
+    });
   }
 }
