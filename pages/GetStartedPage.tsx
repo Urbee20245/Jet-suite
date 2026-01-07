@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MinusIcon, PlusIcon } from '../components/icons/MiniIcons';
+import { getTrialEndDateDisplay } from '../utils/dateTimeUtils';
 
 interface GetStartedPageProps {
   navigate: (path: string) => void;
@@ -91,10 +92,10 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-            Get Started with JetSuite
+            Start Your 7-Day Free Trial
           </h1>
           <p className="text-lg sm:text-xl text-gray-400">
-            Complete the form below to proceed to secure payment
+            Complete the form below to start your free trial - no charge until {getTrialEndDateDisplay()}
           </p>
         </div>
 
@@ -307,7 +308,8 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                     <div className="flex justify-between items-baseline">
                       <span className="font-bold text-white text-lg">Monthly Total</span>
                       <span className="text-2xl sm:text-3xl font-extrabold text-white">
-                        ${total}<span className="text-base sm:text-lg font-normal text-gray-400">/mo</span>
+                        ${total}
+                        <span className="text-base sm:text-lg font-normal text-gray-400">/mo</span>
                       </span>
                     </div>
                   </div>
@@ -341,6 +343,15 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                 </div>
               </div>
 
+              <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg text-center">
+                <p className="text-green-400 font-bold text-lg">
+                  ✨ Your 7-day free trial starts today.
+                </p>
+                <p className="text-green-300 text-sm mt-1">
+                  Your card will be charged ${total}/mo on {getTrialEndDateDisplay()} unless you cancel.
+                </p>
+              </div>
+
               <button
                 type="submit"
                 disabled={isProcessing}
@@ -353,7 +364,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                   </>
                 ) : (
                   <>
-                    Continue to Payment
+                    Start My Free Trial
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -362,7 +373,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
               </button>
 
               <p className="text-center text-xs text-gray-500 mt-4">
-                By continuing, you agree to our Terms of Service and Privacy Policy
+                Credit card required. No charge during trial period. Cancel anytime during your trial period.
               </p>
             </div>
           </div>

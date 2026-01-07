@@ -258,17 +258,23 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
                 </span>
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-400 leading-relaxed">
-                JetSuite isn't just another tool—it's your complete AI-powered marketing team. From Google ranking to customer reviews, we handle everything.
+                Try all 20 tools free for 7 days. Everything you need to dominate local search and grow your business.
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => scrollToSection('foundation')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25">
-                    See All Tools in Action
+                <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 relative">
+                    Start 7-Day Free Trial
+                    <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                        🎉 7 Days Free
+                    </span>
                 </button>
-                <button onClick={() => navigate('/login')} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
-                    Get Your Free Growth Score
+                <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
+                    See Pricing & Value
                 </button>
             </div>
+            <p className="text-sm text-gray-500 mt-4">
+                Credit card required. No charge during trial period. Cancel anytime.
+            </p>
         </div>
 
         {/* Visual Collage Background (Subtle) */}
@@ -455,7 +461,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             </div>
             <div className="text-center mt-8">
                 <p className="text-xl text-white font-bold">Your Price: <span className="text-blue-400 text-3xl">$149/mo</span></p>
-                <p className="text-sm text-gray-500">For everything. No hidden fees.</p>
+                <p className="text-sm text-gray-500">Try all 20 tools free for 7 days.</p>
             </div>
         </div>
       </section>
@@ -487,17 +493,22 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
           <div className="relative z-10">
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to Access All 20 Growth Tools?</h2>
-            <p className="text-xl text-gray-300 mb-10">Join 360+ local businesses growing with JetSuite.</p>
+            <p className="text-xl text-gray-300 mb-10">Start your 7-day free trial now. Join 360+ local businesses growing with JetSuite.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
-                    Get Started
-                    <span className="block text-xs font-normal opacity-80 mt-1">Get instant access to all 20 growth tools</span>
+                <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative">
+                    Start 7-Day Free Trial
+                    <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                        🎉 7 Days Free
+                    </span>
                 </button>
                 <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
                     Schedule a Demo
                     <span className="block text-xs font-normal opacity-80 mt-1">See all tools live</span>
                 </button>
             </div>
+            <p className="text-sm text-gray-500 mt-4">
+                Credit card required. No charge during trial period. Cancel anytime.
+            </p>
           </div>
       </section>
       
@@ -507,7 +518,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
           <h2 className="text-3xl font-bold text-center text-white mb-12">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <FaqItem question="Do I get access to all tools immediately?" answer="Yes! All 20 tools are available from day one. We don't believe in 'unlocking' features." />
-            <FaqItem question="How many businesses can I manage?" answer="One business profile is included in the base plan. You can add more locations or businesses for $99/month each." />
+            <FaqItem question="How many businesses can I manage?" answer="One business profile is included in the base plan. You can add additional locations or businesses for $99/month each." />
             <FaqItem question="What if I only need a few tools?" answer="You still get access to everything. Use what you need now (e.g., just reviews), and expand to other tools (like SEO) as you grow." />
             <FaqItem question="Is there a learning curve?" answer="Minimal. The Growth Plan tells you exactly what to use and when, so you don't have to learn all 20 tools at once." />
           </div>

@@ -51,18 +51,18 @@ const testimonials = [
         businessType: "Healthcare"
     },
     {
-        quote: "I love being able to track my own progress with the Growth Score. It's motivating and simple.",
-        author: "David L.",
-        role: "Real Estate Agent",
-        stars: 5,
-        businessType: "Real Estate"
-    },
-    {
         quote: "Saved me over $2,000/month in agency fees. The AI content generator alone is worth it.",
         author: "Lisa M.",
         role: "Boutique Owner",
         stars: 5,
         businessType: "Retail"
+    },
+    {
+        quote: "I love being able to track my own progress with the Growth Score. It's motivating and simple.",
+        author: "David L.",
+        role: "Real Estate Agent",
+        stars: 5,
+        businessType: "Real Estate"
     },
     {
         quote: "My Google reviews went from 3.2 to 4.8 stars in just 3 months. JetReply is a game-changer.",
@@ -222,16 +222,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               </h1>
               
               <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
-                  JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
+                  Start your 7-day free trial today. JetSuite is the AI platform that handles your Google ranking, reputation, and ads for you—so local customers find you first and choose you.
               </p>
               
               <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
                   <button 
                     onClick={() => navigate('/get-started')} 
-                    className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40"
-                    aria-label="Get Started with JetSuite"
+                    className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
+                    aria-label="Start 7-Day Free Trial"
                   >
-                      Get Started
+                      Start 7-Day Free Trial
+                      <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                          🎉 7 Days Free
+                      </span>
                   </button>
                   <button 
                     onClick={handleVideoClick}
@@ -245,6 +248,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   </button>
               </div>
               
+              {/* Trial Disclosure */}
+              <p className="text-sm text-gray-500 mt-4">
+                Credit card required. No charge during trial period. Cancel anytime.
+              </p>
+
               {/* Trust Badges */}
               <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
                 <span>Featured in:</span>
@@ -715,14 +723,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
         
         {/* Animated fill bar */}
-        <div className="h-full rounded-lg relative">
-          <div className="h-full trust-increase-animated rounded-lg"></div>
-          
-          {/* Animated percentage text - BOTH BEFORE AND AFTER */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative h-5 w-12">
-              <span className="trust-number-animated text-xs font-bold text-white"></span>
-            </div>
+        <div className="h-full trust-increase-animated rounded-lg"></div>
+        
+        {/* Animated percentage text - BOTH BEFORE AND AFTER */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative h-5 w-12">
+            <span className="trust-number-animated text-xs font-bold text-white"></span>
           </div>
         </div>
         
@@ -870,11 +876,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               </ul>
               
               <button onClick={() => navigate('/get-started')} 
-                className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4"
-                aria-label="Get started with JetSuite for $149/month">
-                Get Started
+                className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4 relative"
+                aria-label="Start 7-Day Free Trial">
+                Start 7-Day Free Trial
+                <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                    🎉 7 Days Free
+                </span>
               </button>
-              <p className="text-xs text-gray-500">Get instant access to all 20 growth tools</p>
+              <p className="text-xs text-gray-500">Credit card required. No charge during trial period.</p>
             </div>
           </div>
         </div>
@@ -1020,13 +1029,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="relative z-10 max-w-4xl mx-auto">
           <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Join 360+ local businesses growing with JetSuite. Start growing today.
+            Join 360+ local businesses growing with JetSuite. Start your 7-day free trial now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate('/get-started')} 
-              className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30"
-              aria-label="Start your free trial of JetSuite">
-              Get Started
+              className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
+              aria-label="Start your 7-day free trial of JetSuite">
+              Start 7-Day Free Trial
+              <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                  🎉 7 Days Free
+              </span>
             </button>
             <button 
               onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
@@ -1035,6 +1047,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               Schedule a Personalized Demo
             </button>
           </div>
+          <p className="text-sm text-gray-500 mt-4">
+            Credit card required. No charge during trial period. Cancel anytime.
+          </p>
         </div>
       </section>
       

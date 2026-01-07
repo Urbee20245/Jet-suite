@@ -105,6 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         email: email, // Always include email
       },
       subscription_data: {
+        trial_period_days: 7, // ADDED TRIAL PERIOD
         metadata: {
           user_id: userId || 'unauthenticated',
           seat_count: String(seatCount),

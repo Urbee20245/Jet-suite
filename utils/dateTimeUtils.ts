@@ -63,6 +63,14 @@ export const getDateNDaysFromNow = (days: number): string => {
 };
 
 /**
+ * Get the date 7 days from now and format it for display (e.g., "Monday, December 29, 2025")
+ */
+export const getTrialEndDateDisplay = (): string => {
+  const trialEndDate = getDateNDaysFromNow(7);
+  return formatDateForDisplay(trialEndDate);
+};
+
+/**
  * Get minimum date for date input (today)
  */
 export const getMinDate = (): string => {

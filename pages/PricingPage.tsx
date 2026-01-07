@@ -3,6 +3,7 @@ import { PricingCalculator } from '../components/marketing/PricingCalculator';
 import { CheckCircleIcon, MinusIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { createCheckoutSession } from '../services/stripeService';
 import { Loader } from '../components/Loader';
+import { getTrialEndDateDisplay } from '../utils/dateTimeUtils';
 
 interface PricingPageProps {
   navigate: (path: string) => void;
@@ -61,7 +62,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             Simple, Transparent Pricing
           </h1>
           <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-300">
-            One plan, all the tools. No hidden fees, no feature gates. Just pure growth potential, priced per business.
+            Start your 7-day free trial today. One plan, all the tools. No hidden fees, no feature gates.
           </p>
           
           {/* Savings Calculator CTA */}
@@ -225,12 +226,15 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               </div>
             </div>
 
-            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700">
-              <div className="text-sm text-gray-400 mb-2">Due Today</div>
-              <div className="text-4xl font-bold text-white mb-2">${monthlyTotal}</div>
+            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700 relative">
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                  🎉 7 Days Free
+              </span>
+              <div className="text-sm text-gray-400 mb-2">Trial Starts Today</div>
+              <div className="text-4xl font-bold text-white mb-2">FREE</div>
               <div className="text-sm text-gray-400">Then ${monthlyTotal}/month</div>
               <div className="mt-4 text-xs text-gray-500">
-                All tools included. No hidden fees. Cancel anytime.
+                Trial ends on {getTrialEndDateDisplay()}
               </div>
             </div>
 
@@ -239,11 +243,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               onClick={() => navigate('/get-started')}
               className="w-full mt-6 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center justify-center gap-3"
             >
-              Get Started
+              Start 7-Day Free Trial
             </button>
             
             <p className="mt-4 text-center text-sm text-gray-400">
-              Transparent pricing • Cancel anytime
+              Credit card required. No charge during trial period. Cancel anytime.
             </p>
           </div>
 
@@ -276,7 +280,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
                 />
                 <PricingFaqItem 
                     question="When will I be charged?" 
-                    answer="You'll be charged immediately when you subscribe. Your subscription renews monthly at the same rate." 
+                    answer={`You will be charged $${monthlyTotal} on ${getTrialEndDateDisplay()} after your 7-day free trial ends. Your subscription renews monthly at the same rate.`} 
                 />
                 <PricingFaqItem 
                     question="Do I need to sign a long-term contract?" 
