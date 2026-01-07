@@ -1,4 +1,3 @@
-Business Foundation, Create & Publish -> Marketing and Brand Strategy, Engage & Convert -> Customer Engagement.">
 import type { Tool } from './types';
 import { 
   JetBizIcon, 
