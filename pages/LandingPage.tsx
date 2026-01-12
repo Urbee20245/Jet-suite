@@ -325,17 +325,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           </div>
           
           {/* Industry Breakdown */}
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
-            <span className="text-gray-500">Trusted across industries:</span>
-            <div className="flex flex-wrap gap-2">
-              <span className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded-full border border-blue-700/30">Plumbing</span>
-              <span className="px-3 py-1 bg-teal-900/30 text-teal-300 rounded-full border border-teal-700/30">Healthcare</span>
-              <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full border border-purple-700/30">Retail</span>
-              <span className="px-3 py-1 bg-amber-900/30 text-amber-300 rounded-full border border-amber-700/30">Legal</span>
-              <span className="px-3 py-1 bg-pink-900/30 text-pink-300 rounded-full border border-pink-700/30">Fitness</span>
-            </div>
-          </div>
-        </div>
+<div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
+  <span className="text-gray-500">Trusted across industries:</span>
+  <div className="flex flex-wrap gap-2">
+    <span className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded-full border border-blue-700/30">Plumbing</span>
+    <span className="px-3 py-1 bg-teal-900/30 text-teal-300 rounded-full border border-teal-700/30">Healthcare</span>
+    <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full border border-purple-700/30">Retail</span>
+    <span className="px-3 py-1 bg-amber-900/30 text-amber-300 rounded-full border border-amber-700/30">Legal</span>
+    <span className="px-3 py-1 bg-pink-900/30 text-pink-300 rounded-full border border-pink-700/30">Fitness</span>
+    <span className="px-3 py-1 bg-indigo-900/30 text-indigo-300 rounded-full border border-indigo-700/30">Home Based</span>
+  </div>
+</div>
       </div>
 
       {/* Right Column: Video */}
