@@ -170,205 +170,206 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   return (
     <div className="bg-brand-darker text-gray-300 overflow-x-hidden font-sans">
       
-     {/* 1. HERO SECTION - ENHANCED */}
-<section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden section-animate">
-  {/* Background Pattern */}
-  <div className="absolute inset-0 opacity-[0.02] bg-grid-pattern"></div>
-  
-  {/* Background Gradients */}
-  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50 animate-pulse-subtle"></div>
-  <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-teal-500/10 rounded-full blur-[120px] -z-10 opacity-30"></div>
+      {/* 1. HERO SECTION - ENHANCED */}
+      <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden section-animate">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.02] bg-grid-pattern"></div>
+        
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50 animate-pulse-subtle"></div>
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-teal-500/10 rounded-full blur-[120px] -z-10 opacity-30"></div>
 
-  <div className="max-w-7xl mx-auto">
-    <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
-      {/* Left Column: Text Content */}
-      <div className="lg:w-1/2 w-full text-left">
-        {/* Compact Trust Badge with Shield */}
-        <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
-          
-          {/* Subtle Animated Background */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
-          </div>
-          
-          {/* Shield Icon with Tiny Glow */}
-          <div className="relative">
-            <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-            </svg>
-          </div>
-          
-          {/* Text */}
-          <span className="relative">
-            Trusted by <span className="font-semibold text-white">360+</span> local businesses
-          </span>
-          
-          {/* Live Indicator Dot */}
-          <div className="relative ml-1">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
-            </span>
-          </div>
-        </div>
-        
-        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
-            Get Found First on Google.
-            <br className="hidden md:block"/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
-                Get More Customers.
-            </span>
-        </h1>
-        
-        <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
-            Start your 7-day free trial today.
-            JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
-        </p>
-        
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
-            <button 
-              onClick={() => navigate('/get-started')} 
-              className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
-              aria-label="Start Free Trial"
-            >
-                Start Free Trial
-                <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                    🎉 7 Days Free
-                </span>
-            </button>
-            <button 
-              onClick={handleVideoClick}
-              className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
-              aria-label="Watch 2 minute demo video"
-            >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                Watch 2-Min Demo
-            </button>
-        </div>
-        
-        {/* Trial Disclosure */}
-        <p className="text-sm text-gray-500 mt-4">
-          Credit card required. No charge during trial period. Cancel anytime.
-        </p>
-
-        {/* Trust Badges */}
-        <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
-          <span>Featured in:</span>
-          <div className="flex items-center gap-4 opacity-70">
-            <span className="font-semibold text-gray-400">Forbes</span>
-            <span className="text-gray-500">•</span>
-            <span className="font-semibold text-gray-400">TechCrunch</span>
-            <span className="text-gray-500">•</span>
-            <span className="font-semibold text-gray-400">Entrepreneur</span>
-          </div>
-        </div>
-
-        {/* NEW: Client Avatar Trust Bar */}
-        <div className="mt-10 pt-8 border-t border-slate-800/50 w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3 flex-shrink-0">
-                {/* Client Avatars - Using your 5 images */}
-                {[
-                  '/GJSCLIENT1.png',
-                  '/GJSCLIENT2.png', 
-                  '/GJSCLIENT3.png',
-                  '/GJSCLIENT4.png',
-                  '/GJSCLIENT5.png'
-                ].map((avatar, index) => (
-                  <img 
-                    key={index}
-                    src={avatar}
-                    alt={`Jet Suite Client ${index + 1}`}
-                    className="w-12 h-12 rounded-full border-3 border-slate-900 shadow-lg object-cover hover:scale-110 transition-transform duration-300"
-                    loading="lazy"
-                    style={{
-                      zIndex: 5 - index // Ensures proper stacking
-                    }}
-                  />
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  {[1,2,3,4,5].map((i) => (
-                    <svg 
-                      key={i} 
-                      className="w-4 h-4 fill-yellow-400 text-yellow-400" 
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                  ))}
-                  <span className="ml-2 text-sm font-bold text-white">5.0</span>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
+            {/* Left Column: Text Content */}
+            <div className="lg:w-1/2 w-full text-left">
+              {/* Compact Trust Badge with Shield */}
+              <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
+                
+                {/* Subtle Animated Background */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
                 </div>
-                <p className="text-sm text-gray-400 mt-1">
-                  Rated <span className="font-semibold text-white">5.0/5.0</span> by local businesses
-                </p>
-              </div>
-            </div>
-            <div className="hidden sm:block h-10 w-px bg-slate-700"></div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center border border-blue-500/30">
-                <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-                </svg>
-              </div>
-              <div>
-                <div className="text-lg font-bold text-white">100%</div>
-                <div className="text-sm text-gray-400">Client Satisfaction</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Industry Breakdown */}
-<div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
-  <span className="text-gray-500">Trusted across industries:</span>
-  <div className="flex flex-wrap gap-2">
-    <span className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded-full border border-blue-700/30">Plumbing</span>
-    <span className="px-3 py-1 bg-teal-900/30 text-teal-300 rounded-full border border-teal-700/30">Healthcare</span>
-    <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full border border-purple-700/30">Retail</span>
-    <span className="px-3 py-1 bg-amber-900/30 text-amber-300 rounded-full border border-amber-700/30">Legal</span>
-    <span className="px-3 py-1 bg-pink-900/30 text-pink-300 rounded-full border border-pink-700/30">Fitness</span>
-    <span className="px-3 py-1 bg-indigo-900/30 text-indigo-300 rounded-full border border-indigo-700/30">Home Based</span>
-  </div>
-</div>
-      </div>
-
-      {/* Right Column: Video */}
-      <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
-          <div 
-            ref={videoRef}
-            onClick={handleVideoClick}
-            className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group cursor-pointer relative"
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
-            aria-label="Play demo video: See how JetSuite works"
-          >
-              {/* Video Preview Image */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
-                  {/* Play Button */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                          <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
-                      </div>
-                  </div>
+                
+                {/* Shield Icon with Tiny Glow */}
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                  </svg>
+                </div>
+                
+                {/* Text */}
+                <span className="relative">
+                  Trusted by <span className="font-semibold text-white">360+</span> local businesses
+                </span>
+                
+                {/* Live Indicator Dot */}
+                <div className="relative ml-1">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                  </span>
+                </div>
               </div>
               
-              {/* Video Stats Overlay */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
-                  See how it works in 2 minutes
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+                  Get Found First on Google.
+                  <br className="hidden md:block"/>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
+                      Get More Customers.
+                  </span>
+              </h1>
+              
+              <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
+                  Start your 7-day free trial today.
+                  JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
+              </p>
+              
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
+                  <button 
+                    onClick={() => navigate('/get-started')} 
+                    className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
+                    aria-label="Start Free Trial"
+                  >
+                      Start Free Trial
+                      <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
+                          🎉 7 Days Free
+                      </span>
+                  </button>
+                  <button 
+                    onClick={handleVideoClick}
+                    className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
+                    aria-label="Watch 2 minute demo video"
+                  >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                      Watch 2-Min Demo
+                  </button>
               </div>
+              
+              {/* Trial Disclosure */}
+              <p className="text-sm text-gray-500 mt-4">
+                Credit card required. No charge during trial period. Cancel anytime.
+              </p>
+
+              {/* Trust Badges */}
+              <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                <span>Featured in:</span>
+                <div className="flex items-center gap-4 opacity-70">
+                  <span className="font-semibold text-gray-400">Forbes</span>
+                  <span className="text-gray-500">•</span>
+                  <span className="font-semibold text-gray-400">TechCrunch</span>
+                  <span className="text-gray-500">•</span>
+                  <span className="font-semibold text-gray-400">Entrepreneur</span>
+                </div>
+              </div>
+
+              {/* NEW: Client Avatar Trust Bar */}
+              <div className="mt-10 pt-8 border-t border-slate-800/50 w-full">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex -space-x-3 flex-shrink-0">
+                      {/* Client Avatars - Using your 5 images */}
+                      {[
+                        '/GJSCLIENT1.png',
+                        '/GJSCLIENT2.png', 
+                        '/GJSCLIENT3.png',
+                        '/GJSCLIENT4.png',
+                        '/GJSCLIENT5.png'
+                      ].map((avatar, index) => (
+                        <img 
+                          key={index}
+                          src={avatar}
+                          alt={`Jet Suite Client ${index + 1}`}
+                          className="w-12 h-12 rounded-full border-3 border-slate-900 shadow-lg object-cover hover:scale-110 transition-transform duration-300"
+                          loading="lazy"
+                          style={{
+                            zIndex: 5 - index // Ensures proper stacking
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        {[1,2,3,4,5].map((i) => (
+                          <svg 
+                            key={i} 
+                            className="w-4 h-4 fill-yellow-400 text-yellow-400" 
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                          >
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                          </svg>
+                        ))}
+                        <span className="ml-2 text-sm font-bold text-white">5.0</span>
+                      </div>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Rated <span className="font-semibold text-white">5.0/5.0</span> by local businesses
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:block h-10 w-px bg-slate-700"></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center border border-blue-500/30">
+                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-white">100%</div>
+                      <div className="text-sm text-gray-400">Client Satisfaction</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Industry Breakdown */}
+                <div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
+                  <span className="text-gray-500">Trusted across industries:</span>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded-full border border-blue-700/30">Plumbing</span>
+                    <span className="px-3 py-1 bg-teal-900/30 text-teal-300 rounded-full border border-teal-700/30">Healthcare</span>
+                    <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full border border-purple-700/30">Retail</span>
+                    <span className="px-3 py-1 bg-amber-900/30 text-amber-300 rounded-full border border-amber-700/30">Legal</span>
+                    <span className="px-3 py-1 bg-pink-900/30 text-pink-300 rounded-full border border-pink-700/30">Fitness</span>
+                    <span className="px-3 py-1 bg-indigo-900/30 text-indigo-300 rounded-full border border-indigo-700/30">Home Based</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Video */}
+            <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
+                <div 
+                  ref={videoRef}
+                  onClick={handleVideoClick}
+                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group cursor-pointer relative"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
+                  aria-label="Play demo video: See how JetSuite works"
+                >
+                    {/* Video Preview Image */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
+                        {/* Play Button */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                                <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Video Stats Overlay */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
+                        See how it works in 2 minutes
+                    </div>
+                </div>
+                <p className="text-center text-gray-500 text-sm mt-4">See how JetSuite works for businesses like yours</p>
+            </div>
           </div>
-          <p className="text-center text-gray-500 text-sm mt-4">See how JetSuite works for businesses like yours</p>
-      </div>
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
 
       {/* 2. THE PROBLEM SECTION */}
       <section className="section-animate py-24 px-4 bg-[#0B1121]">
@@ -774,75 +775,73 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                     </div>
 
                     {/* Trust Score Visualization with Animation - COMPLETE FIX */}
-<div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-green-500/30 transition-colors duration-300">
-  <div className="flex items-center justify-between mb-3">
-    <span className="text-sm text-white font-medium">Trust Score Impact</span>
-    <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
-      +45% Increase
-    </span>
-  </div>
-  <div className="space-y-3">
-    <div className="flex items-center justify-between text-xs">
-      <span className="text-gray-400">Before JetTrust: <span 
-      className="text-red-300">2.8%</span></span>
-      <span className="text-gray-400">After JetTrust: <span className="text-green-300 font-medium">4.1%</span></span>
-    </div>
-    
-    {/* Animated Progress Bar */}
-    <div className="relative">
-      <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative">
-        {/* Background bar showing full width */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
-        
-        {/* Animated fill bar */}
-        <div className="h-full trust-increase-animated rounded-lg"></div>
-        
-        {/* Animated percentage text - BOTH BEFORE AND AFTER */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative h-5 w-12">
-            <span className="trust-number-animated text-xs font-bold text-white"></span>
-          </div>
-        </div>
-        
-        {/* Marker points */}
-        
-    
-        <div className="absolute left-2/3 top-0 bottom-0 w-px bg-green-500/30 z-0">
-          <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-green-500"></div>
-        </div>
-      </div>
-      
-      {/* Labels */}
-      <div className="flex justify-between mt-2 text-xs">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-red-500"></div>
-          <span className="text-red-300">Low Trust</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-green-300 font-medium">High Conversion</span>
-        </div>
-      </div>
-    </div>
-    
-    {/* Color Legend */}
-    <div className="flex items-center justify-center gap-4 mt-4 text-xs">
-      <div className="flex items-center gap-1">
-        <div className="w-3 h-3 rounded bg-red-500"></div>
-        <span className="text-red-300">2.8% Start</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <div className="w-3 h-3 rounded bg-gradient-to-r from-red-500 to-green-500"></div>
-        <span className="text-yellow-300">Transition</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <div className="w-3 h-3 rounded bg-green-500"></div>
-        <span className="text-green-300">4.1% Target</span>
-      </div>
-    </div>
-  </div>
-</div>
+                    <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 hover:border-green-500/30 transition-colors duration-300">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-white font-medium">Trust Score Impact</span>
+                        <span className="trust-percent-badge text-xs font-bold bg-gradient-to-r from-green-500/20 to-emerald-600/20 text-green-300 px-3 py-1 rounded-full border border-green-500/30">
+                          +45% Increase
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Before JetTrust: <span 
+                          className="text-red-300">2.8%</span></span>
+                          <span className="text-gray-400">After JetTrust: <span className="text-green-300 font-medium">4.1%</span></span>
+                        </div>
+                        
+                        {/* Animated Progress Bar */}
+                        <div className="relative">
+                          <div className="h-10 rounded-lg bg-slate-800 overflow-hidden relative">
+                            {/* Background bar showing full width */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-slate-700/50 to-slate-800/50"></div>
+                            
+                            {/* Animated fill bar */}
+                            <div className="h-full trust-increase-animated rounded-lg"></div>
+                            
+                            {/* Animated percentage text - BOTH BEFORE AND AFTER */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="relative h-5 w-12">
+                                <span className="trust-number-animated text-xs font-bold text-white"></span>
+                              </div>
+                            </div>
+                            
+                            {/* Marker points */}
+                            <div className="absolute left-2/3 top-0 bottom-0 w-px bg-green-500/30 z-0">
+                              <div className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                              <div className="absolute bottom-0 -left-1 w-2 h-2 rounded-full bg-green-500"></div>
+                            </div>
+                          </div>
+                          
+                          {/* Labels */}
+                          <div className="flex justify-between mt-2 text-xs">
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                              <span className="text-red-300">Low Trust</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                              <span className="text-green-300 font-medium">High Conversion</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Color Legend */}
+                        <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-red-500"></div>
+                            <span className="text-red-300">2.8% Start</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-gradient-to-r from-red-500 to-green-500"></div>
+                            <span className="text-yellow-300">Transition</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded bg-green-500"></div>
+                            <span className="text-green-300">4.1% Target</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
             </div>
@@ -991,8 +990,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             {/* Gradient Overlays */}
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-brand-darker to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-brand-darker to-transparent z-10 pointer-events-none"></div>
-            
-        
             
             {/* Scrolling Testimonials */}
             <div 
