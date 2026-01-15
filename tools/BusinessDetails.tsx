@@ -71,7 +71,7 @@ const DnaReviewAndSaved: React.FC<{ visualDna: BusinessDna; detailedDna: BrandDn
     const expandAll = () => setOpenSections(sectionKeys);
     const collapseAll = () => setOpenSections([]);
 
-    return (<div className="space-y-6"><div><h3 className="text-xl font-bold text-brand-text">{isEditable ? 'Your Business DNA - Review & Approve' : 'Your Approved Business DNA'}</h3><p className="text-brand-text-muted">{isEditable ? 'We extracted the following from your website. Review and make any changes before saving.' : 'This brand identity is active across all JetSuite tools.'}</p>{!isEditable && dnaLastUpdatedAt && <p className="text-xs text-brand-text-muted mt-1">Last saved: {new Date(dnaLastUpdatedAt).toLocaleString()}</p>}</div><div className="grid grid-cols-1 lg:grid-cols-5 gap-4"><div className="lg:col-span-2 bg-white p-4 rounded-lg border border-brand-border"><h4 className="font-semibold mb-2 flex items-center gap-2">Logo {visualDna.logo && <CheckCircleIcon className="w-4 h-4 text-green-500" />}</h4>{!visualDna.logo ? <div className="text-center p-4 border-2 border-dashed rounded-lg"><p className="text-sm text-brand-text-muted mb-2">No logo detected.</p>{isEditable && <button onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload manually</button>}</div> : <div className="space-y-2"><p className="text-xs text-brand-text-muted">Preview:</p><div className="flex gap-2"><div className="flex-1 bg-gray-100 p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div><div className="flex-1 bg-brand-dark p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div></div>{isEditable &&<button onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline mt-2">Upload different logo</button>}</div>}<input type="file" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" /></div><div className="lg:col-span-3 bg-white p-4 rounded-lg border border-brand-border"><div className="pb-4 border-b border-brand-border"><h4 className="font-semibold mb-2">Typography</h4><div className="flex items-center justify-between"><div className="w-1/2"><div style={{fontFamily: visualDna.fonts}} className="text-4xl truncate">{visualDna.fonts ? 'Aa' : ''}</div><p className="text-sm font-semibold mt-1 truncate">{visualDna.fonts || 'Default'}</p></div>{isEditable && <input type="text" value={visualDna.fonts} onChange={e => onVisualDnaChange({...visualDna, fonts: e.target.value})} className="w-1/2 text-sm p-2 border rounded"/>}</div></div><div className="pt-4"><h4 className="font-semibold mb-2">Brand Colors</h4><div className="flex flex-wrap gap-3 items-center">{visualDna.colors.map((color, i) => <div key={i} className="relative group text-center">{isEditable ? <input type="color" value={color} onChange={e => handleColorChange(i, e.target.value)} className="w-12 h-12 rounded-full border-2 border-white shadow-md cursor-pointer" /> : <div style={{backgroundColor: color}} className="w-12 h-12 rounded-full border-2 border-white shadow-md"></div>}<p className="text-xs font-mono mt-1">{color}</p>{isEditable &&<button onClick={() => removeColor(i)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100"><XMarkIcon className="w-3 h-3"/></button>}</div>)}{isEditable &&<button onClick={addColor} className="w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-2xl text-brand-text-muted hover:bg-gray-200">+</button>}</div></div><div className="pt-4 border-t border-brand-border mt-4"><h4 className="font-semibold mb-2">Favicon</h4>{visualDna.faviconUrl ? <div className="flex items-center gap-3"><img src={visualDna.faviconUrl} alt="Favicon" className="w-8 h-8"/><p className="text-sm text-brand-text-muted truncate">{visualDna.faviconUrl}</p>{isEditable && <button onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline ml-auto">Change</button>}</div> : <div className="text-center p-2"><p className="text-sm text-brand-text-muted mb-2">No favicon detected.</p>{isEditable && <button onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload favicon</button>}</div>}<input type="file" ref={faviconInputRef} onChange={handleFaviconUpload} accept="image/png, image/x-icon, image/svg+xml" className="hidden" /></div></div></div>{isEditable && detectedGbp && <GbpDetectedCard detectedGbp={detectedGbp} isConfirmed={isGbpConfirmed} onConfirm={onConfirmGbp} onReject={onRejectGbp} />}<div><div className="flex justify-between items-center mb-2"><h3 className="text-lg font-bold text-brand-text">Extracted Brand DNA Profile</h3>{!isEditable && <div className="flex gap-2 text-sm font-semibold"><button onClick={expandAll} className="hover:underline">Expand All</button><button onClick={collapseAll} className="hover:underline">Collapse All</button></div>}</div>{detailedDna && <DnaDetailedAnalysis dnaProfile={detailedDna} onUpdate={onDetailedDnaChange} isEditable={isEditable} openSections={openSections} toggleSection={toggleSection} />}</div><div className="flex justify-between items-center pt-4">{isEditable ? <><button onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">Cancel</button><button onClick={onSave} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg">Save Changes</button></> : <><button onClick={onRestart} className="text-sm font-semibold text-brand-text-muted hover:underline">Re-extract from Website</button><button onClick={onEdit} className="bg-accent-blue text-white font-bold py-3 px-6 rounded-lg shadow-lg">Edit Business DNA</button></>}</div></div>);
+    return (<div className="space-y-6"><div><h3 className="text-xl font-bold text-brand-text">{isEditable ? 'Your Business DNA - Review & Approve' : 'Your Approved Business DNA'}</h3><p className="text-brand-text-muted">{isEditable ? 'We extracted the following from your website. Review and make any changes before saving.' : 'This brand identity is active across all JetSuite tools.'}</p>{!isEditable && dnaLastUpdatedAt && <p className="text-xs text-brand-text-muted mt-1">Last saved: {new Date(dnaLastUpdatedAt).toLocaleString()}</p>}</div><div className="grid grid-cols-1 lg:grid-cols-5 gap-4"><div className="lg:col-span-2 bg-white p-4 rounded-lg border border-brand-border"><h4 className="font-semibold mb-2 flex items-center gap-2">Logo {visualDna.logo && <CheckCircleIcon className="w-4 h-4 text-green-500" />}</h4>{!visualDna.logo ? <div className="text-center p-4 border-2 border-dashed rounded-lg"><p className="text-sm text-brand-text-muted mb-2">No logo detected.</p>{isEditable && <button onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload manually</button>}</div> : <div className="space-y-2"><p className="text-xs text-brand-text-muted">Preview:</p><div className="flex gap-2"><div className="flex-1 bg-gray-100 p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div><div className="flex-1 bg-brand-dark p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div></div>{isEditable &&<button onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline mt-2">Upload different logo</button>}</div>}<input type="file" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" /></div><div className="lg:col-span-3 bg-white p-4 rounded-lg border border-brand-border"><div className="pb-4 border-b border-brand-border"><h4 className="font-semibold mb-2">Typography</h4><div className="flex items-center justify-between"><div className="w-1/2"><div style={{fontFamily: visualDna.fonts}} className="text-4xl truncate">{visualDna.fonts ? 'Aa' : ''}</div><p className="text-sm font-semibold mt-1 truncate">{visualDna.fonts || 'Default'}</p></div>{isEditable && <input type="text" value={visualDna.fonts} onChange={e => onVisualDnaChange({...visualDna, fonts: e.target.value})} className="w-1/2 text-sm p-2 border rounded"/>}</div></div><div className="pt-4"><h4 className="font-semibold mb-2">Brand Colors</h4><div className="flex flex-wrap gap-3 items-center">{visualDna.colors.map((color, i) => <div key={i} className="relative group text-center">{isEditable ? <input type="color" value={color} onChange={e => handleColorChange(i, e.target.value)} className="w-12 h-12 rounded-full border-2 border-white shadow-md cursor-pointer" /> : <div style={{backgroundColor: color}} className="w-12 h-12 rounded-full border-2 border-white shadow-md"></div>}<p className="text-xs font-mono mt-1">{color}</p>{isEditable &&<button onClick={() => removeColor(i)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100"><XMarkIcon className="w-3 h-3"/></button>}</div>)}{isEditable &&<button onClick={addColor} className="w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-2xl text-brand-text-muted hover:bg-gray-200">+</button>}</div></div><div className="pt-4 border-t border-brand-border mt-4"><h4 className="font-semibold mb-2">Favicon</h4>{visualDna.faviconUrl ? <div className="flex items-center gap-3"><img src={visualDna.faviconUrl} alt="Favicon" className="w-8 h-8"/><p className="text-sm text-brand-text-muted truncate">{visualDna.faviconUrl}</p>{isEditable && <button onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline ml-auto">Change</button>}</div> : <div className="text-center p-2"><p className="text-sm text-brand-text-muted mb-2">No favicon detected.</p>{isEditable && <button onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload favicon</button>}</div>}<input type="file" ref={faviconInputRef} onChange={handleFaviconUpload} accept="image/png, image/x-icon, image/svg+xml" className="hidden" /></div></div></div>{isEditable && detectedGbp && <GbpDetectedCard detectedGbp={detectedGbp} isConfirmed={isGbpConfirmed} onConfirm={onConfirmGbp} onReject={onRejectGbp} />}<div><div className="flex justify-between items-center mb-2"><h3 className="text-lg font-bold text-brand-text">Extracted Brand DNA Profile</h3>{!isEditable && <div className="flex gap-2 text-sm font-semibold"><button onClick={expandAll} className="hover:underline">Expand All</button><button onClick={collapseAll} className="hover:underline">Collapse All</button></div>}</div>{detailedDna && <DnaDetailedAnalysis dnaProfile={isDnaEditing ? editableBrandProfile! : detailedDna} onUpdate={onDetailedDnaChange} isEditable={isDnaEditing} openSections={openSections} toggleSection={toggleSection} />}</div><div className="flex justify-between items-center pt-4">{isEditable ? <><button onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">Cancel</button><button onClick={onSave} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg">Save Changes</button></> : <><button onClick={onRestart} className="text-sm font-semibold text-brand-text-muted hover:underline">Re-extract from Website</button><button onClick={onEdit} className="bg-accent-blue text-white font-bold py-3 px-6 rounded-lg shadow-lg">Edit Business DNA</button></>}</div></div>);
 };
 
 // --- Sub-components for GBP Workflow ---
@@ -185,7 +185,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const step1Completed = !!business.business_name && !!business.business_website;
   const step2Completed = business.isDnaApproved;
-  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped;
+  // UPDATED: Step 3 is complete if GBP is Verified OR if it was confirmed during DNA extraction
+  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.placeId) || isGbpSkipped || (detectedGbp && isGbpConfirmed);
   const step4Completed = true;
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
@@ -195,13 +196,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   
   const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult, gbpResult] = await Promise.all([extractWebsiteDna(business.business_website), extractBrandDnaProfile(business), detectGbpOnWebsite(business.business_website, business.business_name)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); if (gbpResult) { setDetectedGbp(gbpResult); } setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
   
-  // ✅ UPDATED: Save initial DNA extraction to Supabase
+  // UPDATED: Save initial DNA extraction to Supabase and check for GBP confirmation
   const handleInitialSaveDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     setExtractionStage('saving'); 
     
     let newGbpData = profileData.googleBusiness; 
     if (detectedGbp && isGbpConfirmed) { 
+      // If GBP was detected and confirmed during DNA review, set status to Verified
       newGbpData = { 
         ...profileData.googleBusiness, 
         profileName: detectedGbp.name, 
@@ -214,7 +216,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     } 
     
     try {
-      // ✅ NEW: Save to Supabase
+      // Save DNA to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -256,12 +258,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
 
-  // ✅ UPDATED: Save DNA edits to Supabase
+  // UPDATED: Save DNA edits to Supabase
   const handleUpdateDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     
     try {
-      // ✅ NEW: Save to Supabase
+      // Save to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -324,7 +326,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isPrimary: true,
                 isComplete: true,
                 businessDescription: business.business_description,
-                googleBusiness: googleBusiness, // ✅ ADD THIS LINE
+                googleBusiness: googleBusiness, // ADD googleBusiness here
             }),
         });
 
@@ -339,7 +341,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || errorData.error || 'API route failed to save business profile.');
         }
 
-        // ✅ ADD googleBusiness here
+        // ADD googleBusiness here
         onUpdate({ ...profileData, business, googleBusiness }); 
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
@@ -367,7 +369,29 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
       default: return null;
     }
   };
-  const renderGbpContent = () => { if (step3Completed && !isGbpSkipped) { return (<div>{googleBusiness.placeId?.startsWith('detected_') && (<p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>)}<GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} /></div>); } const onUpdateStatus = (s: GbpStatus) => { const newGbp = {...googleBusiness, status: s}; setGoogleBusiness(newGbp); }; switch (googleBusiness.status) { case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; default: return <p className="text-brand-text-muted">Select a status to continue.</p>; } };
+  const renderGbpContent = () => { 
+    // If Step 3 is complete via DNA confirmation, show dashboard
+    if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') { 
+        return (
+            <div>
+                <p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>
+                <GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} />
+            </div>
+        ); 
+    } 
+    
+    const onUpdateStatus = (s: GbpStatus) => { 
+        const newGbp = {...googleBusiness, status: s}; 
+        setGoogleBusiness(newGbp); 
+    }; 
+    
+    switch (googleBusiness.status) { 
+        case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; 
+        case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; 
+        case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; 
+        default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
+    } 
+  };
   const renderSocialContent = () => { if (step4Completed) { return <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />; } return <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div>; };
 
   const handleLockedClick = (stepNumber: number) => {
