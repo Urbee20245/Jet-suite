@@ -1,6 +1,6 @@
 // /api/user/update-profile.ts
 // Backend API endpoint to save user profile changes to database
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with service role for admin operations
 const supabaseUrl = process.env.SUPABASE_URL; // Use standard key for serverless functions
@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     autoRefreshToken: false,
     persistSession: false
   }
-});
+}) as any; // Cast to any to access admin functions not exposed in default SupabaseClient type
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
@@ -36,6 +36,7 @@ export default async function handler(req: any, res: any) {
     console.log('Updating profile for UUID:', userId);
 
     // 1. Update user metadata in Supabase Auth by UUID (Optional, but good practice)
+    // Accessing admin functions via the 'admin' property on supabase.auth
     const { error: authError } = await supabase.auth.admin.updateUserById(
       userId,
       {
