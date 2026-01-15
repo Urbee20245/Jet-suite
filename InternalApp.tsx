@@ -87,6 +87,8 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
       updated_at: new Date().toISOString(),
       google_business_profile: null,
       brand_dna_profile: null,
+      is_dna_approved: false,
+      dna_last_updated_at: undefined,
     },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
@@ -290,6 +292,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           dnaLastUpdatedAt: p.dna_last_updated_at, // Map DB snake_case to client camelCase
           google_business_profile: p.google_business_profile,
           brand_dna_profile: p.brand_dna_profile,
+          is_dna_approved: p.is_dna_approved, // Keep snake_case for type compatibility
+          dna_last_updated_at: p.dna_last_updated_at, // Keep snake_case for type compatibility
       })) as BusinessProfile[];
       
       setBusinesses(mappedBusinesses);

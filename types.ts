@@ -113,6 +113,10 @@ export interface BusinessProfile {
   created_at: string;
   updated_at: string;
   
+  // Database snake_case fields (for direct mapping from DB query result)
+  is_dna_approved: boolean;
+  dna_last_updated_at?: string;
+
   // ADDED JSONB fields from DB (for direct mapping)
   google_business_profile: GoogleBusinessProfile | null;
   brand_dna_profile: BrandDnaProfile | null;
