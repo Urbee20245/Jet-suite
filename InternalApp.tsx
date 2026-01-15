@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
@@ -511,6 +512,15 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   if (isStep1Complete && isStep2Complete) readinessState = 'Foundation Ready';
   else if (isStep1Complete) readinessState = 'Foundation Weak';
 
+  // --- Tool Completion Status ---
+  // Business Details is complete if basic info is saved AND DNA is approved.
+  const isBusinessDetailsComplete = isStep1Complete && isStep2Complete;
+  
+  const toolCompletionStatus = {
+      'businessdetails': isBusinessDetailsComplete,
+      // Add other tools here later if needed
+  };
+
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
         return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(id) => setImpersonatedUserId(id === 'test-user-uuid' ? 'test-user-uuid' : null)} />;
@@ -572,7 +582,13 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   return (
     <div className="flex h-screen text-brand-text font-sans bg-brand-light">
-      {!isJetCreateActive && <Sidebar activeTool={activeTool} setActiveTool={setActiveTool} isAdmin={isAdmin} onLogout={onLogout} />}
+      {!isJetCreateActive && <Sidebar 
+        activeTool={activeTool} 
+        setActiveTool={setActiveTool} 
+        isAdmin={isAdmin} 
+        onLogout={onLogout} 
+        toolCompletionStatus={toolCompletionStatus}
+      />}
       <div className="flex-1 flex flex-col overflow-hidden">
         {impersonatedUserId && ( 
           <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> 

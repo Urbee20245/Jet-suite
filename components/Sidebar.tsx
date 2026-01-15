@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import type { Tool } from '../types';
 import { ALL_TOOLS, SIDEBAR_STATIC_TOP_TOOLS, SIDEBAR_COLLAPSIBLE_CATEGORIES, SIDEBAR_STATIC_BOTTOM_TOOLS, ADMIN_SIDEBAR_TOOLS } from '../constants';
-import { ChevronDownIcon, ArrowRightStartOnRectangleIcon } from '../components/icons/MiniIcons';
+import { ChevronDownIcon, ArrowRightStartOnRectangleIcon, CheckCircleIcon } from '../components/icons/MiniIcons';
 
 interface SidebarProps {
   activeTool: Tool | null;
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   isAdmin: boolean;
   onLogout: () => void;
+  toolCompletionStatus: Record<string, boolean>;
 }
 
 const ToolButton: React.FC<{
@@ -16,7 +17,8 @@ const ToolButton: React.FC<{
   onClick: () => void;
   isCollapsed: boolean;
   isAdmin?: boolean;
-}> = ({ tool, isActive, onClick, isCollapsed, isAdmin = false }) => {
+  isComplete: boolean;
+}> = ({ tool, isActive, onClick, isCollapsed, isAdmin = false, isComplete }) => {
   const isComingSoon = tool.isComingSoon;
   
   // --- UPDATED STYLES ---
@@ -27,14 +29,16 @@ const ToolButton: React.FC<{
     ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200'
     : baseStyles;
   
-  const activeAdminStyles = isAdmin
-    ? 'bg-red-600 text-white'
+  const activeAdminStyles = isActive
+    ? isAdmin
+      ? 'bg-red-600 text-white'
+      : 'bg-accent-purple text-white' // Use accent-purple for active state
     : activeStyles;
   
   const iconActiveColor = isActive
     ? isAdmin
       ? 'text-white'
-      : 'text-green-400' // New active icon color
+      : 'text-white' // Active icon is white
     : isAdmin
     ? 'text-red-400'
     : 'text-gray-400';
@@ -58,7 +62,13 @@ const ToolButton: React.FC<{
         className={`w-6 h-6 flex-shrink-0 ${iconActiveColor}`}
       />
       {!isCollapsed && <span className="ml-4 font-medium">{tool.name}</span>}
-      {!isCollapsed && isComingSoon && (
+      
+      {/* NEW CHECKMARK INDICATOR */}
+      {!isCollapsed && isComplete && (
+          <CheckCircleIcon className="w-4 h-4 text-green-400 ml-auto" />
+      )}
+      
+      {!isCollapsed && isComingSoon && !isComplete && ( // Ensure 'Soon' doesn't overlap checkmark
         <span className="ml-auto text-xs font-bold bg-yellow-400/20 text-yellow-300 px-2 py-0.5 rounded-full">
           Soon
         </span>
@@ -72,7 +82,8 @@ const CollapsibleCategory: React.FC<{
   activeTool: Tool | null;
   setActiveTool: (tool: Tool | null) => void;
   isSidebarCollapsed: boolean;
-}> = ({ category, activeTool, setActiveTool, isSidebarCollapsed }) => {
+  toolCompletionStatus: Record<string, boolean>;
+}> = ({ category, activeTool, setActiveTool, isSidebarCollapsed, toolCompletionStatus }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   React.useEffect(() => {
@@ -95,6 +106,7 @@ const CollapsibleCategory: React.FC<{
               isActive={isActive}
               onClick={() => setActiveTool(tool)}
               isCollapsed={isSidebarCollapsed}
+              isComplete={toolCompletionStatus[tool.id] || false}
             />
           );
         })}
@@ -128,6 +140,7 @@ const CollapsibleCategory: React.FC<{
                 isActive={isActive}
                 onClick={() => setActiveTool(tool)}
                 isCollapsed={isSidebarCollapsed}
+                isComplete={toolCompletionStatus[tool.id] || false}
               />
             );
           })}
@@ -141,7 +154,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTool,
   setActiveTool,
   isAdmin,
-  onLogout
+  onLogout,
+  toolCompletionStatus
 }) => {
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
 
@@ -185,6 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 isActive={isActive}
                 onClick={onClick}
                 isCollapsed={isCollapsed}
+                isComplete={toolCompletionStatus[tool.id] || false}
               />
             );
           })}
@@ -198,6 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               activeTool={activeTool}
               setActiveTool={setActiveTool}
               isSidebarCollapsed={isCollapsed}
+              toolCompletionStatus={toolCompletionStatus}
             />
           ))}
         </div>
@@ -215,6 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               isActive={isActive}
               onClick={() => setActiveTool(tool)}
               isCollapsed={isCollapsed}
+              isComplete={toolCompletionStatus[tool.id] || false}
             />
           );
         })}
@@ -233,6 +250,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onClick={() => setActiveTool(tool)}
                   isCollapsed={isCollapsed}
                   isAdmin
+                  isComplete={toolCompletionStatus[tool.id] || false}
                 />
               );
             })}
