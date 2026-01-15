@@ -283,11 +283,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     if (dbProfiles && dbProfiles.length > 0) {
       console.log('[InternalApp] Loaded businesses:', dbProfiles);
       
-      const mappedBusinesses = dbProfiles.map(p => ({
+      const mappedBusinesses = dbProfiles.map((p: any) => ({ // FIX: Cast p to any to access snake_case fields
           ...p,
           location: `${p.city}, ${p.state}`,
-          isDnaApproved: p.is_dna_approved,
-          dnaLastUpdatedAt: p.dna_last_updated_at,
+          isDnaApproved: p.is_dna_approved, // Map DB snake_case to client camelCase
+          dnaLastUpdatedAt: p.dna_last_updated_at, // Map DB snake_case to client camelCase
           google_business_profile: p.google_business_profile,
           brand_dna_profile: p.brand_dna_profile,
       })) as BusinessProfile[];

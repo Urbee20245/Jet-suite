@@ -104,7 +104,11 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
                                             className="mt-1 w-full bg-white border border-brand-border rounded-md p-2 text-sm disabled:bg-brand-light disabled:opacity-80 resize-none"
                                         />
                                     ) : (
-                                        <DnaField label={fieldKey.replace(/_/g, ' ')} value={fieldValue} isEditable={false} />
+                                        <DnaField 
+                                            label={fieldKey.replace(/_/g, ' ')} 
+                                            value={fieldValue as string | string[] | boolean | undefined} // FIX: Explicit cast
+                                            isEditable={false} 
+                                        /> 
                                     )}
                                 </div>
                             ))}
