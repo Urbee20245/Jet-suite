@@ -21,7 +21,7 @@ const stripe = new Stripe(STRIPE_SECRET_KEY, {
 const supabase = createClient(
   SUPABASE_URL,
   SUPABASE_SERVICE_ROLE_KEY
-);
+) as any; // Casting to any to access admin functions
 
 export const config = {
   api: {
