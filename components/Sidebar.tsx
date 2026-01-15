@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Tool } from '../types';
 import { ALL_TOOLS, SIDEBAR_STATIC_TOP_TOOLS, SIDEBAR_COLLAPSIBLE_CATEGORIES, SIDEBAR_STATIC_BOTTOM_TOOLS, ADMIN_SIDEBAR_TOOLS } from '../constants';
-import { ChevronDownIcon, ArrowRightStartOnRectangleIcon } from './icons/MiniIcons';
+import { ChevronDownIcon, ArrowRightStartOnRectangleIcon } from '../components/icons/MiniIcons';
 
 interface SidebarProps {
   activeTool: Tool | null;
@@ -18,12 +18,27 @@ const ToolButton: React.FC<{
   isAdmin?: boolean;
 }> = ({ tool, isActive, onClick, isCollapsed, isAdmin = false }) => {
   const isComingSoon = tool.isComingSoon;
+  
+  // --- UPDATED STYLES ---
+  const baseStyles = 'text-gray-400 hover:bg-slate-900 hover:text-white';
+  const activeStyles = 'bg-green-700 text-white'; // New active background
+  
   const adminStyles = isAdmin
     ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200'
-    : 'text-gray-400 hover:bg-brand-darker/50 hover:text-white';
+    : baseStyles;
+  
   const activeAdminStyles = isAdmin
     ? 'bg-red-600 text-white'
-    : 'bg-brand-darker text-white';
+    : activeStyles;
+  
+  const iconActiveColor = isActive
+    ? isAdmin
+      ? 'text-white'
+      : 'text-green-400' // New active icon color
+    : isAdmin
+    ? 'text-red-400'
+    : 'text-gray-400';
+  // --- END UPDATED STYLES ---
 
   return (
     <button
@@ -40,15 +55,7 @@ const ToolButton: React.FC<{
       title={isCollapsed ? tool.name : ''}
     >
       <tool.icon
-        className={`w-6 h-6 flex-shrink-0 ${
-          isActive
-            ? isAdmin
-              ? 'text-white'
-              : 'text-accent-purple'
-            : isAdmin
-            ? 'text-red-400'
-            : 'text-gray-400'
-        }`}
+        className={`w-6 h-6 flex-shrink-0 ${iconActiveColor}`}
       />
       {!isCollapsed && <span className="ml-4 font-medium">{tool.name}</span>}
       {!isCollapsed && isComingSoon && (
@@ -143,7 +150,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isCollapsed = typeof window !== 'undefined' && window.innerWidth < 768 ? isMobileCollapsed : false;
 
   return (
-    <div className={`bg-slate-800 p-2 md:p-4 flex flex-col transition-all duration-300 overflow-y-auto w-20 md:w-64`}>
+    <div className={`bg-brand-darker p-2 md:p-4 flex flex-col transition-all duration-300 overflow-y-auto w-20 md:w-64`}>
 
       {/* 🔥 BRANDING (LOGO + TEXT) */}
       <button
@@ -234,7 +241,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           onClick={onLogout}
-          className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-brand-darker/50 hover:text-white mt-2 justify-center md:justify-start`}
+          className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-slate-900 hover:text-white mt-2 justify-center md:justify-start`}
           title="Log Out"
         >
           <ArrowRightStartOnRectangleIcon className="w-6 h-6 flex-shrink-0 text-gray-400" />
