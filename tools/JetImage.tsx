@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Tool } from '../types';
-import { generateImage, getTrendingImageStyles } from '../services/geminiService';
+import type { Tool, ProfileData } from '../types';
+import { generateImage, getTrendingImageStyles, generateYoutubeThumbnailPrompt } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon } from '../components/icons/MiniIcons';
@@ -8,10 +8,12 @@ import { getCurrentDate } from '../utils/dateTimeUtils';
 
 interface JetImageProps {
   tool: Tool;
+  profileData: ProfileData;
 }
 
 type ImageSize = '1K' | '2K' | '4K';
 type DownloadFormat = 'png' | 'jpeg';
+type AspectRatio = "1:1" | "3:4" | "4:3" | "9:16" | "16:9";
 
 interface Style {
   name: string;
@@ -70,9 +72,10 @@ const addWatermark = async (base64Data: string): Promise<string> => {
   });
 };
 
-export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
+export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   const [prompt, setPrompt] = useState('');
   const [imageSize, setImageSize] = useState<ImageSize>('1K');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [watermarkedImageUrl, setWatermarkedImageUrl] = useState<string | null>(null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,6 +90,11 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
 
   const [trendingStyles, setTrendingStyles] = useState<Style[]>([]);
   const [isLoadingStyles, setIsLoadingStyles] = useState(true);
+  
+  // YouTube Thumbnail State
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoTopic, setVideoTopic] = useState('');
+  const [showYoutubeGenerator, setShowYoutubeGenerator] = useState(false);
 
   useEffect(() => {
     const fetchStyles = async () => {
@@ -171,7 +179,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
     setWatermarkedImageUrl(null);
     setOriginalImageUrl(null);
     try {
-      const base64Data = await generateImage(prompt, imageSize, "1:1", inputImage || undefined);
+      const base64Data = await generateImage(prompt, imageSize, aspectRatio, inputImage || undefined);
       setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
       const watermarkedUrl = await addWatermark(base64Data);
       setWatermarkedImageUrl(watermarkedUrl);
@@ -180,6 +188,47 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
       setError('Failed to generate image. Please try again or refine your prompt.');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const handleGenerateThumbnail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoTitle || !videoTopic) {
+      setError('Please enter both the video title and topic.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    setWatermarkedImageUrl(null);
+    setOriginalImageUrl(null);
+    setAspectRatio('16:9'); // Force 16:9 for thumbnails
+
+    try {
+        const brandDna = profileData.brandDnaProfile;
+        const brandTone = brandDna?.brand_tone.primary_tone || 'professional';
+        const brandColors = brandDna?.visual_identity.primary_colors || ['#3B82F6', '#8B5CF6'];
+
+        const thumbnailRequest = {
+            videoTitle,
+            videoTopic,
+            businessName: profileData.business.business_name,
+            brandTone,
+            brandColors,
+        };
+
+        const generatedPrompt = await generateYoutubeThumbnailPrompt(thumbnailRequest);
+        setPrompt(generatedPrompt); // Set the generated prompt for the user to see/edit
+
+        const base64Data = await generateImage(generatedPrompt, '2K', '16:9'); // Use 2K for better thumbnail quality
+        setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
+        const watermarkedUrl = await addWatermark(base64Data);
+        setWatermarkedImageUrl(watermarkedUrl);
+
+    } catch (err: any) {
+        console.error(err);
+        setError('Failed to generate thumbnail. Please try again.');
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -242,6 +291,39 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
         <p className="text-sm text-brand-text-muted mb-6">
           Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
         </p>
+        
+        {/* YouTube Thumbnail Generator Section */}
+        <div className="mb-8 border-b border-brand-border pb-6">
+            <button 
+                onClick={() => setShowYoutubeGenerator(!showYoutubeGenerator)}
+                className="w-full flex items-center justify-between p-3 bg-accent-cyan/10 rounded-lg hover:bg-accent-cyan/20 transition-colors"
+            >
+                <h3 className="font-bold text-lg text-accent-cyan flex items-center gap-2">
+                    <SparklesIcon className="w-5 h-5" />
+                    AI YouTube Thumbnail Generator
+                </h3>
+                <svg className={`w-5 h-5 text-accent-cyan transition-transform ${showYoutubeGenerator ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            
+            {showYoutubeGenerator && (
+                <form onSubmit={handleGenerateThumbnail} className="mt-4 space-y-4 p-4 bg-brand-light rounded-lg border border-brand-border">
+                    <p className="text-sm text-brand-text-muted">Generate a high-CTR thumbnail prompt based on current trends.</p>
+                    <div>
+                        <label className="block text-sm font-medium text-brand-text mb-1">Video Title</label>
+                        <input type="text" value={videoTitle} onChange={e => setVideoTitle(e.target.value)} placeholder="e.g., 5 HVAC Mistakes That Cost You Thousands" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" required />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-brand-text mb-1">Video Topic/Summary</label>
+                        <textarea rows={2} value={videoTopic} onChange={e => setVideoTopic(e.target.value)} placeholder="e.g., Common errors homeowners make with their AC units" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm resize-none" required />
+                    </div>
+                    <button type="submit" disabled={loading} className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
+                        {loading ? 'Generating Thumbnail...' : 'Generate Trend-Based Thumbnail'}
+                    </button>
+                </form>
+            )}
+        </div>
+
+        {/* Standard Image Generator Section */}
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label className="block text-sm font-medium text-brand-text mb-2">Upload an Image (Optional)</label>
@@ -281,6 +363,12 @@ export const JetImage: React.FC<JetImageProps> = ({ tool }) => {
             <span className="block text-sm font-medium text-brand-text mb-2">Image Size</span>
             <div className="flex space-x-2">
               {(['1K', '2K', '4K'] as ImageSize[]).map(size => (<button type="button" key={size} onClick={() => setImageSize(size)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${imageSize === size ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{size}</button>))}
+            </div>
+          </div>
+          <div className="mb-6">
+            <span className="block text-sm font-medium text-brand-text mb-2">Aspect Ratio</span>
+            <div className="flex space-x-2">
+              {(['1:1', '16:9', '4:3', '3:4', '9:16'] as AspectRatio[]).map(ratio => (<button type="button" key={ratio} onClick={() => setAspectRatio(ratio)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${aspectRatio === ratio ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{ratio}</button>))}
             </div>
           </div>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}

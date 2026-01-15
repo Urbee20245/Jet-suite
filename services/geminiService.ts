@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { 
     AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna, 
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
-    LiveWebsiteAnalysis, BusinessReview
+    LiveWebsiteAnalysis, BusinessReview, YoutubeThumbnailRequest
 } from '../types';
 import { getCurrentMonthYear, getCurrentYear, getAIDateTimeContextShort } from '../utils/dateTimeUtils';
 
@@ -854,8 +854,41 @@ export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; 
 };
 
 /**
- * MOCK: Generates a list of trending image styles for JetImage inspiration.
+ * Generates a high-quality, trend-based prompt for a YouTube thumbnail image.
  */
+export const generateYoutubeThumbnailPrompt = async (request: YoutubeThumbnailRequest): Promise<string> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `You are an expert YouTube thumbnail designer and trend analyst. The user is creating a video titled: "${request.videoTitle}" on the topic: "${request.videoTopic}". The business is "${request.businessName}" and the brand tone is "${request.brandTone}". Brand colors are: ${request.brandColors.join(', ')}.
+
+        Your task is to generate a single, highly compelling image generation prompt (max 100 words) for a 16:9 YouTube thumbnail. The prompt must:
+        1. Be based on current YouTube trends (e.g., high contrast, emotional faces, clear text space, vibrant colors).
+        2. Incorporate the brand tone and colors.
+        3. Be designed to maximize click-through rate (CTR).
+        4. Include a suggestion for text overlay (e.g., "Text Overlay: [Video Title]").
+        
+        Output ONLY the image generation prompt text.`;
+        
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: prompt,
+            config: {
+                tools: [{ googleSearch: {} }],
+            },
+        });
+
+        return response.text ?? 'A high-contrast, professional image with space for text overlay.';
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
+
+
 export const getTrendingImageStyles = async (): Promise<Array<{ name: string; description: string; prompt: string }>> => {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 500));

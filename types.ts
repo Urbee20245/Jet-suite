@@ -389,3 +389,12 @@ export interface CalendarDay {
   isToday: boolean;
   posts: ScheduledPost[];
 }
+
+// New type for YouTube Thumbnail generation
+export interface YoutubeThumbnailRequest {
+  videoTitle: string;
+  videoTopic: string;
+  businessName: string;
+  brandTone: string;
+  brandColors: string[];
+}
