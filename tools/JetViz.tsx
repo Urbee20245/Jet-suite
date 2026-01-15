@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon, ArrowDownTrayIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon, ArrowDownTrayIcon, TrashIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
 
 interface JetVizProps {
   tool: Tool;
@@ -183,7 +184,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified ({resolvedIssues} of {allIssueTasks.length} resolved)</h2>
-            <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
+            <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onTaskStatusChange={onTaskStatusChange} />)}</div>
         </div>
     </div>
   );
@@ -228,17 +229,20 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     if (!supabase || !userId || !activeBusinessId) return;
     
     try {
-      const { data, error } = await supabase
-        .from('analysis_results')
-        .select('id, created_at, target_url, results')
-        .eq('user_id', userId)
-        .eq('business_id', activeBusinessId)
-        .eq('tool_name', 'jetviz')
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const data = await loadFromSupabase(userId, activeBusinessId, 'jetviz');
       
-      if (error) throw error;
-      if (data) setSavedAnalyses(data);
+      if (data) {
+        // Since we are loading from the generic analysis_results table, we need to map the structure
+        const mappedData = Array.isArray(data) ? data.map((item: any) => ({
+          id: item.id,
+          created_at: item.created_at,
+          target_url: item.target_url,
+          results: item.results,
+        })) : [];
+        setSavedAnalyses(mappedData);
+      } else {
+        setSavedAnalyses([]);
+      }
     } catch (error) {
       console.error('Error loading saved analyses:', error);
     }
@@ -246,25 +250,11 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
 
   // ADDED FUNCTION TO SAVE ANALYSIS
   const handleSaveAnalysis = async () => {
-    if (!supabase || !userId || !activeBusinessId || !result) return;
+    if (!result || !activeBusinessId || !userId) return;
     
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('analysis_results')
-        .insert({
-          user_id: userId,
-          business_id: activeBusinessId,
-          tool_name: 'jetviz',
-          analysis_type: 'full_audit',
-          target_url: urlToAnalyze,
-          results: result // Save the full LiveWebsiteAnalysis object
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
+      await syncToSupabase(userId, activeBusinessId, 'jetviz', result);
       alert('Analysis saved successfully!');
       loadSavedAnalyses();
     } catch (error) {
@@ -285,6 +275,28 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     
     // Note: We don't need to call onSaveAnalysis here as it's already saved.
     setShowSavedList(false);
+  };
+  
+  // ADDED FUNCTION TO DELETE ANALYSIS
+  const handleDeleteAnalysis = async (analysisId: string) => {
+    if (!confirm('Are you sure you want to delete this saved analysis?')) return;
+    
+    if (!supabase) return;
+    
+    try {
+      const { error } = await supabase
+        .from('analysis_results')
+        .delete()
+        .eq('id', analysisId);
+      
+      if (error) throw error;
+      
+      alert('Analysis deleted successfully!');
+      loadSavedAnalyses();
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      alert('Failed to delete analysis. Please try again.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent, rerunUrl?: string) => {
@@ -331,7 +343,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
         )}
 
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
-            <p className="text-brand-text-muted">{tool.description}</p>
+            <p className="text-brand-text-muted mb-2">{tool.description}</p>
             <p className="text-sm text-brand-text-muted mt-2">
                 Replaces: <span className="text-accent-purple font-semibold">SEO Tools (Ahrefs, SEMrush) ($99-399/mo)</span>
             </p>
@@ -374,7 +386,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
               <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
               <div className="space-y-3">
-                {savedAnalyses.map((analysis) => (
+                {savedAnalyses.map((analysis: any) => (
                   <div
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
@@ -386,12 +398,23 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                         {new Date(analysis.created_at).toLocaleTimeString()}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleLoadAnalysis(analysis)}
-                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      Load
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleLoadAnalysis(analysis)}
+                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAnalysis(analysis.id);
+                        }}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -428,7 +451,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
               <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
               <div className="space-y-3">
-                {savedAnalyses.map((analysis) => (
+                {savedAnalyses.map((analysis: any) => (
                   <div
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
@@ -440,12 +463,23 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                         {new Date(analysis.created_at).toLocaleTimeString()}
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleLoadAnalysis(analysis)}
-                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      Load
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleLoadAnalysis(analysis)}
+                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAnalysis(analysis.id);
+                        }}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

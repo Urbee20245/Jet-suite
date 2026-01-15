@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, AuditReport, BusinessSearchResult, ConfirmedBusiness, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { searchGoogleBusiness, analyzeBusinessListing } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon, ArrowDownTrayIcon, XMarkIcon } from '../components/icons/MiniIcons';
+import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon, ArrowDownTrayIcon, XMarkIcon, TrashIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
 
 interface JetBizProps {
   tool: Tool;
@@ -244,7 +245,7 @@ const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: Grow
             <div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `${progress}%` }}></div></div>
         </div>
         <div className="space-y-4">
-          {displayedTasks.map(task => ( <TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} /> ))}
+          {displayedTasks.map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}
         </div>
         <div className="flex justify-between items-center mt-4">
             <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
@@ -296,42 +297,31 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     if (!supabase || !userId || !activeBusinessId) return;
     
     try {
-      const { data, error } = await supabase
-        .from('analysis_results')
-        .select('id, created_at, target_url, results')
-        .eq('user_id', userId)
-        .eq('business_id', activeBusinessId)
-        .eq('tool_name', 'jetbiz')
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const data = await loadFromSupabase(userId, activeBusinessId, 'jetbiz');
       
-      if (error) throw error;
-      if (data) setSavedAnalyses(data);
+      if (data) {
+        // Since we are loading from the generic analysis_results table, we need to map the structure
+        const mappedData = Array.isArray(data) ? data.map((item: any) => ({
+          id: item.id,
+          created_at: item.created_at,
+          target_url: item.target_url,
+          results: item.results,
+        })) : [];
+        setSavedAnalyses(mappedData);
+      } else {
+        setSavedAnalyses([]);
+      }
     } catch (error) {
       console.error('Error loading saved analyses:', error);
     }
   };
 
   const handleSaveAnalysis = async () => {
-    if (!supabase || !userId || !activeBusinessId || !auditReport) return;
+    if (!auditReport || !activeBusinessId || !userId) return;
     
     setIsSaving(true);
     try {
-      const { data, error } = await supabase
-        .from('analysis_results')
-        .insert({
-          user_id: userId,
-          business_id: activeBusinessId,
-          tool_name: 'jetbiz',
-          analysis_type: 'full_audit',
-          target_url: auditReport.businessAddress,
-          results: auditReport
-        })
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
+      await syncToSupabase(userId, activeBusinessId, 'jetbiz', auditReport);
       alert('Analysis saved successfully!');
       loadSavedAnalyses();
     } catch (error) {
@@ -357,7 +347,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     setShowSavedList(false);
   };
 
-  // ✅ NEW: Delete analysis function
   const handleDeleteAnalysis = async (analysisId: string) => {
     if (!confirm('Are you sure you want to delete this saved analysis?')) return;
     
@@ -385,7 +374,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2>
+        <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile First</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please provide your business name and location in your profile to use this tool.</p>
         <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button>
       </div>
@@ -488,7 +477,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   return (
     <div className="space-y-6">
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
-            <p className="text-brand-text-muted">{tool.description}</p>
+            <p className="text-brand-text-muted mb-2">{tool.description}</p>
             <p className="text-sm text-brand-text-muted mt-2">
                 Replaces: <span className="text-accent-purple font-semibold">Local SEO Consultant ($500-2,000/mo)</span>
             </p>
@@ -499,7 +488,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         {loading && step === 'initial' && <Loader />}
         {renderContent()}
         
-        {/* ✅ UPDATED: Saved Analyses List with Delete Button */}
+        {/* Saved Analyses List */}
         {showSavedList && (
           <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
@@ -516,7 +505,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
               <p className="text-brand-text-muted text-center py-8">No saved analyses yet.</p>
             ) : (
               <div className="space-y-3">
-                {savedAnalyses.map((analysis) => (
+                {savedAnalyses.map((analysis: any) => (
                   <div
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
@@ -542,7 +531,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                         }}
                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
                       >
-                        Delete
+                        <TrashIcon className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

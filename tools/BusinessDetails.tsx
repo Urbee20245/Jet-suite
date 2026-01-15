@@ -364,7 +364,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
 
-  const handleGbpConnect = (gbp: Partial<ProfileData['googleBusiness']>) => { const newGbp = { ...googleBusiness, ...gbp, status: 'Verified' as GbpStatus, placeId: `manual_${Date.now()}` }; setGoogleBusiness(newGbp); onUpdate({...profileData, googleBusiness: newGbp}); };
+  const handleGbpConnect = (gbp: Partial<ProfileData['googleBusiness']>) => { 
+    const newGbp = {...googleBusiness, ...gbp, status: 'Verified' as GbpStatus, placeId: `manual_${Date.now()}`}; 
+    setGoogleBusiness(newGbp); 
+    onUpdate({...profileData, googleBusiness: newGbp}); 
+  };
   const handleGbpDisconnect = () => { const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; setGoogleBusiness(newGbp); onUpdate({...profileData, googleBusiness: newGbp});};
   const handleGenerateDescription = async () => { if (!business.business_website) { alert("Please enter your Website URL first."); return; } setIsGeneratingDescription(true); try { const desc = await generateBusinessDescription(business.business_website); setBusiness(b => ({ ...b, business_description: desc })); } catch (e) { alert("Failed to generate description. Check your API key."); } finally { setIsGeneratingDescription(false); }};
   
