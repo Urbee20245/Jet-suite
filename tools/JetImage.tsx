@@ -3,7 +3,7 @@ import type { Tool, ProfileData } from '../types';
 import { generateImage, getTrendingImageStyles, generateYoutubeThumbnailPrompt } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
 import { getCurrentDate } from '../utils/dateTimeUtils';
 
 interface JetImageProps {
@@ -53,7 +53,7 @@ const addWatermark = async (base64Data: string): Promise<string> => {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'bottom';
-        
+
         // Add a subtle shadow for visibility on any background
         ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
         ctx.shadowBlur = 5;
@@ -94,6 +94,8 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   // YouTube Thumbnail State
   const [videoTitle, setVideoTitle] = useState('');
   const [videoTopic, setVideoTopic] = useState('');
+  const [thumbnailInputImage, setThumbnailInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
+  const thumbnailFileInputRef = useRef<HTMLInputElement>(null);
   const [showYoutubeGenerator, setShowYoutubeGenerator] = useState(false);
 
   useEffect(() => {
@@ -145,26 +147,38 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     }
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isThumbnail: boolean = false) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        setInputImage({
+        const imageObject = {
           dataUrl: dataUrl,
           base64: dataUrl.split(',')[1],
           mimeType: file.type,
-        });
+        };
+        if (isThumbnail) {
+          setThumbnailInputImage(imageObject);
+        } else {
+          setInputImage(imageObject);
+        }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const clearInputImage = () => {
-    setInputImage(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const clearInputImage = (isThumbnail: boolean = false) => {
+    if (isThumbnail) {
+      setThumbnailInputImage(null);
+      if (thumbnailFileInputRef.current) {
+        thumbnailFileInputRef.current.value = '';
+      }
+    } else {
+      setInputImage(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -219,7 +233,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
         const generatedPrompt = await generateYoutubeThumbnailPrompt(thumbnailRequest);
         setPrompt(generatedPrompt); // Set the generated prompt for the user to see/edit
 
-        const base64Data = await generateImage(generatedPrompt, '2K', '16:9'); // Use 2K for better thumbnail quality
+        const base64Data = await generateImage(generatedPrompt, '2K', '16:9', thumbnailInputImage || undefined); // Use 2K for better thumbnail quality
         setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
         const watermarkedUrl = await addWatermark(base64Data);
         setWatermarkedImageUrl(watermarkedUrl);
@@ -300,14 +314,32 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
             >
                 <h3 className="font-bold text-lg text-accent-cyan flex items-center gap-2">
                     <SparklesIcon className="w-5 h-5" />
-                    AI YouTube Thumbnail Generator
+                    AI YouTube Thumbnail Generator (High CTR)
                 </h3>
                 <svg className={`w-5 h-5 text-accent-cyan transition-transform ${showYoutubeGenerator ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </button>
             
             {showYoutubeGenerator && (
                 <form onSubmit={handleGenerateThumbnail} className="mt-4 space-y-4 p-4 bg-brand-light rounded-lg border border-brand-border">
-                    <p className="text-sm text-brand-text-muted">Generate a high-CTR thumbnail prompt based on current trends.</p>
+                    <p className="text-sm text-brand-text-muted">Generate a high-CTR thumbnail prompt based on current trends and your brand DNA.</p>
+                    
+                    {/* Image Upload for Enhancement */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-brand-text mb-2">Upload Base Image (Optional)</label>
+                        {thumbnailInputImage ? (
+                            <div className="relative group w-32 h-32">
+                                <img src={thumbnailInputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
+                                <button type="button" onClick={() => clearInputImage(true)} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
+                            </div>
+                        ) : (
+                            <div onClick={() => thumbnailFileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center cursor-pointer hover:border-accent-purple hover:bg-white transition-colors">
+                                <ArrowUpTrayIcon className="w-6 h-6 mx-auto text-brand-text-muted" />
+                                <p className="mt-1 text-xs text-brand-text">Upload photo to enhance (e.g., a face shot)</p>
+                                <input type="file" ref={thumbnailFileInputRef} onChange={(e) => handleImageUpload(e, true)} accept="image/*" className="hidden" />
+                            </div>
+                        )}
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-brand-text mb-1">Video Title</label>
                         <input type="text" value={videoTitle} onChange={e => setVideoTitle(e.target.value)} placeholder="e.g., 5 HVAC Mistakes That Cost You Thousands" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" required />
@@ -317,27 +349,31 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
                         <textarea rows={2} value={videoTopic} onChange={e => setVideoTopic(e.target.value)} placeholder="e.g., Common errors homeowners make with their AC units" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm resize-none" required />
                     </div>
                     <button type="submit" disabled={loading} className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
-                        {loading ? 'Generating Thumbnail...' : 'Generate Trend-Based Thumbnail'}
+                        {loading ? 'Generating Thumbnail...' : 'Generate High-CTR Thumbnail'}
                     </button>
+                    <p className="text-xs text-brand-text-muted mt-2">
+                        This will automatically set the aspect ratio to 16:9 and size to 2K.
+                    </p>
                 </form>
             )}
         </div>
 
         {/* Standard Image Generator Section */}
+        <h3 className="text-xl font-bold text-brand-text mb-4">Standard Image Generator</h3>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-brand-text mb-2">Upload an Image (Optional)</label>
+            <label className="block text-sm font-medium text-brand-text mb-2">Upload Base Image (Optional)</label>
             {inputImage ? (
               <div className="relative group w-32 h-32">
                 <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
+                <button type="button" onClick={() => clearInputImage(false)} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
               </div>
             ) : (
               <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
                 <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
                 <p className="mt-2 text-sm text-brand-text">Click to upload or drag & drop</p>
                 <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
-                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                <input type="file" ref={fileInputRef} onChange={(e) => handleImageUpload(e, false)} accept="image/*" className="hidden" />
               </div>
             )}
           </div>
