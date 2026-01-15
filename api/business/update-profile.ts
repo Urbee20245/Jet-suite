@@ -42,7 +42,7 @@ export default async function handler(
       isPrimary = true,
       isComplete = true,
       businessDescription,
-      googleBusiness, // ✅ NEW: Google Business Profile data
+      googleBusiness, // ✅ Google Business Profile data
     } = req.body;
 
     if (!userId || !businessName || !websiteUrl || !industry || !city || !state) {
@@ -72,7 +72,7 @@ export default async function handler(
       is_primary: isPrimary,
       is_active: true,
       is_complete: isComplete,
-      google_business_profile: googleBusiness || null, // ✅ NEW: Save GBP data
+      google_business_profile: googleBusiness || null, // ✅ Save GBP data
       updated_at: new Date().toISOString(),
     };
 
