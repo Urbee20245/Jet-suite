@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getSupabaseClient } from '../integrations/supabase/client';
+// Removed import of getSupabaseClient as we are now using the API route
 
 interface OnboardingPageProps {
   navigate: (path: string) => void;
@@ -18,7 +18,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -26,13 +26,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
-
-    const supabase = getSupabaseClient();
-    if (!supabase) {
-        setError('Database service is currently unavailable. Cannot complete onboarding.');
-        setIsSubmitting(false);
-        return;
-    }
 
     const website = hasNoWebsite ? 'https://pending-setup.com' : formData.business_website;
 
@@ -43,58 +36,27 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ navigate, userId
     }
 
     try {
-      // Use INSERT for initial creation. If a record already exists (e.g., from webhook), 
-      // this will fail, but the user should be redirected to /app anyway.
-      const { error: dbError } = await supabase
-        .from('business_profiles')
-        .insert({
-          user_id: userId,
-          business_name: formData.business_name,
-          business_website: website,
+      // Use the secure serverless function to handle the upsert logic
+      const response = await fetch('/api/business/update-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          businessName: formData.business_name,
+          websiteUrl: website,
           industry: formData.industry,
           city: formData.city,
           state: formData.state,
-          is_primary: true, // CRITICAL: Mark as primary
-          is_active: true,
-          is_complete: true, // Mark as complete since they filled out the form
-          updated_at: new Date().toISOString()
-        });
+          isPrimary: true,
+          isComplete: true,
+          businessDescription: '', // Assuming description is empty on initial onboarding
+          googleBusiness: { status: 'Not Created' }, // Default GBP status
+        }),
+      });
 
-      if (dbError) {
-        // If insert fails (e.g., duplicate key from webhook), we assume the profile exists.
-        // We should still attempt to update the existing primary profile if possible.
-        // However, for simplicity in the onboarding flow, we assume success and redirect.
-        // If the user is here, they should be able to proceed.
-        console.warn('[Onboarding] Initial INSERT failed, attempting to proceed/update:', dbError);
-        
-        // Fallback: Attempt to update the existing primary profile if it exists
-        const { data: existingPrimary, error: fetchError } = await supabase
-          .from('business_profiles')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_primary', true)
-          .maybeSingle();
-          
-        if (fetchError) throw fetchError;
-
-        if (existingPrimary) {
-            const { error: updateError } = await supabase
-                .from('business_profiles')
-                .update({
-                    business_name: formData.business_name,
-                    business_website: website,
-                    industry: formData.industry,
-                    city: formData.city,
-                    state: formData.state,
-                    is_complete: true,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', existingPrimary.id);
-            if (updateError) throw updateError;
-        } else {
-            // If we failed to insert and failed to find an existing primary, something is wrong.
-            throw dbError;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || errorData.error || 'Failed to save profile via API.');
       }
 
       // Use a hard redirect to ensure the main App router re-verifies the 
