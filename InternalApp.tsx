@@ -32,7 +32,7 @@ import { GrowthPlan } from './tools/GrowthPlan';
 import UserSupportTickets from './tools/UserSupportTickets';
 import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
-import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState } from './types';
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna } from './types';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 import SupportChatbot from './components/SupportChatbot';
@@ -85,6 +85,8 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
       is_complete: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      google_business_profile: null,
+      brand_dna_profile: null,
     },
     googleBusiness: { profileName: '', mapsUrl: '', status: 'Not Created' },
     isProfileActive: false,
@@ -134,20 +136,33 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       
       if (profileError) throw profileError;
       
+      // The profile object from Supabase contains all columns, including JSONB fields.
+      const loadedBusiness = profile as unknown as BusinessProfile;
+      
+      // Map JSONB fields to the ProfileData structure
+      const loadedGbp = loadedBusiness.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' } as GoogleBusinessProfile;
+      const loadedBrandDnaProfile = loadedBusiness.brand_dna_profile || undefined;
+      
       // 2. Update the active profile data
       setAllProfiles(prev => {
         const updated = [...prev];
         const index = updated.findIndex(p => p.user.id === activeUserId);
         if (index !== -1) {
-          const syncedProfile = {
-            ...updated[index],
+          const currentProfile = updated[index];
+          
+          const syncedProfile: ProfileData = {
+            ...currentProfile,
             business: {
-              ...profile,
-              location: `${profile.city}, ${profile.state}`,
-              isDnaApproved: profile.is_dna_approved,
-              dnaLastUpdatedAt: profile.dna_last_updated_at,
+              ...loadedBusiness,
+              location: `${loadedBusiness.city}, ${loadedBusiness.state}`,
+              isDnaApproved: loadedBusiness.is_dna_approved,
+              dnaLastUpdatedAt: loadedBusiness.dna_last_updated_at,
+              // Ensure the simple DNA structure is also populated if needed by old components
+              dna: loadedBusiness.dna || { logo: '', colors: [], fonts: '', style: '' } as BusinessDna, 
             } as BusinessProfile,
-            isProfileActive: !!profile.is_complete,
+            googleBusiness: loadedGbp, // Map GBP data
+            brandDnaProfile: loadedBrandDnaProfile, // Map detailed DNA
+            isProfileActive: !!loadedBusiness.is_complete,
           };
           updated[index] = syncedProfile;
         }
@@ -169,7 +184,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           const updated = [...prev];
           const index = updated.findIndex(p => p.user.id === activeUserId);
           if (index !== -1) {
-            updated[index] = { ...updated[index], jetbizAnalysis: jetbizReport };
+            updated[index] = { ...updated[index], jetbizAnalysis: jetbizReport as AuditReport };
           }
           return updated;
         });
@@ -182,7 +197,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           const updated = [...prev];
           const index = updated.findIndex(p => p.user.id === activeUserId);
           if (index !== -1) {
-            updated[index] = { ...updated[index], jetvizAnalysis: jetvizReport };
+            updated[index] = { ...updated[index], jetvizAnalysis: jetvizReport as LiveWebsiteAnalysis };
           }
           return updated;
         });
@@ -273,6 +288,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           location: `${p.city}, ${p.state}`,
           isDnaApproved: p.is_dna_approved,
           dnaLastUpdatedAt: p.dna_last_updated_at,
+          google_business_profile: p.google_business_profile,
+          brand_dna_profile: p.brand_dna_profile,
       })) as BusinessProfile[];
       
       setBusinesses(mappedBusinesses);
@@ -375,6 +392,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             updated[index] = {
               ...updated[index],
               business: activeBiz,
+              googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
+              brandDnaProfile: activeBiz.brand_dna_profile || undefined,
               isProfileActive: !!activeBiz.is_complete,
             };
           }
@@ -504,7 +523,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const activeBusinessName = businesses.find(b => b.id === activeBusinessId)?.business_name || 'Loading Business...';
 
-  const isStep1Complete = !!(profileData.business.business_name && profileData.business.location && profileData.business.business_website);
+  const isStep1Complete = !!profileData.business.business_name && !!profileData.business.location && !!profileData.business.business_website;
   const isStep2Complete = profileData.business.isDnaApproved;
 
   let readinessState: ReadinessState = 'Setup Incomplete';

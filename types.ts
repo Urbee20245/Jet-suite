@@ -105,16 +105,18 @@ export interface BusinessProfile {
   service_area: string;
   phone: string;
   email: string;
-  dna: BusinessDna;
+  dna: BusinessDna; // Simple DNA structure (from DB JSONB)
   isDnaApproved: boolean;
   dnaLastUpdatedAt?: string;
   is_primary: boolean;
   is_complete: boolean;
   created_at: string;
   updated_at: string;
+  
+  // ADDED JSONB fields from DB (for direct mapping)
+  google_business_profile: GoogleBusinessProfile | null;
+  brand_dna_profile: BrandDnaProfile | null;
 }
-
-export type GbpStatus = 'Not Created' | 'Not Verified' | 'Verified';
 
 export interface GoogleBusinessProfile {
   profileName: string;
@@ -125,6 +127,8 @@ export interface GoogleBusinessProfile {
   reviewCount?: number;
   address?: string;
 }
+
+export type GbpStatus = 'Not Created' | 'Not Verified' | 'Verified';
 
 export interface BusinessReview {
   id: string;
@@ -206,9 +210,9 @@ export interface BusinessMember {
 export interface ProfileData {
   user: UserProfile;
   business: BusinessProfile;
-  googleBusiness: GoogleBusinessProfile;
+  googleBusiness: GoogleBusinessProfile; // Mapped from business.google_business_profile
   isProfileActive: boolean;
-  brandDnaProfile?: BrandDnaProfile;
+  brandDnaProfile?: BrandDnaProfile; // Mapped from business.brand_dna_profile
   jetbizAnalysis?: AuditReport | null;
   jetvizAnalysis?: LiveWebsiteAnalysis | null;
 }
