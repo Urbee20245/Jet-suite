@@ -184,7 +184,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified ({resolvedIssues} of {allIssueTasks.length} resolved)</h2>
-            <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onTaskStatusChange={onTaskStatusChange} />)}</div>
+            <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
         </div>
     </div>
   );
@@ -391,7 +391,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                     key={analysis.id}
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
                   >
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
                       <div className="font-semibold text-brand-text">{analysis.target_url}</div>
                       <div className="text-sm text-brand-text-muted">
                         {new Date(analysis.created_at).toLocaleDateString()} at{' '}
