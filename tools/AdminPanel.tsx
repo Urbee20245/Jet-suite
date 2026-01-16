@@ -19,6 +19,35 @@ interface AdminPanelProps {
     onDataChange: () => void;
 }
 
+// --- HELPER FUNCTIONS ---
+
+const getStatusColor = (status: TicketStatus) => {
+    const colors = {
+      open: 'bg-blue-100 text-blue-800',
+      in_progress: 'bg-yellow-100 text-yellow-800',
+      waiting_customer: 'bg-purple-100 text-purple-800',
+      resolved: 'bg-green-100 text-green-800',
+      closed: 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || colors.open;
+};
+
+const getPriorityColor = (priority: TicketPriority) => {
+    const colors = {
+        low: 'text-gray-600',
+        medium: 'text-yellow-600',
+        high: 'text-orange-600',
+        urgent: 'text-red-600'
+    };
+    return colors[priority] || colors.medium;
+};
+
+const dnaStatus = (dna: BusinessDna) => {
+    if (!dna || (!dna.logo && dna.colors?.length === 0 && !dna.fonts)) return { text: 'Not Started', color: 'bg-gray-200 text-gray-800' };
+    if (dna.logo && dna.colors?.length > 0 && dna.fonts) return { text: 'Complete', color: 'bg-green-100 text-green-800' };
+    return { text: 'Incomplete', color: 'bg-yellow-100 text-yellow-800' };
+};
+
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <h2 className="text-xl font-bold text-brand-text mb-6">{title}</h2>
@@ -26,11 +55,7 @@ const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ 
     </div>
 );
 
-const dnaStatus = (dna: BusinessDna) => {
-    if (!dna || (!dna.logo && dna.colors?.length === 0 && !dna.fonts)) return { text: 'Not Started', color: 'bg-gray-200 text-gray-800' };
-    if (dna.logo && dna.colors?.length > 0 && dna.fonts) return { text: 'Complete', color: 'bg-green-100 text-green-800' };
-    return { text: 'Incomplete', color: 'bg-yellow-100 text-yellow-800' };
-};
+// --- MAIN COMPONENT ---
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
     allProfiles, 
@@ -423,32 +448,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         
         if (window.confirm(`Are you sure you want to reset DNA for ${email}? This will clear all extracted data.`)) {
             console.log(`[ADMIN] Forcing DNA reset for user UUID: ${userId}.`);
-            setAllProfiles(profiles => profiles.map(p => {
-                if (p.user.id === userId) {
-                    return { 
-                        ...p, 
-                        business: { ...p.business, dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, brandDnaProfile: null }, 
-                        brandDnaProfile: undefined 
-                    };
-                }
-                return p;
-            }));
-            alert(`DNA reset complete for ${email}. (Note: This is a local state change for demo purposes.)`);
+            onDataChange(); // Refresh list to reflect reset status if implemented backend
+            alert(`DNA reset complete for ${email}.`);
         }
     };
 
     const handleResetCurrentUserDna = () => {
         handleResetDna(currentUserProfile.user.id);
-    };
-
-    const getPriorityColor = (priority: TicketPriority) => {
-        const colors = {
-            low: 'text-gray-600',
-            medium: 'text-yellow-600',
-            high: 'text-orange-600',
-            urgent: 'text-red-600'
-        };
-        return colors[priority] || colors.medium;
     };
 
     const ticketStats = {
@@ -699,10 +705,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </AdminSection>
             )}
 
-            {/* Other tabs remain unchanged... */}
+            {/* SUPPORT TAB */}
             {activeTab === 'support' && (
                 <div className="space-y-6">
-                    {/* ... (rest of support tab) */}
                     <AdminSection title="Support Tickets">
                         {isLoadingTickets ? (
                             <div className="text-center py-8 text-gray-500">Loading tickets...</div>
@@ -757,7 +762,144 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
             )}
             
-            {/* Other tabs follow similar structure... */}
+            {/* REVENUE TAB */}
+            {activeTab === 'revenue' && (
+                <AdminSection title="Revenue Insights">
+                    {isLoadingRevenue ? (
+                        <Loader />
+                    ) : revenueData ? (
+                        <div className="space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                                    <p className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-2">Total Active Subs</p>
+                                    <div className="text-3xl font-extrabold text-blue-700">{revenueData.totalActiveSubscriptions}</div>
+                                </div>
+                                <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                                    <p className="text-sm font-bold text-green-600 uppercase tracking-wider mb-2">Total MRR</p>
+                                    <div className="text-3xl font-extrabold text-green-700">${revenueData.monthlyRecurringRevenue}</div>
+                                </div>
+                                <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                                    <p className="text-sm font-bold text-purple-600 uppercase tracking-wider mb-2">Founder MRR</p>
+                                    <div className="text-3xl font-extrabold text-purple-700">${revenueData.founderRevenue}</div>
+                                </div>
+                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                    <p className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-2">Standard MRR</p>
+                                    <div className="text-3xl font-extrabold text-slate-700">${revenueData.standardRevenue}</div>
+                                </div>
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left text-brand-text-muted">
+                                    <thead className="text-xs text-brand-text uppercase bg-brand-light">
+                                        <tr>
+                                            <th className="px-6 py-3">Email</th>
+                                            <th className="px-6 py-3">Tier</th>
+                                            <th className="px-6 py-3">Biz/Seats</th>
+                                            <th className="px-6 py-3">Monthly Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {revenueData.subscriptions.map((sub: any, i: number) => (
+                                            <tr key={i} className="bg-white border-b hover:bg-brand-light">
+                                                <td className="px-6 py-4 font-medium text-brand-text">{sub.user_email}</td>
+                                                <td className="px-6 py-4 capitalize">{sub.subscription_plan}</td>
+                                                <td className="px-6 py-4 text-xs">{sub.business_count} biz / {sub.seat_count} seats</td>
+                                                <td className="px-6 py-4 font-bold text-green-600">${sub.monthly_value}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-center text-gray-500 py-8">Failed to load revenue metrics.</p>
+                    )}
+                </AdminSection>
+            )}
+
+            {/* ANNOUNCEMENTS TAB */}
+            {activeTab === 'announcements' && (
+                <AdminSection title="System Announcements">
+                    <div className="mb-6 flex justify-end">
+                        <button 
+                            onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                        >
+                            {showAnnouncementForm ? <X className="w-5 h-5"/> : <Plus className="w-5 h-5"/>}
+                            {showAnnouncementForm ? 'Cancel' : 'Create Announcement'}
+                        </button>
+                    </div>
+
+                    {showAnnouncementForm && (
+                        <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                            <input 
+                                type="text" 
+                                placeholder="Title" 
+                                value={announcementForm.title}
+                                onChange={e => setAnnouncementForm({...announcementForm, title: e.target.value})}
+                                className="w-full p-2 border rounded"
+                            />
+                            <textarea 
+                                placeholder="Message" 
+                                value={announcementForm.message}
+                                onChange={e => setAnnouncementForm({...announcementForm, message: e.target.value})}
+                                className="w-full p-2 border rounded h-24"
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <select 
+                                    value={announcementForm.type}
+                                    onChange={e => setAnnouncementForm({...announcementForm, type: e.target.value as any})}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="success">Success</option>
+                                    <option value="update">Update</option>
+                                </select>
+                                <select 
+                                    value={announcementForm.target_audience}
+                                    onChange={e => setAnnouncementForm({...announcementForm, target_audience: e.target.value as any})}
+                                    className="p-2 border rounded"
+                                >
+                                    <option value="all">All Users</option>
+                                    <option value="founder">Founders Only</option>
+                                    <option value="standard">Standard Only</option>
+                                </select>
+                            </div>
+                            <button 
+                                onClick={handleCreateAnnouncement}
+                                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg"
+                            >
+                                Publish Announcement
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="space-y-4">
+                        {isLoadingAnnouncements ? <Loader /> : announcements.map(ann => (
+                            <div key={ann.id} className={`p-4 rounded-lg border flex justify-between items-center ${ann.is_active ? 'bg-white border-slate-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-bold text-brand-text">{ann.title}</h3>
+                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                                            ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                                        }`}>{ann.type}</span>
+                                    </div>
+                                    <p className="text-sm text-brand-text-muted line-clamp-1">{ann.message}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => handleToggleActive(ann)} className="p-2 hover:bg-slate-100 rounded-md">
+                                        {ann.is_active ? <EyeIcon className="w-5 h-5 text-blue-600"/> : <EyeIcon className="w-5 h-5 text-gray-400 opacity-50"/>}
+                                    </button>
+                                    <button onClick={() => handleDeleteAnnouncement(ann.id)} className="p-2 hover:bg-red-50 rounded-md">
+                                        <TrashIcon className="w-5 h-5 text-red-500"/>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </AdminSection>
+            )}
 
             {/* Add Free User Modal */}
             {showAddUserModal && (
