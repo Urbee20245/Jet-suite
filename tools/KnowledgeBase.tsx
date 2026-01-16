@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Tool } from '../types';
-import { KNOWLEDGE_BASE_ARTICLES, KbArticle, ALL_TOOLS } from '../constants';
+import { ALL_TOOLS } from '../constants';
+import { KNOWLEDGE_BASE_ARTICLES, KbArticle } from '../constants/knowledgeBase';
 import { ChevronDownIcon } from '../components/icons/MiniIcons';
 
 // --- KB Navigation Data ---
@@ -20,12 +20,33 @@ const KB_SECTIONS = [
     articles: [
       { id: 'foundation/jetbiz', title: 'JetBiz: Google Business' },
       { id: 'foundation/jetviz', title: 'JetViz: Website Audit' },
+      { id: 'foundation/jetkeywords', title: 'JetKeywords: Research' },
+      { id: 'foundation/jetcompete', title: 'JetCompete: Competitors' },
     ],
   },
   {
     name: 'Create & Publish',
     articles: [
       { id: 'create-publish/jetcreate', title: 'JetCreate: Campaigns' },
+      { id: 'create-publish/jetpost', title: 'JetPost: Social Media' },
+      { id: 'create-publish/jetcontent', title: 'JetContent: Blog Posts' },
+      { id: 'create-publish/jetimage', title: 'JetImage: Visuals' },
+    ],
+  },
+  {
+    name: 'Engage & Convert',
+    articles: [
+      { id: 'engage-convert/jetreply', title: 'JetReply: Reviews' },
+      { id: 'engage-convert/jettrust', title: 'JetTrust: Widgets' },
+      { id: 'engage-convert/jetleads', title: 'JetLeads: Discovery' },
+      { id: 'engage-convert/jetevents', title: 'JetEvents: Promotions' },
+      { id: 'engage-convert/jetads', title: 'JetAds: Ad Copy' },
+    ],
+  },
+  {
+    name: 'Growth Control',
+    articles: [
+      { id: 'growth-control/growthplan', title: 'Growth Plan: Action List' },
     ],
   },
 ];
@@ -57,7 +78,7 @@ const ArticleView: React.FC<{ article: KbArticle; setActiveTool: (tool: Tool | n
       <div className="mt-8 pt-6 border-t border-brand-border">
         <h4 className="font-semibold text-brand-text">Next Recommended Step:</h4>
         <button
-          onClick={() => setActiveTool(ALL_TOOLS['knowledgebase'], article.next.articleId)}
+          onClick={() => setActiveTool(ALL_TOOLS['knowledgebase'], article.next!.articleId)}
           className="text-accent-blue font-bold hover:underline"
         >
           {article.next.text} &rarr;
