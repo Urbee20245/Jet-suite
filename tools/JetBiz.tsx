@@ -138,7 +138,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
             {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(task.completionDate!).toLocaleDateString()}</p>}
         </div>
         <div className="relative">
-          <select value={task.status} onChange={(e) => onStatusChange(e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
+          <select 
+            value={task.status} 
+            onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} 
+            className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
+          >
             <option value="to_do">To Do</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
@@ -178,7 +182,11 @@ const IssueCard: React.FC<IssueCardProps> = ({ issue, correspondingTask, onStatu
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${styles.badge}`}>{issue.priority}</span>
           <div className="relative">
-            <select value={correspondingTask.status} onChange={(e) => handleStatusChange(e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[correspondingTask.status].badge}`}>
+            <select 
+              value={correspondingTask.status} 
+              onChange={(e) => handleStatusChange(e.target.value as GrowthPlanTask['status'])} 
+              className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[correspondingTask.status].badge}`}
+            >
               <option value="to_do">To Do</option>
               <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
