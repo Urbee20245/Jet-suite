@@ -175,7 +175,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       
       // 3. Load tasks from Supabase
       const tasks = await loadFromSupabase(activeUserId, businessId, 'tasks');
-      setGrowthPlanTasks(tasks || []);
+      setGrowthPlanTasks(tasks || []); // <-- SET TASKS HERE
       
       // 4. Load keywords from Supabase
       const keywords = await loadFromSupabase(activeUserId, businessId, 'keywords');
