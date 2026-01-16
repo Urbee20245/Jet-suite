@@ -30,6 +30,7 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
   const [status, setStatus] = useState<SubscriptionStatus>(null);
   const [reason, setReason] = useState<string>('');
   const [redirectTo, setRedirectTo] = useState<string>('/pricing');
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     const verifyAccess = async () => {
@@ -43,37 +44,43 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
         
         if (!result.hasAccess) {
           console.log('[SubscriptionGuard] Access denied:', result);
-          
-          if (onAccessDenied) {
-            // Give parent component a chance to handle the denial
-            setTimeout(() => {
-              onAccessDenied(result.status, result.redirectTo || '/pricing');
-            }, 2500); // 2.5 second delay to show the message
-          } else {
-            // Fallback: direct navigation if no callback provided
-            setTimeout(() => {
-              window.location.href = result.redirectTo || '/pricing';
-            }, 2500);
-          }
         }
       } catch (error) {
         console.error('Subscription verification error:', error);
         setHasAccess(false);
         setReason('Unable to verify subscription status. Please try refreshing the page.');
-        
-        // On error, still attempt redirect after delay
-        if (onAccessDenied) {
-          setTimeout(() => {
-            onAccessDenied(null, '/pricing');
-          }, 3000);
-        }
       } finally {
         setIsChecking(false);
       }
     };
 
     verifyAccess();
-  }, [userId, onAccessDenied]);
+  }, [userId]);
+
+  // Effect for countdown and redirect logic
+  useEffect(() => {
+    if (isChecking || hasAccess) return;
+
+    // Start countdown timer
+    const timer = setInterval(() => {
+      setCountdown(prev => prev - 1);
+    }, 1000);
+
+    // Set redirect timeout
+    const redirectTimeout = setTimeout(() => {
+      if (onAccessDenied) {
+        onAccessDenied(status, redirectTo);
+      } else {
+        // Fallback for environments without the callback
+        window.location.href = redirectTo;
+      }
+    }, 3000); // 3 seconds
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(redirectTimeout);
+    };
+  }, [isChecking, hasAccess, onAccessDenied, status, redirectTo]);
 
   // Show loader while checking
   if (isChecking) {
@@ -122,7 +129,11 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
             {/* CTA Button */}
             <button
               onClick={() => {
-                window.location.href = redirectTo;
+                if (onAccessDenied) {
+                  onAccessDenied(status, redirectTo);
+                } else {
+                  window.location.href = redirectTo;
+                }
               }}
               className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-8 rounded-xl transition-opacity shadow-lg"
             >
@@ -131,9 +142,9 @@ export const SubscriptionGuard: React.FC<SubscriptionGuardProps> = ({
                 : 'View Pricing Plans'}
             </button>
 
-            {/* Help Text */}
+            {/* Help Text with Countdown */}
             <p className="text-xs text-gray-500 mt-6">
-              Redirecting in 2.5 seconds...
+              Redirecting in {Math.max(0, countdown)} seconds...
             </p>
           </div>
         </div>
