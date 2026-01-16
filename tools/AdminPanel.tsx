@@ -74,6 +74,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       priority: 1,
       end_date: ''
     });
+    
+    // ===== USER MANAGEMENT STATE (NEW) =====
+    const [userSearchTerm, setUserSearchTerm] = useState('');
+    const [isWipingData, setIsWipingData] = useState<string | null>(null); // Stores userId being wiped
 
     // ===== LOAD SUPPORT TICKETS =====
     useEffect(() => {
@@ -118,13 +122,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         setFilteredTickets(filtered);
     }, [tickets, statusFilter, searchTerm]);
 
-    // ===== LOAD MESSAGES WHEN TICKET SELECTED =====
-    useEffect(() => {
-        if (selectedTicket) {
-            loadMessages(selectedTicket.id);
-        }
-    }, [selectedTicket]);
+    // ===== FILTER USERS/BUSINESSES =====
+    const filteredProfiles = allProfiles.filter(profile => {
+        if (!userSearchTerm) return true;
+        const term = userSearchTerm.toLowerCase();
+        const fullName = `${profile.user.firstName} ${profile.user.lastName}`.toLowerCase();
+        const businessName = profile.business.business_name?.toLowerCase() || '';
+        
+        return profile.user.email.toLowerCase().includes(term) ||
+               fullName.includes(term) ||
+               businessName.includes(term);
+    });
 
+    // ===== LOAD DATA FUNCTIONS =====
     const loadTickets = async () => {
         setIsLoadingTickets(true);
         try {
@@ -313,6 +323,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             }
         } catch (error) {
             console.error('Error updating priority:', error);
+        }
+    };
+
+    // ===== NEW: WIPE USER DATA FUNCTION =====
+    const handleWipeUserData = async (targetUserId: string, targetUserEmail: string) => {
+        if (!window.confirm(`CRITICAL ACTION: Are you absolutely sure you want to wipe ALL data and DELETE the user account for ${targetUserEmail}? This action is irreversible.`)) {
+            return;
+        }
+
+        setIsWipingData(targetUserId);
+        try {
+            const response = await fetch('/api/admin/wipe-user-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': currentUserProfile.user.email // Admin email for auth
+                },
+                body: JSON.stringify({ targetUserId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to wipe data on server.');
+            }
+
+            // Remove user from local state after successful wipe
+            setAllProfiles(prev => prev.filter(p => p.user.id !== targetUserId));
+            alert(`Successfully wiped all data and deleted user: ${targetUserEmail}`);
+
+        } catch (error: any) {
+            console.error('Wipe data error:', error);
+            alert(`Wipe failed: ${error.message}`);
+        } finally {
+            setIsWipingData(null);
         }
     };
 
@@ -508,6 +552,16 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* BUSINESSES TAB */}
             {activeTab === 'businesses' && (
                 <AdminSection title="Business Management">
+                    <div className="mb-4 relative">
+                        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search by Business Name, Owner Email, or User Name..."
+                            value={userSearchTerm}
+                            onChange={(e) => setUserSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-brand-text-muted">
                             <thead className="text-xs text-brand-text uppercase bg-brand-light">
@@ -519,7 +573,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {allProfiles.map(profile => {
+                                {filteredProfiles.map(profile => {
                                     const status = dnaStatus(profile.business.dna);
                                     return (
                                     <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
@@ -542,28 +596,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* USERS TAB */}
             {activeTab === 'users' && (
                 <AdminSection title="User Management">
+                    <div className="mb-4 relative">
+                        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Search by User Email, User Name, or Business Name..."
+                            value={userSearchTerm}
+                            onChange={(e) => setUserSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-brand-text-muted">
                             <thead className="text-xs text-brand-text uppercase bg-brand-light">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">User Email</th>
                                     <th scope="col" className="px-6 py-3">Name</th>
-                                    <th scope="col" className="px-6 py-3">Role</th>
+                                    <th scope="col" className="px-6 py-3">Business</th>
                                     <th scope="col" className="px-6 py-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {allProfiles.map(profile => (
+                                {filteredProfiles.map(profile => (
                                     <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
                                         <td className="px-6 py-4 font-medium text-brand-text">{profile.user.email}</td>
                                         <td className="px-6 py-4">{profile.user.firstName} {profile.user.lastName}</td>
-                                        <td className="px-6 py-4">{profile.user.email === 'theivsightcompany@gmail.com' ? 'Admin' : 'Owner'}</td>
+                                        <td className="px-6 py-4">{profile.business.business_name || '(No Business)'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            {profile.user.email !== 'theivsightcompany@gmail.com' &&
+                                            {profile.user.email !== currentUserProfile.user.email &&
                                                 <button onClick={() => onImpersonate(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
                                             }
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
+                                            
+                                            {profile.user.email !== currentUserProfile.user.email && (
+                                                <button 
+                                                    onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
+                                                    disabled={isWipingData === profile.user.id}
+                                                    className="p-1.5 hover:bg-red-100 rounded-md" 
+                                                    title="Wipe All Data & Delete User"
+                                                >
+                                                    {isWipingData === profile.user.id ? (
+                                                        <Loader2 size={16} className="animate-spin text-red-600" />
+                                                    ) : (
+                                                        <TrashIcon className="w-4 h-4 text-red-600"/>
+                                                    )}
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -579,19 +657,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     {/* Ticket Stats */}
                     <div className="grid grid-cols-4 gap-4">
                         <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <div className="text-2xl font-bold text-gray-900">{ticketStats.total}</div>
+                            <div className="text-3xl font-bold text-gray-900">{ticketStats.total}</div>
                             <div className="text-sm text-gray-600">Total Tickets</div>
                         </div>
                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <div className="text-2xl font-bold text-blue-700">{ticketStats.open}</div>
+                            <div className="text-3xl font-bold text-blue-700">{ticketStats.open}</div>
                             <div className="text-sm text-blue-600">Open</div>
                         </div>
                         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                            <div className="text-2xl font-bold text-yellow-700">{ticketStats.in_progress}</div>
+                            <div className="text-3xl font-bold text-yellow-700">{ticketStats.in_progress}</div>
                             <div className="text-sm text-yellow-600">In Progress</div>
                         </div>
                         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                            <div className="text-2xl font-bold text-green-700">{ticketStats.resolved}</div>
+                            <div className="text-3xl font-bold text-green-700">{ticketStats.resolved}</div>
                             <div className="text-sm text-green-600">Resolved</div>
                         </div>
                     </div>
