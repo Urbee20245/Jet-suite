@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         first_name, 
         last_name, 
         role,
-        businesses:business_profiles!user_id (
+        businesses:business_profiles (
           id, 
           business_name, 
           industry, 

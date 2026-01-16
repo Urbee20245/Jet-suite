@@ -602,6 +602,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         return <AdminPanel 
             allProfiles={allAdminProfiles} 
             setAllProfiles={setAllAdminProfiles} 
+            onDataChange={fetchAllAdminProfiles}
             currentUserProfile={activeProfile} 
             setCurrentUserProfile={setProfileData} 
             onImpersonate={handleImpersonate} 

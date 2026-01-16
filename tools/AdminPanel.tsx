@@ -16,6 +16,7 @@ interface AdminPanelProps {
     currentUserProfile: ProfileData;
     setCurrentUserProfile: (data: ProfileData) => void;
     onImpersonate: (profile: ProfileData | null) => void; // Updated signature
+    onDataChange: () => void;
 }
 
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -36,7 +37,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setAllProfiles, 
     currentUserProfile, 
     setCurrentUserProfile, 
-    onImpersonate 
+    onImpersonate,
+    onDataChange
 }) => {
     // ===== EXISTING ADMIN PANEL STATE =====
     const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements'>('overview');
@@ -352,8 +354,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 throw new Error(errorData.message || 'Failed to wipe data on server.');
             }
 
-            // Remove user from local state after successful wipe
-            setAllProfiles(prev => prev.filter(p => p.user.id !== targetUserId));
+            onDataChange();
             alert(`Successfully wiped all data and deleted user: ${targetUserEmail}`);
 
         } catch (error: any) {
@@ -381,12 +382,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             if (!response.ok) throw new Error(data.message || 'Failed to create user.');
             
             setCreationResult({ success: true, message: `${data.message} Temporary password: ${newUser.password}` });
+            onDataChange();
             
             setTimeout(() => {
                 setShowAddUserModal(false);
                 setNewUser({ email: '', password: '', firstName: '', lastName: '' });
                 setCreationResult(null);
-                alert('User created. Please refresh the page to see the updated list.');
             }, 5000);
 
         } catch (error: any) {
