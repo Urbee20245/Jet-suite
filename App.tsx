@@ -179,7 +179,7 @@ const App: React.FC = () => {
 
   // Sync currentPath with browser forward/back buttons
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window !== 'undefined') return;
     const onLocationChange = () => setCurrentPath(window.location.pathname);
     window.addEventListener('popstate', onLocationChange);
     return () => window.removeEventListener('popstate', onLocationChange);
@@ -311,7 +311,12 @@ const App: React.FC = () => {
         );
       } else {
         // If logged in but on a marketing page, render the marketing site/account pages normally
-        return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+        return <MarketingWebsite 
+          currentPath={currentPath} 
+          navigate={navigate} 
+          onLoginSuccess={handleLoginSuccess} 
+          onLogout={handleLogout} // PASSED HANDLER
+        />;
       }
     }
 
@@ -333,7 +338,12 @@ const App: React.FC = () => {
     ];
 
     if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
-      return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+      return <MarketingWebsite 
+        currentPath={currentPath} 
+        navigate={navigate} 
+        onLoginSuccess={handleLoginSuccess} 
+        onLogout={handleLogout} // PASSED HANDLER
+      />;
     }
 
     return <NotFoundPage navigate={navigate} />;

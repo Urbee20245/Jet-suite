@@ -23,9 +23,10 @@ interface MarketingWebsiteProps {
     currentPath: string;
     navigate: (path: string) => void;
     onLoginSuccess: (email: string) => void;
+    onLogout: () => void; // ADDED PROP
 }
 
-export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath, navigate, onLoginSuccess }) => {
+export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath, navigate, onLoginSuccess, onLogout }) => {
     const renderPage = () => {
         switch (currentPath) {
             case '/':
@@ -51,7 +52,7 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
             case '/billing/success':
                 return <BillingSuccessPage navigate={navigate} />;
             case '/billing/locked':
-                return <BillingLockedPage navigate={navigate} />;
+                return <BillingLockedPage navigate={navigate} onLogout={onLogout} />;
             case '/privacy':
                 return <PrivacyPolicy />;
             case '/terms':
