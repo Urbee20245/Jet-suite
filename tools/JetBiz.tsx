@@ -254,7 +254,7 @@ const JetBizResultDisplay: React.FC<{
             </div>
         </div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+        <div className="flex justify-between items-center mb-4">
             <div>
                 <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
                 <p className="text-brand-text-muted mt-1">Focus on these high-impact tasks. They are already in your Growth Plan.</p>
@@ -477,8 +477,10 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
           <>
             <div className="bg-brand-card p-4 sm:p-6 rounded-xl shadow-lg mb-6 flex justify-between items-center">
               <div>
-                  <p className="text-sm text-brand-text-muted">Analysis for:</p>
-                  <h2 className="text-lg font-bold text-brand-text">{auditReport.businessName}</h2>
+                  <h2 className="text-lg font-bold text-brand-text">
+                      <span className="text-sm text-brand-text-muted font-normal">Analysis for:</span> 
+                      <span className="ml-2">{auditReport.businessName}</span>
+                  </h2>
               </div>
               <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
             </div>

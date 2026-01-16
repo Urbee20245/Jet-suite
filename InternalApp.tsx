@@ -120,7 +120,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   // Initialize allProfiles with default structure
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
       const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
-      const testProfile = createInitialProfile('test-user-uuid', 'test.user@example.com', 'Test', 'User');
+      // Use a valid UUID for the test user
+      const testUserId = '00000000-0000-4000-8000-000000000001'; 
+      const testProfile = createInitialProfile(testUserId, 'test.user@example.com', 'Test', 'User');
       return [adminProfile, testProfile];
   });
 
@@ -255,7 +257,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const loadProfiles = async () => {
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
         const testUserEmail = 'test.user@example.com';
-        const testUserId = 'test-user-uuid';
+        const testUserId = '00000000-0000-4000-8000-000000000001';
         const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
         
         setAllProfiles([currentUserProfile, testUserProfile]);
@@ -382,7 +384,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   };
 
   const isAdmin = userEmail === ADMIN_EMAIL;
-  const profileData = impersonatedUserId === 'test-user-uuid' ? allProfiles[1] : allProfiles[0];
+  const testUserId = '00000000-0000-4000-8000-000000000001';
+  const profileData = impersonatedUserId === testUserId ? allProfiles[1] : allProfiles[0];
   
   // Ensure profileData reflects the active business
   useEffect(() => {
@@ -545,7 +548,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(id) => setImpersonatedUserId(id === 'test-user-uuid' ? 'test-user-uuid' : null)} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(id) => setImpersonatedUserId(id === testUserId ? testUserId : null)} />;
     }
     if (!activeTool || activeTool.id === 'home') {
       return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
