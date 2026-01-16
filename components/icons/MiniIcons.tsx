@@ -277,7 +277,7 @@ export const HandThumbUpIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) 
 
 export const HandThumbDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25a3 3 0 003-3v-3.75a3 3 0 00-3-3H7.5a3 3 0 00-3 3v3.75a3 3 0 003 3zM15.75 3a4.5 4.5 0 00-1.41 5.64l4.37 4.17-.659 1.583a2.25 2.25 0 01-2.25 2.25v2.183c0 1.321.966 2.433 2.322 2.433h.25s-.75-2.433-1.875-2.433V15a2.25 2.25 0 012.25 2.25h3.75a3 3 0 003-3V7.38a2.25 2.25 0 00-2.25-2.25h-3.75z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 15h2.25a3 3 0 003-3v-3.75a3 3 0 00-3-3H7.5a3 3 0 00-3 3v3.75a3 3 0 003 3zM15.75 3a4.5 4.5 0 00-1.41 5.64l4.37 4.17-.659 1.583a2.25 2.25 0 01-2.25 2.25v2.183c0 1.321.966 2.433 2.322 2.433h.25s-.75-2.433-1.875-2.433V15a2.25 2.25 0 012.25-2.25h3.75a3 3 0 003-3V7.38a2.25 2.25 0 00-2.25-2.25h-3.75z" />
   </svg>
 );
 
@@ -316,4 +316,10 @@ export const XCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
+);
+
+export const LockOpenIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75m-9 0H6.75A2.25 2.25 0 0 0 4.5 13.5v6.75a2.25 2.25 0 0 0 2.25 2.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H13.5Z" />
+  </svg>
 );
