@@ -30,12 +30,26 @@ const gbpFacts = [
 
 const AnalysisLoading: React.FC = () => {
     const [currentFactIndex, setCurrentFactIndex] = useState(0);
+    const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        // Cycle through facts every 3.5 seconds
+        const factInterval = setInterval(() => {
             setCurrentFactIndex(prev => (prev + 1) % gbpFacts.length);
         }, 3500);
-        return () => clearInterval(interval);
+        
+        // Animate progress bar over 10 seconds (estimated max analysis time)
+        const progressInterval = setInterval(() => {
+            setProgress(prev => {
+                if (prev >= 95) return prev; // Stop just before 100
+                return prev + 5;
+            });
+        }, 500);
+
+        return () => {
+            clearInterval(factInterval);
+            clearInterval(progressInterval);
+        };
     }, []);
 
     return (
@@ -44,6 +58,17 @@ const AnalysisLoading: React.FC = () => {
             <h3 className="text-xl font-bold text-brand-text mt-4">Analyzing Your Profile...</h3>
             <p className="text-brand-text-muted mt-2">This may take a moment as we compare you to local competitors.</p>
             
+            {/* Progress Bar */}
+            <div className="w-full max-w-md mx-auto my-6">
+                <div className="relative pt-1">
+                    <div className="overflow-hidden h-2 mb-2 text-xs flex rounded bg-accent-purple/20">
+                        <div style={{ width: `${progress}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-accent-blue to-accent-purple transition-all duration-500 ease-out"></div>
+                    </div>
+                    <p className="text-xs text-brand-text-muted text-right">{progress}% Complete</p>
+                </div>
+            </div>
+
+            {/* Rotating Fact */}
             <div className="mt-6 bg-brand-darker p-4 rounded-lg border border-slate-700 min-h-[90px] flex items-center justify-center transition-opacity duration-500">
                 <p className="text-white text-sm italic">
                     {gbpFacts[currentFactIndex]}
@@ -469,7 +494,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
 
   const renderContent = () => {
-    if (loading && step === 'result') {
+    if (loading && step !== 'result') {
         return <AnalysisLoading />;
     }
     if (step === 'result' && auditReport) {
@@ -543,7 +568,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         </div>
         {profileData.googleBusiness.status === 'Not Verified' && step !== 'result' && ( <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg"><div className="flex"><ExclamationTriangleIcon className="w-6 h-6 mr-3"/><p>Your profile isn't verified, so some data may be unavailable.</p></div></div> )}
         {error && <p className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</p>}
-        {loading && step === 'initial' && <Loader />}
         {renderContent()}
         
         {/* Saved Analyses List (Shown outside of result view if requested) */}
