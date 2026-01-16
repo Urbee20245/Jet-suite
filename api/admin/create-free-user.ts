@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let userId: string | undefined;
 
   try {
-    // 1. Create user in Supabase Auth
+    // 1. Create user in Supabase Auth. This will trigger the `handle_new_user` function in the database.
     const { data: newUserData, error: createUserError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -39,9 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (createUserError) throw createUserError;
     userId = newUserData.user.id;
 
-    // 2. UPDATE the public profile record created by the trigger
-    // The `handle_new_user` trigger already created a basic row in `profiles`.
-    // We now UPDATE it with the full name and role.
+    // 2. The trigger has already created a `profiles` row. Now, we UPDATE it with the full name.
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -53,22 +51,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (profileError) throw profileError;
 
-    // 3. Explicitly create the billing account with free tier
+    // 3. The trigger has also created a `billing_accounts` row with a null status.
+    // We now UPDATE that record to grant free, active access.
     const { error: billingError } = await supabase
       .from('billing_accounts')
-      .insert({
-        user_id: userId,
-        user_email: email,
+      .update({
         subscription_status: 'active',
-        subscription_plan: 'free_tier',
-        is_founder: false,
-        business_count: 1,
-        seat_count: 1,
-      });
+        subscription_plan: 'admin_granted_free',
+      })
+      .eq('user_id', userId);
 
     if (billingError) throw billingError;
 
-    // 4. Create a basic business profile for the new user
+    // 4. Create a basic business profile for the new user so they can start onboarding.
     const { error: businessError } = await supabase
       .from('business_profiles')
       .insert({
@@ -86,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(201).json({ success: true, message: `Free user ${email} created successfully.` });
   } catch (error: any) {
     console.error('[Admin Create Free User] Error:', error);
-    // Attempt to clean up the auth user if other steps failed
+    // Attempt to clean up the auth user if other steps failed to prevent orphaned accounts.
     if (userId) {
         await supabase.auth.admin.deleteUser(userId);
         console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
