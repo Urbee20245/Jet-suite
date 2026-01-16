@@ -39,7 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           is_complete,
           dna,
           brand_dna_profile,
-          google_business_profile
+          google_business_profile,
+          dna_last_updated_at
         )
       `)
       .order('created_at', { ascending: false });
@@ -48,7 +49,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Map and flatten the data for the frontend
     const mappedProfiles = profiles.map(profile => {
-      const primaryBusiness = profile.businesses.find((b: any) => b.is_primary) || profile.businesses[0] || {};
+      // Cast to any to allow flexible property access, but use optional chaining for safety
+      const primaryBusiness: any = profile.businesses.find((b: any) => b.is_primary) || profile.businesses[0] || {};
       
       // Map snake_case to camelCase for the frontend ProfileData structure
       const userProfile = {
@@ -83,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_dna_approved: !!primaryBusiness.brand_dna_profile,
-        dna_last_updated_at: primaryBusiness.dna_last_updated_at,
+        dna_last_updated_at: primaryBusiness.dna_last_updated_at || undefined,
       };
 
       return {
