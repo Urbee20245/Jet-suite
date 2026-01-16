@@ -282,7 +282,7 @@ const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed
 const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button type="button" onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
-const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void, onSearch: (e: React.FormEvent) => Promise<void>, searchResults: BusinessSearchResult[], loading: boolean, error: string, onSelect: (b: BusinessSearchResult) => void, selected: BusinessSearchResult | null, onConfirm: () => void, onCancel: () => void }> = ({ profileData, onConnect, onSearch, searchResults, loading, error, onSelect, selected, onConfirm, onCancel }) => { 
+const GbpConnect: React.FC<{ profileData: ProfileData, onSearch: (e: React.FormEvent) => Promise<void>, searchResults: BusinessSearchResult[], loading: boolean, error: string, onSelect: (b: BusinessSearchResult) => void, selected: BusinessSearchResult | null, onConfirm: () => void, onCancel: () => void }> = ({ profileData, onSearch, searchResults, loading, error, onSelect, selected, onConfirm, onCancel }) => { 
     const [searchTerm, setSearchTerm] = useState(''); 
     
     if (selected) return (
@@ -345,7 +345,7 @@ const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<
         </div> 
     ); 
 };
-const renderSocialContent = () => { 
+const renderSocialContent = (userId: string) => { 
     // FIX: Pass the correct handlers to SocialAccountsStep
     return <SocialAccountsStep 
         userId={userId} 
@@ -356,22 +356,17 @@ const renderSocialContent = () => {
 
 // --- New Lock/Unlock Components ---
 
-const LockInCard: React.FC<{ onLock: () => void, onNext: () => void }> = ({ onLock, onNext }) => (
+const LockInCard: React.FC<{ onLock: () => void }> = ({ onLock }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            All foundational steps are complete. Lock this profile to ensure consistency across all AI tools.
+            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools. You can unlock it later to make edits.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                <LockClosedIcon className="w-5 h-5" />
-                Save and Lock
-            </button>
-            <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
-            </button>
-        </div>
+        <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
+            <LockClosedIcon className="w-5 h-5" />
+            Save and Lock
+        </button>
     </div>
 );
 
@@ -380,7 +375,7 @@ const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ on
         <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            This profile is locked to maintain brand consistency across all tools. Unlock to make changes or continue to the next step.
+            This profile is locked to maintain brand consistency across all tools.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button onClick={onUnlock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
@@ -461,7 +456,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   // Removed detectedGbp and isGbpConfirmed state
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
-  const [userId, setUserId] = useState<string>('');
+  // FIX: Use profileData.user.id directly
+  const userId = profileData.user.id;
   
   // GBP Search State
   const [searchTerm, setSearchTerm] = useState('');
@@ -469,13 +465,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
   const [isSearchingGbp, setIsSearchingGbp] = useState(false);
   const [searchError, setSearchError] = useState('');
-  
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('jetsuite_userId');
-    if (storedUserId) {
-      setUserId(storedUserId);
-    }
-  }, []);
   
   // Sync local state with props on initial load or profile change
   useEffect(() => { 
@@ -850,7 +839,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; 
         case 'Verified': return <GbpConnect 
             profileData={profileData} 
-            onConnect={handleGbpConnect} 
             onSearch={handleGbpSearch}
             searchResults={searchResults}
             loading={isSearchingGbp}

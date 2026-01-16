@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import type { ProfileData, BusinessDna } from '../types';
 import type { SupportTicket, SupportMessage, TicketStatus, TicketPriority } from '../Types/supportTypes';
 import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon } from '../components/icons/MiniIcons';
-import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Search } from '../components/SupportIcons';
+import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Search, Loader2 } from '../components/SupportIcons';
 import supportService from '../services/supportService';
 
 interface AdminPanelProps {
