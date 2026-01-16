@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
-import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../services/geminiService';
+import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
 import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { Loader } from '../components/Loader';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
@@ -45,7 +45,7 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
 // --- Sub-components for DNA Workflow ---
 
 const DnaExtractionLoading: React.FC = () => {
-    const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Searching for Google Business Profile...", "Compiling results..."];
+    const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
     const [currentStep, setCurrentStep] = useState(0);
     useEffect(() => { const interval = setInterval(() => { setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev)); }, 2000); return () => clearInterval(interval); }, []);
     return (<div className="text-center p-8 bg-brand-light rounded-xl border-2 border-dashed border-brand-border"><h3 className="text-xl font-bold text-brand-text">Analyzing Your Website...</h3><p className="text-brand-text-muted my-2">This usually takes 2-5 minutes.</p><div className="w-full max-w-xs mx-auto my-6"><div className="relative pt-1"><div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-accent-purple/20"><div style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-purple transition-all duration-500"></div></div></div><ul className="text-left text-sm text-brand-text-muted space-y-2">{steps.map((step, index) => (<li key={step} className={`flex items-center transition-opacity duration-300 ${index <= currentStep ? 'opacity-100' : 'opacity-40'}`}>{index < currentStep ? <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> : <div className="w-4 h-4 mr-2"><Loader /></div>}{step}</li>))}</ul></div><p className="text-xs text-brand-text-muted">Please don't close this page.</p></div>);
@@ -131,13 +131,9 @@ const DnaReviewAndSaved: React.FC<{
     onRestart: () => void; 
     onEdit: () => void; 
     dnaLastUpdatedAt?: string; 
-    detectedGbp: BusinessSearchResult | null; 
-    isGbpConfirmed: boolean; 
-    onConfirmGbp: () => void; 
-    onRejectGbp: () => void; 
     isDnaEditing: boolean; 
     editableBrandProfile: BrandDnaProfile | null; 
-}> = ({ visualDna, detailedDna, isEditable, onVisualDnaChange, onDetailedDnaChange, onSave, onCancel, onRestart, onEdit, dnaLastUpdatedAt, detectedGbp, isGbpConfirmed, onConfirmGbp, onRejectGbp, isDnaEditing, editableBrandProfile }) => {
+}> = ({ visualDna, detailedDna, isEditable, onVisualDnaChange, onDetailedDnaChange, onSave, onCancel, onRestart, onEdit, dnaLastUpdatedAt, isDnaEditing, editableBrandProfile }) => {
     const logoInputRef = useRef<HTMLInputElement>(null);
     const faviconInputRef = useRef<HTMLInputElement>(null);
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files?.[0]) { onVisualDnaChange({ ...visualDna, logo: await toBase64(e.target.files[0]) }); } };
@@ -234,7 +230,7 @@ const DnaReviewAndSaved: React.FC<{
                 </div>
             </div>
             
-            {isEditable && detectedGbp && <GbpDetectedCard detectedGbp={detectedGbp} isConfirmed={isGbpConfirmed} onConfirm={onConfirmGbp} onReject={onRejectGbp} />}
+            {/* Removed GBP Detected Card from Step 2 */}
             
             <div>
                 <div className="flex justify-between items-center mb-2">
@@ -401,8 +397,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
   const [isGbpSkipped, setIsGbpSkipped] = useState(false);
   const [isDnaEditing, setIsDnaEditing] = useState(false);
-  const [detectedGbp, setDetectedGbp] = useState<BusinessSearchResult | null>(null);
-  const [isGbpConfirmed, setIsGbpConfirmed] = useState(false);
+  
+  // Removed detectedGbp and isGbpConfirmed state
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
   const [userId, setUserId] = useState<string>('');
@@ -433,7 +429,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const step1Completed = !!business.business_name && !!business.business_website;
   const step2Completed = business.isDnaApproved;
   // Step 3 is complete if GBP is Verified OR if it was confirmed during DNA extraction
-  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped || (detectedGbp && isGbpConfirmed);
+  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
@@ -444,27 +440,40 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
   
-  const handleAnalyzeDna = async () => { if (!step1Completed) return; setAnalysisError(''); setExtractionStage('extracting'); setDetectedGbp(null); setIsGbpConfirmed(false); try { const [websiteDnaResult, brandDnaProfileResult, gbpResult] = await Promise.all([extractWebsiteDna(business.business_website), extractBrandDnaProfile(business), detectGbpOnWebsite(business.business_website, business.business_name)]); const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); setEditableBrandProfile(brandDnaProfileResult); setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); if (gbpResult) { setDetectedGbp(gbpResult); } setExtractionStage('reviewing'); } catch (e) { console.error("Analysis failed:", e); setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); setExtractionStage('idle'); } };
+  const handleAnalyzeDna = async () => { 
+    if (!step1Completed) return; 
+    setAnalysisError(''); 
+    setExtractionStage('extracting'); 
+    
+    try { 
+      // Removed detectGbpOnWebsite call
+      const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
+        extractWebsiteDna(business.business_website), 
+        extractBrandDnaProfile(business)
+      ]); 
+      
+      const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; 
+      const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; 
+      
+      setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); 
+      setEditableBrandProfile(brandDnaProfileResult); 
+      setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); 
+      
+      setExtractionStage('reviewing'); 
+    } catch (e) { 
+      console.error("Analysis failed:", e); 
+      setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); 
+      setExtractionStage('idle'); 
+    } 
+  };
   
   // Save initial DNA extraction to Supabase and check for GBP confirmation
   const handleInitialSaveDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     setExtractionStage('saving'); 
     
-    let newGbpData = googleBusiness; 
-    if (detectedGbp && isGbpConfirmed) { 
-      // If GBP was detected and confirmed during DNA review, set status to Verified
-      newGbpData = { 
-        ...googleBusiness, 
-        profileName: detectedGbp.name, 
-        address: detectedGbp.address, 
-        rating: detectedGbp.rating, 
-        reviewCount: detectedGbp.reviewCount, 
-        status: 'Verified' as GbpStatus, 
-        placeId: `detected_${Date.now()}`,
-        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detectedGbp.address)}&query_place_id=${detectedGbp.name}`
-      }; 
-    } 
+    // GBP data remains unchanged here, only updated in Step 3
+    const newGbpData = googleBusiness; 
     
     try {
       // Save DNA to Supabase
@@ -488,7 +497,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         dna: editableDna, 
         isDnaApproved: true, 
         dnaLastUpdatedAt: new Date().toISOString(),
-        google_business_profile: newGbpData, // Update the business object with new GBP data
+        google_business_profile: newGbpData, // Use existing GBP data
         brand_dna_profile: editableBrandProfile, // Update the business object with detailed DNA
       };
       
@@ -500,8 +509,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
       });
       
       setExtractionStage('idle'); 
-      setDetectedGbp(null); 
-      setIsGbpConfirmed(false);
       
       alert('✅ Business DNA saved successfully!');
     } catch (error) {
@@ -683,10 +690,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 setIsDnaEditing(true); 
             }} 
             dnaLastUpdatedAt={business.dnaLastUpdatedAt} 
-            detectedGbp={detectedGbp} 
-            isGbpConfirmed={isGbpConfirmed} 
-            onConfirmGbp={() => setIsGbpConfirmed(true)} 
-            onRejectGbp={() => setDetectedGbp(null)} 
             isDnaEditing={isDnaEditing} 
             editableBrandProfile={editableBrandProfile}
         />;
@@ -694,7 +697,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     switch (extractionStage) {
       case 'idle': return (<><p className="text-brand-text-muted mb-4">Analyze your website to automatically pull your logo, colors, fonts, and full brand profile.</p>{analysisError && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-semibold">{analysisError}<div className="mt-2"><button type="button" onClick={handleAnalyzeDna} className="font-bold underline">Try again</button></div></div>}<div className="text-center p-4 rounded-xl"><p className="text-brand-text-muted mb-4">We'll analyze: <a href={business.business_website} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-blue">{business.business_website}</a></p><button type="button" onClick={handleAnalyzeDna} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity duration-300 text-lg shadow-lg">Extract Business DNA</button></div></>);
       case 'extracting': return <DnaExtractionLoading />;
-      case 'reviewing': return (editableDna && editableBrandProfile) ? <DnaReviewAndSaved visualDna={editableDna} detailedDna={editableBrandProfile} isEditable={true} onSave={handleInitialSaveDna} onRestart={handleAnalyzeDna} onVisualDnaChange={setEditableDna} onDetailedDnaChange={setEditableBrandProfile} onEdit={() => {}} onCancel={() => setExtractionStage('idle')} detectedGbp={detectedGbp} isGbpConfirmed={isGbpConfirmed} onConfirmGbp={() => setIsGbpConfirmed(true)} onRejectGbp={() => setDetectedGbp(null)} isDnaEditing={isDnaEditing} editableBrandProfile={editableBrandProfile}/> : <Loader />;
+      case 'reviewing': return (editableDna && editableBrandProfile) ? <DnaReviewAndSaved visualDna={editableDna} detailedDna={editableBrandProfile} isEditable={true} onSave={handleInitialSaveDna} onRestart={handleAnalyzeDna} onVisualDnaChange={setEditableDna} onDetailedDnaChange={setEditableBrandProfile} onEdit={() => {}} onCancel={() => setExtractionStage('idle')} isDnaEditing={isDnaEditing} editableBrandProfile={editableBrandProfile}/> : <Loader />;
       case 'saving': return <div className="text-center p-8"><Loader /><p className="mt-2 font-semibold">Saving your Business DNA...</p></div>;
       default: return null;
     }
@@ -704,7 +707,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') { 
         return (
             <div>
-                <p className="text-brand-text-muted mb-4">Your Google Business Profile was automatically detected and connected during Business DNA extraction.</p>
+                <p className="text-brand-text-muted mb-4">Your Google Business Profile is connected and verified.</p>
                 <GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} />
             </div>
         ); 
