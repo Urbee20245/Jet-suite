@@ -32,7 +32,7 @@ import { GrowthPlan } from './tools/GrowthPlan';
 import UserSupportTickets from './tools/UserSupportTickets';
 import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
-import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna } from './types';
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna, UserProfile } from './types';
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 import SupportChatbot from './components/SupportChatbot';
@@ -108,8 +108,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   );
 
   // --- Identity & State Management ---
-  const [impersonatedUserId, setImpersonatedUserId] = useState<string | null>(null);
-  const activeUserId = impersonatedUserId || userId;
+  const [impersonatedProfile, setImpersonatedProfile] = useState<ProfileData | null>(null);
+  const activeUserId = impersonatedProfile?.user.id || userId;
+  const isAdmin = userEmail === ADMIN_EMAIL;
 
   const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>([]);
   const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
@@ -117,14 +118,15 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   
   const [growthScore, setGrowthScore] = useState(150);
   
-  // Initialize allProfiles with default structure
+  // NEW: State for all profiles (used only by Admin Panel)
+  const [allAdminProfiles, setAllAdminProfiles] = useState<ProfileData[]>([]);
+
+  // Initialize allProfiles with default structure (only current user's profile)
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
-      const adminProfile = createInitialProfile(userId, userEmail, 'The Ivsight', 'Company');
-      // Use a valid UUID for the test user
-      const testUserId = '00000000-0000-4000-8000-000000000001'; 
-      const testProfile = createInitialProfile(testUserId, 'test.user@example.com', 'Test', 'User');
-      return [adminProfile, testProfile];
+      return [createInitialProfile(userId, userEmail, 'Loading', 'User')];
   });
+  
+  const activeProfile = impersonatedProfile || allProfiles[0];
 
   // UNIVERSAL LOAD FUNCTION - Loads ALL data from Supabase
   const loadBusinessData = async (businessId: string) => {
@@ -252,77 +254,88 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  // Initial Profile Load
+  // Function to fetch all profiles for Admin Panel
+  const fetchAllAdminProfiles = async () => {
+    if (!isAdmin) return;
+    
+    try {
+        const response = await fetch('/api/admin/get-all-profiles', {
+            headers: {
+                'x-user-email': userEmail // Pass admin email for authorization
+            }
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to fetch all admin profiles:', response.status);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        // Map fetched profiles to ProfileData structure
+        const fetchedProfiles: ProfileData[] = data.profiles.map((p: any) => {
+            const userProfile: UserProfile = {
+                id: p.user.id,
+                firstName: p.user.firstName,
+                lastName: p.user.lastName,
+                email: p.user.email,
+                phone: p.user.phone || '',
+                role: p.user.role || 'Owner',
+            };
+            
+            const businessProfile: BusinessProfile = {
+                ...p.business,
+                isDnaApproved: !!p.business.brandDnaProfile,
+                dnaLastUpdatedAt: p.business.dna_last_updated_at,
+                googleBusiness: p.business.google_business_profile,
+                brandDnaProfile: p.business.brand_dna_profile,
+                is_dna_approved: !!p.business.brandDnaProfile,
+                dna_last_updated_at: p.business.dna_last_updated_at,
+                // Fill in missing fields from the simplified API response
+                business_website: p.business.business_website || '',
+                business_description: p.business.business_description || '',
+                service_area: p.business.service_area || '',
+                phone: p.business.phone || '',
+                email: p.business.email || '',
+                is_complete: p.business.is_complete || false,
+                created_at: p.business.created_at || new Date().toISOString(),
+                updated_at: p.business.updated_at || new Date().toISOString(),
+                google_business_profile: p.business.google_business_profile || null,
+                dna: p.business.dna || { logo: '', colors: [], fonts: '', style: '' },
+                location: p.business.location || '',
+            };
+            
+            return {
+                user: userProfile,
+                business: businessProfile,
+                googleBusiness: businessProfile.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
+                isProfileActive: businessProfile.is_complete,
+                brandDnaProfile: businessProfile.brand_dna_profile,
+            } as ProfileData;
+        });
+        
+        setAllAdminProfiles(fetchedProfiles);
+        
+    } catch (error) {
+        console.error('Error fetching all admin profiles:', error);
+    }
+};
+
+// Initial Profile Load (Updated to only load current user's profile)
   useEffect(() => {
     const loadProfiles = async () => {
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
-        const testUserEmail = 'test.user@example.com';
-        const testUserId = '00000000-0000-4000-8000-000000000001';
-        const testUserProfile = await fetchAndMergeProfile(testUserId, testUserEmail, false);
         
-        setAllProfiles([currentUserProfile, testUserProfile]);
+        setAllProfiles([currentUserProfile]);
+        
+        // If admin, fetch all profiles immediately
+        if (isAdmin) {
+            fetchAllAdminProfiles();
+        }
     };
     
     loadProfiles();
-  }, [userId, userEmail]);
-
-  // Fetch all accessible businesses
-  const fetchBusinesses = async () => {
-    if (!supabase || !activeUserId) return;
-
-    console.log('[InternalApp] Fetching businesses for active user:', activeUserId);
-
-    const { data: dbProfiles, error } = await supabase
-      .from('business_profiles')
-      .select('*')
-      .eq('user_id', activeUserId)
-      .order('is_primary', { ascending: false })
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('[InternalApp] Error fetching businesses:', error);
-      return;
-    }
-
-    if (dbProfiles && dbProfiles.length > 0) {
-      console.log('[InternalApp] Loaded businesses:', dbProfiles);
-      
-      const mappedBusinesses = dbProfiles.map((p: any) => ({ // FIX: Cast p to any to access snake_case fields
-          ...p,
-          location: `${p.city}, ${p.state}`,
-          isDnaApproved: p.is_dna_approved, // Map DB snake_case to client camelCase
-          dnaLastUpdatedAt: p.dna_last_updated_at, // Map DB snake_case to client camelCase
-          google_business_profile: p.google_business_profile,
-          brand_dna_profile: p.brand_dna_profile,
-          is_dna_approved: p.is_dna_approved, // Keep snake_case for type compatibility
-          dna_last_updated_at: p.dna_last_updated_at, // Keep snake_case for type compatibility
-      })) as BusinessProfile[];
-      
-      setBusinesses(mappedBusinesses);
-      
-      const savedActiveId = localStorage.getItem('jetsuite_active_biz_id');
-      const primaryBusiness = mappedBusinesses.find(b => b.is_primary) || mappedBusinesses[0];
-      
-      const activeId = savedActiveId && mappedBusinesses.some(b => b.id === savedActiveId)
-        ? savedActiveId
-        : primaryBusiness.id;
-      
-      if (activeId) {
-        console.log('[InternalApp] Setting active business ID:', activeId);
-        setActiveBusinessId(activeId);
-        localStorage.setItem('jetsuite_active_biz_id', activeId);
-        loadBusinessData(activeId);
-      }
-    } else {
-      console.log('[InternalApp] No businesses found');
-      setActiveBusinessId(null);
-      setBusinesses([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchBusinesses();
-  }, [activeUserId, supabase]);
+  }, [userId, userEmail, isAdmin]); // Added isAdmin dependency
 
   // Business Switching
   const handleBusinessSwitch = async (businessId: string) => {
@@ -383,10 +396,38 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  const isAdmin = userEmail === ADMIN_EMAIL;
-  const testUserId = '00000000-0000-4000-8000-000000000001';
-  const profileData = impersonatedUserId === testUserId ? allProfiles[1] : allProfiles[0];
-  
+  const handleImpersonate = (profileToImpersonate: ProfileData | null) => {
+    if (profileToImpersonate) {
+        setImpersonatedProfile(profileToImpersonate);
+        // Also switch the active business to the impersonated user's primary business
+        if (profileToImpersonate.business.id !== 'no-business') {
+            handleBusinessSwitch(profileToImpersonate.business.id);
+        }
+    } else {
+        setImpersonatedProfile(null);
+        // Revert to current user's primary business
+        const currentUserPrimaryBiz = businesses.find(b => b.is_primary)?.id || businesses[0]?.id;
+        if (currentUserPrimaryBiz) {
+            handleBusinessSwitch(currentUserPrimaryBiz);
+        }
+    }
+  };
+
+  const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
+    setAllProfiles(prev => {
+        const isSelf = newProfileData.user.id === userId;
+        const index = isSelf ? 0 : prev.findIndex(p => p.user.id === newProfileData.user.id);
+        const updatedProfiles = [...prev];
+        if (index !== -1) {
+            updatedProfiles[index] = newProfileData;
+        } else if (!isSelf) {
+            // If impersonating a user not in the list (shouldn't happen if fetched correctly)
+            updatedProfiles.push(newProfileData);
+        }
+        return updatedProfiles;
+    });
+  };
+
   // Ensure profileData reflects the active business
   useEffect(() => {
     if (activeBusinessId && businesses.length > 0) {
@@ -409,16 +450,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       }
     }
   }, [activeBusinessId, businesses, activeUserId]);
-
-  const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
-    setAllProfiles(prev => {
-        const isSelf = newProfileData.user.id === userId;
-        const index = isSelf ? 0 : 1;
-        const updatedProfiles = [...prev];
-        updatedProfiles[index] = newProfileData;
-        return updatedProfiles;
-    });
-  };
 
   // UNIVERSAL AUTO-SYNC: Save tasks to Supabase whenever they change
   useEffect(() => {
@@ -447,7 +478,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   // Growth Score Calculation
   useEffect(() => {
     let score = 0;
-    const { business, googleBusiness } = profileData;
+    const { business, googleBusiness } = activeProfile;
     const totalTasks = growthPlanTasks.length;
     const completedTasks = growthPlanTasks.filter(t => t.status === 'completed').length;
     const inProgressTasks = growthPlanTasks.filter(t => t.status === 'in_progress').length;
@@ -482,7 +513,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     
     score = Math.min(score, 99);
     setGrowthScore(score);
-  }, [profileData, growthPlanTasks]);
+  }, [activeProfile, growthPlanTasks]);
 
   const handleUpdateProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
     const { business_name, location, business_website } = newProfileData.business;
@@ -520,7 +551,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   // UNIVERSAL SAVE: Save analysis reports to Supabase
   const handleSaveAnalysis = async (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
-    const newProfileData = { ...profileData, [`${type}Analysis`]: report };
+    const newProfileData = { ...activeProfile, [`${type}Analysis`]: report };
     handleUpdateProfileData(newProfileData, true);
     
     if (report && activeBusinessId) {
@@ -528,10 +559,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
   
-  const activeBusinessName = businesses.find(b => b.id === activeBusinessId)?.business_name || 'Loading Business...';
-
-  const isStep1Complete = !!profileData.business.business_name && !!profileData.business.location && !!profileData.business.business_website;
-  const isStep2Complete = profileData.business.isDnaApproved;
+  const isStep1Complete = !!activeProfile.business.business_name && !!activeProfile.business.location && !!activeProfile.business.business_website;
+  const isStep2Complete = activeProfile.business.isDnaApproved;
 
   let readinessState: ReadinessState = 'Setup Incomplete';
   if (isStep1Complete && isStep2Complete) readinessState = 'Foundation Ready';
@@ -548,27 +577,33 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={profileData} setCurrentUserProfile={setProfileData} onImpersonate={(id) => setImpersonatedUserId(id === testUserId ? testUserId : null)} />;
+        return <AdminPanel 
+            allProfiles={allAdminProfiles} 
+            setAllProfiles={setAllAdminProfiles} 
+            currentUserProfile={activeProfile} 
+            setCurrentUserProfile={setProfileData} 
+            onImpersonate={handleImpersonate} 
+        />;
     }
     if (!activeTool || activeTool.id === 'home') {
-      return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
+      return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} />;
     }
     switch (activeTool.id) {
       case 'businessdetails': return <BusinessDetails 
-        profileData={profileData} 
+        profileData={activeProfile} 
         onUpdate={handleUpdateProfileData} 
         setActiveTool={setActiveTool} 
         onBusinessUpdated={fetchBusinesses} 
       />;
       case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
-      case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={profileData} />;
-      case 'account': return <Account plan={plan} profileData={profileData} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
+      case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={activeProfile} />;
+      case 'account': return <Account plan={plan} profileData={activeProfile} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
       case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
       case 'jetbiz': return <JetBiz 
         tool={activeTool} 
         addTasksToGrowthPlan={addTasksToGrowthPlan} 
         onSaveAnalysis={(report) => handleSaveAnalysis('jetbiz', report)} 
-        profileData={profileData} 
+        profileData={activeProfile} 
         setActiveTool={setActiveTool} 
         growthPlanTasks={growthPlanTasks} 
         onTaskStatusChange={handleTaskStatusChange}
@@ -579,22 +614,22 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         tool={activeTool} 
         addTasksToGrowthPlan={addTasksToGrowthPlan} 
         onSaveAnalysis={(report) => handleSaveAnalysis('jetviz', report)} 
-        profileData={profileData} 
+        profileData={activeProfile} 
         setActiveTool={setActiveTool} 
         growthPlanTasks={growthPlanTasks} 
         onTaskStatusChange={handleTaskStatusChange} 
         userId={activeUserId}
         activeBusinessId={activeBusinessId}
       />;
-      case 'jetcompete': return <JetCompete tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={profileData} setActiveTool={setActiveTool} />;
-      case 'jetkeywords': return <JetKeywords tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
-      case 'jetpost': return <JetPost tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
-      case 'jetcontent': return <JetContent tool={activeTool} initialProps={jetContentInitialProps} profileData={profileData} setActiveTool={setActiveTool} />;
-      case 'jetimage': return <JetImage tool={activeTool} profileData={profileData} />;
-      case 'jetcreate': return <JetCreate tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} onUpdateProfile={handleUpdateProfileData} />;
-      case 'jetreply': return <JetReply tool={activeTool} profileData={profileData} readinessState={readinessState} setActiveTool={setActiveTool} />;
-      case 'jettrust': return <JetTrust tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
-      case 'jetleads': return <JetLeads tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
+      case 'jetcompete': return <JetCompete tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={activeProfile} setActiveTool={setActiveTool} />;
+      case 'jetkeywords': return <JetKeywords tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
+      case 'jetpost': return <JetPost tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
+      case 'jetcontent': return <JetContent tool={activeTool} initialProps={jetContentInitialProps} profileData={activeProfile} setActiveTool={setActiveTool} />;
+      case 'jetimage': return <JetImage tool={activeTool} profileData={activeProfile} />;
+      case 'jetcreate': return <JetCreate tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} onUpdateProfile={handleUpdateProfileData} />;
+      case 'jetreply': return <JetReply tool={activeTool} profileData={activeProfile} readinessState={readinessState} setActiveTool={setActiveTool} />;
+      case 'jettrust': return <JetTrust tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
+      case 'jetleads': return <JetLeads tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
       case 'jetevents': return <JetEvents tool={activeTool} />;
       case 'jetads': return <JetAds tool={activeTool} />;
       case 'growthplan': return <GrowthPlan 
@@ -607,7 +642,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         activeBusinessId={activeBusinessId}
       />;
       case 'support': return <UserSupportTickets />;
-      default: return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
+      default: return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} />;
     }
   };
   
@@ -623,11 +658,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         toolCompletionStatus={toolCompletionStatus}
       />}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {impersonatedUserId && ( 
+        {impersonatedProfile && ( 
           <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> 
             <EyeIcon className="w-5 h-5"/> 
-            Viewing as {profileData.user.email}. 
-            <button onClick={() => setImpersonatedUserId(null)} className="underline ml-2">Return to Admin</button> 
+            Viewing as {impersonatedProfile.user.email}. 
+            <button onClick={() => handleImpersonate(null)} className="underline ml-2">Return to Admin</button> 
           </div> 
         )}
         {!isJetCreateActive && (
@@ -649,7 +684,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
           <SupportChatbot context={{ 
             user_id: userId,
             user_email: userEmail,
-            business_name: profileData.business.business_name,
+            business_name: activeProfile.business.business_name,
             current_page: activeTool?.id || 'home',
             subscription_status: 'active',
             conversation_turns: 0,

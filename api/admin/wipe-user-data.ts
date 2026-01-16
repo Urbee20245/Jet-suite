@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log(`[Admin Wipe] Initiating data wipe for user ID: ${targetUserId}`);
 
-    // Tables to delete data from (using ON DELETE CASCADE where possible, but explicitly deleting for safety and clarity)
+    // Tables to delete data from (using user_id as the foreign key)
     const tables = [
       'business_profiles',
       'growth_plan_tasks',
@@ -35,9 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'saved_keywords',
       'social_connections',
       'billing_accounts',
-      'profiles',
     ];
-
+    
+    // Delete from tables using user_id
     for (const table of tables) {
       const { error } = await supabase
         .from(table)
@@ -50,6 +50,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } else {
         console.log(`[Admin Wipe] Successfully deleted data from ${table}.`);
       }
+    }
+    
+    // Delete from profiles table (where id is the primary key and matches user_id)
+    const { error: profilesDeleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', targetUserId);
+        
+    if (profilesDeleteError) {
+        console.error('[Admin Wipe] Failed to delete data from profiles:', profilesDeleteError);
+    } else {
+        console.log('[Admin Wipe] Successfully deleted data from profiles.');
     }
     
     // CRITICAL: Delete the user from Supabase Auth

@@ -11,11 +11,11 @@ import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Searc
 import supportService from '../services/supportService';
 
 interface AdminPanelProps {
-    allProfiles: ProfileData[];
+    allProfiles: ProfileData[]; // This is now the list of ALL users
     setAllProfiles: React.Dispatch<React.SetStateAction<ProfileData[]>>;
     currentUserProfile: ProfileData;
     setCurrentUserProfile: (data: ProfileData) => void;
-    onImpersonate: (userId: string) => void;
+    onImpersonate: (profile: ProfileData | null) => void; // Updated signature
 }
 
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
@@ -367,17 +367,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         
         if (window.confirm(`Are you sure you want to reset DNA for ${email}? This will clear all extracted data.`)) {
             console.log(`[ADMIN] Forcing DNA reset for user UUID: ${userId}.`);
+            // NOTE: This only updates the local state for the Admin Panel view. 
+            // A proper reset would involve an API call to clear the DB fields.
             setAllProfiles(profiles => profiles.map(p => {
                 if (p.user.id === userId) {
                     return { 
                         ...p, 
-                        business: { ...p.business, dna: { logo: '', colors: [], fonts: '', style: '' } }, 
+                        business: { ...p.business, dna: { logo: '', colors: [], fonts: '', style: '' }, isDnaApproved: false, brandDnaProfile: null }, 
                         brandDnaProfile: undefined 
                     };
                 }
                 return p;
             }));
-            alert(`DNA reset complete for ${email}.`);
+            alert(`DNA reset complete for ${email}. (Note: This is a local state change for demo purposes.)`);
         }
     };
 
@@ -538,7 +540,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </div>
                             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                                 <div className="text-3xl font-bold text-green-700">{allProfiles.length}</div>
-                                <div className="text-sm text-green-600">Active Users</div>
+                                <div className="text-sm text-green-600">Total Users</div>
                             </div>
                             <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                                 <div className="text-3xl font-bold text-purple-700">{ticketStats.total}</div>
@@ -624,7 +626,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                         <td className="px-6 py-4">{profile.business.business_name || '(No Business)'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
                                             {profile.user.email !== currentUserProfile.user.email &&
-                                                <button onClick={() => onImpersonate(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
+                                                <button onClick={() => onImpersonate(profile)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
                                             }
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
                                             
