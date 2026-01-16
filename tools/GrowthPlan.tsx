@@ -3,6 +3,7 @@ import type { GrowthPlanTask, Tool } from '../types';
 import { ALL_TOOLS } from '../constants';
 import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
+import { syncToSupabase } from '../utils/syncService'; // Import sync utility
 
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
@@ -10,6 +11,8 @@ interface GrowthPlanProps {
   setActiveTool: (tool: Tool | null) => void;
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
   growthScore: number;
+  userId: string; // Added userId
+  activeBusinessId: string | null; // Added activeBusinessId
 }
 
 const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: string } } = {
@@ -19,12 +22,30 @@ const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: 
 };
 
 const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; onRemove: (id: string) => void; }> = ({ task, onStatusChange, onRemove }) => {
+  
+  const handleMarkComplete = () => {
+    if (window.confirm("Warning: Marking this task as complete will remove it from your active Growth Plan and contribute to your Growth Score. Are you sure you want to complete this task?")) {
+        onStatusChange(task.id, 'completed');
+    }
+  };
+
   return (
     <div className="p-5 rounded-xl shadow-md border bg-white border-brand-border hover:border-accent-purple/50 glow-card glow-card-rounded-xl">
         <div className="flex justify-between items-start">
             <h3 className="text-lg font-bold text-brand-text pr-4">{task.title}</h3>
             <div className="relative flex-shrink-0">
-                <select value={task.status} onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
+                <select 
+                    value={task.status} 
+                    onChange={(e) => {
+                        const newStatus = e.target.value as GrowthPlanTask['status'];
+                        if (newStatus === 'completed') {
+                            handleMarkComplete();
+                        } else {
+                            onStatusChange(task.id, newStatus);
+                        }
+                    }} 
+                    className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
+                >
                     <option value="to_do">To Do</option>
                     <option value="in_progress">In Progress</option>
                     <option value="completed">Completed</option>
@@ -51,7 +72,7 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
                 <span className="mx-2">|</span>
                 <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
             </div>
-            <button onClick={() => onStatusChange(task.id, 'completed')} className="bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">Mark Complete ✓</button>
+            <button onClick={handleMarkComplete} className="bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">Mark Complete ✓</button>
         </div>
     </div>
   );
@@ -89,8 +110,10 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
     )
 }
 
-export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore }) => {
+export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId }) => {
   const [showCompleted, setShowCompleted] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
   const pendingTasks = useMemo(() => tasks.filter(t => t.status !== 'completed'), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(t => t.status === 'completed'), [tasks]);
@@ -98,18 +121,64 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
   const handleClearCompleted = () => {
-    if (window.confirm('Are you sure you want to clear all completed tasks? This cannot be undone.')) {
+    if (window.confirm('Warning: Clearing completed tasks will permanently remove them from your history and Growth Plan. Are you sure you want to clear all completed tasks?')) {
       setTasks(tasks.filter(t => t.status !== 'completed'));
+      setSaveMessage('Completed tasks cleared. Click Save Plan to finalize.');
+    }
+  };
+  
+  const handleManualSave = async () => {
+    if (!userId || !activeBusinessId) {
+        setSaveMessage('Error: Cannot save without active user or business ID.');
+        return;
+    }
+    
+    setIsSaving(true);
+    setSaveMessage('Saving plan...');
+    
+    try {
+        // The sync service handles the upsert/delete logic on the backend
+        await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
+        setSaveMessage('✅ Growth Plan saved successfully!');
+    } catch (error) {
+        setSaveMessage('❌ Failed to save plan. Please try again.');
+        console.error('Manual save failed:', error);
+    } finally {
+        setIsSaving(false);
+        setTimeout(() => setSaveMessage(''), 3000);
     }
   };
 
   return (
     <div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div>
-            <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
-            <p className="text-brand-text-muted mt-1">Your prioritized action items for business growth.</p>
+        <div className="flex justify-between items-center">
+            <div>
+                <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
+                <p className="text-brand-text-muted mt-1">Your prioritized action items for business growth.</p>
+            </div>
+            <div className="text-right">
+                <span className="text-sm font-semibold text-brand-text-muted">Growth Score</span>
+                <div className="text-4xl font-bold text-accent-purple">{growthScore}</div>
+            </div>
         </div>
+        
+        {/* Save Button and Status */}
+        <div className="mt-6 pt-4 border-t border-brand-border">
+            <button
+                onClick={handleManualSave}
+                disabled={isSaving}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
+            >
+                {isSaving ? 'Saving...' : '💾 Save Plan'}
+            </button>
+            {saveMessage && (
+                <p className={`text-center mt-2 text-sm font-semibold ${saveMessage.startsWith('❌') ? 'text-red-500' : 'text-green-600'}`}>
+                    {saveMessage}
+                </p>
+            )}
+        </div>
+
         {tasks.length > 0 && (
             <div className="mt-6">
                 <div className="flex justify-between items-center mb-1">

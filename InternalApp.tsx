@@ -597,7 +597,15 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       case 'jetleads': return <JetLeads tool={activeTool} profileData={profileData} setActiveTool={setActiveTool} />;
       case 'jetevents': return <JetEvents tool={activeTool} />;
       case 'jetads': return <JetAds tool={activeTool} />;
-      case 'growthplan': return <GrowthPlan tasks={growthPlanTasks} setTasks={setGrowthPlanTasks} setActiveTool={setActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={growthScore} />;
+      case 'growthplan': return <GrowthPlan 
+        tasks={growthPlanTasks} 
+        setTasks={setGrowthPlanTasks} 
+        setActiveTool={setActiveTool} 
+        onTaskStatusChange={handleTaskStatusChange} 
+        growthScore={growthScore} 
+        userId={activeUserId}
+        activeBusinessId={activeBusinessId}
+      />;
       case 'support': return <UserSupportTickets />;
       default: return <Welcome setActiveTool={setActiveTool} profileData={profileData} readinessState={readinessState} plan={plan} />;
     }
