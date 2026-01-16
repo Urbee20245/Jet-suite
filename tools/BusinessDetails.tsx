@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
-import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { Loader } from '../components/Loader';
-import { SocialAccountsStep } from '../components/SocialAccountsStep';
+import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 
@@ -758,7 +757,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
         
-        {/* Locked View Overlay */}
+        {/* Conditional Lock/Unlock/Continue Card */}
+        {allStepsComplete && !isLocked && (
+            <LockInCard 
+                onLock={handleLockProfile} 
+                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
+            />
+        )}
+        
         {isLocked && (
             <LockedView 
                 onUnlock={handleUnlockProfile} 
@@ -831,21 +837,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
             {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : renderSocialContent()}
         </StepCard>
-
-        {/* Conditional Lock/Unlock/Continue Card */}
-        {allStepsComplete && !isLocked && (
-            <LockInCard 
-                onLock={handleLockProfile} 
-                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
-            />
-        )}
-        
-        {isLocked && (
-            <LockedView 
-                onUnlock={handleUnlockProfile} 
-                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
-            />
-        )}
     </div>
   );
 };
