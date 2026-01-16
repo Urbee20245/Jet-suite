@@ -70,7 +70,7 @@ const App: React.FC = () => {
   const verifySubscription = async (uid: string) => {
     if (!supabase) {
       // If Supabase is disabled, assume no subscription/onboarding is possible
-      setSubscriptionRedirect('/pricing');
+      setSubscriptionRedirect('/billing/locked');
       setIsAccessTierResolved(true);
       setIsOnboardingResolved(true);
       return;
@@ -79,7 +79,8 @@ const App: React.FC = () => {
     try {
       // 1. Check Subscription
       const result = await checkSubscriptionAccess(uid);
-      setSubscriptionRedirect(result.hasAccess ? null : (result.redirectTo || '/pricing'));
+      // If access is denied, redirect them to the LOCKED page first, not pricing directly
+      setSubscriptionRedirect(result.hasAccess ? null : '/billing/locked');
       setIsAccessTierResolved(true);
 
       // 2. Check Onboarding (Existence of ANY business profile)
@@ -93,7 +94,7 @@ const App: React.FC = () => {
       setIsOnboardingResolved(true);
     } catch (error) {
       console.error('[App] Verification failed:', error);
-      setSubscriptionRedirect('/pricing');
+      setSubscriptionRedirect('/billing/locked');
       setIsAccessTierResolved(true);
       setIsOnboardingResolved(true);
     }
@@ -193,15 +194,17 @@ const App: React.FC = () => {
 
     if (isLoggedIn) {
       if (subscriptionRedirect) {
-        // If we have a redirect but we are ALREADY on a whitelisted page, do nothing
+        // WHITELIST: If they are on a billing/pricing page, don't force the locked redirect
         const isWhitelisted = 
           currentPath === '/pricing' || 
           currentPath === '/account' || 
           currentPath.startsWith('/billing/') ||
-          currentPath === '/contact';
+          currentPath === '/contact' ||
+          currentPath === '/savings';
           
         if (isWhitelisted) return;
 
+        // Otherwise, kick them to the locked page
         if (currentPath !== subscriptionRedirect) {
           navigate(subscriptionRedirect);
         }
@@ -261,7 +264,8 @@ const App: React.FC = () => {
 
   const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
     console.log('[App] Subscription access denied:', { status, redirectTo });
-    navigate(redirectTo); 
+    // When the guard triggers, we go to the dedicated locked page instead of pricing directly
+    navigate('/billing/locked'); 
   };
 
   try {
