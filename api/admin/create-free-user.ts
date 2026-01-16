@@ -22,6 +22,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
+  let userId: string | undefined;
+
   try {
     // 1. Create user in Supabase Auth
     const { data: newUserData, error: createUserError } = await supabase.auth.admin.createUser({
@@ -35,18 +37,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (createUserError) throw createUserError;
-    const userId = newUserData.user.id;
+    userId = newUserData.user.id;
 
-    // 2. Explicitly create the public profile record
+    // 2. UPDATE the public profile record created by the trigger
+    // The `handle_new_user` trigger already created a basic row in `profiles`.
+    // We now UPDATE it with the full name and role.
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
-        id: userId,
-        email: email,
+      .update({
         first_name: firstName,
         last_name: lastName,
         role: 'Owner'
-      });
+      })
+      .eq('id', userId);
 
     if (profileError) throw profileError;
 
@@ -84,16 +87,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error: any) {
     console.error('[Admin Create Free User] Error:', error);
     // Attempt to clean up the auth user if other steps failed
-    if (error.message.includes('profiles') || error.message.includes('billing_accounts')) {
-        // Find the user by email to get their ID for deletion
-        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-        if (!listError && users) {
-            const userToDelete = users.find((u: any) => u.email === email);
-            if (userToDelete) {
-                await supabase.auth.admin.deleteUser(userToDelete.id);
-                console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
-            }
-        }
+    if (userId) {
+        await supabase.auth.admin.deleteUser(userId);
+        console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
     }
     res.status(500).json({ error: 'Failed to create free user', message: error.message });
   }
