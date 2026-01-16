@@ -126,7 +126,39 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       return [createInitialProfile(userId, userEmail, 'Loading', 'User')];
   });
   
-  const activeProfile = impersonatedProfile || allProfiles[0];
+  const activeProfile = allProfiles.find(p => p.user.id === activeUserId) || allProfiles[0];
+
+  // Function to fetch all businesses for the current user
+  const fetchBusinesses = async () => {
+    if (!supabase || !activeUserId) return;
+    try {
+      const { data, error } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', activeUserId);
+
+      if (error) throw error;
+      
+      const loadedBusinesses = data as BusinessProfile[];
+      setBusinesses(loadedBusinesses);
+
+      // Set active business ID if not set, prioritizing primary or the first one
+      if (!activeBusinessId && loadedBusinesses.length > 0) {
+        const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0].id;
+        setActiveBusinessId(primaryBiz);
+        localStorage.setItem('jetsuite_active_biz_id', primaryBiz);
+      } else if (activeBusinessId && !loadedBusinesses.find(b => b.id === activeBusinessId)) {
+        // If the active ID is no longer valid, reset to primary or first
+        const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0]?.id;
+        if (primaryBiz) {
+          setActiveBusinessId(primaryBiz);
+          localStorage.setItem('jetsuite_active_biz_id', primaryBiz);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching businesses:', error);
+    }
+  };
 
   // UNIVERSAL LOAD FUNCTION - Loads ALL data from Supabase
   const loadBusinessData = async (businessId: string) => {
@@ -297,12 +329,15 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
                 service_area: p.business.service_area || '',
                 phone: p.business.phone || '',
                 email: p.business.email || '',
+                is_primary: p.business.is_primary || false,
                 is_complete: p.business.is_complete || false,
                 created_at: p.business.created_at || new Date().toISOString(),
                 updated_at: p.business.updated_at || new Date().toISOString(),
                 google_business_profile: p.business.google_business_profile || null,
                 dna: p.business.dna || { logo: '', colors: [], fonts: '', style: '' },
                 location: p.business.location || '',
+                city: p.business.city || '',
+                state: p.business.state || '',
             };
             
             return {
@@ -319,7 +354,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     } catch (error) {
         console.error('Error fetching all admin profiles:', error);
     }
-};
+  };
 
 // Initial Profile Load (Updated to only load current user's profile)
   useEffect(() => {
@@ -327,6 +362,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
         
         setAllProfiles([currentUserProfile]);
+        
+        // Fetch all businesses for the current user
+        await fetchBusinesses();
         
         // If admin, fetch all profiles immediately
         if (isAdmin) {
@@ -337,13 +375,20 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     loadProfiles();
   }, [userId, userEmail, isAdmin]); // Added isAdmin dependency
 
+  // Load data for the active business whenever the activeBusinessId changes
+  useEffect(() => {
+    if (activeBusinessId) {
+      loadBusinessData(activeBusinessId);
+    }
+  }, [activeBusinessId]);
+
   // Business Switching
   const handleBusinessSwitch = async (businessId: string) => {
     if (activeBusinessId === businessId) return;
     
     localStorage.setItem('jetsuite_active_biz_id', businessId);
     setActiveBusinessId(businessId);
-    await loadBusinessData(businessId);
+    // loadBusinessData will be triggered by the useEffect above
     
     setSavedKeywords([]);
     setGrowthPlanTasks([]);
@@ -413,7 +458,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  const setProfileData = (newProfileData: ProfileData, persist: boolean = false) => {
+  const setProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
     setAllProfiles(prev => {
         const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : prev.findIndex(p => p.user.id === newProfileData.user.id);

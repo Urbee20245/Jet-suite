@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         is_dna_approved: !!primaryBusiness.brand_dna_profile,
-        dna_last_updated_at: undefined,
+        dna_last_updated_at: primaryBusiness.dna_last_updated_at,
       };
 
       return {
