@@ -62,16 +62,6 @@ const DnaField: React.FC<{ label: string; value: string | string[] | boolean | u
         displayValue = value;
     }
 
-    if (!isEditable) {
-        return (
-            <div>
-                <p className="font-semibold text-brand-text-muted">{label}</p>
-                <p className="text-brand-text whitespace-pre-wrap">{displayValue}</p>
-            </div>
-        );
-    }
-    
-    // If editable, this component is only used for display within the read-only section
     return (
         <div>
             <p className="font-semibold text-brand-text-muted">{label}</p>
@@ -292,7 +282,77 @@ const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed
 const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button type="button" onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
-const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => { const [searchTerm, setSearchTerm] = useState(''); const [results, setResults] = useState<BusinessSearchResult[]>([]); const [selected, setSelected] = useState<BusinessSearchResult | null>(null); const [loading, setLoading] = useState(false); const handleSearch = async (e: React.FormEvent) => { e.preventDefault(); if (!searchTerm) return; setLoading(true); setResults([]); setSelected(null); const res = await searchGoogleBusiness(searchTerm); setResults(res); setLoading(false); }; if (selected) return ( <div className="bg-brand-light p-6 rounded-lg border text-center"><h4 className="font-bold">Is this your business?</h4><div className="bg-white my-4 p-4 rounded-lg border"><p className="font-bold">{selected.name}</p><p className="text-sm text-brand-text-muted">{selected.address}</p></div><div className="flex gap-4 justify-center"><button type="button" onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button><button type="button" onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button></div></div> ); return ( <div className="bg-brand-light p-6 rounded-lg border space-y-4"> <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4> <form onSubmit={handleSearch} className="space-y-4"> <div><label className="text-xs font-semibold">1. Paste Google Share or Maps URL</label><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="https://share.google/... or https://maps.app.goo.gl/..." className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <div className="text-center text-xs font-semibold">OR</div> <div><label className="text-xs font-semibold">2. Search by Name & Location</label><input type="text" onChange={e => setSearchTerm(e.target.value)} placeholder={`${profileData.business.business_name}, ${profileData.business.location}`} className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">{loading ? '...' : 'Find & Connect'}</button> {loading && <Loader />} <div className="space-y-2 mt-4">{results.map(r => <button type="button" key={r.name+r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"><p className="font-semibold">{r.name}</p><p className="text-xs text-brand-text-muted">{r.address}</p></button>)}</div> </form> </div> ); };
+const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void, onSearch: (e: React.FormEvent) => Promise<void>, searchResults: BusinessSearchResult[], loading: boolean, error: string, onSelect: (b: BusinessSearchResult) => void, selected: BusinessSearchResult | null, onConfirm: () => void, onCancel: () => void }> = ({ profileData, onConnect, onSearch, searchResults, loading, error, onSelect, selected, onConfirm, onCancel }) => { 
+    const [searchTerm, setSearchTerm] = useState(''); 
+    
+    if (selected) return (
+        <div className="bg-brand-light p-6 rounded-lg border text-center">
+            <h4 className="font-bold text-brand-text">Confirm This Business</h4>
+            <p className="text-sm text-brand-text-muted mb-4">Is this the correct Google Business Profile?</p>
+            <div className="bg-white my-4 p-4 rounded-lg border">
+                <p className="font-bold text-brand-text">{selected.name}</p>
+                <p className="text-sm text-brand-text-muted">{selected.address}</p>
+                <p className="text-xs text-brand-text-muted flex items-center justify-center gap-1 mt-1">
+                    <StarIcon className="w-3 h-3 text-yellow-400" /> {selected.rating} ({selected.reviewCount} reviews)
+                </p>
+            </div>
+            <div className="flex gap-4 justify-center">
+                <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">No, search again</button>
+                <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, Connect</button>
+            </div>
+        </div>
+    );
+
+    return ( 
+        <div className="bg-brand-light p-6 rounded-lg border space-y-4"> 
+            <h4 className="font-bold text-brand-text">Connect Your Verified Profile</h4> 
+            <form onSubmit={onSearch} className="space-y-4"> 
+                <div>
+                    <label className="text-xs font-semibold text-brand-text-muted">Search by Name & Location</label>
+                    <input 
+                        type="text" 
+                        value={searchTerm} 
+                        onChange={e => setSearchTerm(e.target.value)} 
+                        placeholder={`${profileData.business.business_name}, ${profileData.business.location}`} 
+                        className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" 
+                    />
+                </div> 
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
+                    {loading ? 'Searching...' : 'Find & Connect'}
+                </button>
+                
+                {loading && (
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                        <div className="bg-blue-600 h-2.5 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                    </div>
+                )}
+                
+                <div className="space-y-2 mt-4">
+                    {searchResults.map(r => 
+                        <button 
+                            type="button" 
+                            key={r.name+r.address} 
+                            onClick={() => onSelect(r)} 
+                            className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"
+                        >
+                            <p className="font-semibold text-brand-text">{r.name}</p>
+                            <p className="text-xs text-brand-text-muted">{r.address}</p>
+                        </button>
+                    )}
+                </div> 
+            </form> 
+        </div> 
+    ); 
+};
+const renderSocialContent = () => { 
+    // FIX: Pass the correct handlers to SocialAccountsStep
+    return <SocialAccountsStep 
+        userId={userId} 
+        onContinue={() => {}} 
+        onSkip={() => {}} 
+    />; 
+  };
 
 // --- New Lock/Unlock Components ---
 
@@ -402,6 +462,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
   const [userId, setUserId] = useState<string>('');
+  
+  // GBP Search State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
+  const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
+  const [isSearchingGbp, setIsSearchingGbp] = useState(false);
+  const [searchError, setSearchError] = useState('');
   
   useEffect(() => {
     const storedUserId = localStorage.getItem('jetsuite_userId');
@@ -665,12 +732,72 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
 
-  const handleGbpConnect = (gbp: Partial<ProfileData['googleBusiness']>) => { 
-    const newGbp = {...googleBusiness, ...gbp, status: 'Verified' as GbpStatus, placeId: `manual_${Date.now()}`}; 
-    setGoogleBusiness(newGbp); 
-    onUpdate({...profileData, googleBusiness: newGbp}); 
+  const handleGbpSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchError('');
+    setIsSearchingGbp(true);
+    setSearchResults([]);
+    setSelectedGbp(null);
+
+    const query = searchTerm.trim() || `${business.business_name}, ${business.location}`;
+    
+    try {
+        const results = await searchGoogleBusiness(query);
+        if (results.length === 0) {
+            setSearchError('No businesses found matching your query. Try a different search term.');
+        } else {
+            setSearchResults(results);
+        }
+    } catch (err) {
+        setSearchError('Failed to search Google Business Profiles. Please try again.');
+    } finally {
+        setIsSearchingGbp(false);
+    }
   };
-  const handleGbpDisconnect = () => { const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; setGoogleBusiness(newGbp); onUpdate({...profileData, googleBusiness: newGbp});};
+
+  const handleGbpSelect = (gbp: BusinessSearchResult) => {
+    setSelectedGbp(gbp);
+    setSearchResults([]); // Clear search results once selected
+  };
+
+  const handleGbpConfirm = async () => {
+    if (!selectedGbp) return;
+
+    // 1. Update local state with confirmed GBP data
+    const newGbp: ProfileData['googleBusiness'] = {
+        profileName: selectedGbp.name,
+        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
+        status: 'Verified' as GbpStatus,
+        placeId: `manual_${Date.now()}`, // Mock place ID
+        rating: selectedGbp.rating,
+        reviewCount: selectedGbp.reviewCount,
+        address: selectedGbp.address,
+    };
+    
+    setGoogleBusiness(newGbp);
+    
+    // 2. Save the entire profile to the database
+    await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+    
+    // 3. Clear selection state
+    setSelectedGbp(null);
+    setSearchTerm('');
+    setSearchResults([]);
+  };
+
+  const handleGbpCancel = () => {
+    setSelectedGbp(null);
+    setSearchResults([]);
+  };
+
+  const handleGbpDisconnect = () => { 
+    const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
+    setGoogleBusiness(newGbp); 
+    onUpdate({...profileData, googleBusiness: newGbp});
+    // Also save the change to the database
+    handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+  };
+  
   const handleGenerateDescription = async () => { if (!business.business_website) { alert("Please enter your Website URL first."); return; } setIsGeneratingDescription(true); try { const desc = await generateBusinessDescription(business.business_website); setBusiness(b => ({ ...b, business_description: desc })); } catch (e) { alert("Failed to generate description. Check your API key."); } finally { setIsGeneratingDescription(false); }};
   
   const renderDnaContent = () => {
@@ -721,7 +848,18 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     switch (googleBusiness.status) { 
         case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; 
         case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; 
-        case 'Verified': return <GbpConnect profileData={profileData} onConnect={handleGbpConnect} />; 
+        case 'Verified': return <GbpConnect 
+            profileData={profileData} 
+            onConnect={handleGbpConnect} 
+            onSearch={handleGbpSearch}
+            searchResults={searchResults}
+            loading={isSearchingGbp}
+            error={searchError}
+            onSelect={handleGbpSelect}
+            selected={selectedGbp}
+            onConfirm={handleGbpConfirm}
+            onCancel={handleGbpCancel}
+        />; 
         default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
     } 
   };
