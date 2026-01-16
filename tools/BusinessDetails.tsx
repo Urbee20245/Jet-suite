@@ -310,7 +310,7 @@ const LockInCard: React.FC<{ onLock: () => void, onNext: () => void }> = ({ onLo
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
                 <LockClosedIcon className="w-5 h-5" />
-                Lock In Profile
+                Save and Lock
             </button>
             <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
                 Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
@@ -592,6 +592,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleLockProfile = async () => {
+    // 1. Save current basic info first
+    await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+    
+    // 2. Proceed with locking
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
     await updateProfileLockStatus(true);
   };
