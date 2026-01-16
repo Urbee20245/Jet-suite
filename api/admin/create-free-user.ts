@@ -25,11 +25,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   let userId: string | undefined;
 
   try {
-    // 1. Create user in Supabase Auth. This will trigger the `handle_new_user` function in the database.
+    // 1. Create user in Supabase Auth
     const { data: newUserData, error: createUserError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: true, // Mark as verified immediately
       user_metadata: {
         first_name: firstName,
         last_name: lastName,
@@ -39,52 +39,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (createUserError) throw createUserError;
     userId = newUserData.user.id;
 
-    // 2. The trigger has already created a `profiles` row. Now, we UPDATE it with the full name.
+    // 2. Explicitly Create Profile (don't rely on trigger)
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({
+      .upsert({
+        id: userId,
+        email: email,
         first_name: firstName,
         last_name: lastName,
         role: 'Owner'
-      })
-      .eq('id', userId);
+      }, { onConflict: 'id' });
 
     if (profileError) throw profileError;
 
-    // 3. The trigger has also created a `billing_accounts` row with a null status.
-    // We now UPDATE that record to grant free, active access.
+    // 3. Explicitly Create Billing Account with ACTIVE status
     const { error: billingError } = await supabase
       .from('billing_accounts')
-      .update({
+      .upsert({
+        user_id: userId,
+        user_email: email,
         subscription_status: 'active',
         subscription_plan: 'admin_granted_free',
-      })
-      .eq('user_id', userId);
+        business_count: 1,
+        seat_count: 1,
+        is_founder: false,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
 
     if (billingError) throw billingError;
 
-    // 4. Create a basic business profile for the new user so they can start onboarding.
+    // 4. Create Initial Business Profile so they skip the onboarding check
     const { error: businessError } = await supabase
       .from('business_profiles')
       .insert({
         user_id: userId,
         business_name: `${firstName}'s Business`,
-        industry: 'General',
-        city: 'City',
-        state: 'State',
+        industry: 'Other',
+        city: 'Sample City',
+        state: 'Sample State',
         is_primary: true,
-        is_complete: false,
+        is_complete: false, // User will be prompted to complete details on login
       });
 
     if (businessError) throw businessError;
 
-    res.status(201).json({ success: true, message: `Free user ${email} created successfully.` });
+    console.log(`[Admin] Successfully created free user: ${email} (ID: ${userId})`);
+    res.status(201).json({ 
+        success: true, 
+        message: `User created successfully!`,
+        userId: userId
+    });
+
   } catch (error: any) {
     console.error('[Admin Create Free User] Error:', error);
-    // Attempt to clean up the auth user if other steps failed to prevent orphaned accounts.
+    // Cleanup if partially successful
     if (userId) {
         await supabase.auth.admin.deleteUser(userId);
-        console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
     }
     res.status(500).json({ error: 'Failed to create free user', message: error.message });
   }
