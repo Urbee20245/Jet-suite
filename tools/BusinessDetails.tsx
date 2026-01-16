@@ -5,6 +5,7 @@ import { Loader } from '../components/Loader';
 import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { SocialAccountsStep } from '../components/SocialAccountsStep'; // <-- ADDED IMPORT
 
 // --- Types ---
 interface BusinessDetailsProps { 
@@ -724,7 +725,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
     } 
   };
-  const renderSocialContent = () => { if (step4Completed) { return <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />; } return <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div>; };
+  const renderSocialContent = () => { 
+    // FIX: Pass the correct handlers to SocialAccountsStep
+    return <SocialAccountsStep 
+        userId={userId} 
+        onContinue={() => {}} 
+        onSkip={() => {}} 
+    />; 
+  };
 
   const handleLockedClick = (stepNumber: number) => {
     let message = '';
@@ -835,7 +843,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         </StepCard>
 
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
-            {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : renderSocialContent()}
+            {renderSocialContent()}
         </StepCard>
     </div>
   );

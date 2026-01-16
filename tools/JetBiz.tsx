@@ -479,7 +479,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
               <div>
                   <h2 className="text-lg font-bold text-brand-text">
                       <span className="text-sm text-brand-text-muted font-normal">Analysis for:</span> 
-                      <span className="ml-2">{auditReport.businessName}</span>
+                      <span className="ml-2 font-extrabold">{auditReport.businessName}</span>
                   </h2>
               </div>
               <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
