@@ -179,7 +179,7 @@ const App: React.FC = () => {
 
   // Sync currentPath with browser forward/back buttons
   useEffect(() => {
-    if (typeof window !== 'undefined') return;
+    if (typeof window === 'undefined') return;
     const onLocationChange = () => setCurrentPath(window.location.pathname);
     window.addEventListener('popstate', onLocationChange);
     return () => window.removeEventListener('popstate', onLocationChange);
@@ -315,7 +315,7 @@ const App: React.FC = () => {
           currentPath={currentPath} 
           navigate={navigate} 
           onLoginSuccess={handleLoginSuccess} 
-          onLogout={handleLogout} // PASSED HANDLER
+          onLogout={handleLogout}
         />;
       }
     }
@@ -342,7 +342,7 @@ const App: React.FC = () => {
         currentPath={currentPath} 
         navigate={navigate} 
         onLoginSuccess={handleLoginSuccess} 
-        onLogout={handleLogout} // PASSED HANDLER
+        onLogout={handleLogout}
       />;
     }
 
