@@ -96,7 +96,7 @@ const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, st
             {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(task.completionDate!).toLocaleDateString()}</p>}
         </div>
         <div className="relative">
-          <select value={task.status} onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
+          <select value={task.status} onChange={(e) => onStatusChange(e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
             <option value="to_do">To Do</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
@@ -163,12 +163,12 @@ const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask
 
 const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool | null) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool }) => {
     const [showCompleted, setShowCompleted] = useState(false);
-    const weeklyActionTasks = report.weeklyActions.map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
+    const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
     const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
     const displayedTasks = showCompleted ? weeklyActionTasks : weeklyActionTasks.filter(t => t.status !== 'completed');
 
-    const allIssueTasks = report.issues.map(issue => growthPlanTasks.find(t => t.title === issue.task.title)).filter(Boolean) as GrowthPlanTask[];
+    const allIssueTasks = (report.issues || []).map(issue => growthPlanTasks.find(t => t.title === issue.task.title)).filter(Boolean) as GrowthPlanTask[];
     const resolvedIssues = allIssueTasks.filter(t => t.status === 'completed').length;
 
     return (
@@ -184,7 +184,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified ({resolvedIssues} of {allIssueTasks.length} resolved)</h2>
-            <div className="space-y-4">{report.issues.map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
+            <div className="space-y-4">{(report.issues || []).map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
         </div>
     </div>
   );

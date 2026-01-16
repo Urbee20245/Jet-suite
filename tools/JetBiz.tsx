@@ -209,7 +209,7 @@ const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask
 const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: GrowthPlanTask[], onRerun: (e: React.FormEvent) => Promise<void>, isRunning: boolean, onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void, setActiveTool: (tool: Tool | null) => void }> = ({ report, growthPlanTasks, onRerun, isRunning, onTaskStatusChange, setActiveTool }) => {
   const [showCompleted, setShowCompleted] = useState(false);
 
-  const weeklyActionTasks = report.weeklyActions.map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
+  const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
   const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
   const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
   
@@ -255,7 +255,7 @@ const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: Grow
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
         <div className="space-y-4">
-          {report.issues.map(issue => {
+          {(report.issues || []).map(issue => {
             const correspondingTask = growthPlanTasks.find(t => t.title === issue.task.title);
             return <IssueCard key={issue.id} issue={issue} correspondingTask={correspondingTask} onStatusChange={onTaskStatusChange} />;
           })}

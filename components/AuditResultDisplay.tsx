@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { AuditReport, AuditIssue, GrowthPlanTask } from '../types';
 import { 
@@ -98,7 +97,7 @@ export const AuditResultDisplay: React.FC<AuditResultDisplayProps> = ({ report, 
             </button>
         </div>
         <div className="space-y-4">
-          {report.weeklyActions.map((task, index) => (
+          {(report.weeklyActions || []).map((task, index) => (
             <TaskCard key={index} task={task} isWeeklyAction />
           ))}
         </div>
@@ -110,7 +109,7 @@ export const AuditResultDisplay: React.FC<AuditResultDisplayProps> = ({ report, 
       <div>
         <h3 className="text-xl font-bold text-brand-text mb-4">Full List of Issues Identified</h3>
         <div className="space-y-4">
-          {report.issues.map((issue, index) => (
+          {(report.issues || []).map((issue, index) => (
             <IssueCard key={index} issue={issue} />
           ))}
         </div>
