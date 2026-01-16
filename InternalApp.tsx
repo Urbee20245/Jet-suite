@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
@@ -123,6 +124,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
 
   // Initialize allProfiles with default structure (only current user's profile)
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
+      // Initialize with the current user's basic profile structure
       return [createInitialProfile(userId, userEmail, 'Loading', 'User')];
   });
   
@@ -361,6 +363,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     const loadProfiles = async () => {
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
         
+        // Initialize allProfiles with the current user's profile
         setAllProfiles([currentUserProfile]);
         
         // Fetch all businesses for the current user
