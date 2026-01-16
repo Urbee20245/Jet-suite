@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { InternalApp } from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
@@ -8,8 +7,35 @@ import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client';
-import { NotFoundPage } from './pages/NotFoundPage'; 
-import { ContactPage } from './pages/ContactPage'; 
+import { syncToSupabase, loadFromSupabase } from './utils/syncService'; // Import sync utilities
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { Welcome } from './tools/Welcome';
+import { BusinessDetails } from './tools/BusinessDetails';
+import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
+import { Account } from './tools/Account';
+import { KnowledgeBase } from './tools/KnowledgeBase';
+import { JetBiz } from './tools/JetBiz';
+import { JetViz } from './tools/JetViz';
+import { JetCompete } from './tools/JetCompete';
+import { JetKeywords } from './tools/JetKeywords';
+import { JetPost } from './tools/JetPost';
+import { JetContent } from './tools/JetContent';
+import { JetImage } from './tools/JetImage';
+import { JetCreate } from './tools/JetCreate';
+import { JetReply } from './tools/JetReply';
+import { JetTrust } from './tools/JetTrust';
+import { JetLeads } from './tools/JetLeads';
+import { JetEvents } from './tools/JetEvents';
+import { JetAds } from './tools/JetAds';
+import { GrowthPlan } from './tools/GrowthPlan';
+import UserSupportTickets from './tools/UserSupportTickets';
+import { AdminPanel } from './tools/AdminPanel';
+import { Planner } from './tools/Planner';
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna, UserProfile } from './types';
+import { ALL_TOOLS } from './constants';
+import { EyeIcon } from './components/icons/MiniIcons';
+import SupportChatbot from './components/SupportChatbot';
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -29,8 +55,7 @@ if (typeof window !== 'undefined') {
 
 console.log('[App] Component module loaded');
 
-// TEMPORARILY REMOVED ADMIN_EMAIL CHECK FOR DEVELOPMENT ACCESS
-// const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
+const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
 interface InternalAppProps {
     onLogout: () => void;
@@ -85,8 +110,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   // --- Identity & State Management ---
   const [impersonatedProfile, setImpersonatedProfile] = useState<ProfileData | null>(null);
   const activeUserId = impersonatedProfile?.user.id || userId;
-  // TEMPORARY FIX: Set isAdmin to true for all logged-in users
-  const isAdmin = true; 
+  const isAdmin = userEmail === ADMIN_EMAIL;
 
   const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>([]);
   const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
@@ -267,7 +291,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     if (!isAdmin) return;
     
     try {
-        // TEMPORARY FIX: Use current user email for auth check
         const response = await fetch('/api/admin/get-all-profiles', {
             headers: {
                 'x-user-email': userEmail // Pass admin email for authorization
@@ -299,7 +322,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
                 googleBusiness: p.business.google_business_profile,
                 brandDnaProfile: p.business.brand_dna_profile,
                 is_dna_approved: !!p.business.brandDnaProfile,
-                dna_last_updated_at: p.business.dna_last_updated_at || undefined,
+                dna_last_updated_at: p.business.dna_last_updated_at,
                 // Fill in missing fields from the simplified API response
                 business_website: p.business.business_website || '',
                 business_description: p.business.business_description || '',
