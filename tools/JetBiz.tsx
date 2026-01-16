@@ -44,8 +44,8 @@ const AnalysisLoading: React.FC = () => {
             <h3 className="text-xl font-bold text-brand-text mt-4">Analyzing Your Profile...</h3>
             <p className="text-brand-text-muted mt-2">This may take a moment as we compare you to local competitors.</p>
             
-            <div className="mt-6 bg-brand-light p-4 rounded-lg border border-brand-border min-h-[90px] flex items-center justify-center transition-opacity duration-500">
-                <p className="text-brand-text-muted text-sm italic">
+            <div className="mt-6 bg-brand-darker p-4 rounded-lg border border-slate-700 min-h-[90px] flex items-center justify-center transition-opacity duration-500">
+                <p className="text-white text-sm italic">
                     {gbpFacts[currentFactIndex]}
                 </p>
             </div>
