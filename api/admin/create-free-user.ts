@@ -37,19 +37,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (createUserError) throw createUserError;
     const userId = newUserData.user.id;
 
-    // The handle_new_user trigger creates a billing_accounts record.
-    // We update it to grant free, active access.
+    // 2. Explicitly create the public profile record
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'Owner'
+      });
+
+    if (profileError) throw profileError;
+
+    // 3. Explicitly create the billing account with free tier
     const { error: billingError } = await supabase
       .from('billing_accounts')
-      .update({ 
+      .insert({
+        user_id: userId,
+        user_email: email,
         subscription_status: 'active',
-        subscription_plan: 'free_tier' // Explicitly set to free
-      })
-      .eq('user_id', userId);
+        subscription_plan: 'free_tier',
+        is_founder: false,
+        business_count: 1,
+        seat_count: 1,
+      });
 
-    if (billingError) console.warn(`Could not set free plan for ${email}:`, billingError.message);
+    if (billingError) throw billingError;
 
-    // 2. Create a basic business profile for the new user
+    // 4. Create a basic business profile for the new user
     const { error: businessError } = await supabase
       .from('business_profiles')
       .insert({
@@ -67,6 +83,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(201).json({ success: true, message: `Free user ${email} created successfully.` });
   } catch (error: any) {
     console.error('[Admin Create Free User] Error:', error);
+    // Attempt to clean up the auth user if other steps failed
+    if (error.message.includes('profiles') || error.message.includes('billing_accounts')) {
+        const { data: { user } } = await supabase.auth.admin.getUserByEmail(email);
+        if (user) {
+            await supabase.auth.admin.deleteUser(user.id);
+        }
+    }
     res.status(500).json({ error: 'Failed to create free user', message: error.message });
   }
 }
