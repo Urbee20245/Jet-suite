@@ -50,15 +50,23 @@ export default async function handler(
 
       case 'jetbiz':
       case 'jetviz':
-        const { data: report } = await supabase
+        // Fetch ALL reports for this business/type
+        const { data: reports } = await supabase
           .from('audit_reports')
-          .select('report_data')
+          .select('id, report_data, analysis_name, created_at, updated_at')
           .eq('user_id', userId)
           .eq('business_id', businessId)
           .eq('report_type', dataType)
-          .maybeSingle();
+          .order('created_at', { ascending: false });
 
-        result = report?.report_data || null;
+        // Map to a cleaner structure for the frontend
+        result = (reports || []).map(report => ({
+            id: report.id,
+            created_at: report.created_at,
+            updated_at: report.updated_at,
+            analysis_name: report.analysis_name,
+            results: report.report_data,
+        }));
         break;
 
       case 'keywords':

@@ -3,13 +3,14 @@ export const syncToSupabase = async (
   userId: string,
   businessId: string | null,
   dataType: string,
-  data: any
+  data: any,
+  analysisName?: string // <-- ADD analysisName
 ) => {
   try {
     await fetch('/api/sync/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, businessId, dataType, data }),
+      body: JSON.stringify({ userId, businessId, dataType, data, analysisName }), // <-- PASS analysisName
     });
   } catch (error) {
     console.error(`Error syncing ${dataType}:`, error);

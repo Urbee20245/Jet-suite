@@ -202,6 +202,9 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedList, setShowSavedList] = useState(false);
   
+  // 1. ADD STATE FOR ANALYSIS NAME
+  const [analysisName, setAnalysisName] = useState('');
+  
   const supabase = getSupabaseClient();
 
   // ADDED EFFECT TO LOAD SAVED ANALYSES
@@ -232,10 +235,11 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       const data = await loadFromSupabase(userId, activeBusinessId, 'jetviz');
       
       if (data) {
-        // Since we are loading from the generic analysis_results table, we need to map the structure
+        // 3. UPDATE MAPPING TO INCLUDE analysis_name
         const mappedData = Array.isArray(data) ? data.map((item: any) => ({
           id: item.id,
           created_at: item.created_at,
+          analysis_name: item.analysis_name, // <-- NEW FIELD
           target_url: item.target_url,
           results: item.results,
         })) : [];
@@ -248,14 +252,18 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   };
 
-  // ADDED FUNCTION TO SAVE ANALYSIS
+  // 2. UPDATE SAVE ANALYSIS FUNCTION
   const handleSaveAnalysis = async () => {
     if (!result || !activeBusinessId || !userId) return;
     
+    const nameToSave = analysisName.trim() || `JetViz Analysis - ${new Date().toLocaleDateString()}`;
+    
     setIsSaving(true);
     try {
-      await syncToSupabase(userId, activeBusinessId, 'jetviz', result);
+      // Pass analysisName to sync service
+      await syncToSupabase(userId, activeBusinessId, 'jetviz', result, nameToSave);
       alert('Analysis saved successfully!');
+      setAnalysisName(''); // Clear input after saving
       loadSavedAnalyses();
     } catch (error) {
       console.error('Error saving analysis:', error);
@@ -284,8 +292,9 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     if (!supabase) return;
     
     try {
+      // Assuming audit_reports is the correct table based on sync/save.ts
       const { error } = await supabase
-        .from('analysis_results')
+        .from('audit_reports')
         .delete()
         .eq('id', analysisId);
       
@@ -357,69 +366,39 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
           <JetVizResultDisplay report={result} onRerun={(e) => handleSubmit(e, result.businessAddress)} isRunning={loading} growthPlanTasks={growthPlanTasks} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
           
           {/* Save Analysis Button */}
-          <div className="mt-6 flex gap-4">
-            <button
-              onClick={handleSaveAnalysis}
-              disabled={isSaving}
-              className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md"
-            >
-              {isSaving ? 'Saving...' : '💾 Save Analysis'}
-            </button>
-            
-            <button
-              onClick={() => setShowSavedList(!showSavedList)}
-              className="px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md"
-            >
-              📂 View Saved Analyses ({savedAnalyses.length})
-            </button>
-            
-            <button
-              onClick={handleStartOver}
-              className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md"
-            >
-              Start New Scan
-            </button>
+          <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
+                <h3 className="text-xl font-bold text-brand-text mb-4">Save Analysis</h3>
+                <div className="flex gap-4">
+                    <input
+                        type="text"
+                        value={analysisName}
+                        onChange={(e) => setAnalysisName(e.target.value)}
+                        placeholder={`e.g., Week 1 Analysis - ${new Date().toLocaleDateString()}`}
+                        className="flex-1 bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                    />
+                    <button
+                      onClick={handleSaveAnalysis}
+                      disabled={isSaving}
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md flex items-center gap-2"
+                    >
+                      {isSaving ? 'Saving...' : '💾 Save Report'}
+                    </button>
+                </div>
+                
+                <button
+                  onClick={() => setShowSavedList(!showSavedList)}
+                  className="mt-4 w-full px-6 py-3 bg-brand-light hover:bg-brand-border border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
+                >
+                  📂 View Saved Analyses ({savedAnalyses.length})
+                </button>
           </div>
 
-          {/* Saved Analyses List */}
-          {showSavedList && savedAnalyses.length > 0 && (
-            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
-              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
-              <div className="space-y-3">
-                {savedAnalyses.map((analysis: any) => (
-                  <div
-                    key={analysis.id}
-                    className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
-                  >
-                    <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
-                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
-                      <div className="text-sm text-brand-text-muted">
-                        {new Date(analysis.created_at).toLocaleDateString()} at{' '}
-                        {new Date(analysis.created_at).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleLoadAnalysis(analysis)}
-                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        Load
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAnalysis(analysis.id);
-                        }}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <button
+            onClick={handleStartOver}
+            className="w-full mt-6 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md"
+          >
+            Start New Scan
+          </button>
         </>
       )}
 
@@ -446,43 +425,58 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
               </button>
             </div>
           )}
+        </div>
+      )}
+      
+      {/* Saved Analyses List (Shown outside of result view if requested) */}
+      {showSavedList && (
+        <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-brand-text">Saved Analyses</h3>
+            <button
+              onClick={() => setShowSavedList(false)}
+              className="text-brand-text-muted hover:text-brand-text"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
           
-          {showSavedList && savedAnalyses.length > 0 && (
-            <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
-              <h3 className="text-xl font-bold text-brand-text mb-4">Saved Analyses</h3>
-              <div className="space-y-3">
-                {savedAnalyses.map((analysis: any) => (
-                  <div
-                    key={analysis.id}
-                    className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
-                      <div className="text-sm text-brand-text-muted">
-                        {new Date(analysis.created_at).toLocaleDateString()} at{' '}
-                        {new Date(analysis.created_at).toLocaleTimeString()}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleLoadAnalysis(analysis)}
-                        className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        Load
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteAnalysis(analysis.id);
-                        }}
-                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+          {savedAnalyses.length === 0 ? (
+            <p className="text-brand-text-muted text-center py-8">No saved analyses yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {savedAnalyses.map((analysis: any) => (
+                <div
+                  key={analysis.id}
+                  className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
+                >
+                  <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
+                    {/* 5. DISPLAY ANALYSIS NAME */}
+                    <div className="font-semibold text-brand-text">{analysis.analysis_name || analysis.target_url}</div>
+                    <div className="text-sm text-brand-text-muted">
+                      {new Date(analysis.created_at).toLocaleDateString()} at{' '}
+                      {new Date(analysis.created_at).toLocaleTimeString()}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleLoadAnalysis(analysis)}
+                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      Load
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteAnalysis(analysis.id);
+                      }}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

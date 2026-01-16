@@ -19,7 +19,7 @@ export default async function handler(
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { userId, businessId, dataType, data } = req.body;
+    const { userId, businessId, dataType, data, analysisName } = req.body;
 
     if (!userId || !dataType || data === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -58,15 +58,27 @@ export default async function handler(
           .eq('report_type', dataType)
           .maybeSingle();
 
+        const upsertData: any = { 
+            report_data: data, 
+            updated_at: new Date().toISOString(),
+            analysis_name: analysisName || null
+        };
+
         if (existing) {
           result = await supabase
             .from('audit_reports')
-            .update({ report_data: data, updated_at: new Date().toISOString() })
+            .update(upsertData)
             .eq('id', existing.id);
         } else {
           result = await supabase
             .from('audit_reports')
-            .insert({ user_id: userId, business_id: businessId, report_type: dataType, report_data: data });
+            .insert({ 
+                user_id: userId, 
+                business_id: businessId, 
+                report_type: dataType, 
+                report_data: data,
+                analysis_name: analysisName || null
+            });
         }
         break;
 

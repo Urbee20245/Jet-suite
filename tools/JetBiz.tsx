@@ -278,6 +278,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedList, setShowSavedList] = useState(false);
   
+  // 1. ADD STATE FOR ANALYSIS NAME
+  const [analysisName, setAnalysisName] = useState('');
+  
   const supabase = getSupabaseClient();
 
   useEffect(() => {
@@ -300,10 +303,11 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       const data = await loadFromSupabase(userId, activeBusinessId, 'jetbiz');
       
       if (data) {
-        // Since we are loading from the generic analysis_results table, we need to map the structure
+        // 3. UPDATE MAPPING TO INCLUDE analysis_name
         const mappedData = Array.isArray(data) ? data.map((item: any) => ({
           id: item.id,
           created_at: item.created_at,
+          analysis_name: item.analysis_name, // <-- NEW FIELD
           target_url: item.target_url,
           results: item.results,
         })) : [];
@@ -316,13 +320,41 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   };
 
+  // 4. ADD DELETE FUNCTION
+  const handleDeleteAnalysis = async (analysisId: string) => {
+    if (!confirm('Are you sure you want to delete this saved analysis?')) return;
+    
+    if (!supabase) return;
+    
+    try {
+      // Assuming audit_reports is the correct table based on sync/save.ts
+      const { error } = await supabase
+        .from('audit_reports')
+        .delete()
+        .eq('id', analysisId);
+      
+      if (error) throw error;
+      
+      alert('Analysis deleted successfully!');
+      loadSavedAnalyses();
+    } catch (error) {
+      console.error('Error deleting analysis:', error);
+      alert('Failed to delete analysis. Please try again.');
+    }
+  };
+
+  // 2. UPDATE SAVE FUNCTION
   const handleSaveAnalysis = async () => {
     if (!auditReport || !activeBusinessId || !userId) return;
     
+    const nameToSave = analysisName.trim() || `JetBiz Analysis - ${new Date().toLocaleDateString()}`;
+    
     setIsSaving(true);
     try {
-      await syncToSupabase(userId, activeBusinessId, 'jetbiz', auditReport);
+      // Pass analysisName to sync service
+      await syncToSupabase(userId, activeBusinessId, 'jetbiz', auditReport, nameToSave);
       alert('Analysis saved successfully!');
+      setAnalysisName(''); // Clear input after saving
       loadSavedAnalyses();
     } catch (error) {
       console.error('Error saving analysis:', error);
@@ -345,27 +377,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     });
     setStep('result');
     setShowSavedList(false);
-  };
-
-  const handleDeleteAnalysis = async (analysisId: string) => {
-    if (!confirm('Are you sure you want to delete this saved analysis?')) return;
-    
-    if (!supabase) return;
-    
-    try {
-      const { error } = await supabase
-        .from('analysis_results')
-        .delete()
-        .eq('id', analysisId);
-      
-      if (error) throw error;
-      
-      alert('Analysis deleted successfully!');
-      loadSavedAnalyses();
-    } catch (error) {
-      console.error('Error deleting analysis:', error);
-      alert('Failed to delete analysis. Please try again.');
-    }
   };
 
   const businessQuery = `${profileData.business.business_name}, ${profileData.business.location}`;
@@ -446,18 +457,28 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay report={auditReport} growthPlanTasks={growthPlanTasks} onRerun={handleRerun} isRunning={loading} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
             
-            <div className="mt-6 flex gap-4">
-                <button
-                  onClick={handleSaveAnalysis}
-                  disabled={isSaving}
-                  className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md"
-                >
-                  {isSaving ? 'Saving...' : '💾 Save Analysis'}
-                </button>
+            <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
+                <h3 className="text-xl font-bold text-brand-text mb-4">Save Analysis</h3>
+                <div className="flex gap-4">
+                    <input
+                        type="text"
+                        value={analysisName}
+                        onChange={(e) => setAnalysisName(e.target.value)}
+                        placeholder={`e.g., Week 1 Analysis - ${new Date().toLocaleDateString()}`}
+                        className="flex-1 bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                    />
+                    <button
+                      onClick={handleSaveAnalysis}
+                      disabled={isSaving}
+                      className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md flex items-center gap-2"
+                    >
+                      {isSaving ? 'Saving...' : '💾 Save Report'}
+                    </button>
+                </div>
                 
                 <button
                   onClick={() => setShowSavedList(!showSavedList)}
-                  className="px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md"
+                  className="mt-4 w-full px-6 py-3 bg-brand-light hover:bg-brand-border border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
                 >
                   📂 View Saved Analyses ({savedAnalyses.length})
                 </button>
@@ -488,8 +509,8 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         {loading && step === 'initial' && <Loader />}
         {renderContent()}
         
-        {/* Saved Analyses List */}
-        {showSavedList && (
+        {/* Saved Analyses List (Shown outside of result view if requested) */}
+        {showSavedList && step !== 'result' && (
           <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-brand-text">Saved Analyses</h3>
@@ -511,7 +532,8 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                     className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
                   >
                     <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
-                      <div className="font-semibold text-brand-text">{analysis.target_url}</div>
+                      {/* 5. DISPLAY ANALYSIS NAME */}
+                      <div className="font-semibold text-brand-text">{analysis.analysis_name || analysis.target_url}</div>
                       <div className="text-sm text-brand-text-muted">
                         {new Date(analysis.created_at).toLocaleDateString()} at{' '}
                         {new Date(analysis.created_at).toLocaleTimeString()}
