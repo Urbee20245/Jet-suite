@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription, detectGbpOnWebsite } from '../services/geminiService';
-import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, InformationCircleIcon as InfoIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { Loader } from '../components/Loader';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
 import { ALL_TOOLS } from '../constants';
@@ -297,7 +297,46 @@ const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconn
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
 const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<ProfileData['googleBusiness']>) => void }> = ({ profileData, onConnect }) => { const [searchTerm, setSearchTerm] = useState(''); const [results, setResults] = useState<BusinessSearchResult[]>([]); const [selected, setSelected] = useState<BusinessSearchResult | null>(null); const [loading, setLoading] = useState(false); const handleSearch = async (e: React.FormEvent) => { e.preventDefault(); if (!searchTerm) return; setLoading(true); setResults([]); setSelected(null); const res = await searchGoogleBusiness(searchTerm); setResults(res); setLoading(false); }; if (selected) return ( <div className="bg-brand-light p-6 rounded-lg border text-center"><h4 className="font-bold">Is this your business?</h4><div className="bg-white my-4 p-4 rounded-lg border"><p className="font-bold">{selected.name}</p><p className="text-sm text-brand-text-muted">{selected.address}</p></div><div className="flex gap-4 justify-center"><button type="button" onClick={() => setSelected(null)} className="text-sm font-semibold">No, search again</button><button type="button" onClick={() => onConnect({ profileName: selected.name, address: selected.address, rating: selected.rating, reviewCount: selected.reviewCount })} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, connect</button></div></div> ); return ( <div className="bg-brand-light p-6 rounded-lg border space-y-4"> <h4 className="font-bold text-brand-text">Connect Your Google Business Profile</h4> <form onSubmit={handleSearch} className="space-y-4"> <div><label className="text-xs font-semibold">1. Paste Google Share or Maps URL</label><input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="https://share.google/... or https://maps.app.goo.gl/..." className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <div className="text-center text-xs font-semibold">OR</div> <div><label className="text-xs font-semibold">2. Search by Name & Location</label><input type="text" onChange={e => setSearchTerm(e.target.value)} placeholder={`${profileData.business.business_name}, ${profileData.business.location}`} className="w-full bg-white border-brand-border rounded-lg p-2 text-sm mt-1" /></div> <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">{loading ? '...' : 'Find & Connect'}</button> {loading && <Loader />} <div className="space-y-2 mt-4">{results.map(r => <button type="button" key={r.name+r.address} onClick={() => setSelected(r)} className="w-full text-left p-3 bg-white hover:bg-gray-50 rounded-lg border"><p className="font-semibold">{r.name}</p><p className="text-xs text-brand-text-muted">{r.address}</p></button>)}</div> </form> </div> ); };
-const CompletionCard: React.FC<{ onNext: () => void }> = ({ onNext }) => ( <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl"> <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" /> <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Business Profile Complete!</h2> <p className="text-brand-text-muted my-4 max-w-md mx-auto">Great work! Your business identity is set up. Now let's analyze your local presence and find growth opportunities.</p> <button onClick={onNext} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-opacity duration-300 text-lg shadow-lg shadow-accent-purple/20 flex items-center gap-2 mx-auto">Continue to JetBiz <ArrowRightIcon className="w-5 h-5" /></button> <button type="button" className="text-sm text-brand-text-muted hover:underline mt-4">Stay here and review my details</button> </div> );
+
+// --- New Lock/Unlock Components ---
+
+const LockInCard: React.FC<{ onLock: () => void, onNext: () => void }> = ({ onLock, onNext }) => (
+    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
+        <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
+        <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
+        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+            All foundational steps are complete. Lock this profile to ensure consistency across all AI tools.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                <LockClosedIcon className="w-5 h-5" />
+                Lock In Profile
+            </button>
+            <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
+            </button>
+        </div>
+    </div>
+);
+
+const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ onUnlock, onNext }) => (
+    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl relative">
+        <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
+        <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
+        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+            This profile is locked to maintain brand consistency across all tools. Unlock to make changes or continue to the next step.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onClick={onUnlock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                <LockOpenIcon className="w-5 h-5" />
+                Unlock to Edit
+            </button>
+            <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
+            </button>
+        </div>
+    </div>
+);
 
 const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick }) => { 
     const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
@@ -312,8 +351,11 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
     };
 
     return (
-        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''}`}>
-            <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left">
+        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
+            {isLocked && (
+                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-xl"></div>
+            )}
+            <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left relative z-20">
                 <div className="flex items-center gap-4">
                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>
                         {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
@@ -396,6 +438,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
   
+  // NEW: Determine if the profile is locked (is_complete is true)
+  const isLocked = profileData.business.is_complete;
+
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
   
@@ -509,6 +554,54 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
 
+  const updateProfileLockStatus = async (lockStatus: boolean) => {
+    try {
+        const locationParts = business.location.split(',').map(s => s.trim());
+        const city = locationParts[0] || '';
+        const state = locationParts[1] || '';
+
+        const response = await fetch('/api/business/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: profileData.user.id,
+                businessName: business.business_name,
+                websiteUrl: business.business_website,
+                industry: business.industry,
+                city: city,
+                state: state,
+                isPrimary: business.is_primary,
+                isComplete: lockStatus, // Set the lock status
+                businessDescription: business.business_description,
+                googleBusiness: googleBusiness,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update profile lock status.');
+        }
+
+        const updatedBusiness = { ...business, is_complete: lockStatus };
+        onUpdate({ ...profileData, business: updatedBusiness });
+        onBusinessUpdated();
+
+    } catch (err: any) {
+        console.error('[BusinessDetails] Lock/Unlock failed:', err);
+        alert(`Failed to update profile lock status. Details: ${err.message}`);
+    }
+  };
+
+  const handleLockProfile = async () => {
+    if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
+    await updateProfileLockStatus(true);
+  };
+
+  const handleUnlockProfile = async () => {
+    if (!window.confirm('Are you sure you want to unlock this profile? This will allow editing but may affect consistency in tools until changes are saved.')) return;
+    await updateProfileLockStatus(false);
+  };
+
+
   const handleSaveInfo = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     
@@ -532,8 +625,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 industry: business.industry,
                 city: city,
                 state: state,
-                isPrimary: true,
-                isComplete: true,
+                isPrimary: business.is_primary,
+                isComplete: isLocked, // Preserve current lock status
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
             }),
@@ -658,7 +751,15 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
         
-        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick}>
+        {/* Locked View Overlay */}
+        {isLocked && (
+            <LockedView 
+                onUnlock={handleUnlockProfile} 
+                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
+            />
+        )}
+
+        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked}>
             <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
             {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
             <form onSubmit={handleSaveInfo} className="space-y-4">
@@ -691,11 +792,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </form>
         </StepCard>
 
-        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick}>
             {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
         </StepCard>
 
-        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick}>
             <div className="mb-6 bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border border-accent-purple/30 rounded-lg p-4">
                 <h3 className="font-semibold text-accent-purple mb-3 flex items-center"><span className="text-lg mr-2">🎯</span>Why Connect Your GBP?</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-brand-text-muted">
@@ -720,11 +821,24 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </div>
         </StepCard>
 
-        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
             {!userId ? <div className="text-center p-4"><Loader /><p className="text-sm text-brand-text-muted mt-2">Loading...</p></div> : renderSocialContent()}
         </StepCard>
 
-        {allStepsComplete && <CompletionCard onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} />}
+        {/* Conditional Lock/Unlock/Continue Card */}
+        {allStepsComplete && !isLocked && (
+            <LockInCard 
+                onLock={handleLockProfile} 
+                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
+            />
+        )}
+        
+        {isLocked && (
+            <LockedView 
+                onUnlock={handleUnlockProfile} 
+                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
+            />
+        )}
     </div>
   );
 };
