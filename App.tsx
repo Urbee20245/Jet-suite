@@ -44,7 +44,8 @@ const App: React.FC = () => {
   const [isAccessTierResolved, setIsAccessTierResolved] = useState(false);
   const [subscriptionRedirect, setSubscriptionRedirect] = useState<string | null>(null);
   const [isOnboardingResolved, setIsOnboardingResolved] = useState(false);
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  // CHANGED: Check for existence of ANY business profile, not just completion status
+  const [hasAnyBusinessProfile, setHasAnyBusinessProfile] = useState(false);
 
   // 3. Navigation State
   const [currentPath, setCurrentPath] = useState(() => {
@@ -81,16 +82,14 @@ const App: React.FC = () => {
       setSubscriptionRedirect(result.hasAccess ? null : (result.redirectTo || '/pricing'));
       setIsAccessTierResolved(true);
 
-      // 2. Check Onboarding (Extension)
-      // We look for the primary business to decide if onboarding is finished
-      const { data: profile } = await supabase
+      // 2. Check Onboarding (Existence of ANY business profile)
+      // We check if the user has ever created a business profile.
+      const { count: profileCount } = await supabase
         .from('business_profiles')
-        .select('is_complete')
-        .eq('user_id', uid)
-        .eq('is_primary', true)
-        .maybeSingle();
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', uid);
       
-      setIsOnboardingComplete(!!profile?.is_complete);
+      setHasAnyBusinessProfile(!!profileCount && profileCount > 0);
       setIsOnboardingResolved(true);
     } catch (error) {
       console.error('[App] Verification failed:', error);
@@ -170,7 +169,7 @@ const App: React.FC = () => {
         setIsAccessTierResolved(false);
         setSubscriptionRedirect(null);
         setIsOnboardingResolved(false);
-        setIsOnboardingComplete(false);
+        setHasAnyBusinessProfile(false);
       }
     });
     
@@ -200,7 +199,10 @@ const App: React.FC = () => {
         return;
       }
 
-      if (!isOnboardingComplete) {
+      // NEW LOGIC: Only redirect to /onboarding if NO business profile exists at all.
+      // If a profile exists (even if incomplete/unlocked), we allow access to /app
+      // where InternalApp will guide them to Business Details.
+      if (!hasAnyBusinessProfile) {
         if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact')) {
           navigate('/onboarding');
         }
@@ -229,7 +231,7 @@ const App: React.FC = () => {
         navigate('/');
       }
     }
-  }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, isOnboardingResolved, subscriptionRedirect, isOnboardingComplete]);
+  }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, isOnboardingResolved, subscriptionRedirect, hasAnyBusinessProfile]);
 
   const handleLoginSuccess = (email: string) => {
       setIsLoggedIn(true);
@@ -244,11 +246,11 @@ const App: React.FC = () => {
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
       setCurrentUserId(null);
-      localStorage.removeItem('jetsuite_userId');
+      localStorage.removeItem('jetsuite_userId'); // Clear on sign out
       setIsAccessTierResolved(false);
       setSubscriptionRedirect(null);
       setIsOnboardingResolved(false);
-      setIsOnboardingComplete(false);
+      setHasAnyBusinessProfile(false);
       navigate('/');
   }
 
@@ -275,7 +277,8 @@ const App: React.FC = () => {
       );
     }
 
-    if (isLoggedIn && currentUserId && currentPath === '/onboarding') {
+    // RENDER ONBOARDING PAGE ONLY IF NO BUSINESS PROFILE EXISTS YET
+    if (isLoggedIn && currentUserId && !hasAnyBusinessProfile && currentPath === '/onboarding') {
       return <OnboardingPage navigate={navigate} userId={currentUserId} />;
     }
 
