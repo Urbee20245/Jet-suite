@@ -91,20 +91,16 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
   const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
-  const [growthScore, setGrowthScore] = useState(150);
+  const [growthScore, setGrowthScore] = useState(0);
   
-  // NEW: State for all profiles (used only by Admin Panel)
   const [allAdminProfiles, setAllAdminProfiles] = useState<ProfileData[]>([]);
 
-  // Initialize allProfiles with default structure (only current user's profile)
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
-      // Initialize with the current user's basic profile structure
       return [createInitialProfile(userId, userEmail, 'Loading', 'User')];
   });
   
   const activeProfile = allProfiles.find(p => p.user.id === activeUserId) || allProfiles[0];
 
-  // Function to fetch all businesses for the current user
   const fetchBusinesses = async () => {
     if (!supabase || !activeUserId) return;
     try {
@@ -118,13 +114,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       const loadedBusinesses = data as BusinessProfile[];
       setBusinesses(loadedBusinesses);
 
-      // Set active business ID if not set, prioritizing primary or the first one
       if (!activeBusinessId && loadedBusinesses.length > 0) {
         const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0].id;
         setActiveBusinessId(primaryBiz);
         localStorage.setItem('jetsuite_active_biz_id', primaryBiz);
       } else if (activeBusinessId && !loadedBusinesses.find(b => b.id === activeBusinessId)) {
-        // If the active ID is no longer valid, reset to primary or first
         const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0]?.id;
         if (primaryBiz) {
           setActiveBusinessId(primaryBiz);
@@ -136,12 +130,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  // UNIVERSAL LOAD FUNCTION - Loads ALL data from Supabase
   const loadBusinessData = async (businessId: string) => {
     if (!supabase || !activeUserId) return;
     
     try {
-      // 1. Load business profile details
       const { data: profile, error: profileError } = await supabase
         .from('business_profiles')
         .select('*')
@@ -150,14 +142,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       
       if (profileError) throw profileError;
       
-      // The profile object from Supabase contains all columns, including JSONB fields.
       const loadedBusiness = profile as unknown as BusinessProfile;
-      
-      // Map JSONB fields to the ProfileData structure
       const loadedGbp = loadedBusiness.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' } as GoogleBusinessProfile;
       const loadedBrandDnaProfile = loadedBusiness.brand_dna_profile || undefined;
       
-      // 2. Update the active profile data
       setAllProfiles(prev => {
         const updated = [...prev];
         const index = updated.findIndex(p => p.user.id === activeUserId);
@@ -171,11 +159,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
               location: `${loadedBusiness.city}, ${loadedBusiness.state}`,
               isDnaApproved: loadedBusiness.is_dna_approved,
               dnaLastUpdatedAt: loadedBusiness.dna_last_updated_at,
-              // Ensure the simple DNA structure is also populated if needed by old components
               dna: loadedBusiness.dna || { logo: '', colors: [], fonts: '', style: '' } as BusinessDna, 
             } as BusinessProfile,
-            googleBusiness: loadedGbp, // Map GBP data
-            brandDnaProfile: loadedBrandDnaProfile, // Map detailed DNA
+            googleBusiness: loadedGbp, 
+            brandDnaProfile: loadedBrandDnaProfile, 
             isProfileActive: !!loadedBusiness.is_complete,
           };
           updated[index] = syncedProfile;
@@ -183,15 +170,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         return updated;
       });
       
-      // 3. Load tasks from Supabase
       const tasks = await loadFromSupabase(activeUserId, businessId, 'tasks');
-      setGrowthPlanTasks(tasks || []); // <-- SET TASKS HERE
+      setGrowthPlanTasks(tasks || []);
       
-      // 4. Load keywords from Supabase
       const keywords = await loadFromSupabase(activeUserId, businessId, 'keywords');
       setSavedKeywords(keywords || []);
       
-      // 5. Load JetBiz report
       const jetbizReport = await loadFromSupabase(activeUserId, businessId, 'jetbiz');
       if (jetbizReport) {
         setAllProfiles(prev => {
@@ -204,7 +188,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         });
       }
       
-      // 6. Load JetViz report
       const jetvizReport = await loadFromSupabase(activeUserId, businessId, 'jetviz');
       if (jetvizReport) {
         setAllProfiles(prev => {
@@ -226,10 +209,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  // Function to fetch profile from DB
   const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
-    let defaultProfile: ProfileData;
-    defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
+    let defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
 
     try {
         const response = await fetch(`/api/user/get-profile?userId=${uid}`);
@@ -237,10 +218,8 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         
         const { profile: dbProfile } = await response.json();
         
-        let mergedProfile = defaultProfile;
-        
         if (dbProfile) {
-            mergedProfile = {
+            return {
                 ...defaultProfile,
                 user: {
                     ...defaultProfile.user,
@@ -254,7 +233,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
             };
         }
         
-        return mergedProfile;
+        return defaultProfile;
 
     } catch (error) {
         console.error(`Error fetching profile for ${uid}:`, error);
@@ -262,117 +241,53 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  // Function to fetch all profiles for Admin Panel
   const fetchAllAdminProfiles = async () => {
     if (!isAdmin) return;
     
     try {
         const response = await fetch('/api/admin/get-all-profiles', {
             headers: {
-                'x-user-email': userEmail // Pass admin email for authorization
+                'x-user-email': userEmail 
             }
         });
         
-        if (!response.ok) {
-            console.error('Failed to fetch all admin profiles:', response.status);
-            return;
-        }
-        
+        if (!response.ok) return;
         const data = await response.json();
-        
-        // Map fetched profiles to ProfileData structure
-        const fetchedProfiles: ProfileData[] = data.profiles.map((p: any) => {
-            const userProfile: UserProfile = {
-                id: p.user.id,
-                firstName: p.user.firstName,
-                lastName: p.user.lastName,
-                email: p.user.email,
-                phone: p.user.phone || '',
-                role: p.user.role || 'Owner',
-            };
-            
-            const businessProfile: BusinessProfile = {
-                ...p.business,
-                isDnaApproved: !!p.business.brandDnaProfile,
-                dnaLastUpdatedAt: p.business.dna_last_updated_at,
-                googleBusiness: p.business.google_business_profile,
-                brandDnaProfile: p.business.brand_dna_profile,
-                is_dna_approved: !!p.business.brandDnaProfile,
-                dna_last_updated_at: p.business.dna_last_updated_at,
-                // Fill in missing fields from the simplified API response
-                business_website: p.business.business_website || '',
-                business_description: p.business.business_description || '',
-                service_area: p.business.service_area || '',
-                phone: p.business.phone || '',
-                email: p.business.email || '',
-                is_primary: p.business.is_primary || false,
-                is_complete: p.business.is_complete || false,
-                created_at: p.business.created_at || new Date().toISOString(),
-                updated_at: p.business.updated_at || new Date().toISOString(),
-                google_business_profile: p.business.google_business_profile || null,
-                dna: p.business.dna || { logo: '', colors: [], fonts: '', style: '' },
-                location: p.business.location || '',
-                city: p.business.city || '',
-                state: p.business.state || '',
-            };
-            
-            return {
-                user: userProfile,
-                business: businessProfile,
-                googleBusiness: businessProfile.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
-                isProfileActive: businessProfile.is_complete,
-                brandDnaProfile: businessProfile.brand_dna_profile,
-            } as ProfileData;
-        });
-        
-        setAllAdminProfiles(fetchedProfiles);
+        setAllAdminProfiles(data.profiles as ProfileData[]);
         
     } catch (error) {
         console.error('Error fetching all admin profiles:', error);
     }
   };
 
-// Initial Profile Load (Updated to only load current user's profile)
   useEffect(() => {
-    const loadProfiles = async () => {
+    const loadInitial = async () => {
         const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
-        
-        // Initialize allProfiles with the current user's profile
         setAllProfiles([currentUserProfile]);
-        
-        // Fetch all businesses for the current user
         await fetchBusinesses();
-        
-        // If admin, fetch all profiles immediately
         if (isAdmin) {
             fetchAllAdminProfiles();
         }
     };
     
-    loadProfiles();
-  }, [userId, userEmail, isAdmin]); // Added isAdmin dependency
+    loadInitial();
+  }, [userId, userEmail, isAdmin]);
 
-  // Load data for the active business whenever the activeBusinessId changes
   useEffect(() => {
     if (activeBusinessId) {
       loadBusinessData(activeBusinessId);
     }
   }, [activeBusinessId]);
 
-  // Business Switching
   const handleBusinessSwitch = async (businessId: string) => {
     if (activeBusinessId === businessId) return;
-    
     localStorage.setItem('jetsuite_active_biz_id', businessId);
     setActiveBusinessId(businessId);
-    // loadBusinessData will be triggered by the useEffect above
-    
     setSavedKeywords([]);
     setGrowthPlanTasks([]);
     setJetContentInitialProps(null);
   };
   
-  // Add New Business
   const handleAddBusiness = async () => {
     if (!supabase || !activeUserId) return;
     
@@ -421,13 +336,11 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const handleImpersonate = (profileToImpersonate: ProfileData | null) => {
     if (profileToImpersonate) {
         setImpersonatedProfile(profileToImpersonate);
-        // Also switch the active business to the impersonated user's primary business
         if (profileToImpersonate.business.id !== 'no-business') {
             handleBusinessSwitch(profileToImpersonate.business.id);
         }
     } else {
         setImpersonatedProfile(null);
-        // Revert to current user's primary business
         const currentUserPrimaryBiz = businesses.find(b => b.is_primary)?.id || businesses[0]?.id;
         if (currentUserPrimaryBiz) {
             handleBusinessSwitch(currentUserPrimaryBiz);
@@ -435,7 +348,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  const setProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
+  const setProfileData = (newProfileData: ProfileData) => {
     setAllProfiles(prev => {
         const isSelf = newProfileData.user.id === userId;
         const index = isSelf ? 0 : prev.findIndex(p => p.user.id === newProfileData.user.id);
@@ -443,14 +356,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         if (index !== -1) {
             updatedProfiles[index] = newProfileData;
         } else if (!isSelf) {
-            // If impersonating a user not in the list (shouldn't happen if fetched correctly)
             updatedProfiles.push(newProfileData);
         }
         return updatedProfiles;
     });
   };
 
-  // Ensure profileData reflects the active business
   useEffect(() => {
     if (activeBusinessId && businesses.length > 0) {
       const activeBiz = businesses.find(b => b.id === activeBusinessId);
@@ -473,14 +384,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   }, [activeBusinessId, businesses, activeUserId]);
 
-  // UNIVERSAL AUTO-SYNC: Save tasks to Supabase whenever they change
   useEffect(() => {
     if (activeBusinessId && activeUserId && growthPlanTasks.length >= 0) {
       syncToSupabase(activeUserId, activeBusinessId, 'tasks', growthPlanTasks);
     }
   }, [growthPlanTasks, activeBusinessId, activeUserId]);
 
-  // UNIVERSAL AUTO-SYNC: Save keywords to Supabase whenever they change
   useEffect(() => {
     if (activeBusinessId && activeUserId && savedKeywords.length >= 0) {
       syncToSupabase(activeUserId, activeBusinessId, 'keywords', savedKeywords);
@@ -497,7 +406,6 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     }
   };
 
-  // Growth Score Calculation
   useEffect(() => {
     let score = 0;
     const { business, googleBusiness } = activeProfile;
@@ -537,12 +445,12 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     setGrowthScore(score);
   }, [activeProfile, growthPlanTasks]);
 
-  const handleUpdateProfileData = (newProfileData: ProfileData, persist: boolean = true) => {
+  const handleUpdateProfileData = (newProfileData: ProfileData) => {
     const { business_name, location, business_website } = newProfileData.business;
     if (business_name && location && business_website && !newProfileData.isProfileActive) { 
-      setProfileData({ ...newProfileData, isProfileActive: true }, persist); 
+      setProfileData({ ...newProfileData, isProfileActive: true }); 
     } else { 
-      setProfileData(newProfileData, persist); 
+      setProfileData(newProfileData); 
     }
   };
 
@@ -571,10 +479,9 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
       );
   };
 
-  // UNIVERSAL SAVE: Save analysis reports to Supabase
   const handleSaveAnalysis = async (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
     const newProfileData = { ...activeProfile, [`${type}Analysis`]: report };
-    handleUpdateProfileData(newProfileData, true);
+    handleUpdateProfileData(newProfileData);
     
     if (report && activeBusinessId) {
       await syncToSupabase(activeUserId, activeBusinessId, type, report);
@@ -588,13 +495,10 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   if (isStep1Complete && isStep2Complete) readinessState = 'Foundation Ready';
   else if (isStep1Complete) readinessState = 'Foundation Weak';
 
-  // --- Tool Completion Status ---
-  // Business Details is complete if basic info is saved AND DNA is approved.
   const isBusinessDetailsComplete = isStep1Complete && isStep2Complete;
   
   const toolCompletionStatus = {
       'businessdetails': isBusinessDetailsComplete,
-      // Add other tools here later if needed
   };
 
   const renderActiveTool = () => {
