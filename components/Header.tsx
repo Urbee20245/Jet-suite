@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Tool, BusinessProfile } from '../types';
-import { BoltIcon, ChevronDownIcon } from './icons/MiniIcons';
+import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 
 interface HeaderProps {
@@ -28,6 +28,12 @@ export const Header: React.FC<HeaderProps> = ({
   
   // Derived value for display
   const activeBusinessName = activeBusiness?.business_name || 'Loading Business...';
+  
+  // Get GBP data from the active business profile
+  const gbpData = activeBusiness?.google_business_profile;
+  const reviewCount = gbpData?.reviewCount || 0;
+  const rating = gbpData?.rating || 0;
+  const isVerified = gbpData?.status === 'Verified';
 
   return (
     <header className="bg-brand-card shadow-sm border-b border-brand-border p-4 flex items-center justify-between h-16 flex-shrink-0 relative z-50">
@@ -121,8 +127,33 @@ export const Header: React.FC<HeaderProps> = ({
         </h2>
       </div>
 
-      {/* RIGHT: Growth Score */}
-      <div className="flex items-center">
+      {/* RIGHT: Growth Score + GBP Reviews */}
+      <div className="flex items-center space-x-4">
+        
+        {/* GBP Review Status */}
+        {isVerified && (
+            <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
+                <div className="flex items-center">
+                    <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <span className="ml-1 text-sm font-bold text-brand-text">
+                        {rating.toFixed(1)}
+                    </span>
+                    <span className="ml-1 text-xs text-brand-text-muted">
+                        ({reviewCount})
+                    </span>
+                </div>
+                <span className="text-xs text-brand-text-muted hidden sm:inline">
+                    GBP Reviews
+                </span>
+                
+                {/* Tooltip for sync delay */}
+                <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
+                    <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
+                </div>
+            </div>
+        )}
+        
+        {/* Growth Score */}
         <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
           <BoltIcon className="w-5 h-5 text-yellow-500" />
           <span className="ml-2 text-sm font-bold text-brand-text">
