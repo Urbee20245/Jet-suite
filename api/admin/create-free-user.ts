@@ -88,7 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Find the user by email to get their ID for deletion
         const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
         if (!listError && users) {
-            const userToDelete = users.find(u => u.email === email);
+            const userToDelete = users.find((u: any) => u.email === email);
             if (userToDelete) {
                 await supabase.auth.admin.deleteUser(userToDelete.id);
                 console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
