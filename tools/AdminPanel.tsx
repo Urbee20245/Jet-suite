@@ -101,6 +101,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     
     const [userSearchTerm, setUserSearchTerm] = useState('');
     const [isWipingData, setIsWipingData] = useState<string | null>(null); 
+    const [isBulkLoading, setIsBulkLoading] = useState(false);
     const [showAddUserModal, setShowAddUserModal] = useState(false);
     const [newUser, setNewUser] = useState({ email: '', password: '', firstName: '', lastName: '' });
     const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -377,6 +378,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
+    const handleBulkWipeFreeUsers = async () => {
+        if (!window.confirm(`CRITICAL BULK ACTION: Are you absolutely sure you want to delete ALL users on Free/Admin-Granted plans? This will wipe their business profiles, tasks, and accounts. This cannot be undone.`)) {
+            return;
+        }
+
+        setIsBulkLoading(true);
+        try {
+            const response = await fetch('/api/admin/bulk-wipe-free-users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': currentUserProfile.user.email
+                }
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to perform bulk wipe.');
+
+            alert(data.message);
+            onDataChange();
+        } catch (error: any) {
+            console.error('Bulk wipe error:', error);
+            alert(`Bulk wipe failed: ${error.message}`);
+        } finally {
+            setIsBulkLoading(false);
+        }
+    };
+
     const handleCreateFreeUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsCreatingUser(true);
@@ -558,6 +587,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <p className="text-xs mt-1">Quick-add a new user with a business profile for testing.</p>
                             </button>
                             <button 
+                                onClick={handleBulkWipeFreeUsers}
+                                disabled={isBulkLoading}
+                                className="bg-orange-50 hover:bg-orange-100 text-orange-700 p-4 rounded-lg border border-orange-200 text-left disabled:opacity-50"
+                            >
+                                <h3 className="font-bold">{isBulkLoading ? 'Wiping...' : 'Wipe All Free Users'}</h3>
+                                <p className="text-xs mt-1">Bulk delete all test/free accounts to start fresh.</p>
+                            </button>
+                            <button 
                                 onClick={() => setActiveTab('support')}
                                 className="bg-green-50 hover:bg-green-100 text-green-700 p-4 rounded-lg border border-green-200 text-left"
                             >
@@ -621,7 +658,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                         <td className="px-6 py-4 flex items-center space-x-2">
                                             <button onClick={() => handleResetDna(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Reset DNA"><ArrowPathIcon className="w-4 h-4 text-yellow-600"/></button>
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Delete"><TrashIcon className="w-4 h-4 text-red-600"/></button>
+                                            {profile.user.email !== currentUserProfile.user.email && (
+                                                <button 
+                                                    onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
+                                                    disabled={isWipingData === profile.user.id}
+                                                    className="p-1.5 hover:bg-red-100 rounded-md" 
+                                                    title="Wipe All Data & Delete Account"
+                                                >
+                                                    {isWipingData === profile.user.id ? (
+                                                        <Loader2 size={16} className="animate-spin text-red-600" />
+                                                    ) : (
+                                                        <TrashIcon className="w-4 h-4 text-red-600"/>
+                                                    )}
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 )})}
@@ -921,7 +971,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             )}
 
                             <div className="flex justify-end gap-4 pt-4">
-                                <button type="button" onClick={() => setShowAddUserModal(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                                <button type="button" onClick={() => { setShowAddUserModal(false); setCreationResult(null); }} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
                                 <button type="submit" disabled={isCreatingUser} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                                     {isCreatingUser ? 'Creating...' : 'Create User'}
                                 </button>
