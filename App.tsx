@@ -255,8 +255,8 @@ const App: React.FC = () => {
   }
 
   const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
-    setSubscriptionRedirect(redirectTo);
-    setIsAccessTierResolved(true);
+    console.log('[App] Subscription access denied:', { status, redirectTo });
+    navigate(redirectTo); // Navigate to /pricing or /account
   };
 
   try {
