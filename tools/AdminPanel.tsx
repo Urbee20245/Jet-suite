@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, BusinessDna } from '../types';
 import type { SupportTicket, SupportMessage, TicketStatus, TicketPriority } from '../Types/supportTypes';
-import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon, PlusIcon } from '../components/icons/MiniIcons';
 import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Search, Loader2 } from '../components/SupportIcons';
 import supportService from '../services/supportService';
 
@@ -78,6 +78,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     // ===== USER MANAGEMENT STATE (NEW) =====
     const [userSearchTerm, setUserSearchTerm] = useState('');
     const [isWipingData, setIsWipingData] = useState<string | null>(null); // Stores userId being wiped
+    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [newUser, setNewUser] = useState({ email: '', password: '', firstName: '', lastName: '' });
+    const [isCreatingUser, setIsCreatingUser] = useState(false);
+    const [creationResult, setCreationResult] = useState<{ success: boolean; message: string } | null>(null);
 
     // ===== LOAD SUPPORT TICKETS =====
     useEffect(() => {
@@ -360,6 +364,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
+    const handleCreateTestUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsCreatingUser(true);
+        setCreationResult(null);
+        try {
+            const response = await fetch('/api/admin/create-test-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': currentUserProfile.user.email
+                },
+                body: JSON.stringify(newUser)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to create user.');
+            
+            setCreationResult({ success: true, message: `${data.message} Temporary password: ${newUser.password}` });
+            
+            setTimeout(() => {
+                setShowAddUserModal(false);
+                setNewUser({ email: '', password: '', firstName: '', lastName: '' });
+                setCreationResult(null);
+                alert('User created. Please refresh the page to see the updated list.');
+            }, 5000);
+
+        } catch (error: any) {
+            setCreationResult({ success: false, message: error.message });
+        } finally {
+            setIsCreatingUser(false);
+        }
+    };
+
     // ===== UPDATED ADMIN FUNCTIONS (USING UUID) =====
     const handleResetDna = (userId: string) => {
         const profile = allProfiles.find(p => p.user.id === userId);
@@ -517,9 +553,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <h3 className="font-bold">Reset My Business DNA</h3>
                                 <p className="text-xs mt-1">Clears all extracted DNA for your current profile to allow re-testing.</p>
                             </button>
-                            <button className="bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-lg border border-blue-200 text-left">
-                                <h3 className="font-bold">Add Test Business</h3>
-                                <p className="text-xs mt-1">Quick-add a new business profile with dummy data for testing.</p>
+                            <button onClick={() => setShowAddUserModal(true)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-lg border border-blue-200 text-left">
+                                <h3 className="font-bold">Add Test User</h3>
+                                <p className="text-xs mt-1">Quick-add a new user with a business profile for testing.</p>
                             </button>
                             <button 
                                 onClick={() => setActiveTab('support')}
@@ -598,15 +634,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             {/* USERS TAB */}
             {activeTab === 'users' && (
                 <AdminSection title="User Management">
-                    <div className="mb-4 relative">
-                        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                        <input
-                            type="text"
-                            placeholder="Search by User Email, User Name, or Business Name..."
-                            value={userSearchTerm}
-                            onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search by User Email, User Name, or Business Name..."
+                                value={userSearchTerm}
+                                onChange={(e) => setUserSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <button onClick={() => setShowAddUserModal(true)} className="ml-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <PlusIcon className="w-5 h-5" /> Add Test User
+                        </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left text-brand-text-muted">
@@ -1135,6 +1176,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Test User Modal */}
+            {showAddUserModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-brand-text">Create Test User</h3>
+                        <form onSubmit={handleCreateTestUser} className="space-y-4">
+                            <input type="text" placeholder="First Name" value={newUser.firstName} onChange={e => setNewUser({...newUser, firstName: e.target.value})} className="w-full p-2 border rounded" required />
+                            <input type="text" placeholder="Last Name" value={newUser.lastName} onChange={e => setNewUser({...newUser, lastName: e.target.value})} className="w-full p-2 border rounded" required />
+                            <input type="email" placeholder="Email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full p-2 border rounded" required />
+                            <input type="text" placeholder="Temporary Password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full p-2 border rounded" required />
+                            
+                            {creationResult && (
+                                <p className={`text-sm p-3 rounded ${creationResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    {creationResult.message}
+                                </p>
+                            )}
+
+                            <div className="flex justify-end gap-4 pt-4">
+                                <button type="button" onClick={() => setShowAddUserModal(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
+                                <button type="submit" disabled={isCreatingUser} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                                    {isCreatingUser ? 'Creating...' : 'Create User'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

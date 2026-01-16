@@ -95,9 +95,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return {
         user: userProfile,
         business: businessProfile,
-        googleBusiness: businessProfile.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
+        googleBusiness: businessProfile.googleBusiness || { profileName: '', mapsUrl: '', status: 'Not Created' },
         isProfileActive: businessProfile.is_complete,
-        brandDnaProfile: businessProfile.brand_dna_profile,
+        brandDnaProfile: businessProfile.brandDnaProfile,
       };
     });
 
