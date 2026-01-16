@@ -318,7 +318,7 @@ const GbpConnect: React.FC<{ profileData: ProfileData, onConnect: (gbp: Partial<
                     />
                 </div> 
                 {error && <p className="text-red-500 text-sm">{error}</p>}
-                <button type="submit" disabled={loading || !searchTerm} className="w-full bg-accent-blue text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
+                <button type="submit" disabled={loading || !searchTerm} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
                     {loading ? 'Searching...' : 'Find & Connect'}
                 </button>
                 
@@ -904,12 +904,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <ProgressBar currentStep={currentStep} totalSteps={4} />
         
         {/* Conditional Lock/Unlock/Continue Card */}
-        {allStepsComplete && !isLocked && (
-            <LockInCard 
-                onLock={handleLockProfile} 
-                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
-            />
-        )}
         
         {isLocked && (
             <LockedView 
@@ -983,6 +977,40 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
             {renderSocialContent()}
         </StepCard>
+        
+        {/* NEW: Lock/Unlock Card at the bottom */}
+        {allStepsComplete && !isLocked && (
+            <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
+                <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
+                <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
+                <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+                    All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools. You can unlock it later to make edits.
+                </p>
+                <button onClick={handleLockProfile} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
+                    <LockClosedIcon className="w-5 h-5" />
+                    Save and Lock
+                </button>
+            </div>
+        )}
+        
+        {isLocked && (
+            <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl relative">
+                <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
+                <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
+                <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+                    This profile is locked to maintain brand consistency across all tools.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onClick={handleUnlockProfile} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                        <LockOpenIcon className="w-5 h-5" />
+                        Unlock to Edit
+                    </button>
+                    <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
+                        Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+        )}
     </div>
   );
 };
