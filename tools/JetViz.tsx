@@ -84,99 +84,101 @@ const priorityStyles = {
 // --- END CONSTANTS ---
 
 // --- TYPES ---
-type TaskCardProps = { task: GrowthPlanTask, onStatusChange: (id: string, status: GrowthPlanTask['status']) => void };
-type IssueCardProps = { issue: AuditIssue; correspondingTask: GrowthPlanTask | undefined; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; };
+// Simplified TaskCardProps: No longer needs onStatusChange
+interface SimpleTaskCardProps {
+  task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
+  isAdded: boolean;
+  onAdd: () => void;
+}
+
+// Simplified IssueCardProps: No longer needs onStatusChange
+interface SimpleIssueCardProps {
+  issue: AuditIssue;
+  isAdded: boolean;
+  onAdd: () => void;
+}
 // --- END TYPES ---
 
 // --- COMPONENTS ---
-const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
-  const isCompleted = task.status === 'completed';
-  const handleToggle = () => onStatusChange(task.id, isCompleted ? 'to_do' : 'completed');
-
+const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd }) => {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isCompleted ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
-      <div className="flex items-start">
-        <input type="checkbox" checked={isCompleted} onChange={handleToggle} className="h-5 w-5 rounded border-gray-300 text-accent-purple focus:ring-accent-purple mt-0.5 cursor-pointer"/>
-        <div className="ml-3 flex-1">
-            <label onClick={handleToggle} className={`font-bold text-brand-text cursor-pointer ${isCompleted ? 'line-through text-brand-text-muted' : ''}`}>{task.title}</label>
-            {!isCompleted && <p className="text-sm text-brand-text-muted mt-1">{task.description}</p>}
-            {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(task.completionDate!).toLocaleDateString()}</p>}
+    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+            <h4 className="font-bold text-brand-text">{task.title}</h4>
+            <p className="text-sm text-brand-text-muted mt-1">{task.description}</p>
+            <div className="mt-2 flex items-center space-x-4 text-xs text-brand-text-muted font-medium">
+                <span>Effort: <span className="font-bold text-brand-text">{task.effort}</span></span>
+                <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
+            </div>
         </div>
-        <div className="relative">
-          <select 
-            value={task.status} 
-            onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} 
-            className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
-          >
-            <option value="to_do">To Do</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
-          <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-        </div>
+        <button 
+            onClick={onAdd} 
+            disabled={isAdded}
+            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
+                isAdded 
+                    ? 'bg-green-500 text-white cursor-default' 
+                    : 'bg-accent-purple hover:bg-accent-pink text-white'
+            }`}
+        >
+            {isAdded ? '✓ Added' : 'Add to Plan'}
+        </button>
       </div>
     </div>
   );
 };
 
-const IssueCard: React.FC<IssueCardProps> = ({ issue, correspondingTask, onStatusChange }) => {
-  const isCompleted = correspondingTask?.status === 'completed';
+const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd }) => {
   const styles = priorityStyles[issue.priority];
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const handleStatusChange = (newStatus: GrowthPlanTask['status']) => {
-    if (correspondingTask) { onStatusChange(correspondingTask.id, newStatus); }
-  };
-  
-  const handleToggleComplete = () => {
-    if (correspondingTask) { onStatusChange(correspondingTask.id, isCompleted ? 'to_do' : 'completed'); }
-  };
-
-  if (!correspondingTask) return null;
-
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isCompleted ? 'bg-green-50/50' : 'bg-white'}`}>
+    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white'}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-start">
-           <input type="checkbox" checked={isCompleted} onChange={handleToggleComplete} className="h-5 w-5 rounded border-gray-300 text-accent-purple focus:ring-accent-purple mt-0.5 cursor-pointer"/>
            <div className="ml-3">
-              <label onClick={handleToggleComplete} className={`font-bold text-brand-text cursor-pointer ${isCompleted ? 'line-through text-brand-text-muted' : ''}`}>{issue.issue}</label>
-              {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(correspondingTask.completionDate!).toLocaleDateString()}</p>}
+              <h4 className={`font-bold text-brand-text`}>{issue.issue}</h4>
+              {isAdded && <p className="text-xs text-brand-text-muted mt-1">Task already added to Growth Plan.</p>}
            </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${styles.badge}`}>{issue.priority}</span>
-          <div className="relative">
-            <select 
-              value={correspondingTask.status} 
-              onChange={(e) => handleStatusChange(e.target.value as GrowthPlanTask['status'])} 
-              className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[correspondingTask.status].badge}`}
-            >
-              <option value="to_do">To Do</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-            </select>
-            <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+          <button 
+            onClick={onAdd} 
+            disabled={isAdded}
+            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
+                isAdded 
+                    ? 'bg-green-500 text-white cursor-default' 
+                    : 'bg-accent-purple hover:bg-accent-pink text-white'
+            }`}
+        >
+            {isAdded ? '✓ Added' : 'Add to Plan'}
+        </button>
         </div>
       </div>
-      {!isCompleted && (
-        <div className="ml-8 mt-2">
-            <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs font-semibold text-accent-purple hover:underline">{isExpanded ? 'Hide Details' : 'Show Details'}</button>
-            {isExpanded && (
-                <div className="mt-2 space-y-2 text-sm">
-                    <div><h4 className="font-semibold text-brand-text-muted">Why This Matters</h4><p>{issue.whyItMatters}</p></div>
-                    <div><h4 className="font-semibold text-brand-text-muted">Exact Fix Instructions</h4><p className="whitespace-pre-wrap">{issue.fix}</p></div>
-                </div>
-            )}
-        </div>
-      )}
+      <div className="ml-8 mt-2">
+          <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs font-semibold text-accent-purple hover:underline">
+              {isExpanded ? 'Hide Details' : 'Show Details'}
+          </button>
+          {isExpanded && (
+              <div className="mt-2 space-y-2 text-sm">
+                  <div>
+                      <h4 className="font-semibold text-brand-text-muted">Why This Matters</h4>
+                      <p>{issue.whyItMatters}</p>
+                  </div>
+                  <div>
+                      <h4 className="font-semibold text-brand-text-muted">Exact Fix Instructions</h4>
+                      <p className="whitespace-pre-wrap">{issue.fix}</p>
+                  </div>
+              </div>
+          )}
+      </div>
     </div>
   );
 };
 
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool | null) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool }) => {
+const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool, onAddTask }) => {
     const [showCompleted, setShowCompleted] = useState(false);
     const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
@@ -185,6 +187,22 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
 
     const allIssueTasks = (report.issues || []).map(issue => growthPlanTasks.find(t => t.title === issue.task.title)).filter(Boolean) as GrowthPlanTask[];
     const resolvedIssues = allIssueTasks.filter(t => t.status === 'completed').length;
+    
+    const existingTaskTitles = new Set(growthPlanTasks.map(t => t.title));
+
+    const handleAddWeeklyAction = (task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>) => {
+        onAddTask([task]);
+    };
+    
+    const handleAddIssueTask = (issue: AuditIssue) => {
+        onAddTask([{
+            title: issue.task.title,
+            description: issue.task.description,
+            whyItMatters: issue.whyItMatters,
+            effort: issue.task.effort,
+            sourceModule: issue.task.sourceModule
+        }]);
+    };
 
     return (
     <div className="space-y-8 mt-6">
@@ -193,13 +211,34 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2><p className="text-brand-text-muted mt-1">Focus on these high-impact tasks to see the fastest results.</p></div></div>
             <div className="mb-4"><div className="flex justify-between items-center mb-1"><span className="text-sm font-semibold">{completedWeeklyTasks} of {weeklyActionTasks.length} done</span><span className="text-sm font-bold">{Math.round(progress)}%</span></div><div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `${progress}%` }}></div></div></div>
-            <div className="space-y-4">{(displayedTasks || []).map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}</div>
-            <div className="flex justify-between items-center mt-4"><label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label><button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button></div>
+            <div className="space-y-4">
+                {(report.weeklyActions || []).map(task => (
+                    <SimpleTaskCard 
+                        key={task.title} 
+                        task={task} 
+                        isAdded={existingTaskTitles.has(task.title)}
+                        onAdd={() => handleAddWeeklyAction(task)}
+                    />
+                ))}
+            </div>
+            <div className="flex justify-between items-center mt-4">
+                <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
+                <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
+            </div>
         </div>
 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified ({resolvedIssues} of {allIssueTasks.length} resolved)</h2>
-            <div className="space-y-4">{(report.issues || []).map(issue => <IssueCard key={issue.id} issue={issue} correspondingTask={growthPlanTasks.find(t => t.title === issue.task.title)} onStatusChange={onTaskStatusChange} />)}</div>
+            <div className="space-y-4">
+                {(report.issues || []).map(issue => (
+                    <SimpleIssueCard 
+                        key={issue.id} 
+                        issue={issue} 
+                        isAdded={existingTaskTitles.has(issue.task.title)}
+                        onAdd={() => handleAddIssueTask(issue)}
+                    />
+                ))}
+            </div>
         </div>
     </div>
   );
@@ -367,7 +406,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
         )}
 
         <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
-            <p className="text-brand-text-muted mb-2">{tool.description}</p>
+            <p className="text-brand-text-muted mb-2"><span className="font-bold text-brand-text">{tool.description}</span></p>
             <p className="text-sm text-brand-text-muted mt-2">
                 Replaces: <span className="text-accent-purple font-semibold">SEO Tools (Ahrefs, SEMrush) ($99-399/mo)</span>
             </p>
@@ -378,7 +417,15 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       
       {!loading && result && (
         <>
-          <JetVizResultDisplay report={result} onRerun={(e) => handleSubmit(e, result.businessAddress)} isRunning={loading} growthPlanTasks={growthPlanTasks} onTaskStatusChange={onTaskStatusChange} setActiveTool={setActiveTool} />
+          <JetVizResultDisplay 
+            report={result} 
+            onRerun={(e) => handleSubmit(e, result.businessAddress)} 
+            isRunning={loading} 
+            growthPlanTasks={growthPlanTasks} 
+            onTaskStatusChange={onTaskStatusChange} 
+            setActiveTool={setActiveTool} 
+            onAddTask={addTasksToGrowthPlan}
+          />
           
           {/* Save Analysis Button */}
           <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
