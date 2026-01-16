@@ -69,7 +69,7 @@ const ScoreCircle: React.FC<{ score: number }> = ({ score }) => {
     );
 };
 
-// --- Task and Issue Card components copied from JetBiz ---
+// --- CONSTANTS ---
 const statusStyles = {
   to_do: { badge: 'bg-red-100 text-red-800', text: 'To Do' },
   in_progress: { badge: 'bg-yellow-100 text-yellow-800', text: 'In Progress' },
@@ -81,8 +81,15 @@ const priorityStyles = {
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200' },
 };
+// --- END CONSTANTS ---
 
-const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, status: GrowthPlanTask['status']) => void }> = ({ task, onStatusChange }) => {
+// --- TYPES ---
+type TaskCardProps = { task: GrowthPlanTask, onStatusChange: (id: string, status: GrowthPlanTask['status']) => void };
+type IssueCardProps = { issue: AuditIssue; correspondingTask: GrowthPlanTask | undefined; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; };
+// --- END TYPES ---
+
+// --- COMPONENTS ---
+const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
   const isCompleted = task.status === 'completed';
   const handleToggle = () => onStatusChange(task.id, isCompleted ? 'to_do' : 'completed');
 
@@ -96,7 +103,7 @@ const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, st
             {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(task.completionDate!).toLocaleDateString()}</p>}
         </div>
         <div className="relative">
-          <select value={task.status} onChange={(e) => onStatusChange(e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
+          <select value={task.status} onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
             <option value="to_do">To Do</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
@@ -108,7 +115,7 @@ const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, st
   );
 };
 
-const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask | undefined; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; }> = ({ issue, correspondingTask, onStatusChange }) => {
+const IssueCard: React.FC<IssueCardProps> = ({ issue, correspondingTask, onStatusChange }) => {
   const isCompleted = correspondingTask?.status === 'completed';
   const styles = priorityStyles[issue.priority];
   const [isExpanded, setIsExpanded] = useState(false);
@@ -178,7 +185,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2><p className="text-brand-text-muted mt-1">Focus on these high-impact tasks to see the fastest results.</p></div></div>
             <div className="mb-4"><div className="flex justify-between items-center mb-1"><span className="text-sm font-semibold">{completedWeeklyTasks} of {weeklyActionTasks.length} done</span><span className="text-sm font-bold">{Math.round(progress)}%</span></div><div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `${progress}%` }}></div></div></div>
-            <div className="space-y-4">{displayedTasks.map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}</div>
+            <div className="space-y-4">{(displayedTasks || []).map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}</div>
             <div className="flex justify-between items-center mt-4"><label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label><button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button></div>
         </div>
 

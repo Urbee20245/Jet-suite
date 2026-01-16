@@ -104,19 +104,27 @@ const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}>
     </div>
 );
 
-const priorityStyles = {
-  High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200', iconColor: 'text-red-500' },
-  Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', iconColor: 'text-yellow-500' },
-  Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200', iconColor: 'text-blue-500' },
-};
-
+// --- CONSTANTS ---
 const statusStyles = {
   to_do: { badge: 'bg-red-100 text-red-800', text: 'To Do' },
   in_progress: { badge: 'bg-yellow-100 text-yellow-800', text: 'In Progress' },
   completed: { badge: 'bg-green-100 text-green-800', text: 'Completed' },
 };
 
-const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, status: GrowthPlanTask['status']) => void }> = ({ task, onStatusChange }) => {
+const priorityStyles = {
+  High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200', iconColor: 'text-red-500' },
+  Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', iconColor: 'text-yellow-500' },
+  Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200', iconColor: 'text-blue-500' },
+};
+// --- END CONSTANTS ---
+
+// --- TYPES ---
+type TaskCardProps = { task: GrowthPlanTask, onStatusChange: (id: string, status: GrowthPlanTask['status']) => void };
+type IssueCardProps = { issue: AuditIssue; correspondingTask: GrowthPlanTask | undefined; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; };
+// --- END TYPES ---
+
+// --- COMPONENTS ---
+const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
   const isCompleted = task.status === 'completed';
   const handleToggle = () => onStatusChange(task.id, isCompleted ? 'to_do' : 'completed');
 
@@ -142,21 +150,17 @@ const TaskCard: React.FC<{ task: GrowthPlanTask, onStatusChange: (id: string, st
   );
 };
 
-const IssueCard: React.FC<{ issue: AuditIssue; correspondingTask: GrowthPlanTask | undefined; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; }> = ({ issue, correspondingTask, onStatusChange }) => {
+const IssueCard: React.FC<IssueCardProps> = ({ issue, correspondingTask, onStatusChange }) => {
   const isCompleted = correspondingTask?.status === 'completed';
   const styles = priorityStyles[issue.priority];
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleStatusChange = (newStatus: GrowthPlanTask['status']) => {
-    if (correspondingTask) {
-      onStatusChange(correspondingTask.id, newStatus);
-    }
+    if (correspondingTask) { onStatusChange(correspondingTask.id, newStatus); }
   };
   
   const handleToggleComplete = () => {
-    if (correspondingTask) {
-        onStatusChange(correspondingTask.id, isCompleted ? 'to_do' : 'completed');
-    }
+    if (correspondingTask) { onStatusChange(correspondingTask.id, isCompleted ? 'to_do' : 'completed'); }
   };
 
   if (!correspondingTask) return null;
@@ -245,7 +249,7 @@ const JetBizResultDisplay: React.FC<{ report: AuditReport, growthPlanTasks: Grow
             <div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `${progress}%` }}></div></div>
         </div>
         <div className="space-y-4">
-          {displayedTasks.map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}
+          {(displayedTasks || []).map(task => (<TaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} />))}
         </div>
         <div className="flex justify-between items-center mt-4">
             <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
