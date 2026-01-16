@@ -138,7 +138,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onStatusChange }) => {
             {isCompleted && <p className="text-xs text-brand-text-muted mt-1">Completed on: {new Date(task.completionDate!).toLocaleDateString()}</p>}
         </div>
         <div className="relative">
-          <select value={task.status} onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
+          <select value={task.status} onChange={(e) => onStatusChange(e.target.value as GrowthPlanTask['status'])} className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}>
             <option value="to_do">To Do</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>

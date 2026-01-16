@@ -7,6 +7,7 @@ import {
   ArrowPathIcon 
 } from './icons/MiniIcons';
 
+// --- CONSTANTS ---
 const priorityStyles = {
   High: {
     icon: ExclamationTriangleIcon,
@@ -25,7 +26,20 @@ const priorityStyles = {
   },
 };
 
-const TaskCard: React.FC<{ task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>, isWeeklyAction?: boolean }> = ({ task, isWeeklyAction = false }) => (
+// --- TYPES ---
+interface TaskCardProps {
+  task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
+  isWeeklyAction?: boolean;
+}
+
+interface IssueCardProps {
+  issue: AuditIssue;
+}
+// --- END TYPES ---
+
+// --- COMPONENTS ---
+
+const TaskCard: React.FC<TaskCardProps> = ({ task, isWeeklyAction = false }) => (
   <div className={`flex items-start p-4 rounded-lg border ${isWeeklyAction ? 'bg-white shadow glow-card glow-card-rounded-lg' : 'bg-brand-light'}`}>
     <CheckCircleIcon className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" />
     <div className="ml-4">
@@ -39,7 +53,7 @@ const TaskCard: React.FC<{ task: Omit<GrowthPlanTask, 'id' | 'status' | 'created
   </div>
 );
 
-const IssueCard: React.FC<{ issue: AuditIssue }> = ({ issue }) => {
+const IssueCard: React.FC<IssueCardProps> = ({ issue }) => {
   const styles = priorityStyles[issue.priority];
   
   return (

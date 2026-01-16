@@ -23,15 +23,17 @@ export default async function handler(
     }
 
     // Fetch profile data from the public.profiles table
-    // We use the service key here to ensure we can read the profile even if RLS is complex,
-    // but the query is restricted by the provided userId.
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    if (error) {
+      // If no rows found (PGRST116), return 200 with null profile
+      if (error.code === 'PGRST116') {
+        return res.status(200).json({ profile: null });
+      }
       throw error;
     }
 
