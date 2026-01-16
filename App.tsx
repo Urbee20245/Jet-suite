@@ -193,15 +193,21 @@ const App: React.FC = () => {
 
     if (isLoggedIn) {
       if (subscriptionRedirect) {
+        // If we have a redirect but we are ALREADY on a whitelisted page, do nothing
+        const isWhitelisted = 
+          currentPath === '/pricing' || 
+          currentPath === '/account' || 
+          currentPath.startsWith('/billing/') ||
+          currentPath === '/contact';
+          
+        if (isWhitelisted) return;
+
         if (currentPath !== subscriptionRedirect) {
           navigate(subscriptionRedirect);
         }
         return;
       }
 
-      // NEW LOGIC: Only redirect to /onboarding if NO business profile exists at all.
-      // If a profile exists (even if incomplete/unlocked), we allow access to /app
-      // where InternalApp will guide them to Business Details.
       if (!hasAnyBusinessProfile) {
         if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact')) {
           navigate('/onboarding');
@@ -221,7 +227,7 @@ const App: React.FC = () => {
         currentPath.startsWith('/features') ||
         currentPath.startsWith('/how-it-works') ||
         currentPath.startsWith('/faq') ||
-        currentPath.startsWith('/contact'); // ADDED /contact here
+        currentPath.startsWith('/contact'); 
 
       if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
@@ -236,7 +242,6 @@ const App: React.FC = () => {
   const handleLoginSuccess = (email: string) => {
       setIsLoggedIn(true);
       setCurrentUserEmail(email);
-      // Note: currentUserId is set by the onAuthStateChange listener immediately after this.
   };
   
   const handleLogout = async () => {
@@ -246,7 +251,7 @@ const App: React.FC = () => {
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
       setCurrentUserId(null);
-      localStorage.removeItem('jetsuite_userId'); // Clear on sign out
+      localStorage.removeItem('jetsuite_userId'); 
       setIsAccessTierResolved(false);
       setSubscriptionRedirect(null);
       setIsOnboardingResolved(false);
@@ -256,7 +261,7 @@ const App: React.FC = () => {
 
   const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
     console.log('[App] Subscription access denied:', { status, redirectTo });
-    navigate(redirectTo); // Navigate to /pricing or /account
+    navigate(redirectTo); 
   };
 
   try {
@@ -264,7 +269,7 @@ const App: React.FC = () => {
     
     if (normalizedPath === '/privacy') return <PrivacyPolicy />;
     if (normalizedPath === '/terms') return <TermsOfService />;
-    if (normalizedPath === '/contact') return <ContactPage />; // ADDED ROUTE CHECK
+    if (normalizedPath === '/contact') return <ContactPage />;
 
     if (!sessionChecked) {
       return (
@@ -282,22 +287,31 @@ const App: React.FC = () => {
       return <OnboardingPage navigate={navigate} userId={currentUserId} />;
     }
 
+    // CHECK IF WE SHOULD APPLY THE GUARD
+    // We only apply the guard if the user is trying to access protected "/app" routes
+    const isProtectedRoute = currentPath.startsWith('/app');
+
     if (isLoggedIn && currentUserId && currentUserEmail) {
-      return (
-        <SubscriptionGuard 
-          userId={currentUserId}
-          onAccessDenied={handleSubscriptionAccessDenied}
-        >
-          <InternalApp 
-            onLogout={handleLogout} 
-            userEmail={currentUserEmail} 
+      if (isProtectedRoute) {
+        return (
+          <SubscriptionGuard 
             userId={currentUserId}
-          />
-        </SubscriptionGuard>
-      );
+            onAccessDenied={handleSubscriptionAccessDenied}
+          >
+            <InternalApp 
+              onLogout={handleLogout} 
+              userEmail={currentUserEmail} 
+              userId={currentUserId}
+            />
+          </SubscriptionGuard>
+        );
+      } else {
+        // If logged in but on a marketing page, render the marketing site/account pages normally
+        return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
+      }
     }
 
-    // Check if current path is valid marketing route (handled by MarketingWebsite)
+    // Valid marketing routes for non-logged in users
     const validMarketingRoutes = [
       '/',
       '/features',
@@ -311,15 +325,13 @@ const App: React.FC = () => {
       '/login',
       '/billing/success',
       '/billing/locked',
-      '/contact' // Included here for completeness, though MarketingWebsite handles it
+      '/contact'
     ];
 
-    // Check if current path is valid
     if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
       return <MarketingWebsite currentPath={currentPath} navigate={navigate} onLoginSuccess={handleLoginSuccess} />;
     }
 
-    // 404 - Invalid route
     return <NotFoundPage navigate={navigate} />;
     
   } catch (error) {
