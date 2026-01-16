@@ -82,6 +82,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const [newUser, setNewUser] = useState({ email: '', password: '', firstName: '', lastName: '' });
     const [isCreatingUser, setIsCreatingUser] = useState(false);
     const [creationResult, setCreationResult] = useState<{ success: boolean; message: string } | null>(null);
+    const [isGrantingAccess, setIsGrantingAccess] = useState<string | null>(null);
 
     // ===== LOAD SUPPORT TICKETS =====
     useEffect(() => {
@@ -330,7 +331,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
-    // ===== NEW: WIPE USER DATA FUNCTION =====
     const handleWipeUserData = async (targetUserId: string, targetUserEmail: string) => {
         if (!window.confirm(`CRITICAL ACTION: Are you absolutely sure you want to wipe ALL data and DELETE the user account for ${targetUserEmail}? This action is irreversible.`)) {
             return;
@@ -364,12 +364,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
-    const handleCreateTestUser = async (e: React.FormEvent) => {
+    const handleCreateFreeUser = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsCreatingUser(true);
         setCreationResult(null);
         try {
-            const response = await fetch('/api/admin/create-test-user', {
+            const response = await fetch('/api/admin/create-free-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -396,15 +396,42 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         }
     };
 
-    // ===== UPDATED ADMIN FUNCTIONS (USING UUID) =====
+    const handleGrantFreeAccess = async (targetUserId: string, targetUserEmail: string) => {
+        if (!window.confirm(`Are you sure you want to grant lifetime free access to ${targetUserEmail}? This will give them an active subscription.`)) {
+            return;
+        }
+
+        setIsGrantingAccess(targetUserId);
+        try {
+            const response = await fetch('/api/admin/grant-free-access', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-email': currentUserProfile.user.email
+                },
+                body: JSON.stringify({ targetUserId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to grant access.');
+            }
+
+            alert(`Successfully granted free access to ${targetUserEmail}.`);
+        } catch (error: any) {
+            console.error('Grant access error:', error);
+            alert(`Failed to grant access: ${error.message}`);
+        } finally {
+            setIsGrantingAccess(null);
+        }
+    };
+
     const handleResetDna = (userId: string) => {
         const profile = allProfiles.find(p => p.user.id === userId);
         const email = profile?.user.email || userId;
         
         if (window.confirm(`Are you sure you want to reset DNA for ${email}? This will clear all extracted data.`)) {
             console.log(`[ADMIN] Forcing DNA reset for user UUID: ${userId}.`);
-            // NOTE: This only updates the local state for the Admin Panel view. 
-            // A proper reset would involve an API call to clear the DB fields.
             setAllProfiles(profiles => profiles.map(p => {
                 if (p.user.id === userId) {
                     return { 
@@ -554,7 +581,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <p className="text-xs mt-1">Clears all extracted DNA for your current profile to allow re-testing.</p>
                             </button>
                             <button onClick={() => setShowAddUserModal(true)} className="bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-lg border border-blue-200 text-left">
-                                <h3 className="font-bold">Add Test User</h3>
+                                <h3 className="font-bold">Create Free User</h3>
                                 <p className="text-xs mt-1">Quick-add a new user with a business profile for testing.</p>
                             </button>
                             <button 
@@ -646,7 +673,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             />
                         </div>
                         <button onClick={() => setShowAddUserModal(true)} className="ml-4 flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                            <PlusIcon className="w-5 h-5" /> Add Test User
+                            <PlusIcon className="w-5 h-5" /> Create Free User
                         </button>
                     </div>
                     <div className="overflow-x-auto">
@@ -669,6 +696,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                             {profile.user.email !== currentUserProfile.user.email &&
                                                 <button onClick={() => onImpersonate(profile)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
                                             }
+                                            <button 
+                                                onClick={() => handleGrantFreeAccess(profile.user.id, profile.user.email)}
+                                                disabled={isGrantingAccess === profile.user.id}
+                                                className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                title="Grant Lifetime Free Access"
+                                            >
+                                                {isGrantingAccess === profile.user.id ? (
+                                                    <Loader2 size={16} className="animate-spin text-green-600" />
+                                                ) : (
+                                                    <CreditCardIcon className="w-4 h-4 text-green-600"/>
+                                                )}
+                                            </button>
                                             <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
                                             
                                             {profile.user.email !== currentUserProfile.user.email && (
@@ -1180,12 +1219,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
             )}
 
-            {/* Add Test User Modal */}
+            {/* Add Free User Modal */}
             {showAddUserModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-                        <h3 className="text-xl font-bold mb-4 text-brand-text">Create Test User</h3>
-                        <form onSubmit={handleCreateTestUser} className="space-y-4">
+                        <h3 className="text-xl font-bold mb-4 text-brand-text">Create Free User</h3>
+                        <form onSubmit={handleCreateFreeUser} className="space-y-4">
                             <input type="text" placeholder="First Name" value={newUser.firstName} onChange={e => setNewUser({...newUser, firstName: e.target.value})} className="w-full p-2 border rounded" required />
                             <input type="text" placeholder="Last Name" value={newUser.lastName} onChange={e => setNewUser({...newUser, lastName: e.target.value})} className="w-full p-2 border rounded" required />
                             <input type="email" placeholder="Email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full p-2 border rounded" required />

@@ -37,33 +37,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (createUserError) throw createUserError;
     const userId = newUserData.user.id;
 
-    // The handle_new_user trigger should have created records in `profiles` and `billing_accounts`.
-    // Let's ensure the billing account is set to founder tier and active for testing.
+    // The handle_new_user trigger creates a billing_accounts record.
+    // We update it to grant free, active access.
     const { error: billingError } = await supabase
       .from('billing_accounts')
-      .update({ is_founder: true, subscription_status: 'active' })
+      .update({ 
+        subscription_status: 'active',
+        subscription_plan: 'free_tier' // Explicitly set to free
+      })
       .eq('user_id', userId);
 
-    if (billingError) console.warn(`Could not set founder status for ${email}:`, billingError.message);
+    if (billingError) console.warn(`Could not set free plan for ${email}:`, billingError.message);
 
     // 2. Create a basic business profile for the new user
     const { error: businessError } = await supabase
       .from('business_profiles')
       .insert({
         user_id: userId,
-        business_name: `${firstName}'s Test Business`,
+        business_name: `${firstName}'s Business`,
         industry: 'General',
-        city: 'Testville',
-        state: 'TS',
+        city: 'City',
+        state: 'State',
         is_primary: true,
         is_complete: false,
       });
 
     if (businessError) throw businessError;
 
-    res.status(201).json({ success: true, message: `Test user ${email} created successfully.` });
+    res.status(201).json({ success: true, message: `Free user ${email} created successfully.` });
   } catch (error: any) {
-    console.error('[Admin Create Test User] Error:', error);
-    res.status(500).json({ error: 'Failed to create test user', message: error.message });
+    console.error('[Admin Create Free User] Error:', error);
+    res.status(500).json({ error: 'Failed to create free user', message: error.message });
   }
 }
