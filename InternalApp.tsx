@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { InternalApp } from './InternalApp';
-import { MarketingWebsite } from './pages/MarketingWebsite';
-import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { TermsOfService } from './pages/TermsOfService';
-import { OnboardingPage } from './pages/OnboardingPage';
-import { SubscriptionGuard } from './components/SubscriptionGuard';
-import { checkSubscriptionAccess } from './services/subscriptionService';
-import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client';
-import { syncToSupabase, loadFromSupabase } from './utils/syncService'; // Import sync utilities
+import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Welcome } from './tools/Welcome';
@@ -37,24 +29,6 @@ import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData
 import { ALL_TOOLS } from './constants';
 import { EyeIcon } from './components/icons/MiniIcons';
 import SupportChatbot from './components/SupportChatbot';
-
-// Fetch real current time on app load (with timeout to prevent hanging)
-if (typeof window !== 'undefined') {
-  const initRealTime = async () => {
-    try {
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), 2000)
-      );
-      await Promise.race([fetchRealDateTime(), timeout]);
-      console.log('✅ Real date/time initialized');
-    } catch (error) {
-      console.warn('⚠️ Could not fetch real time, using system time');
-    }
-  };
-  initRealTime();
-}
-
-console.log('[App] Component module loaded');
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
