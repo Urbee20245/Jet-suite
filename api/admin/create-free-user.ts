@@ -85,9 +85,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('[Admin Create Free User] Error:', error);
     // Attempt to clean up the auth user if other steps failed
     if (error.message.includes('profiles') || error.message.includes('billing_accounts')) {
-        const { data: { user } } = await supabase.auth.admin.getUserByEmail(email);
-        if (user) {
-            await supabase.auth.admin.deleteUser(user.id);
+        // Find the user by email to get their ID for deletion
+        const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+        if (!listError && users) {
+            const userToDelete = users.find(u => u.email === email);
+            if (userToDelete) {
+                await supabase.auth.admin.deleteUser(userToDelete.id);
+                console.log(`[Admin Cleanup] Deleted orphaned auth user: ${email}`);
+            }
         }
     }
     res.status(500).json({ error: 'Failed to create free user', message: error.message });
