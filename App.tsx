@@ -10,6 +10,7 @@ import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
 import { ContactPage } from './pages/ContactPage'; // Import ContactPage
+import { JetSuiteLogo } from './components/JetSuiteLogo'; // Import JetSuiteLogo
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -254,7 +255,7 @@ const App: React.FC = () => {
       setIsLoggedIn(false);
       setCurrentUserEmail(null);
       setCurrentUserId(null);
-      localStorage.removeItem('jetsuite_userId'); 
+      localStorage.removeItem('jetsuite_userId'); // Clear on sign out
       setIsAccessTierResolved(false);
       setSubscriptionRedirect(null);
       setIsOnboardingResolved(false);
@@ -277,9 +278,9 @@ const App: React.FC = () => {
 
     if (!sessionChecked) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-brand-dark">
+        <div className="min-h-screen flex items-center justify-center bg-brand-darker">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <JetSuiteLogo className="w-24 h-24 mx-auto mb-4 animate-loading-pulse" />
             <p className="text-white">Loading JetSuite...</p>
           </div>
         </div>
@@ -350,7 +351,7 @@ const App: React.FC = () => {
     
   } catch (error) {
     console.error('[App] Critical render error:', error);
-    return <div className="p-10 text-white">Application crashed. Please check console.</div>;
+    return <div className="p-4 text-white">Application crashed. Please check console.</div>;
   }
 };
 
