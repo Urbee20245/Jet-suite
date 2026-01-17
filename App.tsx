@@ -10,6 +10,7 @@ import { fetchRealDateTime } from './utils/realTime';
 import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
 import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
 import { ContactPage } from './pages/ContactPage'; // Import ContactPage
+import Admin from './pages/Admin'; // Import Admin page
 
 // Fetch real current time on app load (with timeout to prevent hanging)
 if (typeof window !== 'undefined') {
@@ -200,7 +201,8 @@ const App: React.FC = () => {
           currentPath === '/account' || 
           currentPath.startsWith('/billing/') ||
           currentPath === '/contact' ||
-          currentPath === '/savings';
+          currentPath === '/savings' ||
+          currentPath === '/admin'; // Allow admin access
           
         if (isWhitelisted) return;
 
@@ -212,7 +214,7 @@ const App: React.FC = () => {
       }
 
       if (!hasAnyBusinessProfile) {
-        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact')) {
+        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact') && currentPath !== '/admin') {
           navigate('/onboarding');
         }
         return;
@@ -230,13 +232,14 @@ const App: React.FC = () => {
         currentPath.startsWith('/features') ||
         currentPath.startsWith('/how-it-works') ||
         currentPath.startsWith('/faq') ||
-        currentPath.startsWith('/contact'); 
+        currentPath.startsWith('/contact') ||
+        currentPath === '/admin'; // Allow admin access
 
       if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
       }
     } else {
-      if (currentPath.startsWith('/app') || currentPath === '/onboarding') {
+      if (currentPath.startsWith('/app') || currentPath === '/onboarding' || currentPath === '/admin') {
         navigate('/');
       }
     }
@@ -274,6 +277,11 @@ const App: React.FC = () => {
     if (normalizedPath === '/privacy') return <PrivacyPolicy />;
     if (normalizedPath === '/terms') return <TermsOfService />;
     if (normalizedPath === '/contact') return <ContactPage />;
+    
+    // Admin route - must be logged in to access
+    if (normalizedPath === '/admin') {
+      return <Admin navigate={navigate} />;
+    }
 
     if (!sessionChecked) {
       return (
