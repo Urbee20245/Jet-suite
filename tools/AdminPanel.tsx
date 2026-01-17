@@ -1,8 +1,3 @@
-// =====================================================
-// ENHANCED ADMIN PANEL - FULLY FUNCTIONAL VERSION
-// All features working, better UX, complete functionality
-// =====================================================
-
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, BusinessDna } from '../types';
 import type { SupportTicket, SupportMessage, TicketStatus, TicketPriority } from '../Types/supportTypes';
@@ -345,7 +340,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         try {
             const result = await supportService.getAllTickets();
             if (result.success) {
-                setTickets(result.data);
+                setTickets(result.data || []);
             }
         } catch (error) {
             console.error('Error loading tickets:', error);
@@ -354,7 +349,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             setIsLoadingTickets(false);
         }
     };
-    
+
     const loadRevenueData = async () => {
         setIsLoadingRevenue(true);
         try {
@@ -1530,7 +1525,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-bold text-brand-text">{ann.title}</h3>
-                                        <span className={`text-xs] uppercase font-bold px-2 py-0.5 rounded-full ${
+                                        <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded-full ${
                                             ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                         }`}>{ann.type}</span>
                                         <span className="text-xs text-gray-500">
