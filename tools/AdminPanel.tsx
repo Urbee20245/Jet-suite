@@ -11,6 +11,8 @@ import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Searc
 import { Loader } from '../components/Loader';
 import supportService from '../services/supportService';
 
+const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
+
 interface AdminPanelProps {
     allProfiles: ProfileData[]; // This is now the list of ALL users
     setAllProfiles: React.Dispatch<React.SetStateAction<ProfileData[]>>;
@@ -661,27 +663,54 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <tbody>
                                 {filteredProfiles.map(profile => {
                                     const status = dnaStatus(profile.business?.dna);
+                                    const isAdminAccount = profile.user.email === ADMIN_EMAIL;
+                                    
                                     return (
-                                    <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
-                                        <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">{profile.business?.business_name || '(No Name)'}</th>
+                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${isAdminAccount ? 'bg-yellow-50' : 'bg-white'}`}>
+                                        <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">
+                                            {profile.business?.business_name || '(No Name)'}
+                                            {isAdminAccount && (
+                                                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">ADMIN</span>
+                                            )}
+                                        </th>
                                         <td className="px-6 py-4">{profile.user.email}</td>
-                                        <td className="px-6 py-4"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>{status.text}</span></td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                                                {status.text}
+                                            </span>
+                                        </td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            <button onClick={() => handleResetDna(profile.user.id)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Reset DNA"><ArrowPathIcon className="w-4 h-4 text-yellow-600"/></button>
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
-                                            {profile.user.email !== currentUserProfile.user.email && (
-                                                <button 
-                                                    onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
-                                                    disabled={isWipingData === profile.user.id}
-                                                    className="p-1.5 hover:bg-red-100 rounded-md" 
-                                                    title="Wipe All Data & Delete Account"
-                                                >
-                                                    {isWipingData === profile.user.id ? (
-                                                        <Loader2 size={16} className="animate-spin text-red-600" />
-                                                    ) : (
-                                                        <TrashIcon className="w-4 h-4 text-red-600"/>
-                                                    )}
-                                                </button>
+                                            {!isAdminAccount && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => handleResetDna(profile.user.id)} 
+                                                        className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                        title="Reset DNA"
+                                                    >
+                                                        <ArrowPathIcon className="w-4 h-4 text-yellow-600"/>
+                                                    </button>
+                                                    <button 
+                                                        className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                        title="Edit"
+                                                    >
+                                                        <PencilIcon className="w-4 h-4 text-blue-600"/>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
+                                                        disabled={isWipingData === profile.user.id}
+                                                        className="p-1.5 hover:bg-red-100 rounded-md" 
+                                                        title="Wipe All Data & Delete Account"
+                                                    >
+                                                        {isWipingData === profile.user.id ? (
+                                                            <Loader2 size={16} className="animate-spin text-red-600" />
+                                                        ) : (
+                                                            <TrashIcon className="w-4 h-4 text-red-600"/>
+                                                        )}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {isAdminAccount && (
+                                                <span className="text-xs text-gray-500 italic px-2">Protected Account</span>
                                             )}
                                         </td>
                                     </tr>
@@ -721,46 +750,67 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredProfiles.map(profile => (
-                                    <tr key={profile.user.id} className="bg-white border-b hover:bg-brand-light">
-                                        <td className="px-6 py-4 font-medium text-brand-text">{profile.user.email}</td>
+                                {filteredProfiles.map(profile => {
+                                    const isAdminAccount = profile.user.email === ADMIN_EMAIL;
+                                    
+                                    return (
+                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${isAdminAccount ? 'bg-yellow-50' : 'bg-white'}`}>
+                                        <td className="px-6 py-4 font-medium text-brand-text">
+                                            {profile.user.email}
+                                            {isAdminAccount && (
+                                                <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">ADMIN</span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4">{profile.user.firstName} {profile.user.lastName}</td>
                                         <td className="px-6 py-4">{profile.business?.business_name || '(No Business)'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            {profile.user.email !== currentUserProfile.user.email &&
-                                                <button onClick={() => onImpersonate(profile)} className="p-1.5 hover:bg-gray-200 rounded-md" title="Impersonate User"><EyeIcon className="w-4 h-4 text-green-600"/></button>
-                                            }
-                                            <button 
-                                                onClick={() => handleGrantFreeAccess(profile.user.id, profile.user.email)}
-                                                disabled={isGrantingAccess === profile.user.id}
-                                                className="p-1.5 hover:bg-gray-200 rounded-md" 
-                                                title="Grant Lifetime Free Access"
-                                            >
-                                                {isGrantingAccess === profile.user.id ? (
-                                                    <Loader2 size={16} className="animate-spin text-green-600" />
-                                                ) : (
-                                                    <CreditCardIcon className="w-4 h-4 text-green-600"/>
-                                                )}
-                                            </button>
-                                            <button className="p-1.5 hover:bg-gray-200 rounded-md" title="Edit"><PencilIcon className="w-4 h-4 text-blue-600"/></button>
-                                            
-                                            {profile.user.email !== currentUserProfile.user.email && (
-                                                <button 
-                                                    onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
-                                                    disabled={isWipingData === profile.user.id}
-                                                    className="p-1.5 hover:bg-red-100 rounded-md" 
-                                                    title="Wipe All Data & Delete User"
-                                                >
-                                                    {isWipingData === profile.user.id ? (
-                                                        <Loader2 size={16} className="animate-spin text-red-600" />
-                                                    ) : (
-                                                        <TrashIcon className="w-4 h-4 text-red-600"/>
-                                                    )}
-                                                </button>
+                                            {!isAdminAccount && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => onImpersonate(profile)} 
+                                                        className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                        title="Impersonate User"
+                                                    >
+                                                        <EyeIcon className="w-4 h-4 text-green-600"/>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleGrantFreeAccess(profile.user.id, profile.user.email)}
+                                                        disabled={isGrantingAccess === profile.user.id}
+                                                        className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                        title="Grant Lifetime Free Access"
+                                                    >
+                                                        {isGrantingAccess === profile.user.id ? (
+                                                            <Loader2 size={16} className="animate-spin text-green-600" />
+                                                        ) : (
+                                                            <CreditCardIcon className="w-4 h-4 text-green-600"/>
+                                                        )}
+                                                    </button>
+                                                    <button 
+                                                        className="p-1.5 hover:bg-gray-200 rounded-md" 
+                                                        title="Edit"
+                                                    >
+                                                        <PencilIcon className="w-4 h-4 text-blue-600"/>
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleWipeUserData(profile.user.id, profile.user.email)} 
+                                                        disabled={isWipingData === profile.user.id}
+                                                        className="p-1.5 hover:bg-red-100 rounded-md" 
+                                                        title="Wipe All Data & Delete User"
+                                                    >
+                                                        {isWipingData === profile.user.id ? (
+                                                            <Loader2 size={16} className="animate-spin text-red-600" />
+                                                        ) : (
+                                                            <TrashIcon className="w-4 h-4 text-red-600"/>
+                                                        )}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {isAdminAccount && (
+                                                <span className="text-xs text-gray-500 italic px-2">Protected Account</span>
                                             )}
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                     </div>

@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log('[Admin Get All Profiles] Starting fetch for:', userEmail);
     
-    // 1. Fetch all profiles
+    // 1. Fetch ALL profiles - no filters, no limits
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select(`
@@ -30,21 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         first_name, 
         last_name, 
         role,
-        businesses:business_profiles (
-          id, 
-          business_name, 
-          industry, 
-          city, 
-          state,
-          is_primary,
-          is_complete,
-          dna,
-          brand_dna_profile,
-          google_business_profile,
-          dna_last_updated_at,
-          created_at,
-          updated_at
-        )
+        created_at
       `)
       .order('created_at', { ascending: false });
 
@@ -55,11 +41,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log(`[Admin Get All Profiles] Found ${profiles?.length || 0} profiles`);
 
-    // 2. Map profiles to the format expected by the frontend
-    const mappedProfiles = profiles.map(profile => {
-      // Find primary or first business
-      const businessesArray = Array.isArray(profile.businesses) ? profile.businesses : [];
+    // 2. For each profile, fetch their businesses separately
+    const mappedProfiles = await Promise.all(profiles.map(async (profile) => {
+      // Fetch businesses for this user
+      const { data: businesses, error: businessError } = await supabase
+        .from('business_profiles')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      if (businessError) {
+        console.error(`[Admin Get All Profiles] Error fetching businesses for ${profile.email}:`, businessError);
+      }
+
+      const businessesArray = businesses || [];
       const primaryBusiness: any = businessesArray.find((b: any) => b.is_primary) || businessesArray[0] || {};
+      
+      console.log(`[Admin Get All Profiles] User ${profile.email} has ${businessesArray.length} businesses`);
       
       return {
         user: {
@@ -91,9 +89,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         isProfileActive: !!primaryBusiness.is_complete,
         brandDnaProfile: primaryBusiness.brand_dna_profile || undefined,
       };
-    });
+    }));
 
     console.log(`[Admin Get All Profiles] Successfully mapped ${mappedProfiles.length} profiles`);
+    console.log(`[Admin Get All Profiles] Emails found:`, mappedProfiles.map(p => p.user.email));
+    
     return res.status(200).json({ profiles: mappedProfiles });
     
   } catch (error: any) {
