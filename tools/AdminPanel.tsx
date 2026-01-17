@@ -126,6 +126,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     }, [activeTab]);
 
+    // Force refresh when returning to admin panel to ensure latest user list
+    useEffect(() => {
+        onDataChange();
+    }, []);
+
     useEffect(() => {
         let filtered = [...tickets];
 
@@ -410,6 +415,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         e.preventDefault();
         setIsCreatingUser(true);
         setCreationResult(null);
+        
         try {
             const response = await fetch('/api/admin/create-free-user', {
                 method: 'POST',
@@ -419,23 +425,28 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 },
                 body: JSON.stringify(newUser)
             });
+            
             const data = await response.json();
+            
             if (!response.ok) throw new Error(data.message || 'Failed to create user.');
             
-            setCreationResult({ success: true, message: `User created successfully! Temp password: ${newUser.password}` });
+            // Show success message with password
+            setCreationResult({ 
+                success: true, 
+                message: `✅ User created successfully!\n\n📧 Email: ${newUser.email}\n🔑 Temporary Password: ${newUser.password}\n\n⚠️ Copy this password now - it won't be shown again!` 
+            });
             
-            // Refresh the list
-            onDataChange();
+            // Refresh the user list immediately
+            await onDataChange();
             
-            // Keep success message visible for a bit longer so admin can copy the password
-            setTimeout(() => {
-                setShowAddUserModal(false);
-                setNewUser({ email: '', password: '', firstName: '', lastName: '' });
-                setCreationResult(null);
-            }, 8000);
+            // Reset form but keep modal open so admin can copy password
+            setNewUser({ email: '', password: '', firstName: '', lastName: '' });
 
         } catch (error: any) {
-            setCreationResult({ success: false, message: error.message });
+            setCreationResult({ 
+                success: false, 
+                message: `❌ Failed to create user: ${error.message}` 
+            });
         } finally {
             setIsCreatingUser(false);
         }
@@ -958,23 +969,77 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4 text-brand-text">Create Free User</h3>
                         <p className="text-sm text-brand-text-muted mb-4">This will create a new user account with 1 business and 1 seat, and immediate active access.</p>
+                        
                         <form onSubmit={handleCreateFreeUser} className="space-y-4">
-                            <input type="text" placeholder="First Name" value={newUser.firstName} onChange={e => setNewUser({...newUser, firstName: e.target.value})} className="w-full p-2 border rounded" required />
-                            <input type="text" placeholder="Last Name" value={newUser.lastName} onChange={e => setNewUser({...newUser, lastName: e.target.value})} className="w-full p-2 border rounded" required />
-                            <input type="email" placeholder="Email" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} className="w-full p-2 border rounded" required />
-                            <input type="text" placeholder="Password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} className="w-full p-2 border rounded" required />
+                            <input 
+                                type="text" 
+                                placeholder="First Name" 
+                                value={newUser.firstName} 
+                                onChange={e => setNewUser({...newUser, firstName: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Last Name" 
+                                value={newUser.lastName} 
+                                onChange={e => setNewUser({...newUser, lastName: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="email" 
+                                placeholder="Email" 
+                                value={newUser.email} 
+                                onChange={e => setNewUser({...newUser, email: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Temporary Password" 
+                                value={newUser.password} 
+                                onChange={e => setNewUser({...newUser, password: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
                             
                             {creationResult && (
-                                <div className={`text-sm p-3 rounded font-semibold ${creationResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                <div className={`text-sm p-4 rounded font-semibold whitespace-pre-line ${
+                                    creationResult.success 
+                                        ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                                        : 'bg-red-100 text-red-800 border-2 border-red-300'
+                                }`}>
                                     {creationResult.message}
                                 </div>
                             )}
 
                             <div className="flex justify-end gap-4 pt-4">
-                                <button type="button" onClick={() => { setShowAddUserModal(false); setCreationResult(null); }} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancel</button>
-                                <button type="submit" disabled={isCreatingUser} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                                    {isCreatingUser ? 'Creating...' : 'Create User'}
+                                <button 
+                                    type="button" 
+                                    onClick={() => { 
+                                        setShowAddUserModal(false); 
+                                        setCreationResult(null); 
+                                        setNewUser({ email: '', password: '', firstName: '', lastName: '' });
+                                    }} 
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                                    disabled={isCreatingUser}
+                                >
+                                    {creationResult?.success ? 'Close' : 'Cancel'}
                                 </button>
+                                {!creationResult?.success && (
+                                    <button 
+                                        type="submit" 
+                                        disabled={isCreatingUser} 
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isCreatingUser ? 'Creating...' : 'Create User'}
+                                    </button>
+                                )}
                             </div>
                         </form>
                     </div>

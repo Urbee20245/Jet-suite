@@ -19,6 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    console.log('[Admin Get All Profiles] Starting fetch for:', userEmail);
+    
     // 1. Fetch all profiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -39,12 +41,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           dna,
           brand_dna_profile,
           google_business_profile,
-          dna_last_updated_at
+          dna_last_updated_at,
+          created_at,
+          updated_at
         )
       `)
       .order('created_at', { ascending: false });
 
-    if (profilesError) throw profilesError;
+    if (profilesError) {
+      console.error('[Admin Get All Profiles] Profiles error:', profilesError);
+      throw profilesError;
+    }
+
+    console.log(`[Admin Get All Profiles] Found ${profiles?.length || 0} profiles`);
 
     // 2. Map profiles to the format expected by the frontend
     const mappedProfiles = profiles.map(profile => {
@@ -84,7 +93,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     });
 
+    console.log(`[Admin Get All Profiles] Successfully mapped ${mappedProfiles.length} profiles`);
     return res.status(200).json({ profiles: mappedProfiles });
+    
   } catch (error: any) {
     console.error('[Admin Get All Profiles] Error:', error);
     return res.status(500).json({ error: 'Failed to fetch profiles', message: error.message });

@@ -504,7 +504,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   const renderActiveTool = () => {
     if (isAdmin && activeTool?.id === 'adminpanel') {
         return <AdminPanel 
-            allProfiles={allAdminProfiles} 
+            allProfiles={allAdminProfiles.length > 0 ? allAdminProfiles : allProfiles} 
             setAllProfiles={setAllAdminProfiles} 
             onDataChange={fetchAllAdminProfiles}
             currentUserProfile={activeProfile} 
