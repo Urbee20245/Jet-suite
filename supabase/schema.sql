@@ -143,3 +143,32 @@ BEGIN
         ALTER TABLE business_profiles ADD COLUMN website_url TEXT;
     END IF;
 END $$;
+
+
+-- ============================================================================
+-- TRIAL MANAGEMENT SYSTEM
+-- Added: January 2026
+-- Purpose: Enable 7-day free trial tracking for new users
+-- ============================================================================
+
+-- Add trial_end_date column to profiles table
+ALTER TABLE profiles 
+ADD COLUMN IF NOT EXISTS trial_end_date DATE;
+
+-- Add comment explaining the column
+COMMENT ON COLUMN profiles.trial_end_date IS 'Date when the user trial ends (7 days from account creation by default). NULL means no trial set.';
+
+-- Create index for efficient querying of trial status
+CREATE INDEX IF NOT EXISTS idx_profiles_trial_end_date ON profiles(trial_end_date);
+
+-- Optional: Set trial end date for existing users (7 days from their creation)
+-- Uncomment the lines below if you want to give existing users a trial
+/*
+UPDATE profiles 
+SET trial_end_date = (created_at::date + INTERVAL '7 days')::date
+WHERE trial_end_date IS NULL 
+  AND created_at IS NOT NULL;
+*/
+
+-- End of Trial Management System
+-- ============================================================================
