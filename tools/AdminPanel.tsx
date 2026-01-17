@@ -1530,7 +1530,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-bold text-brand-text">{ann.title}</h3>
-                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                                        <span className={`text-xs] uppercase font-bold px-2 py-0.5 rounded-full ${
                                             ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                         }`}>{ann.type}</span>
                                         <span className="text-xs text-gray-500">
