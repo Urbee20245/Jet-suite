@@ -156,6 +156,15 @@ const ConfirmModal: React.FC<{
     );
 };
 
+// Helper to check if an announcement has expired
+const isExpired = (endDate: string | null) => {
+    if (!endDate) return false;
+    const end = new Date(endDate);
+    const now = new Date();
+    // Compare dates only (set time to 00:00:00)
+    return end.setHours(0, 0, 0, 0) < now.setHours(0, 0, 0, 0);
+};
+
 // --- MAIN COMPONENT ---
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
@@ -414,7 +423,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           loadAnnouncements();
           showToast('Announcement created successfully', 'success');
         } else {
-          showToast('Failed to create announcement', 'error');
+          const errorData = await response.json();
+          showToast(`Failed to create announcement: ${errorData.error || 'Unknown error'}`, 'error');
         }
       } catch (error) {
         console.error('Error creating announcement:', error);
@@ -463,7 +473,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           },
           body: JSON.stringify({
             id: announcement.id,
-            ...announcement,
+            title: announcement.title,
+            message: announcement.message,
+            type: announcement.type,
+            target_audience: announcement.target_audience,
+            priority: announcement.priority,
+            end_date: announcement.end_date,
             is_active: !announcement.is_active
           })
         });
@@ -1082,23 +1097,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedBusinesses.map(profile => (
-                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${profile.user.email === ADMIN_EMAIL ? 'bg-yellow-50' : 'bg-white'}`}>
+                                {paginatedBusinesses.map(profile => {
+                                    const status = dnaStatus(profile.business?.dna);
+                                    const isAdminAccount = profile.user.email === ADMIN_EMAIL;
+                                    
+                                    return (
+                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${isAdminAccount ? 'bg-yellow-50' : 'bg-white'}`}>
                                         <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">
                                             {profile.business?.business_name || '(No Name)'}
-                                            {profile.user.email === ADMIN_EMAIL && (
+                                            {isAdminAccount && (
                                                 <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">ADMIN</span>
                                             )}
                                         </th>
                                         <td className="px-6 py-4">{profile.user.email}</td>
                                         <td className="px-6 py-4">{profile.business.location || 'N/A'}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${dnaStatus(profile.business?.dna).color}`}>
-                                                {dnaStatus(profile.business?.dna).text}
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                                                {status.text}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            {profile.user.email !== ADMIN_EMAIL && (
+                                            {!isAdminAccount && (
                                                 <>
                                                     <button 
                                                         onClick={() => handleResetDna(profile.user.id)} 
@@ -1128,12 +1147,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                     </button>
                                                 </>
                                             )}
-                                            {profile.user.email === ADMIN_EMAIL && (
+                                            {isAdminAccount && (
                                                 <span className="text-xs text-gray-500 italic px-2">Protected Account</span>
                                             )}
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                     </div>
@@ -1468,12 +1487,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 value={announcementForm.title}
                                 onChange={e => setAnnouncementForm({...announcementForm, title: e.target.value})}
                                 className="w-full p-2 border rounded"
+                                required
                             />
                             <textarea 
                                 placeholder="Message" 
                                 value={announcementForm.message}
                                 onChange={e => setAnnouncementForm({...announcementForm, message: e.target.value})}
                                 className="w-full p-2 border rounded h-24"
+                                required
                             />
                             <div className="grid grid-cols-3 gap-4">
                                 <select 
@@ -1505,7 +1526,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             </div>
                             <button 
                                 onClick={handleCreateAnnouncement}
-                                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700"
+                                disabled={!announcementForm.title || !announcementForm.message}
+                                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
                             >
                                 Publish Announcement
                             </button>
@@ -1513,14 +1535,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     )}
 
                     <div className="space-y-4">
-                        {isLoadingAnnouncements ? <Loader /> : announcements.map(ann => (
-                            <div key={ann.id} className={`p-4 rounded-lg border flex justify-between items-center ${ann.is_active ? 'bg-white border-slate-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
+                        {isLoadingAnnouncements ? <Loader /> : announcements.map(ann => {
+                            const expired = isExpired(ann.end_date);
+                            const isActive = ann.is_active && !expired;
+                            
+                            return (
+                            <div key={ann.id} className={`p-4 rounded-lg border flex justify-between items-center ${isActive ? 'bg-white border-slate-200' : 'bg-gray-50 border-gray-200 opacity-60'}`}>
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-bold text-brand-text">{ann.title}</h3>
                                         <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                             ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                         }`}>{ann.type}</span>
+                                        {expired && (
+                                            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">EXPIRED</span>
+                                        )}
                                         <span className="text-xs text-gray-500">
                                             {ann.target_audience !== 'all' ? `(${ann.target_audience})` : ''}
                                         </span>
@@ -1540,7 +1569,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     </button>
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                 </AdminSection>
             )}
