@@ -70,7 +70,7 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
     brandDnaProfile: undefined,
 });
 
-export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
+const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveToolState] = useState<Tool | null>(null);
   const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
   
@@ -623,4 +623,4 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
   );
 };
 
-export default App;
+export default InternalApp;

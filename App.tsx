@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { InternalApp } from './InternalApp';
+import InternalApp from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { TermsOfService } from './pages/TermsOfService';
