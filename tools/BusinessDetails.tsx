@@ -381,7 +381,7 @@ const LockInCard: React.FC<{ onLock: () => void }> = ({ onLock }) => (
         </p>
         <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
             <LockClosedIcon className="w-5 h-5" />
-            Save and Lock
+            Lock Profile
         </button>
     </div>
 );
@@ -735,13 +735,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleLockProfile = async () => {
-    // The lock is NOT a save feature, but we must ensure the latest info is saved first.
-    // We call handleSaveInfo to ensure Step 1 and Step 3 data is persisted.
-    await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
-    
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
     
-    // Now perform the lock operation, which preserves the DNA data.
+    // Perform the lock operation, which preserves the DNA data.
     await updateProfileLockStatus(true);
   };
 
@@ -965,7 +961,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
     } 
   };
-  const renderSocialContent = () => { 
+  const renderSocialContent = (userId: string) => { 
+    // FIX: Pass the correct handlers to SocialAccountsStep
     return <SocialAccountsStep 
         userId={userId} 
         onContinue={() => {}} 
@@ -1159,23 +1156,25 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         </StepCard>
 
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
-            {renderSocialContent()}
+            {renderSocialContent(userId)}
         </StepCard>
         
+        {/* NEW: Lock Profile Button (Appears when all steps are complete and unlocked) */}
         {allStepsComplete && !isLocked && (
             <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
                 <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
                 <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
                 <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                    All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools. You can unlock it later to make edits.
+                    All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
                 </p>
                 <button onClick={handleLockProfile} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
                     <LockClosedIcon className="w-5 h-5" />
-                    Save and Lock
+                    Lock Profile
                 </button>
             </div>
         )}
         
+        {/* NEW: Locked View (Appears when profile is locked) */}
         {isLocked && (
             <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl relative">
                 <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
