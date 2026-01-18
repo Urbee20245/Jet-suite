@@ -6,7 +6,7 @@ import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronD
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
-import { HintTooltip } from '../components/HintTooltip'; // Import the new component
+import { HintTooltip } from '../components/HintTooltip';
 
 // --- Types ---
 interface BusinessDetailsProps { 
@@ -476,58 +476,57 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   
   const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>('physical');
   
-  // Removed detectedGbp and isGbpConfirmed state
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
-  // FIX: Use profileData.user.id directly
   const userId = profileData.user.id;
   
-  // GBP Search State
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
   const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
   const [isSearchingGbp, setIsSearchingGbp] = useState(false);
   const [searchError, setSearchError] = useState('');
   
-  // Sync local state with props on initial load or profile change
   useEffect(() => { 
+    console.log('✅ [BusinessDetails] useEffect triggered with profileData:', {
+      business: profileData.business,
+      brandDnaProfile: profileData.brandDnaProfile,
+      isDnaApproved: profileData.business.isDnaApproved,
+    });
+
     setBusiness(profileData.business); 
     setGoogleBusiness(profileData.googleBusiness); 
-    // If DNA is approved, set editable DNA to the saved version
-    if (profileData.business.isDnaApproved) {
+    
+    if (profileData.brandDnaProfile) {
+        console.log('✅ [BusinessDetails] DNA Profile found, setting editable state.');
         setEditableDna(profileData.business.dna);
-        setEditableBrandProfile(profileData.brandDnaProfile || null);
+        setEditableBrandProfile(profileData.brandDnaProfile);
+    } else {
+        console.log('🟡 [BusinessDetails] No DNA Profile found in props.');
     }
-    // Reset editing state when profile loads
+    
     setIsDnaEditing(false);
   }, [profileData]);
 
   useEffect(() => {
-    // Set initial location type based on whether location data exists
     if (profileData.business.location) {
       setLocationType('physical');
     } else {
-      // Default for new profiles or profiles without location
       setLocationType('online'); 
     }
-    // Also ensure location is not undefined
     if (!business.location) {
       setBusiness(prev => ({ ...prev, location: '' }));
     }
   }, [profileData.business]);
 
-  // Check if form is dirty
   useEffect(() => { setIsDirty(JSON.stringify(profileData.business) !== JSON.stringify(business) || JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness)); }, [business, googleBusiness, profileData]);
 
   const step1Completed = !!business.business_name && !!business.business_website;
-  const step2Completed = business.isDnaApproved;
-  // Step 3 is complete if GBP is Verified OR if it was confirmed during DNA extraction
+  const step2Completed = profileData.business.isDnaApproved;
   const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
   const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
   
-  // NEW: Determine if the profile is locked (is_complete is true)
   const isLocked = profileData.business.is_complete;
 
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -539,7 +538,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setExtractionStage('extracting'); 
     
     try { 
-      // Removed detectGbpOnWebsite call
       const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
         extractWebsiteDna(business.business_website), 
         extractBrandDnaProfile(business)
@@ -560,16 +558,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     } 
   };
   
-  // Save initial DNA extraction to Supabase and check for GBP confirmation
   const handleInitialSaveDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     setExtractionStage('saving'); 
     
-    // GBP data remains unchanged here, only updated in Step 3
     const newGbpData = googleBusiness; 
     
     try {
-      // Save DNA to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -584,14 +579,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         throw new Error('Failed to save DNA to database');
       }
 
-      // Update local state
       const updatedBusiness = { 
         ...business, 
         dna: editableDna, 
         isDnaApproved: true, 
         dnaLastUpdatedAt: new Date().toISOString(),
-        google_business_profile: newGbpData, // Use existing GBP data
-        brand_dna_profile: editableBrandProfile, // Update the business object with detailed DNA
+        google_business_profile: newGbpData,
+        brand_dna_profile: editableBrandProfile,
       };
       
       onUpdate({ 
@@ -611,12 +605,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
 
-  // Save DNA edits to Supabase
   const handleUpdateDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     
     try {
-      // Save to Supabase
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -631,13 +623,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         throw new Error('Failed to save DNA to database');
       }
 
-      // Update local state
       const updatedBusiness = { 
         ...business, 
         dna: editableDna, 
         isDnaApproved: true, 
         dnaLastUpdatedAt: new Date().toISOString(),
-        brand_dna_profile: editableBrandProfile, // Update the business object with detailed DNA
+        brand_dna_profile: editableBrandProfile,
       }; 
       
       onUpdate({ 
@@ -656,7 +647,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
     try {
-        // Location is optional for online/home-based businesses
         let city = '';
         let state = '';
         
@@ -665,44 +655,19 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             city = locationParts[0] || '';
             state = locationParts[1] || '';
             
-            // Only validate location for physical businesses
             if (!city || !state) {
                 alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)');
                 return;
             }
         } else {
-            // For online/home businesses, use null or empty values
             city = '';
             state = '';
         }
 
-        // Validate truly required fields only
-        if (!profileData.user.id) {
-            alert('User ID is missing. Please sign out and sign back in.');
+        if (!profileData.user.id || !business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
+            alert('Required fields in Step 1 are missing.');
             return;
         }
-        if (!business.business_name?.trim()) {
-            alert('Business Name is required. Please fill in Step 1.');
-            return;
-        }
-        if (!business.business_website?.trim()) {
-            alert('Website URL is required. Please fill in Step 1.');
-            return;
-        }
-        if (!business.industry?.trim()) {
-            alert('Business Category is required. Please select one in Step 1.');
-            return;
-        }
-
-        console.log('🔍 Saving profile with lock status:', {
-          businessName: business.business_name,
-          website: business.business_website,
-          industry: business.industry,
-          city: city,
-          state: state,
-          location_original: business.location,
-          isComplete: lockStatus,
-        });
 
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
@@ -723,12 +688,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('[BusinessDetails] API Error:', errorData);
             throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
 
-        const updatedBusiness = { ...business, is_complete: lockStatus };
-        onUpdate({ ...profileData, business: updatedBusiness });
         onBusinessUpdated();
 
     } catch (err: any) {
@@ -738,10 +700,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleLockProfile = async () => {
-    // 1. Save current basic info first
     await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
-    
-    // 2. Proceed with locking
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
     await updateProfileLockStatus(true);
   };
@@ -756,7 +715,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     e.preventDefault(); 
     
     try {
-        // Location is optional for online/home-based businesses
         let city = '';
         let state = '';
         
@@ -771,17 +729,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             }
         }
 
-        // Validate required fields
-        if (!business.business_name?.trim()) {
-            alert('Business Name is required.');
-            return;
-        }
-        if (!business.business_website?.trim()) {
-            alert('Website URL is required.');
-            return;
-        }
-        if (!business.industry?.trim()) {
-            alert('Business Category is required.');
+        if (!business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
+            alert('Business Name, Website, and Category are required.');
             return;
         }
 
@@ -804,7 +753,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('[BusinessDetails] API Error:', errorData);
             throw new Error(errorData.message || 'API route failed to save business profile.');
         }
 
@@ -844,29 +792,24 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const handleGbpSelect = (gbp: BusinessSearchResult) => {
     setSelectedGbp(gbp);
-    setSearchResults([]); // Clear search results once selected
+    setSearchResults([]);
   };
 
   const handleGbpConfirm = async () => {
     if (!selectedGbp) return;
 
-    // 1. Update local state with confirmed GBP data
     const newGbp: ProfileData['googleBusiness'] = {
         profileName: selectedGbp.name,
         mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
         status: 'Verified' as GbpStatus,
-        placeId: `manual_${Date.now()}`, // Mock place ID
+        placeId: `manual_${Date.now()}`,
         rating: selectedGbp.rating,
         reviewCount: selectedGbp.reviewCount,
         address: selectedGbp.address,
     };
     
     setGoogleBusiness(newGbp);
-    
-    // 2. Save the entire profile to the database
     await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
-    
-    // 3. Clear selection state
     setSelectedGbp(null);
     setSearchTerm('');
     setSearchResults([]);
@@ -881,7 +824,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
     onUpdate({...profileData, googleBusiness: newGbp});
-    // Also save the change to the database
     handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
   };
   
@@ -904,7 +846,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
   
   const renderDnaContent = () => {
-    if (business.isDnaApproved && profileData.brandDnaProfile) {
+    console.log('✅ [BusinessDetails] renderDnaContent called. State:', {
+      isDnaApproved_prop: profileData.business.isDnaApproved,
+      brandDnaProfile_prop_exists: !!profileData.brandDnaProfile,
+      extractionStage: extractionStage,
+      isDnaEditing: isDnaEditing,
+    });
+
+    if (profileData.business.isDnaApproved && profileData.brandDnaProfile) {
         return <DnaReviewAndSaved 
             visualDna={isDnaEditing ? editableDna! : business.dna} 
             detailedDna={isDnaEditing ? editableBrandProfile! : profileData.brandDnaProfile} 
@@ -933,7 +882,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   };
   const renderGbpContent = () => { 
-    // If Step 3 is complete via DNA confirmation, show dashboard
     if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') { 
         return (
             <div>
@@ -968,7 +916,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     } 
   };
   const renderSocialContent = () => { 
-    // FIX: Pass the correct handlers to SocialAccountsStep
     return <SocialAccountsStep 
         userId={userId} 
         onContinue={() => {}} 
@@ -1013,8 +960,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         )}
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
-        
-        {/* Conditional Lock/Unlock/Continue Card */}
         
         {isLocked && (
             <LockedView 

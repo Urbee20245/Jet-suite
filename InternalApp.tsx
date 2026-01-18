@@ -142,17 +142,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       
       if (profileError) throw profileError;
       
+      // DEBUGGING: Log raw data from Supabase
+      console.log('✅ [InternalApp] Raw business profile from DB:', profile);
+      
       const loadedBusiness = profile as unknown as BusinessProfile;
       const loadedGbp = loadedBusiness.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' } as GoogleBusinessProfile;
       const loadedBrandDnaProfile = loadedBusiness.brand_dna_profile || undefined;
-      
-      console.log('📊 Loading business from Supabase:', {
-        id: loadedBusiness.id,
-        name: loadedBusiness.business_name,
-        city: loadedBusiness.city,
-        state: loadedBusiness.state,
-        is_complete: loadedBusiness.is_complete,
-      });
       
       setAllProfiles(prev => {
         const updated = [...prev];
@@ -160,7 +155,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         if (index !== -1) {
           const currentProfile = updated[index];
           
-          // FIX: Safely reconstruct location
           const reconstructedLocation = (loadedBusiness.city && loadedBusiness.state) 
             ? `${loadedBusiness.city}, ${loadedBusiness.state}` 
             : (loadedBusiness.city || loadedBusiness.state || '');
@@ -179,11 +173,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
             isProfileActive: !!loadedBusiness.is_complete,
           };
           
-          console.log('✅ Profile reconstructed:', {
+          // DEBUGGING: Log reconstructed profile
+          console.log('✅ [InternalApp] Reconstructed profile to be set in state:', {
             business_name: syncedProfile.business.business_name,
-            location: syncedProfile.business.location,
+            is_dna_approved: syncedProfile.business.is_dna_approved,
+            brand_dna_profile_exists: !!syncedProfile.brandDnaProfile,
             is_complete: syncedProfile.business.is_complete,
-            isProfileActive: syncedProfile.isProfileActive,
           });
           
           updated[index] = syncedProfile;
@@ -221,7 +216,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         });
       }
       
-      console.log('✅ All business data loaded from Supabase');
+      console.log('✅ [InternalApp] All business data loaded from Supabase');
       
     } catch (error) {
       console.error('Error loading business data:', error);
