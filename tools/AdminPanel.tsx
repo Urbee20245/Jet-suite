@@ -892,7 +892,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     };
 
     const handleSelectAll = () => {
-        if (selectedUsers.size === paginatedUsers.filter(p => p.user.email !== ADMIN_EMAIL).length) {
+        if (selectedUsers.size === paginatedUsers.filter(p => p.user.email !== ADMIN_EMAIL).length && paginatedUsers.length > 0) {
             setSelectedUsers(new Set());
         } else {
             const allIds = new Set(paginatedUsers.filter(p => p.user.email !== ADMIN_EMAIL).map(p => p.user.id));
@@ -1525,11 +1525,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <h3 className="font-bold text-brand-text">{ann.title}</h3>
-                                        <span className={`text-xs uppercase font-bold px-2 py-0.5 rounded-full ${
+                                        <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                             ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                         }`}>{ann.type}</span>
                                         <span className="text-xs text-gray-500">
-                                            {ann.target_audience !== 'all' && ('(' + ann.target_audience + ')')}
+                                            {ann.target_audience !== 'all' && `(${ann.target_audience})`}
                                         </span>
                                     </div>
                                     <p className="text-sm text-brand-text-muted line-clamp-2 mb-2">{ann.message}</p>
