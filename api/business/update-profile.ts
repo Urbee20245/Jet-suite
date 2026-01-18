@@ -39,31 +39,48 @@ export default async function handler(
       industry,
       city,
       state,
-      isPrimary = true,
-      isComplete = true,
+      isPrimary,
+      isComplete,
       businessDescription,
-      googleBusiness, // ✅ Google Business Profile data
+      googleBusiness,
+      // ✅ FIX: Accept DNA fields to preserve them
+      dna,
+      brandDnaProfile,
+      isDnaApproved,
+      dnaLastUpdatedAt,
     } = req.body;
 
-    // Only userId, businessName, websiteUrl, and industry are truly required
-    // City and state are optional for online/home-based businesses
-    if (!userId || !businessName || !websiteUrl || !industry) {
-      const missing = [];
-      if (!userId) missing.push('userId');
-      if (!businessName) missing.push('businessName');
-      if (!websiteUrl) missing.push('websiteUrl');
-      if (!industry) missing.push('industry');
-      
-      console.error('Missing required fields:', { missing, received: req.body });
-      
+    if (!userId) {
       return res.status(400).json({ 
-        error: 'Missing required fields', 
-        missing: missing,
-        message: `Required fields: ${missing.join(', ')}`
+        error: 'Missing required field: userId'
       });
     }
 
-    // Check if a primary business profile already exists for this user
+    // ✅ FIX: Dynamically build a partial update payload
+    const updatePayload: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    // Conditionally add fields to the update object only if they are provided
+    if (businessName !== undefined) updatePayload.business_name = businessName;
+    if (websiteUrl !== undefined) updatePayload.business_website = websiteUrl;
+    if (industry !== undefined) updatePayload.industry = industry;
+    if (city !== undefined) updatePayload.city = city;
+    if (state !== undefined) updatePayload.state = state;
+    if (isPrimary !== undefined) updatePayload.is_primary = isPrimary;
+    if (isComplete !== undefined) updatePayload.is_complete = isComplete;
+    if (businessDescription !== undefined) updatePayload.business_description = businessDescription;
+    if (googleBusiness !== undefined) updatePayload.google_business_profile = googleBusiness;
+    
+    // Preserve DNA fields if they are passed in the request
+    if (dna !== undefined) updatePayload.dna = dna;
+    if (brandDnaProfile !== undefined) updatePayload.brand_dna_profile = brandDnaProfile;
+    if (isDnaApproved !== undefined) updatePayload.is_dna_approved = isDnaApproved;
+    if (dnaLastUpdatedAt !== undefined) updatePayload.dna_last_updated_at = dnaLastUpdatedAt;
+
+    console.log('✅ [API] Performing partial update with payload:', Object.keys(updatePayload));
+
+    // Find the primary business profile to update
     const { data: existingPrimary, error: fetchError } = await supabase
       .from('business_profiles')
       .select('id')
@@ -75,44 +92,38 @@ export default async function handler(
       throw fetchError;
     }
 
-    const businessData = {
-      user_id: userId,
-      business_name: businessName,
-      business_website: websiteUrl,
-      industry: industry,
-      city: city || null,
-      state: state || null,
-      business_description: businessDescription,
-      is_primary: isPrimary,
-      is_active: true,
-      is_complete: isComplete,
-      google_business_profile: googleBusiness || null, // ✅ Save GBP data
-      updated_at: new Date().toISOString(),
-    };
-
     let result;
     if (existingPrimary) {
-      // Update existing primary business
+      // Update the existing primary business profile
       result = await supabase
         .from('business_profiles')
-        .update(businessData)
+        .update(updatePayload)
         .eq('id', existingPrimary.id)
         .select()
         .single();
     } else {
-      // Insert new primary business
+      // If no primary profile exists, create one (onboarding case)
+      const insertPayload = {
+        user_id: userId,
+        ...updatePayload,
+        business_name: businessName,
+        business_website: websiteUrl,
+        industry: industry,
+        is_primary: isPrimary ?? true,
+        is_complete: isComplete ?? false,
+      };
       result = await supabase
         .from('business_profiles')
-        .insert(businessData)
+        .insert(insertPayload)
         .select()
         .single();
     }
 
     if (result.error) {
-      console.error('Supabase upsert/insert error:', result.error);
+      console.error('Supabase update/insert error:', result.error);
       return res.status(500).json({
         error: 'Database operation failed',
-        message: `Failed to save business profile: ${result.error.message} (Code: ${result.error.code})`,
+        message: `Failed to save business profile: ${result.error.message}`,
       });
     }
 

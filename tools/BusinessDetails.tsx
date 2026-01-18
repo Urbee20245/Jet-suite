@@ -669,6 +669,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
 
+        // ✅ FIX: Include all DNA fields when locking/unlocking
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -683,6 +684,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: lockStatus,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
+                // ✅ FIX: Preserve DNA data on lock/unlock
+                dna: business.dna,
+                brandDnaProfile: profileData.brandDnaProfile,
+                isDnaApproved: business.isDnaApproved,
+                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
             }),
         });
 
@@ -734,6 +740,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
 
+        // ✅ FIX: Include all DNA fields when saving
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -748,6 +755,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: isLocked,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
+                // ✅ FIX: Preserve DNA data on save
+                dna: business.dna,
+                brandDnaProfile: profileData.brandDnaProfile,
+                isDnaApproved: business.isDnaApproved,
+                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
             }),
         });
 
@@ -1112,7 +1124,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             {renderSocialContent()}
         </StepCard>
         
-        {/* NEW: Lock/Unlock Card at the bottom */}
         {allStepsComplete && !isLocked && (
             <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
                 <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
