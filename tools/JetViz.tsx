@@ -178,7 +178,7 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
 };
 
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; onTaskStatusChange: (id: string, status: GrowthPlanTask['status']) => void; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, onTaskStatusChange, setActiveTool, onAddTask }) => {
+const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask }) => {
     const [showCompleted, setShowCompleted] = useState(false);
     const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
@@ -422,7 +422,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             onRerun={(e) => handleSubmit(e, result.businessAddress)} 
             isRunning={loading} 
             growthPlanTasks={growthPlanTasks} 
-            onTaskStatusChange={onTaskStatusChange} 
             setActiveTool={setActiveTool} 
             onAddTask={addTasksToGrowthPlan}
           />

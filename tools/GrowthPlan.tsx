@@ -26,6 +26,8 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
   const handleMarkComplete = () => {
     if (window.confirm("Warning: Marking this task as complete will remove it from your active Growth Plan and contribute to your Growth Score. Are you sure you want to complete this task?")) {
         onStatusChange(task.id, 'completed');
+        // CRITICAL: Delete the task immediately upon confirmation of completion
+        onRemove(task.id);
     }
   };
 
@@ -120,6 +122,11 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
+  const handleRemoveTask = (taskId: string) => {
+    setTasks(tasks.filter(t => t.id !== taskId));
+    setSaveMessage('Task deleted. Click Save Plan to finalize.');
+  };
+
   const handleClearCompleted = () => {
     if (window.confirm('Warning: Clearing completed tasks will permanently remove them from your history and Growth Plan. Are you sure you want to clear all completed tasks?')) {
       setTasks(tasks.filter(t => t.status !== 'completed'));
@@ -197,7 +204,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
           <h3 className="text-xl font-bold text-brand-text mb-4">Pending Tasks ({pendingTasks.length})</h3>
           {pendingTasks.length > 0 ? (
             <div className="space-y-4">
-              {pendingTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={() => {}} /> )}
+              {pendingTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
             </div>
           ) : (
              <div className="text-center bg-brand-card p-12 rounded-xl shadow-lg border-2 border-dashed border-green-400">
