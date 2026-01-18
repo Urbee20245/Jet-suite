@@ -97,7 +97,7 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
                                     ) : (
                                         <DnaField 
                                             label={fieldKey.replace(/_/g, ' ')} 
-                                            value={fieldValue as string | string[] | boolean | undefined} // FIX: Explicit cast
+                                            value={fieldValue as string | string[] | boolean | undefined} 
                                             isEditable={false} 
                                         /> 
                                     )}
@@ -220,8 +220,6 @@ const DnaReviewAndSaved: React.FC<{
                     </div>
                 </div>
             </div>
-            
-            {/* Removed GBP Detected Card from Step 2 */}
             
             <div>
                 <div className="flex justify-between items-center mb-2">
@@ -361,14 +359,6 @@ const GbpConnect: React.FC<{
         </div> 
     ); 
 };
-const renderSocialContent = (userId: string) => { 
-    // FIX: Pass the correct handlers to SocialAccountsStep
-    return <SocialAccountsStep 
-        userId={userId} 
-        onContinue={() => {}} 
-        onSkip={() => {}} 
-    />; 
-  };
 
 // --- New Lock/Unlock Components ---
 
@@ -496,7 +486,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setBusiness(profileData.business); 
     setGoogleBusiness(profileData.googleBusiness); 
     
-    if (profileData.brandDnaProfile) {
+    if (profileData.business.isDnaApproved && profileData.brandDnaProfile) {
         console.log('✅ [BusinessDetails] DNA Profile found, setting editable state.');
         setEditableDna(profileData.business.dna);
         setEditableBrandProfile(profileData.brandDnaProfile);
