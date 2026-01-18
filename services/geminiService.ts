@@ -770,24 +770,37 @@ export const generateImage = async (
     }
 };
 
-export const generateBusinessDescription = async (url: string): Promise<string> => {
+export const generateBusinessDescription = async (url: string): Promise<{ description: string; suggestedCategory: string }> => {
     try {
         const ai = getAiClient();
-        const prompt = `You are a concise marketing copywriter. Analyze the content of the website at ${url}. Based on the content, generate a compelling 2-3 sentence business description (max 500 characters). Focus on what the business does, who it serves, and its key value proposition. Output only the description text.`;
+        const prompt = `You are a concise marketing copywriter and business analyst. Analyze the content of the website at ${url}. Based on the content, generate two things:
+        1. A compelling 2-3 sentence business description (max 500 characters). Focus on what the business does, who it serves, and its key value proposition.
+        2. A suggested business category from the following list: "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other".
+
+        Your entire output must be a single JSON object with keys "description" and "suggestedCategory".`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: prompt,
+            contents: injectDateContext(prompt),
             config: {
                 tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        description: { type: Type.STRING },
+                        suggestedCategory: { type: Type.STRING }
+                    },
+                    required: ["description", "suggestedCategory"]
+                }
             },
         });
 
-        // FIX: Ensure response.text is not undefined before trimming to prevent runtime errors.
-        return response.text ?? '';
+        const jsonText = response.text.trim();
+        return JSON.parse(jsonText);
     } catch (error) {
         if (error instanceof Error && error.message === "AI_KEY_MISSING") {
-            return "AI features are disabled due to missing API key.";
+            return { description: "AI features are disabled due to missing API key.", suggestedCategory: "Other" };
         }
         throw error;
     }

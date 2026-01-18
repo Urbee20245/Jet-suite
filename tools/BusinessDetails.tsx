@@ -437,7 +437,7 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
 const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
 
 // --- Main Component ---
-const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design" ];
+const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other" ];
 
 export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated }) => {
   const [business, setBusiness] = useState(profileData.business);
@@ -787,7 +787,23 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
   };
   
-  const handleGenerateDescription = async () => { if (!business.business_website) { alert("Please enter your Website URL first."); return; } setIsGeneratingDescription(true); try { const desc = await generateBusinessDescription(business.business_website); setBusiness(b => ({ ...b, business_description: desc })); } catch (e) { alert("Failed to generate description. Check your API key."); } finally { setIsGeneratingDescription(false); }};
+  const handleGenerateDescription = async () => { 
+    if (!business.business_website) { 
+        alert("Please enter your Website URL first."); 
+        return; 
+    } 
+    setIsGeneratingDescription(true); 
+    setSuggestedCategory(null);
+    try { 
+        const { description, suggestedCategory } = await generateBusinessDescription(business.business_website); 
+        setBusiness(b => ({ ...b, business_description: description })); 
+        setSuggestedCategory(suggestedCategory);
+    } catch (e) { 
+        alert("Failed to generate description. Check your API key."); 
+    } finally { 
+        setIsGeneratingDescription(false); 
+    }
+  };
   
   const renderDnaContent = () => {
     if (business.isDnaApproved && profileData.brandDnaProfile) {
