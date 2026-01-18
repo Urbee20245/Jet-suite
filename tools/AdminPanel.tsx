@@ -1082,27 +1082,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedBusinesses.map(profile => {
-                                    const status = dnaStatus(profile.business?.dna);
-                                    const isAdminAccount = profile.user.email === ADMIN_EMAIL;
-                                    
-                                    return (
-                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${isAdminAccount ? 'bg-yellow-50' : 'bg-white'}`}>
+                                {paginatedBusinesses.map(profile => (
+                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${profile.user.email === ADMIN_EMAIL ? 'bg-yellow-50' : 'bg-white'}`}>
                                         <th scope="row" className="px-6 py-4 font-medium text-brand-text whitespace-nowrap">
                                             {profile.business?.business_name || '(No Name)'}
-                                            {isAdminAccount && (
+                                            {profile.user.email === ADMIN_EMAIL && (
                                                 <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">ADMIN</span>
                                             )}
                                         </th>
                                         <td className="px-6 py-4">{profile.user.email}</td>
                                         <td className="px-6 py-4">{profile.business.location || 'N/A'}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}>
-                                                {status.text}
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${dnaStatus(profile.business?.dna).color}`}>
+                                                {dnaStatus(profile.business?.dna).text}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            {!isAdminAccount && (
+                                            {profile.user.email !== ADMIN_EMAIL && (
                                                 <>
                                                     <button 
                                                         onClick={() => handleResetDna(profile.user.id)} 
@@ -1132,12 +1128,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                     </button>
                                                 </>
                                             )}
-                                            {isAdminAccount && (
+                                            {profile.user.email === ADMIN_EMAIL && (
                                                 <span className="text-xs text-gray-500 italic px-2">Protected Account</span>
                                             )}
                                         </td>
                                     </tr>
-                                )})}
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -1206,13 +1202,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedUsers.map(profile => {
-                                    const isAdminAccount = profile.user.email === ADMIN_EMAIL;
-                                    
-                                    return (
-                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${isAdminAccount ? 'bg-yellow-50' : 'bg-white'}`}>
+                                {paginatedUsers.map(profile => (
+                                    <tr key={profile.user.id} className={`border-b hover:bg-brand-light ${profile.user.email === ADMIN_EMAIL ? 'bg-yellow-50' : 'bg-white'}`}>
                                         <td className="px-6 py-4">
-                                            {!isAdminAccount && (
+                                            {profile.user.email !== ADMIN_EMAIL && (
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedUsers.has(profile.user.id)}
@@ -1223,14 +1216,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                         </td>
                                         <td className="px-6 py-4 font-medium text-brand-text">
                                             {profile.user.email}
-                                            {isAdminAccount && (
+                                            {profile.user.email === ADMIN_EMAIL && (
                                                 <span className="ml-2 px-2 py-0.5 text-xs font-bold bg-red-600 text-white rounded-full">ADMIN</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4">{profile.user.firstName} {profile.user.lastName}</td>
                                         <td className="px-6 py-4">{profile.business?.business_name || '(No Business)'}</td>
                                         <td className="px-6 py-4 flex items-center space-x-2">
-                                            {!isAdminAccount && (
+                                            {profile.user.email !== ADMIN_EMAIL && (
                                                 <>
                                                     <button 
                                                         onClick={() => onImpersonate(profile)} 
@@ -1272,12 +1265,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                                     </button>
                                                 </>
                                             )}
-                                            {isAdminAccount && (
+                                            {profile.user.email === ADMIN_EMAIL && (
                                                 <span className="text-xs text-gray-500 italic px-2">Protected Account</span>
                                             )}
                                         </td>
                                     </tr>
-                                )})}
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -1547,7 +1540,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     </button>
                                 </div>
                             </div>
-                        )))}
+                        ))}
                     </div>
                 </AdminSection>
             )}
