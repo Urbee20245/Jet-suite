@@ -69,15 +69,22 @@ export async function getSocialConnections(userId: string): Promise<SocialConnec
   try {
     const response = await fetch(`/api/social/get-connections?userId=${userId}`);
     
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      console.error('Get connections: Server returned HTML instead of JSON');
+      return [];
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to fetch social connections');
+      console.error('Failed to fetch social connections');
+      return [];
     }
 
     const data = await response.json();
     return data.connections || [];
   } catch (error: any) {
     console.error('Get connections error:', error);
-    throw error;
+    return [];
   }
 }
 
@@ -156,15 +163,22 @@ export async function getScheduledPosts(
 
     const response = await fetch(`/api/social/get-posts?${params}`);
     
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      console.error('Get posts: Server returned HTML instead of JSON');
+      return [];
+    }
+
     if (!response.ok) {
-      throw new Error('Failed to fetch scheduled posts');
+      console.error('Failed to fetch scheduled posts');
+      return [];
     }
 
     const data = await response.json();
     return data.posts || [];
   } catch (error: any) {
     console.error('Get posts error:', error);
-    throw error;
+    return [];
   }
 }
 

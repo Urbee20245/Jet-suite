@@ -214,6 +214,13 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
     try {
         const response = await fetch(`/api/user/get-profile?userId=${uid}`);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+          console.error('Profile fetch: Server returned HTML instead of JSON');
+          return defaultProfile;
+        }
+
         if (!response.ok) throw new Error('Failed to fetch profile from API');
         
         const { profile: dbProfile } = await response.json();
@@ -236,7 +243,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return defaultProfile;
 
     } catch (error) {
-        console.error(`Error fetching profile for ${uid}:`, error);
+        console.error(`Error fetching profile:`, error);
         return defaultProfile;
     }
   };
