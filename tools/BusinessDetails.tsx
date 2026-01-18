@@ -669,7 +669,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
 
-        // ✅ FIX: Include all DNA fields when locking/unlocking
+        console.log('🔒 Locking profile with DNA preservation:', {
+          hasDna: !!business.dna,
+          isDnaApproved: business.isDnaApproved,
+          hasBrandProfile: !!profileData.brandDnaProfile,
+          lockStatus
+        });
+
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -684,7 +690,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: lockStatus,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
-                // ✅ FIX: Preserve DNA data on lock/unlock
+                // ✅ FIX: Include DNA data to preserve it
                 dna: business.dna,
                 brandDnaProfile: profileData.brandDnaProfile,
                 isDnaApproved: business.isDnaApproved,
@@ -694,10 +700,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
         if (!response.ok) {
             const errorData = await response.json();
+            console.error('[BusinessDetails] Lock API Error:', errorData);
             throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
 
         onBusinessUpdated();
+        console.log('✅ Profile locked successfully with DNA preserved');
 
     } catch (err: any) {
         console.error('[BusinessDetails] Lock/Unlock failed:', err);
@@ -740,7 +748,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
 
-        // ✅ FIX: Include all DNA fields when saving
+        console.log('💾 Saving business info with DNA preservation:', {
+          hasDna: !!business.dna,
+          isDnaApproved: business.isDnaApproved
+        });
+
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -755,7 +767,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: isLocked,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
-                // ✅ FIX: Preserve DNA data on save
+                // ✅ FIX: Include DNA data
                 dna: business.dna,
                 brandDnaProfile: profileData.brandDnaProfile,
                 isDnaApproved: business.isDnaApproved,
