@@ -23,8 +23,11 @@ export default async function handler(
     const { businessId, dna, brandDnaProfile } = req.body;
 
     if (!businessId || !dna || !brandDnaProfile) {
+      console.error('[Save DNA] Missing fields:', { businessId: !!businessId, dna: !!dna, brandDnaProfile: !!brandDnaProfile });
       return res.status(400).json({ error: 'Missing required fields: businessId, dna, brandDnaProfile' });
     }
+    
+    console.log(`[Save DNA] Attempting to save DNA for business ID: ${businessId}`);
 
     // Update business_profiles with DNA data
     const { data, error } = await supabase
@@ -32,7 +35,7 @@ export default async function handler(
       .update({
         dna: dna, // Visual DNA (logo, colors, fonts)
         brand_dna_profile: brandDnaProfile, // Detailed brand profile
-        is_dna_approved: true,
+        is_dna_approved: true, // CRITICAL: Explicitly set to true
         dna_last_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -41,12 +44,14 @@ export default async function handler(
       .single();
 
     if (error) {
-      console.error('Supabase DNA save error:', error);
+      console.error('[Save DNA] Supabase DNA save error:', error);
       return res.status(500).json({ 
         error: 'Failed to save DNA', 
         message: error.message 
       });
     }
+    
+    console.log(`[Save DNA] Successfully saved DNA for business ID: ${businessId}. is_dna_approved set to true.`);
 
     return res.status(200).json({ 
       success: true, 
@@ -55,7 +60,7 @@ export default async function handler(
     });
 
   } catch (error: any) {
-    console.error('DNA save error:', error);
+    console.error('[Save DNA] General error:', error);
     return res.status(500).json({ 
       error: 'Failed to save DNA', 
       message: error.message 
