@@ -38,7 +38,7 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
             reader.readAsDataURL(blob);
         });
     } catch (error) {
-        console.error("CORS error fetching image:", error);
+        console.error("CORS error fetching image, returning empty string:", error);
         return "";
     }
 };
@@ -690,7 +690,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: lockStatus,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
-                // ✅ FIX: Include DNA data to preserve it
+                // CRITICAL FIX: Include DNA data to preserve it
                 dna: business.dna,
                 brandDnaProfile: profileData.brandDnaProfile,
                 isDnaApproved: business.isDnaApproved,
@@ -704,7 +704,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
 
-        // ✅ CRITICAL FIX: Update local state with DNA preserved BEFORE calling onBusinessUpdated
+        // CRITICAL FIX: Update local state with DNA preserved BEFORE calling onBusinessUpdated
         const updatedBusiness = { 
             ...business, 
             is_complete: lockStatus,
@@ -735,8 +735,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleLockProfile = async () => {
+    // The lock is NOT a save feature, but we must ensure the latest info is saved first.
+    // We call handleSaveInfo to ensure Step 1 and Step 3 data is persisted.
     await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+    
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
+    
+    // Now perform the lock operation, which preserves the DNA data.
     await updateProfileLockStatus(true);
   };
 
@@ -788,7 +793,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isComplete: isLocked,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
-                // ✅ FIX: Include DNA data
+                // CRITICAL FIX: Include DNA data to preserve it
                 dna: business.dna,
                 brandDnaProfile: profileData.brandDnaProfile,
                 isDnaApproved: business.isDnaApproved,
@@ -824,7 +829,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     try {
         const results = await searchGoogleBusiness(query);
         if (results.length === 0) {
-            setSearchError('No businesses found matching your query. Try a different search term.');
+            setSearchError('No businesses found matching your query. Try updating your profile.');
         } else {
             setSearchResults(results);
         }
