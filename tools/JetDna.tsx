@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Tool, ProfileData, BrandDnaProfile } from '../types';
-import { extractBrandDnaProfile } from '../services/geminiService';
+import type { Tool, ProfileData, BrandDnaProfile, BusinessDna } from '../types';
+import { extractBrandDnaProfile, extractWebsiteDna } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { InformationCircleIcon, CheckCircleIcon } from '../components/icons/MiniIcons';
 import { HowToUse } from '../components/HowToUse';
@@ -84,6 +84,24 @@ const DnaDisplay: React.FC<{ dna: BrandDnaProfile }> = ({ dna }) => (
   </div>
 );
 
+const imageURLToBase64 = async (url: string): Promise<string> => {
+    if (!url || url.startsWith('data:image')) return url;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error("CORS error fetching image, returning empty string:", error);
+        return ""; // Return empty string on failure
+    }
+};
+
 export const JetDna: React.FC<JetDnaProps> = ({ tool, profileData, onUpdate, setActiveTool }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -111,10 +129,52 @@ export const JetDna: React.FC<JetDnaProps> = ({ tool, profileData, onUpdate, set
     setError('');
     setLoading(true);
     try {
-      const result = await extractBrandDnaProfile(profileData.business);
-      onUpdate({ ...profileData, brandDnaProfile: result });
-    } catch (err) {
-      setError('Failed to extract Brand DNA. The AI may be having trouble with this request. Please try again.');
+      // 1. Extract both visual and detailed DNA
+      const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
+        extractWebsiteDna(profileData.business.business_website),
+        extractBrandDnaProfile(profileData.business)
+      ]);
+
+      // 2. Process visual DNA
+      const { logoUrl, faviconUrl, ...extractedVisual } = websiteDnaResult;
+      const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : '';
+      const visualDna: BusinessDna = { ...extractedVisual, logo: logoBase64, faviconUrl };
+
+      // 3. Save to database via API
+      const response = await fetch('/api/business/save-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessId: profileData.business.id,
+          dna: visualDna,
+          brandDnaProfile: brandDnaProfileResult,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save DNA to database');
+      }
+
+      // 4. Update parent state with persisted data
+      const updatedBusinessProfile = {
+        ...profileData.business,
+        dna: visualDna,
+        brand_dna_profile: brandDnaProfileResult,
+        isDnaApproved: true,
+        dnaLastUpdatedAt: new Date().toISOString(),
+      };
+
+      onUpdate({
+        ...profileData,
+        business: updatedBusinessProfile,
+        brandDnaProfile: brandDnaProfileResult,
+      });
+
+      alert('Brand DNA extracted and saved successfully!');
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to extract and save Brand DNA. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
