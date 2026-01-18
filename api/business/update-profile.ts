@@ -34,7 +34,7 @@ export default async function handler(
   try {
     const {
       userId,
-      businessId, // Added businessId for explicit update targeting
+      businessId,
       businessName,
       websiteUrl,
       industry,
@@ -44,7 +44,7 @@ export default async function handler(
       isComplete,
       businessDescription,
       googleBusiness,
-      // CRITICAL: Accept and preserve DNA fields
+      // DNA fields from request
       dna,
       brandDnaProfile,
       isDnaApproved,
@@ -57,12 +57,30 @@ export default async function handler(
       });
     }
 
-    // 1. Dynamically build a partial update payload
+    // CRITICAL FIX: Get existing business data FIRST to preserve DNA
+    let query = supabase
+      .from('business_profiles')
+      .select('*') // Select ALL fields to get existing DNA
+      .eq('user_id', userId);
+      
+    if (businessId) {
+        query = query.eq('id', businessId);
+    } else {
+        query = query.eq('is_primary', true);
+    }
+
+    const { data: existingProfile, error: fetchError } = await query.maybeSingle();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError;
+    }
+
+    // Build update payload
     const updatePayload: any = {
       updated_at: new Date().toISOString(),
     };
 
-    // Conditionally add fields to the update object only if they are provided
+    // Add regular fields
     if (businessName !== undefined) updatePayload.business_name = businessName;
     if (websiteUrl !== undefined) updatePayload.business_website = websiteUrl;
     if (industry !== undefined) updatePayload.industry = industry;
@@ -73,39 +91,50 @@ export default async function handler(
     if (businessDescription !== undefined) updatePayload.business_description = businessDescription;
     if (googleBusiness !== undefined) updatePayload.google_business_profile = googleBusiness;
     
-    // CRITICAL FIX: Preserve DNA fields if they are passed in the request
-    if (dna !== undefined) updatePayload.dna = dna;
-    if (brandDnaProfile !== undefined) updatePayload.brand_dna_profile = brandDnaProfile;
-    if (isDnaApproved !== undefined) updatePayload.is_dna_approved = isDnaApproved;
-    if (dnaLastUpdatedAt !== undefined) updatePayload.dna_last_updated_at = dnaLastUpdatedAt;
-
-    console.log('✅ [API] Performing partial update with payload keys:', Object.keys(updatePayload));
-
-    // 2. Find the primary business profile to update (or use businessId if provided)
-    let query = supabase
-      .from('business_profiles')
-      .select('id')
-      .eq('user_id', userId);
-      
-    if (businessId) {
-        query = query.eq('id', businessId);
-    } else {
-        query = query.eq('is_primary', true);
+    // CRITICAL FIX: Only update DNA fields if they have actual data
+    // Otherwise, preserve existing DNA from database
+    if (dna && Object.keys(dna).length > 0) {
+      updatePayload.dna = dna;
+      console.log('✅ [API] Updating DNA with new data');
+    } else if (existingProfile?.dna) {
+      updatePayload.dna = existingProfile.dna;
+      console.log('✅ [API] Preserving existing DNA from database');
+    }
+    
+    if (brandDnaProfile && Object.keys(brandDnaProfile).length > 0) {
+      updatePayload.brand_dna_profile = brandDnaProfile;
+      console.log('✅ [API] Updating brand DNA profile with new data');
+    } else if (existingProfile?.brand_dna_profile) {
+      updatePayload.brand_dna_profile = existingProfile.brand_dna_profile;
+      console.log('✅ [API] Preserving existing brand DNA profile from database');
+    }
+    
+    if (isDnaApproved !== undefined) {
+      updatePayload.is_dna_approved = isDnaApproved;
+    } else if (existingProfile?.is_dna_approved !== undefined) {
+      updatePayload.is_dna_approved = existingProfile.is_dna_approved;
+    }
+    
+    if (dnaLastUpdatedAt !== undefined) {
+      updatePayload.dna_last_updated_at = dnaLastUpdatedAt;
+    } else if (existingProfile?.dna_last_updated_at) {
+      updatePayload.dna_last_updated_at = existingProfile.dna_last_updated_at;
     }
 
-    const { data: existingPrimary, error: fetchError } = await query.maybeSingle();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      throw fetchError;
-    }
+    console.log('✅ [API] Update payload keys:', Object.keys(updatePayload));
+    console.log('✅ [API] DNA fields:', {
+      hasDna: !!updatePayload.dna,
+      hasBrandProfile: !!updatePayload.brand_dna_profile,
+      isDnaApproved: updatePayload.is_dna_approved
+    });
 
     let result;
-    if (existingPrimary) {
+    if (existingProfile) {
       // Update the existing business profile
       result = await supabase
         .from('business_profiles')
         .update(updatePayload)
-        .eq('id', existingPrimary.id)
+        .eq('id', existingProfile.id)
         .select()
         .single();
     } else {
@@ -134,6 +163,7 @@ export default async function handler(
       });
     }
 
+    console.log('✅ [API] Profile updated successfully with DNA preserved');
     return res.status(200).json({ businessProfile: result.data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
