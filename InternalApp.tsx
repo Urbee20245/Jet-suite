@@ -146,17 +146,30 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       const loadedGbp = loadedBusiness.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' } as GoogleBusinessProfile;
       const loadedBrandDnaProfile = loadedBusiness.brand_dna_profile || undefined;
       
+      console.log('📊 Loading business from Supabase:', {
+        id: loadedBusiness.id,
+        name: loadedBusiness.business_name,
+        city: loadedBusiness.city,
+        state: loadedBusiness.state,
+        is_complete: loadedBusiness.is_complete,
+      });
+      
       setAllProfiles(prev => {
         const updated = [...prev];
         const index = updated.findIndex(p => p.user.id === activeUserId);
         if (index !== -1) {
           const currentProfile = updated[index];
           
+          // FIX: Safely reconstruct location
+          const reconstructedLocation = (loadedBusiness.city && loadedBusiness.state) 
+            ? `${loadedBusiness.city}, ${loadedBusiness.state}` 
+            : (loadedBusiness.city || loadedBusiness.state || '');
+          
           const syncedProfile: ProfileData = {
             ...currentProfile,
             business: {
               ...loadedBusiness,
-              location: `${loadedBusiness.city}, ${loadedBusiness.state}`,
+              location: reconstructedLocation,
               isDnaApproved: loadedBusiness.is_dna_approved,
               dnaLastUpdatedAt: loadedBusiness.dna_last_updated_at,
               dna: loadedBusiness.dna || { logo: '', colors: [], fonts: '', style: '' } as BusinessDna, 
@@ -165,6 +178,14 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
             brandDnaProfile: loadedBrandDnaProfile, 
             isProfileActive: !!loadedBusiness.is_complete,
           };
+          
+          console.log('✅ Profile reconstructed:', {
+            business_name: syncedProfile.business.business_name,
+            location: syncedProfile.business.location,
+            is_complete: syncedProfile.business.is_complete,
+            isProfileActive: syncedProfile.isProfileActive,
+          });
+          
           updated[index] = syncedProfile;
         }
         return updated;

@@ -688,7 +688,15 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
 
-        console.log('[BusinessDetails] Saving with location type:', locationType, { city, state });
+        console.log('🔍 Saving profile with lock status:', {
+          businessName: business.business_name,
+          website: business.business_website,
+          industry: business.industry,
+          city: city,
+          state: state,
+          location_original: business.location,
+          isComplete: lockStatus,
+        });
 
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',

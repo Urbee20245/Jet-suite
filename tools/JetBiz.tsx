@@ -348,14 +348,12 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   // REMOVED: handleSaveAnalysis function
   // REMOVED: handleLoadAnalysis function
 
-  const businessQuery = `${profileData.business.business_name}, ${profileData.business.location}`;
-
-  if (!profileData.business.business_name || !profileData.business.location) {
+  if (!profileData.business.business_name) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
         <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile First</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please provide your business name and location in your profile to use this tool.</p>
+        <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please provide your business name in your profile to use this tool.</p>
         <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button>
       </div>
     );
@@ -364,6 +362,10 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   if (profileData.googleBusiness.status === 'Not Created' && !profileData.jetbizAnalysis) {
       return <JetBizGuidanceMode setActiveTool={setActiveTool} />;
   }
+
+  const businessQuery = profileData.business.location 
+    ? `${profileData.business.business_name}, ${profileData.business.location}`
+    : profileData.business.business_name;
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
