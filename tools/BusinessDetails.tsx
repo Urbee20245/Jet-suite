@@ -665,29 +665,35 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
         
-        // 2. Prepare payload for lock/unlock - CRITICAL: Send full state to preserve JSONB fields
+        // 2. Prepare payload for lock/unlock - CRITICAL: Preserve all DNA data
+        const payload = {
+            userId: profileData.user.id,
+            businessId: business.id,
+            isComplete: lockStatus,
+            
+            // Business Info
+            businessName: business.business_name,
+            websiteUrl: business.business_website,
+            industry: business.industry,
+            city: business.city,
+            state: business.state,
+            isPrimary: business.is_primary,
+            businessDescription: business.business_description,
+            
+            // CRITICAL: Preserve Google Business Profile
+            googleBusiness: googleBusiness,
+            
+            // CRITICAL: Preserve all DNA data
+            dna: business.dna,
+            brandDnaProfile: profileData.brandDnaProfile,
+            isDnaApproved: business.isDnaApproved,
+            dnaLastUpdatedAt: business.dnaLastUpdatedAt,
+        };
+
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: profileData.user.id,
-                businessId: business.id,
-                isComplete: lockStatus,
-                
-                // CRITICAL FIX: Include all complex fields to ensure they are preserved
-                businessName: business.business_name,
-                websiteUrl: business.business_website,
-                industry: business.industry,
-                city: business.city,
-                state: business.state,
-                isPrimary: business.is_primary,
-                businessDescription: business.business_description,
-                googleBusiness: googleBusiness,
-                dna: business.dna,
-                brandDnaProfile: profileData.brandDnaProfile,
-                isDnaApproved: business.isDnaApproved,
-                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
-            }),
+            body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -766,30 +772,34 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
         console.log('💾 Saving business info with DNA preservation:', {
           hasDna: !!business.dna,
-          isDnaApproved: business.isDnaApproved
+          isDnaApproved: business.isDnaApproved,
+          dnaPreserved: JSON.stringify(business.dna || {}).substring(0, 100)
         });
+
+        // CRITICAL: Always include DNA data even when just saving business info
+        const payload = {
+            userId: profileData.user.id,
+            businessId: business.id,
+            businessName: business.business_name,
+            websiteUrl: business.business_website,
+            industry: business.industry,
+            city: city || null,
+            state: state || null,
+            isPrimary: business.is_primary,
+            isComplete: isLocked,
+            businessDescription: business.business_description,
+            googleBusiness: googleBusiness,
+            // CRITICAL: PRESERVE DNA DATA - use existing saved data
+            dna: business.dna || null,
+            brandDnaProfile: profileData.brandDnaProfile || null,
+            isDnaApproved: business.isDnaApproved,
+            dnaLastUpdatedAt: business.dnaLastUpdatedAt,
+        };
 
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: profileData.user.id,
-                businessId: business.id, // Pass business ID for clarity
-                businessName: business.business_name,
-                websiteUrl: business.business_website,
-                industry: business.industry,
-                city: city || null,
-                state: state || null,
-                isPrimary: business.is_primary,
-                isComplete: isLocked,
-                businessDescription: business.business_description,
-                googleBusiness: googleBusiness,
-                // CRITICAL FIX: Include DNA data to preserve it
-                dna: business.dna,
-                brandDnaProfile: profileData.brandDnaProfile,
-                isDnaApproved: business.isDnaApproved,
-                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
-            }),
+            body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -797,8 +807,22 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || 'API route failed to save business profile.');
         }
 
-        // Update local state and mark as clean
-        onUpdate({ ...profileData, business, googleBusiness }); 
+        // Update local state - preserve all DNA data
+        const updatedBusiness = {
+            ...business,
+            city: city || null,
+            state: state || null,
+        };
+        
+        setBusiness(updatedBusiness);
+        
+        // Update parent component - preserve all DNA data
+        onUpdate({ 
+            ...profileData, 
+            business: updatedBusiness, 
+            googleBusiness 
+        }); 
+        
         setIsDirty(false);
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
