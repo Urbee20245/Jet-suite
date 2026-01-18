@@ -468,6 +468,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [isGbpSkipped, setIsGbpSkipped] = useState(false);
   const [isDnaEditing, setIsDnaEditing] = useState(false);
   
+  const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>('physical');
+  
   // Removed detectedGbp and isGbpConfirmed state
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
   
@@ -493,6 +495,20 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     // Reset editing state when profile loads
     setIsDnaEditing(false);
   }, [profileData]);
+
+  useEffect(() => {
+    // Set initial location type based on whether location data exists
+    if (profileData.business.location) {
+      setLocationType('physical');
+    } else {
+      // Default for new profiles or profiles without location
+      setLocationType('online'); 
+    }
+    // Also ensure location is not undefined
+    if (!business.location) {
+      setBusiness(prev => ({ ...prev, location: '' }));
+    }
+  }, [profileData.business]);
 
   // Check if form is dirty
   useEffect(() => { setIsDirty(JSON.stringify(profileData.business) !== JSON.stringify(business) || JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness)); }, [business, googleBusiness, profileData]);
@@ -634,9 +650,45 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
     try {
-        const locationParts = (business.location || '').split(',').map(s => s.trim());
-        const city = locationParts[0] || '';
-        const state = locationParts[1] || '';
+        // Location is optional for online/home-based businesses
+        let city = '';
+        let state = '';
+        
+        if (locationType === 'physical' && business.location) {
+            const locationParts = (business.location || '').split(',').map(s => s.trim());
+            city = locationParts[0] || '';
+            state = locationParts[1] || '';
+            
+            // Only validate location for physical businesses
+            if (!city || !state) {
+                alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)');
+                return;
+            }
+        } else {
+            // For online/home businesses, use null or empty values
+            city = '';
+            state = '';
+        }
+
+        // Validate truly required fields only
+        if (!profileData.user.id) {
+            alert('User ID is missing. Please sign out and sign back in.');
+            return;
+        }
+        if (!business.business_name?.trim()) {
+            alert('Business Name is required. Please fill in Step 1.');
+            return;
+        }
+        if (!business.business_website?.trim()) {
+            alert('Website URL is required. Please fill in Step 1.');
+            return;
+        }
+        if (!business.industry?.trim()) {
+            alert('Business Category is required. Please select one in Step 1.');
+            return;
+        }
+
+        console.log('[BusinessDetails] Saving with location type:', locationType, { city, state });
 
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
@@ -646,17 +698,19 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 businessName: business.business_name,
                 websiteUrl: business.business_website,
                 industry: business.industry,
-                city: city,
-                state: state,
+                city: city || null,
+                state: state || null,
                 isPrimary: business.is_primary,
-                isComplete: lockStatus, // Set the lock status
+                isComplete: lockStatus,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
             }),
         });
 
         if (!response.ok) {
-            throw new Error('Failed to update profile lock status.');
+            const errorData = await response.json();
+            console.error('[BusinessDetails] API Error:', errorData);
+            throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
 
         const updatedBusiness = { ...business, is_complete: lockStatus };
@@ -688,15 +742,35 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     e.preventDefault(); 
     
     try {
-        const locationParts = (business.location || '').split(',').map(s => s.trim());
-        const city = locationParts[0] || '';
-        const state = locationParts[1] || '';
+        // Location is optional for online/home-based businesses
+        let city = '';
+        let state = '';
         
-        if (!city || !state) {
-            alert('Please enter location in format: City, State (e.g., Atlanta, Georgia)');
+        if (locationType === 'physical' && business.location) {
+            const locationParts = (business.location || '').split(',').map(s => s.trim());
+            city = locationParts[0] || '';
+            state = locationParts[1] || '';
+            
+            if (!city || !state) {
+                alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)');
+                return;
+            }
+        }
+
+        // Validate required fields
+        if (!business.business_name?.trim()) {
+            alert('Business Name is required.');
             return;
         }
-        
+        if (!business.business_website?.trim()) {
+            alert('Website URL is required.');
+            return;
+        }
+        if (!business.industry?.trim()) {
+            alert('Business Category is required.');
+            return;
+        }
+
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -705,24 +779,19 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 businessName: business.business_name,
                 websiteUrl: business.business_website,
                 industry: business.industry,
-                city: city,
-                state: state,
+                city: city || null,
+                state: state || null,
                 isPrimary: business.is_primary,
-                isComplete: isLocked, // Preserve current lock status
+                isComplete: isLocked,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
             }),
         });
 
         if (!response.ok) {
-            let errorData;
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                const text = await response.text();
-                throw new Error(`Server returned non-JSON error (Status: ${response.status}). Raw response: ${text.substring(0, 100)}...`);
-            }
-            throw new Error(errorData.message || errorData.error || 'API route failed to save business profile.');
+            const errorData = await response.json();
+            console.error('[BusinessDetails] API Error:', errorData);
+            throw new Error(errorData.message || 'API route failed to save business profile.');
         }
 
         onUpdate({ ...profileData, business, googleBusiness }); 
@@ -732,7 +801,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
     } catch (err: any) {
         console.error('[BusinessDetails] Database save failed:', err);
-        alert(`Failed to save business details. Check your connection. Details: ${err.message}`);
+        alert(`Failed to save business details. Details: ${err.message}`);
     }
   };
 
@@ -959,8 +1028,77 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                     <datalist id="business-categories">{BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}</datalist>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-brand-text mb-1">Primary Location (City, State)</label>
-                    <input type="text" name="location" value={business.location} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                        Business Location Type
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                        <button
+                            type="button"
+                            onClick={() => setLocationType('physical')}
+                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                                locationType === 'physical'
+                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
+                            }`}
+                        >
+                            🏢 Physical Location
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLocationType('online')}
+                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                                locationType === 'online'
+                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
+                            }`}
+                        >
+                            🌐 Online Only
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLocationType('home')}
+                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                                locationType === 'home'
+                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
+                            }`}
+                        >
+                            🏠 Home-Based
+                        </button>
+                    </div>
+                    
+                    {locationType === 'physical' && (
+                        <div>
+                            <label className="block text-sm font-medium text-brand-text mb-1">
+                                Primary Location (City, State) <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="location" 
+                                value={business.location || ''} 
+                                onChange={handleBusinessChange} 
+                                placeholder="e.g., Loganville, Georgia"
+                                className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
+                                required
+                            />
+                        </div>
+                    )}
+                    
+                    {locationType === 'online' && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                            <p className="text-sm text-blue-800">
+                                ✓ Online-only business. No physical location needed.
+                            </p>
+                        </div>
+                    )}
+                    
+                    {locationType === 'home' && (
+                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                            <p className="text-sm text-purple-800">
+                                ✓ Home-based business. Location details are private.
+                            </p>
+                        </div>
+                    )}
                 </div>
                 {isDirty && <div className="flex justify-end pt-2"><button type="submit" className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save Changes</button></div>}
             </form>
@@ -971,6 +1109,15 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         </StepCard>
 
         <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick}>
+            {locationType !== 'physical' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-yellow-800 font-semibold">
+                        ℹ️ Google Business Profile is primarily for businesses with physical locations.
+                        Since you're {locationType === 'online' ? 'online-only' : 'home-based'}, 
+                        this step is optional but can still help with brand visibility.
+                    </p>
+                </div>
+            )}
             <div className="mb-6 bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border border-accent-purple/30 rounded-lg p-4">
                 <h3 className="font-semibold text-accent-purple mb-3 flex items-center"><span className="text-lg mr-2">🎯</span>Why Connect Your GBP?</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-brand-text-muted">

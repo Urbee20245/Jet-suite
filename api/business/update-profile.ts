@@ -45,8 +45,22 @@ export default async function handler(
       googleBusiness, // ✅ Google Business Profile data
     } = req.body;
 
-    if (!userId || !businessName || !websiteUrl || !industry || !city || !state) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Only userId, businessName, websiteUrl, and industry are truly required
+    // City and state are optional for online/home-based businesses
+    if (!userId || !businessName || !websiteUrl || !industry) {
+      const missing = [];
+      if (!userId) missing.push('userId');
+      if (!businessName) missing.push('businessName');
+      if (!websiteUrl) missing.push('websiteUrl');
+      if (!industry) missing.push('industry');
+      
+      console.error('Missing required fields:', { missing, received: req.body });
+      
+      return res.status(400).json({ 
+        error: 'Missing required fields', 
+        missing: missing,
+        message: `Required fields: ${missing.join(', ')}`
+      });
     }
 
     // Check if a primary business profile already exists for this user
@@ -66,8 +80,8 @@ export default async function handler(
       business_name: businessName,
       business_website: websiteUrl,
       industry: industry,
-      city: city,
-      state: state,
+      city: city || null,
+      state: state || null,
       business_description: businessDescription,
       is_primary: isPrimary,
       is_active: true,
