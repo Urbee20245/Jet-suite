@@ -370,101 +370,6 @@ const renderSocialContent = (userId: string) => {
     />; 
   };
 
-// --- New Lock/Unlock Components ---
-
-const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean }> = ({ onLock, isDirty }) => (
-    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
-        <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
-        </p>
-        <button 
-            onClick={onLock} 
-            disabled={isDirty}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            <LockClosedIcon className="w-5 h-5" />
-            Lock Profile
-        </button>
-        {isDirty && <p className="text-xs text-red-500 mt-2 font-semibold">Save all changes before locking.</p>}
-    </div>
-);
-
-const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ onUnlock, onNext }) => (
-    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl">
-        <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            This profile is locked to maintain brand consistency across all tools.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={onUnlock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                <LockOpenIcon className="w-5 h-5" />
-                Unlock to Edit
-            </button>
-            <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
-            </button>
-        </div>
-    </div>
-);
-
-const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; hint?: string; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick, hint }) => { 
-    const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-
-    const handleClick = () => {
-        if (isLocked) {
-            onLockedClick(number);
-        } else {
-            setIsOpen(!isOpen);
-        }
-    };
-
-    return (
-        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
-            {isLocked && (
-                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-xl"></div>
-            )}
-            <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left relative z-20">
-                <div className="flex items-center gap-4">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>
-                        {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-2">
-                            <span>{number}. {title}</span>
-                            {hint && (
-                                <HintTooltip content={hint}>
-                                    <InfoIcon className="w-5 h-5" />
-                                </HintTooltip>
-                            )}
-                        </h2>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
-                    {isComplete && <CheckCircleIcon className="w-6 h-6 text-green-500"/>}
-                    {isOpen ? <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" /> : <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />}
-                </div>
-            </button>
-            
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-6 sm:p-8 pt-0">
-                    <div className={isLocked ? 'pointer-events-none' : ''}>
-                        {children}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
-
-// --- Main Component ---
-const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other" ];
-
 export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated }) => {
   const [business, setBusiness] = useState(profileData.business);
   const [googleBusiness, setGoogleBusiness] = useState(profileData.googleBusiness);
@@ -534,7 +439,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const step2Completed = profileData.business.isDnaApproved;
   const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
-  const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
+  
+  // CRITICAL FIX: Update allStepsComplete to require Step 3
+  const allStepsComplete = step1Completed && step2Completed && step3Completed;
+  
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
   
   const isLocked = profileData.business.is_complete;
