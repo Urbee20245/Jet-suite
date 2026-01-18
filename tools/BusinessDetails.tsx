@@ -372,22 +372,27 @@ const renderSocialContent = (userId: string) => {
 
 // --- New Lock/Unlock Components ---
 
-const LockInCard: React.FC<{ onLock: () => void }> = ({ onLock }) => (
+const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean }> = ({ onLock, isDirty }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools. You can unlock it later to make edits.
+            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
         </p>
-        <button onClick={onLock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
+        <button 
+            onClick={onLock} 
+            disabled={isDirty}
+            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+        >
             <LockClosedIcon className="w-5 h-5" />
             Lock Profile
         </button>
+        {isDirty && <p className="text-xs text-red-500 mt-2 font-semibold">Save all changes before locking.</p>}
     </div>
 );
 
 const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ onUnlock, onNext }) => (
-    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl relative">
+    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">
@@ -518,9 +523,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   }, [profileData.business]);
 
-  useEffect(() => { setIsDirty(JSON.stringify(profileData.business) !== JSON.stringify(business) || JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness)); }, [business, googleBusiness, profileData]);
+  useEffect(() => { 
+    // Deep comparison to check if form state differs from saved profile data
+    const isBusinessDirty = JSON.stringify(profileData.business) !== JSON.stringify(business);
+    const isGbpDirty = JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness);
+    setIsDirty(isBusinessDirty || isGbpDirty); 
+  }, [business, googleBusiness, profileData]);
 
-  const step1Completed = !!business.business_name && !!business.business_website;
+  const step1Completed = !!business.business_name && !!business.business_website && !!business.industry && (locationType === 'online' || locationType === 'home' || (!!business.location && business.location.includes(',')));
   const step2Completed = profileData.business.isDnaApproved;
   const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
@@ -647,54 +657,21 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
     try {
-        let city = '';
-        let state = '';
-        
-        if (locationType === 'physical' && business.location) {
-            const locationParts = (business.location || '').split(',').map(s => s.trim());
-            city = locationParts[0] || '';
-            state = locationParts[1] || '';
-            
-            if (!city || !state) {
-                alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)');
-                return;
-            }
-        } else {
-            city = '';
-            state = '';
-        }
-
-        if (!profileData.user.id || !business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
-            alert('Required fields in Step 1 are missing.');
+        // 1. Validation (Ensure no unsaved changes if locking)
+        if (lockStatus && isDirty) {
+            alert('Please save all pending changes in Step 1 before locking the profile.');
             return;
         }
-
-        console.log('🔒 Locking profile with DNA preservation:', {
-          hasDna: !!business.dna,
-          isDnaApproved: business.isDnaApproved,
-          hasBrandProfile: !!profileData.brandDnaProfile,
-          lockStatus
-        });
-
+        
+        // 2. Prepare minimal payload for lock/unlock
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: profileData.user.id,
-                businessName: business.business_name,
-                websiteUrl: business.business_website,
-                industry: business.industry,
-                city: city || null,
-                state: state || null,
-                isPrimary: business.is_primary,
+                businessId: business.id, // Pass business ID for clarity
                 isComplete: lockStatus,
-                businessDescription: business.business_description,
-                googleBusiness: googleBusiness,
-                // CRITICAL FIX: Include DNA data to preserve it
-                dna: business.dna,
-                brandDnaProfile: profileData.brandDnaProfile,
-                isDnaApproved: business.isDnaApproved,
-                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
+                // Only send the lock status, rely on previous saves for data integrity
             }),
         });
 
@@ -704,29 +681,24 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
 
-        // CRITICAL FIX: Update local state with DNA preserved BEFORE calling onBusinessUpdated
+        // 3. Update local state
         const updatedBusiness = { 
             ...business, 
             is_complete: lockStatus,
-            // Explicitly preserve DNA fields in local state
-            dna: business.dna,
-            isDnaApproved: business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt,
         };
         
         setBusiness(updatedBusiness);
         
-        // Update parent component with DNA preserved
+        // Update parent component
         onUpdate({ 
             ...profileData, 
             business: updatedBusiness,
-            brandDnaProfile: profileData.brandDnaProfile 
         });
         
-        // NOW call onBusinessUpdated to refresh from database
+        // 4. Refresh data from database to ensure consistency
         onBusinessUpdated();
         
-        console.log('✅ Profile locked successfully with DNA preserved');
+        console.log(`✅ Profile ${lockStatus ? 'locked' : 'unlocked'} successfully.`);
 
     } catch (err: any) {
         console.error('[BusinessDetails] Lock/Unlock failed:', err);
@@ -737,7 +709,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleLockProfile = async () => {
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
     
-    // Perform the lock operation, which preserves the DNA data.
+    // Check for dirty state again before proceeding
+    if (isDirty) {
+        setNotification({ message: 'Please save all pending changes in Step 1 before locking.', type: 'error' });
+        setTimeout(() => setNotification(null), 3000);
+        return;
+    }
+
+    // Perform the lock operation
     await updateProfileLockStatus(true);
   };
 
@@ -780,6 +759,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: profileData.user.id,
+                businessId: business.id, // Pass business ID for clarity
                 businessName: business.business_name,
                 websiteUrl: business.business_website,
                 industry: business.industry,
@@ -802,7 +782,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || 'API route failed to save business profile.');
         }
 
+        // Update local state and mark as clean
         onUpdate({ ...profileData, business, googleBusiness }); 
+        setIsDirty(false);
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
         onBusinessUpdated();
@@ -1161,17 +1143,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         
         {/* NEW: Lock Profile Button (Appears when all steps are complete and unlocked) */}
         {allStepsComplete && !isLocked && (
-            <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
-                <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
-                <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
-                <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                    All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
-                </p>
-                <button onClick={handleLockProfile} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto">
-                    <LockClosedIcon className="w-5 h-5" />
-                    Lock Profile
-                </button>
-            </div>
+            <LockInCard 
+                onLock={handleLockProfile} 
+                isDirty={isDirty}
+            />
         )}
         
         {/* NEW: Locked View (Appears when profile is locked) */}
