@@ -38,8 +38,8 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
             reader.readAsDataURL(blob);
         });
     } catch (error) {
-        console.error("CORS error fetching image, returning empty string:", error);
-        return "";
+        console.error("CORS error fetching image, returning original URL:", error);
+        return url; // Return original URL on failure
     }
 };
 
@@ -495,10 +495,17 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
       business: profileData.business,
       brandDnaProfile: profileData.brandDnaProfile,
       isDnaApproved: profileData.business.isDnaApproved,
+      hasDna: !!profileData.business.dna
     });
 
     setBusiness(profileData.business); 
     setGoogleBusiness(profileData.googleBusiness); 
+    
+    // CRITICAL: Always set editableDna from the saved DNA
+    if (profileData.business.dna) {
+        console.log('✅ [BusinessDetails] Setting editableDna from saved business.dna');
+        setEditableDna(profileData.business.dna);
+    }
     
     if (profileData.brandDnaProfile) {
         console.log('✅ [BusinessDetails] DNA Profile found, setting editable state.');
@@ -665,35 +672,35 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
         
-        // 2. Prepare payload for lock/unlock - CRITICAL: Preserve all DNA data
-        const payload = {
-            userId: profileData.user.id,
-            businessId: business.id,
-            isComplete: lockStatus,
-            
-            // Business Info
-            businessName: business.business_name,
-            websiteUrl: business.business_website,
-            industry: business.industry,
-            city: business.city,
-            state: business.state,
-            isPrimary: business.is_primary,
-            businessDescription: business.business_description,
-            
-            // CRITICAL: Preserve Google Business Profile
-            googleBusiness: googleBusiness,
-            
-            // CRITICAL: Preserve all DNA data
-            dna: business.dna,
-            brandDnaProfile: profileData.brandDnaProfile,
-            isDnaApproved: business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt,
-        };
-
+        // CRITICAL: Preserve DNA from ALL possible sources
+        const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
+        const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
+        
+        // 2. Prepare payload for lock/unlock - CRITICAL: Send full state to preserve JSONB fields
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+                userId: profileData.user.id,
+                businessId: business.id,
+                isComplete: lockStatus,
+                
+                // CRITICAL FIX: Include all complex fields to ensure they are preserved
+                businessName: business.business_name,
+                websiteUrl: business.business_website,
+                industry: business.industry,
+                city: business.city,
+                state: business.state,
+                isPrimary: business.is_primary,
+                businessDescription: business.business_description,
+                googleBusiness: googleBusiness,
+                
+                // CRITICAL: Preserve DNA from ALL possible sources
+                dna: dnaToPreserve,
+                brandDnaProfile: brandProfileToPreserve,
+                isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
+                dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
+            }),
         });
 
         if (!response.ok) {
@@ -706,6 +713,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         const updatedBusiness = { 
             ...business, 
             is_complete: lockStatus,
+            // CRITICAL: Preserve DNA in local state
+            dna: dnaToPreserve,
+            brand_dna_profile: brandProfileToPreserve,
+            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
+            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
         };
         
         setBusiness(updatedBusiness);
@@ -714,6 +726,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         onUpdate({ 
             ...profileData, 
             business: updatedBusiness,
+            brandDnaProfile: brandProfileToPreserve,
         });
         
         // 4. Refresh data from database to ensure consistency
@@ -771,12 +784,15 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         }
 
         console.log('💾 Saving business info with DNA preservation:', {
-          hasDna: !!business.dna,
-          isDnaApproved: business.isDnaApproved,
-          dnaPreserved: JSON.stringify(business.dna || {}).substring(0, 100)
+          hasSavedDna: !!profileData.business.dna,
+          hasEditableDna: !!editableDna,
+          isDnaApproved: business.isDnaApproved
         });
 
-        // CRITICAL: Always include DNA data even when just saving business info
+        // CRITICAL: Always include existing DNA data - check multiple sources
+        const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
+        const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
+        
         const payload = {
             userId: profileData.user.id,
             businessId: business.id,
@@ -789,11 +805,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             isComplete: isLocked,
             businessDescription: business.business_description,
             googleBusiness: googleBusiness,
-            // CRITICAL: PRESERVE DNA DATA - use existing saved data
-            dna: business.dna || null,
-            brandDnaProfile: profileData.brandDnaProfile || null,
-            isDnaApproved: business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt,
+            // CRITICAL: Preserve DNA from ALL possible sources
+            dna: dnaToPreserve,
+            brandDnaProfile: brandProfileToPreserve,
+            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
+            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
         };
 
         const response = await fetch('/api/business/update-profile', {
@@ -807,16 +823,21 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             throw new Error(errorData.message || 'API route failed to save business profile.');
         }
 
-        // Update local state - preserve all DNA data
+        // Update local state with ALL preserved data
         const updatedBusiness = {
             ...business,
             city: city || null,
             state: state || null,
+            // CRITICAL: Preserve DNA in local state
+            dna: dnaToPreserve,
+            brand_dna_profile: brandProfileToPreserve,
+            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
+            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
         };
         
         setBusiness(updatedBusiness);
         
-        // Update parent component - preserve all DNA data
+        // Update parent component with ALL preserved data
         onUpdate({ 
             ...profileData, 
             business: updatedBusiness, 

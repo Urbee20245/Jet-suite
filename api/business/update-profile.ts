@@ -34,6 +34,7 @@ export default async function handler(
   try {
     const {
       userId,
+      businessId, // Added businessId for explicit update targeting
       businessName,
       websiteUrl,
       industry,
@@ -43,7 +44,7 @@ export default async function handler(
       isComplete,
       businessDescription,
       googleBusiness,
-      // ✅ FIX: Accept DNA fields to preserve them
+      // CRITICAL: Accept and preserve DNA fields
       dna,
       brandDnaProfile,
       isDnaApproved,
@@ -56,7 +57,7 @@ export default async function handler(
       });
     }
 
-    // ✅ FIX: Dynamically build a partial update payload
+    // 1. Dynamically build a partial update payload
     const updatePayload: any = {
       updated_at: new Date().toISOString(),
     };
@@ -72,21 +73,27 @@ export default async function handler(
     if (businessDescription !== undefined) updatePayload.business_description = businessDescription;
     if (googleBusiness !== undefined) updatePayload.google_business_profile = googleBusiness;
     
-    // Preserve DNA fields if they are passed in the request
+    // CRITICAL FIX: Preserve DNA fields if they are passed in the request
     if (dna !== undefined) updatePayload.dna = dna;
     if (brandDnaProfile !== undefined) updatePayload.brand_dna_profile = brandDnaProfile;
     if (isDnaApproved !== undefined) updatePayload.is_dna_approved = isDnaApproved;
     if (dnaLastUpdatedAt !== undefined) updatePayload.dna_last_updated_at = dnaLastUpdatedAt;
 
-    console.log('✅ [API] Performing partial update with payload:', Object.keys(updatePayload));
+    console.log('✅ [API] Performing partial update with payload keys:', Object.keys(updatePayload));
 
-    // Find the primary business profile to update
-    const { data: existingPrimary, error: fetchError } = await supabase
+    // 2. Find the primary business profile to update (or use businessId if provided)
+    let query = supabase
       .from('business_profiles')
       .select('id')
-      .eq('user_id', userId)
-      .eq('is_primary', true)
-      .maybeSingle();
+      .eq('user_id', userId);
+      
+    if (businessId) {
+        query = query.eq('id', businessId);
+    } else {
+        query = query.eq('is_primary', true);
+    }
+
+    const { data: existingPrimary, error: fetchError } = await query.maybeSingle();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
       throw fetchError;
@@ -94,7 +101,7 @@ export default async function handler(
 
     let result;
     if (existingPrimary) {
-      // Update the existing primary business profile
+      // Update the existing business profile
       result = await supabase
         .from('business_profiles')
         .update(updatePayload)
@@ -102,7 +109,7 @@ export default async function handler(
         .select()
         .single();
     } else {
-      // If no primary profile exists, create one (onboarding case)
+      // If no profile exists, create one (onboarding case)
       const insertPayload = {
         user_id: userId,
         ...updatePayload,
