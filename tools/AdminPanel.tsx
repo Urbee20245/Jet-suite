@@ -1529,7 +1529,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                             ann.type === 'warning' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
                                         }`}>{ann.type}</span>
                                         <span className="text-xs text-gray-500">
-                                            {ann.target_audience !== 'all' && `(${ann.target_audience})`}
+                                            {ann.target_audience !== 'all' && ('(' + ann.target_audience + ')')}
                                         </span>
                                     </div>
                                     <p className="text-sm text-brand-text-muted line-clamp-2 mb-2">{ann.message}</p>
