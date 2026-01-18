@@ -56,7 +56,7 @@ const AnalysisLoading: React.FC = () => {
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg mt-6 text-center">
             <Loader />
             <h3 className="text-xl font-bold text-brand-text mt-4">Analyzing Your Profile...</h3>
-            <p className="text-brand-text-muted mt-2">This may take a moment as we compare you to local competitors.</p>
+            <p className="text-brand-text-muted mt-2">This may take up to 5 minutes as we compare you to local competitors.</p>
             
             {/* Progress Bar */}
             <div className="w-full max-w-md mx-auto my-6">
@@ -327,12 +327,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // REMOVED: Saved analyses state and related functions
-  // const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
-  // const [isSaving, setIsSaving] = useState(false);
-  // const [showSavedList, setShowSavedList] = useState(false);
-  // const [analysisName, setAnalysisName] = useState('');
-  
   const supabase = getSupabaseClient();
 
   useEffect(() => {
@@ -342,12 +336,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   }, [profileData.jetbizAnalysis]);
   
-  // REMOVED: useEffect to load saved analyses
-
-  // REMOVED: handleDeleteAnalysis function
-  // REMOVED: handleSaveAnalysis function
-  // REMOVED: handleLoadAnalysis function
-
   if (!profileData.business.business_name) {
     return (
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
@@ -380,15 +368,28 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   };
 
   const runAnalysis = async (business: ConfirmedBusiness) => {
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 1500)); // Minimum 1.5s delay
+    
     try {
-      const analysis = await analyzeBusinessListing(business);
+      const analysisPromise = analyzeBusinessListing(business);
+      
+      // Wait for both analysis and minimum delay
+      const [analysis] = await Promise.all([
+        analysisPromise,
+        minDelayPromise
+      ]);
+
       setAuditReport(analysis);
       // Tasks are automatically added to the Growth Plan via this call
       addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
       // Report is saved to the active profile via this call
       onSaveAnalysis(analysis);
-    } catch (err) { setError('Failed to get analysis. Please try again.'); } 
-    finally { setLoading(false); }
+    } catch (err) { 
+      setError('Failed to get analysis. Please try again.'); 
+    } 
+    finally { 
+      setLoading(false); 
+    }
   }
 
   const handleConfirm = async () => {
