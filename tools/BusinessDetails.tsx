@@ -5,7 +5,8 @@ import { Loader } from '../components/Loader';
 import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
-import { SocialAccountsStep } from '../components/SocialAccountsStep'; // <-- ADDED IMPORT
+import { SocialAccountsStep } from '../components/SocialAccountsStep';
+import { HintTooltip } from '../components/HintTooltip'; // Import the new component
 
 // --- Types ---
 interface BusinessDetailsProps { 
@@ -404,7 +405,7 @@ const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ on
     </div>
 );
 
-const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick }) => { 
+const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; hint?: string; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick, hint }) => { 
     const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -427,13 +428,18 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
                         {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-3">
-                            {number}. {title} 
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-2">
+                            <span>{number}. {title}</span>
+                            {hint && (
+                                <HintTooltip content={hint}>
+                                    <InfoIcon className="w-5 h-5" />
+                                </HintTooltip>
+                            )}
                         </h2>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
                     {isComplete && <CheckCircleIcon className="w-6 h-6 text-green-500"/>}
                     {isOpen ? <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" /> : <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />}
                 </div>
@@ -989,6 +995,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setTimeout(() => setNotification(null), 3000);
   };
 
+  const hints = {
+    step1: "This information powers all JetSuite AI tools. Your business name, website, and category help us provide accurate, personalized recommendations across every module.",
+    step2: "Your Business DNA is the source of truth for all AI-generated content. It ensures brand consistency in posts, images, ads, and replies by capturing your unique tone, colors, and style.",
+    step3: "Connecting your GBP unlocks local SEO audits in JetBiz, auto-fetches reviews for JetReply, and improves your Growth Score accuracy. Essential for local visibility.",
+    step4: "Link your social accounts to schedule posts, auto-reply to messages, and manage all your social presence from one place. Optional but highly recommended."
+  };
+
   return (
     <div className="space-y-6">
         {notification && (
@@ -1010,7 +1023,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             />
         )}
 
-        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked}>
+        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked} hint={hints.step1}>
             <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
             {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
             <form onSubmit={handleSaveInfo} className="space-y-4">
@@ -1112,11 +1125,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </form>
         </StepCard>
 
-        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick} hint={hints.step2}>
             {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
         </StepCard>
 
-        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick} hint={hints.step3}>
             {locationType !== 'physical' && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-yellow-800 font-semibold">
@@ -1150,7 +1163,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </div>
         </StepCard>
 
-        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick}>
+        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
             {renderSocialContent()}
         </StepCard>
         
