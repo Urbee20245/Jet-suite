@@ -513,7 +513,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         />;
     }
     if (!activeTool || activeTool.id === 'home') {
-      return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} />;
+      return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} growthScore={growthScore} />;
     }
     switch (activeTool.id) {
       case 'businessdetails': return <BusinessDetails 
@@ -569,7 +569,7 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
         activeBusinessId={activeBusinessId}
       />;
       case 'support': return <UserSupportTickets />;
-      default: return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} />;
+      default: return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} growthScore={growthScore} />;
     }
   };
   
@@ -622,3 +622,5 @@ export const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, u
     </div>
   );
 };
+
+export default App;

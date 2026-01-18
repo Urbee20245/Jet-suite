@@ -1,13 +1,17 @@
+"use client";
+
 import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState } from '../types';
-import { ArrowRightIcon } from '../components/icons/MiniIcons';
+import { ArrowRightIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { QuickStatsCards } from '../components/QuickStatsCards'; // Import new component
 
 interface WelcomeProps {
     setActiveTool: (tool: Tool | null, articleId?: string) => void;
     profileData: ProfileData;
     readinessState: ReadinessState;
     plan: { name: string, profileLimit: number };
+    growthScore: number; // ADDED
 }
 
 const RecommendedAction: React.FC<{
@@ -106,7 +110,7 @@ const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) 
     </footer>
 );
 
-export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan }) => {
+export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore }) => {
     const getNextAction = () => {
         switch(readinessState) {
             case 'Setup Incomplete':
@@ -132,17 +136,31 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
 
   return (
     <div className="h-full w-full space-y-8 pb-12">
-        <div className="bg-brand-card rounded-lg shadow-lg p-8 w-full">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-brand-text">{nextAction.title}</h1>
-            <p className="text-lg text-brand-text-muted mt-2">{nextAction.description}</p>
-            <div className="mt-6 flex items-center gap-4">
+        
+        {/* NEW: Quick Stats Cards */}
+        <QuickStatsCards 
+            profileData={profileData} 
+            growthScore={growthScore}
+            readinessState={readinessState} 
+        />
+
+        {/* NEW: Next Action Card (Replaces old large header) */}
+        <div className="bg-brand-card rounded-xl shadow-lg p-6 w-full border border-brand-border">
+            <div className="flex items-center gap-4 mb-4">
+                <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0" />
+                <div>
+                    <h1 className="text-xl font-bold text-brand-text">Next Best Action</h1>
+                    <p className="text-sm text-brand-text-muted">{nextAction.description}</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-4">
                 <button 
                     onClick={nextAction.onCtaClick}
-                    className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-lg flex items-center gap-2"
+                    className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm flex items-center gap-2"
                 >
                     {nextAction.ctaText} <ArrowRightIcon className="w-5 h-5" />
                 </button>
-                 <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-sm font-semibold underline underline-offset-2">
+                 <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-xs font-semibold underline underline-offset-2">
                     Why this matters
                 </button>
             </div>
