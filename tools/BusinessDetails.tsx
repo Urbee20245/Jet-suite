@@ -634,7 +634,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
     try {
-        const locationParts = business.location.split(',').map(s => s.trim());
+        const locationParts = (business.location || '').split(',').map(s => s.trim());
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
 
@@ -688,7 +688,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     e.preventDefault(); 
     
     try {
-        const locationParts = business.location.split(',').map(s => s.trim());
+        const locationParts = (business.location || '').split(',').map(s => s.trim());
         const city = locationParts[0] || '';
         const state = locationParts[1] || '';
         
