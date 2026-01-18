@@ -46,7 +46,7 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
 // --- Constants ---
 const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other" ];
 
-// --- Sub-components for DNA Workflow ---
+// --- Component Definitions (to fix TS2304 errors) ---
 
 const DnaExtractionLoading: React.FC = () => {
     const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
@@ -373,8 +373,6 @@ const renderSocialContent = (userId: string) => {
     />; 
   };
 
-// --- New Lock/Unlock Components ---
-
 const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean }> = ({ onLock, isDirty }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
@@ -667,15 +665,28 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             return;
         }
         
-        // 2. Prepare minimal payload for lock/unlock
+        // 2. Prepare payload for lock/unlock - CRITICAL: Send full state to preserve JSONB fields
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: profileData.user.id,
-                businessId: business.id, // Pass business ID for clarity
+                businessId: business.id,
                 isComplete: lockStatus,
-                // Only send the lock status, rely on previous saves for data integrity
+                
+                // CRITICAL FIX: Include all complex fields to ensure they are preserved
+                businessName: business.business_name,
+                websiteUrl: business.business_website,
+                industry: business.industry,
+                city: business.city,
+                state: business.state,
+                isPrimary: business.is_primary,
+                businessDescription: business.business_description,
+                googleBusiness: googleBusiness,
+                dna: business.dna,
+                brandDnaProfile: profileData.brandDnaProfile,
+                isDnaApproved: business.isDnaApproved,
+                dnaLastUpdatedAt: business.dnaLastUpdatedAt,
             }),
         });
 
