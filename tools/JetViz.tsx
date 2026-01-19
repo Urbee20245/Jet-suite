@@ -204,35 +204,6 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                 ))}
             </div>
         </div>
-
-        <div className="mt-8">
-            <button
-                onClick={async () => {
-                    console.log('💾 [JetViz] Double-save: Ensuring all tasks are in Supabase before navigation...');
-                    
-                    // Wait a moment for state to propagate from InternalApp
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                    
-                    if (userId && activeBusinessId) {
-                        try {
-                            // Perform a safety save with the most current tasks from InternalApp state
-                            // This ensures persistence even if there were any timing issues
-                            await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
-                            console.log('✅ [JetViz] Double-save completed. Tasks secured in Supabase. Navigating...');
-                        } catch (error) {
-                            console.error('❌ [JetViz] Double-save failed:', error);
-                            // Still navigate - tasks were already saved by addTasksToGrowthPlan
-                            console.log('⚠️ [JetViz] Proceeding to Growth Plan (initial save succeeded)');
-                        }
-                    }
-                    setActiveTool(ALL_TOOLS['growthplan']);
-                }}
-                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
-            >
-                Go to Growth Plan to Execute Tasks
-                <ArrowPathIcon className="w-5 h-5" />
-            </button>
-        </div>
     </div>
   );
 };
@@ -345,6 +316,35 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 userId={userId}
                 activeBusinessId={activeBusinessId}
             />
+            
+            <div className="mt-8">
+                <button
+                    onClick={async () => {
+                        console.log('💾 [JetViz] Double-save: Ensuring all tasks are in Supabase before navigation...');
+                        
+                        // Wait a moment for state to propagate from InternalApp
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        
+                        if (userId && activeBusinessId) {
+                            try {
+                                // Perform a safety save with the most current tasks from InternalApp state
+                                // This ensures persistence even if there were any timing issues
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                console.log('✅ [JetViz] Double-save completed. Tasks secured in Supabase. Navigating...');
+                            } catch (error) {
+                                console.error('❌ [JetViz] Double-save failed:', error);
+                                // Still navigate - tasks were already saved by addTasksToGrowthPlan
+                                console.log('⚠️ [JetViz] Proceeding to Growth Plan (initial save succeeded)');
+                            }
+                        }
+                        setActiveTool(ALL_TOOLS['growthplan']);
+                    }}
+                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                >
+                    Go to Growth Plan to Execute Tasks
+                    <ArrowPathIcon className="w-5 h-5" />
+                </button>
+            </div>
         </>
       )}
 
