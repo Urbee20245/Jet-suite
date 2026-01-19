@@ -84,14 +84,12 @@ const priorityStyles = {
 // --- END CONSTANTS ---
 
 // --- TYPES ---
-// Simplified TaskCardProps: No longer needs onStatusChange
 interface SimpleTaskCardProps {
   task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
   isAdded: boolean;
   onAdd: () => void;
 }
 
-// Simplified IssueCardProps: No longer needs onStatusChange
 interface SimpleIssueCardProps {
   issue: AuditIssue;
   isAdded: boolean;
@@ -178,15 +176,11 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
 };
 
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask }) => {
+const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; userId: string; activeBusinessId: string | null; }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask, userId, activeBusinessId }) => {
     const [showCompleted, setShowCompleted] = useState(false);
     const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
     const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
-    const displayedTasks = showCompleted ? weeklyActionTasks : weeklyActionTasks.filter(t => t.status !== 'completed');
-
-    const allIssueTasks = (report.issues || []).map(issue => growthPlanTasks.find(t => t.title === issue.task.title)).filter(Boolean) as GrowthPlanTask[];
-    const resolvedIssues = allIssueTasks.filter(t => t.status === 'completed').length;
     
     const existingTaskTitles = new Set(growthPlanTasks.map(t => t.title));
 
@@ -221,14 +215,37 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                     />
                 ))}
             </div>
-            <div className="flex justify-between items-center mt-4">
+            
+            <div className="mt-8">
+                <button
+                    onClick={async () => {
+                        console.log('💾 [JetViz] Saving tasks before navigation...');
+                        if (userId && activeBusinessId && growthPlanTasks.length > 0) {
+                            try {
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
+                            } catch (error) {
+                                console.error('❌ [JetViz] Failed to save tasks:', error);
+                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                            }
+                        }
+                        setActiveTool(ALL_TOOLS['growthplan']);
+                    }}
+                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                >
+                    Go to Growth Plan to Execute Tasks
+                    <ArrowPathIcon className="w-5 h-5" />
+                </button>
+            </div>
+
+            <div className="flex justify-between items-center mt-6">
                 <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
                 <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
             </div>
         </div>
 
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified ({resolvedIssues} of {allIssueTasks.length} resolved)</h2>
+            <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
             <div className="space-y-4">
                 {(report.issues || []).map(issue => (
                     <SimpleIssueCard 
@@ -251,17 +268,13 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [error, setError] = useState('');
   const [showPromo, setShowPromo] = useState(true);
   
-  // ADDED STATE FOR PERSISTENCE
   const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedList, setShowSavedList] = useState(false);
-  
-  // 1. ADD STATE FOR ANALYSIS NAME
   const [analysisName, setAnalysisName] = useState('');
   
   const supabase = getSupabaseClient();
 
-  // ADDED EFFECT TO LOAD SAVED ANALYSES
   useEffect(() => {
     if (userId && activeBusinessId) {
       loadSavedAnalyses();
@@ -281,19 +294,15 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     return (<div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center"><InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" /><h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2><p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p><button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button></div>);
   }
 
-  // ADDED FUNCTION TO LOAD SAVED ANALYSES
   const loadSavedAnalyses = async () => {
     if (!supabase || !userId || !activeBusinessId) return;
-    
     try {
       const data = await loadFromSupabase(userId, activeBusinessId, 'jetviz');
-      
       if (data) {
-        // 3. UPDATE MAPPING TO INCLUDE analysis_name
         const mappedData = Array.isArray(data) ? data.map((item: any) => ({
           id: item.id,
           created_at: item.created_at,
-          analysis_name: item.analysis_name, // <-- NEW FIELD
+          analysis_name: item.analysis_name,
           target_url: item.target_url,
           results: item.results,
         })) : [];
@@ -306,18 +315,14 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   };
 
-  // 2. UPDATE SAVE ANALYSIS FUNCTION
   const handleSaveAnalysis = async () => {
     if (!result || !activeBusinessId || !userId) return;
-    
     const nameToSave = analysisName.trim() || `JetViz Analysis - ${new Date().toLocaleDateString()}`;
-    
     setIsSaving(true);
     try {
-      // Pass analysisName to sync service
       await syncToSupabase(userId, activeBusinessId, 'jetviz', result, nameToSave);
       alert('Analysis saved successfully!');
-      setAnalysisName(''); // Clear input after saving
+      setAnalysisName('');
       loadSavedAnalyses();
     } catch (error) {
       console.error('Error saving analysis:', error);
@@ -327,33 +332,19 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
   };
 
-  // ADDED FUNCTION TO LOAD PREVIOUS ANALYSIS
   const handleLoadAnalysis = (analysis: any) => {
-    // The full LiveWebsiteAnalysis object is stored in the 'results' field
     const loadedReport = analysis.results as LiveWebsiteAnalysis;
-    
-    setUrlToAnalyze(loadedReport.businessAddress); // Assuming businessAddress holds the URL
+    setUrlToAnalyze(loadedReport.businessAddress);
     setResult(loadedReport);
-    
-    // Note: We don't need to call onSaveAnalysis here as it's already saved.
     setShowSavedList(false);
   };
   
-  // ADDED FUNCTION TO DELETE ANALYSIS
   const handleDeleteAnalysis = async (analysisId: string) => {
     if (!confirm('Are you sure you want to delete this saved analysis?')) return;
-    
     if (!supabase) return;
-    
     try {
-      // Assuming audit_reports is the correct table based on sync/save.ts
-      const { error } = await supabase
-        .from('audit_reports')
-        .delete()
-        .eq('id', analysisId);
-      
+      const { error } = await supabase.from('audit_reports').delete().eq('id', analysisId);
       if (error) throw error;
-      
       alert('Analysis deleted successfully!');
       loadSavedAnalyses();
     } catch (error) {
@@ -424,9 +415,10 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             growthPlanTasks={growthPlanTasks} 
             setActiveTool={setActiveTool} 
             onAddTask={addTasksToGrowthPlan}
+            userId={userId}
+            activeBusinessId={activeBusinessId}
           />
           
-          {/* Save Analysis Button */}
           <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
                 <h3 className="text-xl font-bold text-brand-text mb-4">Save Analysis</h3>
                 <div className="flex gap-4">
@@ -489,7 +481,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
         </div>
       )}
       
-      {/* Saved Analyses List (Shown outside of result view if requested) */}
       {showSavedList && (
         <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
@@ -512,7 +503,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                   className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
                 >
                   <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
-                    {/* 5. DISPLAY ANALYSIS NAME */}
                     <div className="font-semibold text-brand-text">{analysis.analysis_name || analysis.target_url}</div>
                     <div className="text-sm text-brand-text-muted">
                       {new Date(analysis.created_at).toLocaleDateString()} at{' '}
