@@ -49,6 +49,21 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   const supabase = getSupabaseClient();
 
+  const fetchAllProfiles = async () => {
+    if (userEmail !== ADMIN_EMAIL) return;
+    try {
+      const response = await fetch('/api/admin/get-all-profiles', {
+        headers: { 'x-user-email': userEmail }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAllProfiles(data.profiles || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch master profile list:', error);
+    }
+  };
+
   const loadData = async () => {
     if (!supabase || !userId) return;
     setIsLoading(true);
@@ -65,7 +80,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         const activeBiz = businessList.find(b => b.id === activeBusinessId) || businessList[0];
         setActiveBusinessId(activeBiz.id);
 
-        // Construct location string for tools
         const locationStr = activeBiz.city && activeBiz.state 
           ? `${activeBiz.city}, ${activeBiz.state}` 
           : activeBiz.city || activeBiz.state || '';
@@ -74,7 +88,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           user: { id: userId, firstName: '', lastName: '', email: userEmail, phone: '', role: 'Owner' },
           business: {
             ...activeBiz,
-            location: locationStr, // Explicitly set location for tools like JetKeywords
+            location: locationStr,
             isDnaApproved: activeBiz.is_dna_approved,
           },
           googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
@@ -83,20 +97,15 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         };
         setCurrentProfileData(profile);
 
-        const { data: reviews } = await supabase
-          .from('business_reviews')
-          .select('ai_response_sent')
-          .eq('business_id', activeBiz.id);
-        
-        if (reviews && reviews.length > 0) {
-          const responded = reviews.filter(r => r.ai_response_sent).length;
-          setReviewResponseRate(Math.round((responded / reviews.length) * 100));
-        }
-
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
         if (savedTasks) {
           setTasks(savedTasks);
         }
+      }
+
+      // If user is admin, pre-fetch or refresh the master list
+      if (userEmail === ADMIN_EMAIL) {
+        await fetchAllProfiles();
       }
     } catch (error) {
       console.error('Error loading app data:', error);
@@ -108,6 +117,13 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   useEffect(() => {
     loadData();
   }, [userId]);
+
+  // Refresh admin data specifically when the admin tool is opened
+  useEffect(() => {
+    if (activeTool?.id === 'adminpanel' && userEmail === ADMIN_EMAIL) {
+      fetchAllProfiles();
+    }
+  }, [activeTool?.id]);
 
   const handleSetActiveTool = (tool: Tool | null, articleId?: string) => {
     setActiveTool(tool);
@@ -131,12 +147,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (activeBusinessId) {
       try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
-        console.log('✅ [InternalApp] Tasks saved to Supabase:', updatedTasks.length);
       } catch (error) {
         console.error('❌ [InternalApp] Failed to save tasks:', error);
       }
     }
-
     return updatedTasks; 
   };
 
@@ -151,7 +165,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (activeBusinessId) {
       try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
-        console.log('✅ [InternalApp] Task status updated in Supabase');
       } catch (error) {
         console.error('❌ [InternalApp] Failed to save task status:', error);
       }
@@ -176,24 +189,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
-
-  useEffect(() => {
-    const autoLoadTasks = async () => {
-      if (activeTool?.id === 'growthplan' && activeBusinessId && userId) {
-        console.log('🔄 [InternalApp] Auto-loading tasks for Growth Plan...');
-        try {
-          const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
-          if (data && Array.isArray(data) && data.length > 0) {
-            setTasks(data);
-            console.log('✅ [InternalApp] Auto-loaded tasks from Supabase:', data.length);
-          }
-        } catch (error) {
-          console.error('❌ [InternalApp] Failed to auto-load tasks:', error);
-        }
-      }
-    };
-    autoLoadTasks();
-  }, [activeTool?.id, activeBusinessId, userId]);
 
   const renderActiveTool = () => {
     if (!currentProfileData) return null;
@@ -256,7 +251,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-dark">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-purple mx-auto"></div>
       </div>
     );
   }
@@ -279,6 +274,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           onSwitchBusiness={setActiveBusinessId}
           onAddBusiness={() => handleSetActiveTool({ id: 'businessdetails', name: 'Business Details', category: 'foundation' })}
           setActiveTool={handleSetActiveTool}
+          userId={userId}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-brand-light">
           {renderActiveTool()}
