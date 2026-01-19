@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -44,6 +44,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [businesses, setBusinesses] = useState<any[]>([]);
   const [currentProfileData, setCurrentProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
 
@@ -64,9 +65,14 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     }
   };
 
-  const loadData = async () => {
+  const loadData = useCallback(async (isInitial = false) => {
     if (!supabase || !userId) return;
-    setIsLoading(true);
+    
+    if (isInitial) {
+      setIsLoading(true);
+    } else {
+      setIsBackgroundLoading(true);
+    }
 
     try {
       const { data: businessList } = await supabase
@@ -78,7 +84,11 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       if (businessList && businessList.length > 0) {
         setBusinesses(businessList);
         const activeBiz = businessList.find(b => b.id === activeBusinessId) || businessList[0];
-        setActiveBusinessId(activeBiz.id);
+        
+        // Only set if different to avoid infinite loops
+        if (activeBiz.id !== activeBusinessId) {
+          setActiveBusinessId(activeBiz.id);
+        }
 
         const locationStr = activeBiz.city && activeBiz.state 
           ? `${activeBiz.city}, ${activeBiz.state}` 
@@ -103,34 +113,32 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         }
       }
 
-      // If user is admin, pre-fetch or refresh the master list
-      if (userEmail === ADMIN_EMAIL) {
+      // If user is admin, refresh the master list
+      if (userEmail === ADMIN_EMAIL && (isInitial || activeTool?.id === 'adminpanel')) {
         await fetchAllProfiles();
       }
     } catch (error) {
       console.error('Error loading app data:', error);
     } finally {
-      setIsLoading(false);
+      if (isInitial) {
+        setIsLoading(false);
+      }
+      setIsBackgroundLoading(false);
     }
-  };
+  }, [supabase, userId, activeBusinessId, userEmail, activeTool?.id]);
 
+  // Initial load only
   useEffect(() => {
-    loadData();
+    loadData(true);
   }, [userId]);
-
-  // Refresh admin data specifically when the admin tool is opened
-  useEffect(() => {
-    if (activeTool?.id === 'adminpanel' && userEmail === ADMIN_EMAIL) {
-      fetchAllProfiles();
-    }
-  }, [activeTool?.id]);
 
   const handleSetActiveTool = (tool: Tool | null, articleId?: string) => {
     setActiveTool(tool);
     setKbArticleId(articleId || null);
     
+    // Background refresh for specific navigation points
     if (!tool || tool.id === 'growthplan' || tool.id === 'home') {
-        loadData();
+        loadData(false);
     }
   };
 
@@ -196,7 +204,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
     switch (activeTool?.id) {
       case 'businessdetails':
-        return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={loadData} />;
+        return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={() => loadData(false)} />;
       case 'jetbiz':
         return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':
@@ -222,7 +230,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetcompete':
         return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={loadData} />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={() => loadData(false)} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':
@@ -232,7 +240,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={loadData} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={() => loadData(false)} />;
       case 'support':
         return <UserSupportTickets />;
       default:
@@ -271,12 +279,20 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           growthScore={calculateGrowthScore()}
           businesses={businesses}
           activeBusinessId={activeBusinessId}
-          onSwitchBusiness={setActiveBusinessId}
+          onSwitchBusiness={(id) => {
+            setActiveBusinessId(id);
+            loadData(false);
+          }}
           onAddBusiness={() => handleSetActiveTool({ id: 'businessdetails', name: 'Business Details', category: 'foundation' })}
           setActiveTool={handleSetActiveTool}
           userId={userId}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-brand-light">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-brand-light relative">
+          {isBackgroundLoading && (
+            <div className="absolute top-4 right-4 z-50">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-purple"></div>
+            </div>
+          )}
           {renderActiveTool()}
         </main>
       </div>
