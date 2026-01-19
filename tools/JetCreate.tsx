@@ -201,7 +201,12 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
     };
 
     const generateCampaignImage = async (campaign: CampaignIdea) => {
-        return await generateBrandedImage(`A premium marketing campaign visual for "${campaign.name}"`, '16:9');
+        try {
+            return await generateBrandedImage(`A premium marketing campaign visual for "${campaign.name}"`, '16:9');
+        } catch (e) {
+            console.error('Error generating idea image:', e);
+            return '';
+        }
     };
 
     useEffect(() => {
@@ -213,12 +218,17 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                 try {
                     const ideas = await generateCampaignIdeas(profileData);
                     
-                    // Generate images for all campaigns
+                    // Generate images for all campaigns with individual try-catch to prevent blocking the whole list
                     const ideasWithImages = await Promise.all(
-                        ideas.map(async (idea) => ({
-                            ...idea,
-                            imageUrl: await generateCampaignImage(idea)
-                        }))
+                        ideas.map(async (idea) => {
+                            let imageUrl = '';
+                            try {
+                                imageUrl = await generateCampaignImage(idea);
+                            } catch (e) {
+                                console.error(`Failed to generate image for idea ${idea.id}`, e);
+                            }
+                            return { ...idea, imageUrl };
+                        })
                     );
                     
                     setCampaignIdeas(ideasWithImages);
@@ -272,7 +282,11 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
         };
         
         // Generate image for custom campaign
-        customCampaign.imageUrl = await generateCampaignImage(customCampaign);
+        try {
+            customCampaign.imageUrl = await generateCampaignImage(customCampaign);
+        } catch (e) {
+            console.error('Custom campaign image error:', e);
+        }
         
         handleSelectCampaign(customCampaign);
     };
@@ -507,12 +521,12 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
             {/* Main Content */}
             <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
                 {/* Left Panel: Campaign Ideas */}
-                <aside className="w-full lg:w-80 lg:flex-shrink-0 flex flex-col gap-4">
-                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm">
+                <aside className="w-full lg:w-80 lg:flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
+                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm flex-shrink-0">
                         <h2 className="font-bold text-lg text-brand-text mb-1">Campaign Ideas</h2>
                         <p className="text-xs text-brand-text-muted mb-4">Generated for your business</p>
                         
-                        <div className="space-y-3 max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
+                        <div className="space-y-3 pr-1">
                             {isLoadingCampaigns ? (
                                 <div className="flex items-center justify-center py-8">
                                     <Loader />
@@ -529,7 +543,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                         }`}
                                     >
                                         {idea.imageUrl && (
-                                            <div className="w-full h-32 overflow-hidden">
+                                            <div className="w-full h-32 overflow-hidden bg-slate-100">
                                                 <img 
                                                     src={idea.imageUrl} 
                                                     alt={idea.name}
@@ -555,7 +569,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     </div>
 
                     {/* Custom Campaign Input */}
-                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm">
+                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm flex-shrink-0">
                         <h3 className="font-semibold text-sm text-brand-text mb-2">Custom Campaign</h3>
                         <textarea 
                             value={customCampaignPrompt} 
@@ -662,8 +676,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
 
                                                 {/* Image Preview */}
                                                 {post.imageUrl && (
-                                                    <div className="mb-3 rounded-lg overflow-hidden">
-                                                        <img src={post.imageUrl} alt={`${post.platform} post`} className="w-full h-auto" />
+                                                    <div className="mb-3 rounded-lg overflow-hidden bg-slate-200 aspect-square">
+                                                        <img src={post.imageUrl} alt={`${post.platform} post`} className="w-full h-full object-cover" />
                                                     </div>
                                                 )}
 
@@ -707,8 +721,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
 
                                                 {/* Image Preview */}
                                                 {ad.imageUrl && (
-                                                    <div className="mb-3 rounded-lg overflow-hidden">
-                                                        <img src={ad.imageUrl} alt={`Ad ${i + 1}`} className="w-full h-auto" />
+                                                    <div className="mb-3 rounded-lg overflow-hidden bg-slate-200 aspect-video">
+                                                        <img src={ad.imageUrl} alt={`Ad ${i + 1}`} className="w-full h-full object-cover" />
                                                     </div>
                                                 )}
 

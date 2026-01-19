@@ -473,7 +473,7 @@ export const generateImage = async (prompt: string, imageSize: '1K' | '2K' | '4K
         const parts: any[] = [];
         if (inputImage) parts.push({ inlineData: { data: inputImage.base64, mimeType: inputImage.mimeType } });
         parts.push({ text: prompt });
-        const modelName = inputImage ? 'gemini-1.5-flash' : 'gemini-3-pro-image-preview';
+        const modelName = inputImage ? 'gemini-1.5-flash-latest' : 'gemini-3-pro-image-preview';
         const config: any = {};
         if (modelName === 'gemini-3-pro-image-preview') config.imageConfig = { imageSize, aspectRatio };
         const response = await ai.models.generateContent({ model: modelName, contents: { parts }, config });
