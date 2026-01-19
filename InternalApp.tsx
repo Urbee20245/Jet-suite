@@ -299,8 +299,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
-      {/* JetBot Chatbot for Internal App */}
-      <JethelperApp />
+      {/* JetBot Chatbot is now only rendered inside UserSupportTickets.tsx */}
     </div>
   );
 };

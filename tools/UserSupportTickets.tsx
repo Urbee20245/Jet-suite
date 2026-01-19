@@ -22,6 +22,7 @@ import type {
   TicketCategory,
   TicketStatus 
 } from '../Types/supportTypes';
+import SupportChatbot from '../components/SupportChatbot'; // Import the support chatbot
 
 export default function UserSupportTickets() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -269,6 +270,9 @@ export default function UserSupportTickets() {
             </div>
           </div>
         )}
+        
+        {/* JetBot Chatbot - Only visible on the Support page */}
+        <SupportChatbot />
       </div>
     );
   }
@@ -351,6 +355,7 @@ export default function UserSupportTickets() {
             ))}
           </div>
         )}
+        <SupportChatbot />
       </div>
     );
   }
@@ -464,6 +469,7 @@ export default function UserSupportTickets() {
             </div>
           </div>
         </div>
+        <SupportChatbot />
       </div>
     );
   }
@@ -585,6 +591,7 @@ export default function UserSupportTickets() {
             </div>
           )}
         </div>
+        <SupportChatbot />
       </div>
     );
   }
