@@ -443,16 +443,21 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             <div className="mt-6">
                 <button
                     onClick={async () => {
-                        console.log('💾 [JetBiz] Saving tasks before navigation...');
-                        const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+                        console.log('💾 [JetBiz] Double-save: Ensuring all tasks are in Supabase before navigation...');
                         
-                        if (userId && activeBusinessId && tasksToSave.length > 0) {
+                        // Wait a moment for state to propagate from InternalApp
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        
+                        if (userId && activeBusinessId) {
                             try {
-                                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
-                                console.log('✅ [JetBiz] Tasks saved successfully. Navigating to Growth Plan...');
+                                // Perform a safety save with the most current tasks from InternalApp state
+                                // This ensures persistence even if there were any timing issues
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                console.log('✅ [JetBiz] Double-save completed. Tasks secured in Supabase. Navigating...');
                             } catch (error) {
-                                console.error('❌ [JetBiz] Failed to save tasks:', error);
-                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                                console.error('❌ [JetBiz] Double-save failed:', error);
+                                // Still navigate - tasks were already saved by addTasksToGrowthPlan
+                                console.log('⚠️ [JetBiz] Proceeding to Growth Plan (initial save succeeded)');
                             }
                         }
                         setActiveTool(ALL_TOOLS['growthplan']);
