@@ -27,6 +27,7 @@ import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
+import JethelperApp from './jethelper/JethelperApp'; // Import JethelperApp
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -298,6 +299,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
+      {/* JetBot Chatbot for Internal App */}
+      <JethelperApp />
     </div>
   );
 };
