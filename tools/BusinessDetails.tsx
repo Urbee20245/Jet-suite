@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
+import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult, GrowthPlanTask } from '../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
@@ -362,7 +362,7 @@ const GbpConnect: React.FC<{
     ); 
 };
 
-const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.FormEvent) => void }> = ({ onLock, isDirty, onSave }) => (
+const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.MouseEvent) => void, isSaving: boolean }> = ({ onLock, isDirty, onSave, isSaving }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
@@ -376,19 +376,20 @@ const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: R
                     <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
                     <button 
                         onClick={onSave} 
-                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2"
+                        disabled={isSaving}
+                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                        <CheckCircleIcon className="w-5 h-5" />
-                        Save All Changes
+                        {isSaving ? <Loader /> : <CheckCircleIcon className="w-5 h-5" />}
+                        {isSaving ? 'Saving Changes...' : 'Save All Changes'}
                     </button>
                 </div>
             )}
             
             <button 
                 onClick={onLock} 
-                disabled={isDirty}
+                disabled={isDirty || isSaving}
                 className={`w-full max-w-xs font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
-                    isDirty 
+                    isDirty || isSaving
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300' 
                     : 'bg-red-500 hover:bg-red-600 text-white'
                 }`}
@@ -475,6 +476,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [googleBusiness, setGoogleBusiness] = useState(profileData.googleBusiness);
   const [saveSuccess, setSaveSuccess] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [isSavingInfo, setIsSavingInfo] = useState(false);
   const [extractionStage, setExtractionStage] = useState<ExtractionStage>('idle');
   const [editableDna, setEditableDna] = useState<BusinessDna | null>(null);
   const [editableBrandProfile, setEditableBrandProfile] = useState<BrandDnaProfile | null>(null);
@@ -509,26 +511,25 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   }, [profileData.business]);
 
   useEffect(() => {
-    // Compare essential fields only to determine if save is needed
-    // This avoids blocking the lock action due to metadata or timestamp mismatches
+    // Robust comparison for "dirty" state detection
     const essentialBusiness = {
-        name: business.business_name?.trim(),
-        website: business.business_website?.trim(),
-        industry: business.industry?.trim(),
-        description: business.business_description?.trim(),
-        city: business.city,
-        state: business.state,
-        location: business.location?.trim()
+        name: (business.business_name || '').trim(),
+        website: (business.business_website || '').trim(),
+        industry: (business.industry || '').trim(),
+        description: (business.business_description || '').trim(),
+        city: business.city || null,
+        state: business.state || null,
+        location: (business.location || '').trim()
     };
     
     const essentialProfile = {
-        name: profileData.business.business_name?.trim(),
-        website: profileData.business.business_website?.trim(),
-        industry: profileData.business.industry?.trim(),
-        description: profileData.business.business_description?.trim(),
-        city: profileData.business.city,
-        state: profileData.business.state,
-        location: profileData.business.location?.trim()
+        name: (profileData.business.business_name || '').trim(),
+        website: (profileData.business.business_website || '').trim(),
+        industry: (profileData.business.industry || '').trim(),
+        description: (profileData.business.business_description || '').trim(),
+        city: profileData.business.city || null,
+        state: profileData.business.state || null,
+        location: (profileData.business.location || '').trim()
     };
 
     const isBusinessDirty = JSON.stringify(essentialBusiness) !== JSON.stringify(essentialProfile);
@@ -662,8 +663,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     await updateProfileLockStatus(false);
   };
 
-  const handleSaveInfo = async (e: React.FormEvent) => { 
-    if (e) e.preventDefault(); 
+  const handleSaveInfo = async (e?: React.FormEvent | React.MouseEvent) => { 
+    if (e && 'preventDefault' in e) e.preventDefault(); 
+    setIsSavingInfo(true);
     try {
         let city = '';
         let state = '';
@@ -671,10 +673,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             const locationParts = (business.location || '').split(',').map(s => s.trim());
             city = locationParts[0] || '';
             state = locationParts[1] || '';
-            if (!city || !state) { alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)'); return; }
+            if (!city || !state) { alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)'); setIsSavingInfo(false); return; }
         }
         if (!business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
             alert('Business Name, Website, and Category are required.');
+            setIsSavingInfo(false);
             return;
         }
         const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
@@ -714,6 +717,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         onBusinessUpdated();
     } catch (err: any) {
         alert(`Failed to save business details. Details: ${err.message}`);
+    } finally {
+        setIsSavingInfo(false);
     }
   };
 
@@ -745,7 +750,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         address: selectedGbp.address,
     };
     setGoogleBusiness(newGbp);
-    await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+    await handleSaveInfo();
     setSelectedGbp(null);
     setSearchTerm('');
     setSearchResults([]);
@@ -756,7 +761,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
     onUpdate({...profileData, googleBusiness: newGbp});
-    handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
+    handleSaveInfo();
   };
   
   const handleGenerateDescription = async () => { 
@@ -896,8 +901,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 {/* ALWAYS show save button if unlocked to allow the user to clear dirty state and lock */}
                 {!isLocked && (
                     <div className="flex justify-end pt-2">
-                        <button type="submit" className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all">
-                            Save Changes
+                        <button type="submit" disabled={isSavingInfo} className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all disabled:opacity-50">
+                            {isSavingInfo ? 'Saving Changes...' : 'Save Changes'}
                         </button>
                     </div>
                 )}
@@ -922,7 +927,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             <SocialAccountsStep userId={profileData.user.id} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
         {allStepsComplete && !isLocked && (
-            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} />
+            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} />
         )}
     </div>
   );
