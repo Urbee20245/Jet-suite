@@ -31,7 +31,8 @@ import {
     JetEventsIcon,
     GrowthPlanIcon,
     AdminPanelIcon,
-    ProfileIcon
+    ProfileIcon,
+    JetProductIcon // Import the new icon
 } from '../components/icons/ToolIcons';
 import { FaqItem } from '../components/marketing/FaqItem';
 
@@ -141,6 +142,14 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             replaces: "Stock Photos + Designer",
             icon: JetImageIcon,
             iconBg: "bg-rose-600"
+        },
+        { 
+            name: "JetProduct", 
+            tagline: "AI Product Mockup Generator", 
+            brief: "Upload a product photo and generate professional, branded mockups for e-commerce and ads.", 
+            replaces: "Product Photography & Designer",
+            icon: JetProductIcon,
+            iconBg: "bg-orange-600"
         }
     ],
     engage: [
@@ -491,7 +500,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
       {/* 11. CTA SECTION */}
       <section className="py-24 px-4 bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-          <div className="relative z-10">
+          <div className="relative z-10 max-w-4xl mx-auto">
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to Access All 20 Growth Tools?</h2>
             <p className="text-xl text-gray-300 mb-10">Start your 7-day free trial now. Join 360+ local businesses growing with JetSuite.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

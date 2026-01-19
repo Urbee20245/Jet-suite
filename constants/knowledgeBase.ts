@@ -156,6 +156,18 @@ export const KNOWLEDGE_BASE_ARTICLES: Record<string, KbArticle> = {
     skip: 'Using generic stock photos makes your brand look cheap and unoriginal.',
     how: 'Enter a prompt describing the image, select the aspect ratio, and generate the visual.',
     next: {
+      text: 'Next: Generate Product Mockups with JetProduct',
+      articleId: 'create-publish/jetproduct',
+    },
+  },
+  'create-publish/jetproduct': {
+    title: 'JetProduct: AI Product Mockup Generator',
+    what: 'JetProduct takes a simple photo of your product and generates professional, branded mockups in various styles (e.g., studio, lifestyle, e-commerce ready).',
+    why: 'Professional product photography is expensive. JetProduct allows you to create high-quality, consistent visuals for your listings and ads instantly, increasing conversion rates.',
+    when: 'Use this whenever you launch a new product, update your e-commerce listings, or need fresh visuals for an ad campaign.',
+    skip: 'Using low-quality or inconsistent product photos reduces customer trust and lowers conversion rates.',
+    how: 'Upload your product image, select a style (e.g., "Lifestyle Scene"), and JetProduct generates the final image using your Brand DNA colors.',
+    next: {
       text: 'Next: Manage Reviews with JetReply',
       articleId: 'engage-convert/jetreply',
     },
