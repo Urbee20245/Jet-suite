@@ -134,12 +134,6 @@ const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}>
 );
 
 // --- CONSTANTS ---
-const statusStyles = {
-  to_do: { badge: 'bg-red-100 text-red-800', text: 'To Do' },
-  in_progress: { badge: 'bg-yellow-100 text-yellow-800', text: 'In Progress' },
-  completed: { badge: 'bg-green-100 text-green-800', text: 'Completed' },
-};
-
 const priorityStyles = {
   High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200', iconColor: 'text-red-500' },
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', iconColor: 'text-yellow-500' },
@@ -435,7 +429,19 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             
             <div className="mt-6">
                 <button
-                    onClick={() => setActiveTool(ALL_TOOLS['growthplan'])}
+                    onClick={async () => {
+                        console.log('💾 [JetBiz] Saving tasks before navigation...');
+                        if (userId && activeBusinessId && growthPlanTasks.length > 0) {
+                            try {
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                console.log('✅ [JetBiz] Tasks saved successfully. Navigating to Growth Plan...');
+                            } catch (error) {
+                                console.error('❌ [JetBiz] Failed to save tasks:', error);
+                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                            }
+                        }
+                        setActiveTool(ALL_TOOLS['growthplan']);
+                    }}
                     className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
                 >
                     Go to Growth Plan to Execute Tasks
