@@ -163,7 +163,9 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
         <div className="flex justify-between items-center">
             <div>
                 <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
-                <p className="text-brand-text-muted mt-1">Your prioritized action items for business growth.</p>
+                <p className="text-brand-text-muted mt-1">
+                    Your prioritized action items for business growth. <strong className="text-accent-purple">Complete these steps in order.</strong>
+                </p>
             </div>
             <div className="text-right">
                 <span className="text-sm font-semibold text-brand-text-muted">Growth Score</span>
@@ -178,13 +180,11 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
                 disabled={isSaving}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
             >
-                {isSaving ? 'Saving...' : '💾 Save Plan'}
+                {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
             </button>
-            {saveMessage && (
-                <p className={`text-center mt-2 text-sm font-semibold ${saveMessage.startsWith('❌') ? 'text-red-500' : 'text-green-600'}`}>
-                    {saveMessage}
-                </p>
-            )}
+            <p className="text-center mt-2 text-xs text-brand-text-muted">
+                {saveMessage || 'Save your changes (status updates, task deletions) to persist them across sessions.'}
+            </p>
         </div>
 
         {tasks.length > 0 && (
@@ -203,6 +203,9 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
       {tasks.length > 0 ? (
         <div className="mt-8">
           <h3 className="text-xl font-bold text-brand-text mb-4">Pending Tasks ({pendingTasks.length})</h3>
+          <p className="text-sm text-brand-text-muted mb-4">
+            These tasks will remain here until you mark them as completed.
+          </p>
           {pendingTasks.length > 0 ? (
             <div className="space-y-4">
               {pendingTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
