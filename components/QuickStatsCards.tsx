@@ -2,12 +2,13 @@
 
 import React from 'react';
 import type { ProfileData } from '../types';
-import { BoltIcon, StarIcon, DnaIcon, CheckCircleIcon, ExclamationTriangleIcon, LockClosedIcon } from '../components/icons/MiniIcons';
+import { BoltIcon, StarIcon, CheckCircleIcon, ChatBubbleLeftRightIcon } from '../components/icons/MiniIcons';
 
 interface QuickStatsCardsProps {
     profileData: ProfileData;
     growthScore: number;
-    pendingTasksCount: number; // Replaced readinessState
+    pendingTasksCount: number;
+    reviewResponseRate: number; // Added prop
 }
 
 const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.ReactNode; color: string; borderColor: string; }> = ({ title, value, icon, color, borderColor }) => (
@@ -24,8 +25,8 @@ const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.Re
     </div>
 );
 
-export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, growthScore, pendingTasksCount }) => {
-    const { googleBusiness, business } = profileData;
+export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, growthScore, pendingTasksCount, reviewResponseRate }) => {
+    const { googleBusiness } = profileData;
 
     // 1. Growth Score Card
     const growthScoreLevel = growthScore >= 80 ? 'Excellent' : growthScore >= 60 ? 'Strong' : 'Building';
@@ -58,22 +59,19 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
         </>
     );
 
-    // 3. DNA Status Card
-    const dnaApproved = business.isDnaApproved;
-    const dnaColor = dnaApproved ? 'bg-green-500' : 'bg-red-500';
-    const dnaBorder = dnaApproved ? 'border-green-500/30' : 'border-red-500/30';
-    const dnaIconColor = dnaApproved ? 'text-green-500' : 'text-red-500';
-    const dnaIcon = <DnaIcon className={`w-5 h-5 ${dnaIconColor}`} />;
-    const dnaValue = (
+    // 3. Review Response Rate Card (Replaced Brand DNA)
+    const reviewColor = reviewResponseRate >= 90 ? 'bg-green-500' : reviewResponseRate >= 70 ? 'bg-blue-500' : 'bg-orange-500';
+    const reviewBorder = reviewResponseRate >= 90 ? 'border-green-500/30' : reviewResponseRate >= 70 ? 'border-blue-500/30' : 'border-orange-500/30';
+    const reviewIconColor = reviewResponseRate >= 90 ? 'text-green-500' : reviewResponseRate >= 70 ? 'text-blue-500' : 'text-orange-500';
+    const reviewIcon = <ChatBubbleLeftRightIcon className={`w-5 h-5 ${reviewIconColor}`} />;
+    const reviewValue = (
         <>
-            <p className="text-xl font-extrabold text-brand-text flex items-center gap-2">
-                {dnaApproved ? 'Approved' : 'Missing'}
-            </p>
-            <p className="text-xs text-brand-text-muted mt-1">Brand DNA Status</p>
+            <p className="text-2xl font-extrabold text-brand-text">{reviewResponseRate}%</p>
+            <p className="text-xs text-brand-text-muted mt-1">Response Rate</p>
         </>
     );
 
-    // 4. Pending Tasks Card (Replaces Readiness)
+    // 4. Pending Tasks Card
     const taskColor = pendingTasksCount === 0 ? 'bg-green-500' : pendingTasksCount <= 3 ? 'bg-blue-500' : 'bg-yellow-500';
     const taskBorder = pendingTasksCount === 0 ? 'border-green-500/30' : pendingTasksCount <= 3 ? 'border-blue-500/30' : 'border-yellow-500/30';
     const taskIconColor = pendingTasksCount === 0 ? 'text-green-500' : pendingTasksCount <= 3 ? 'text-blue-500' : 'text-yellow-500';
@@ -94,7 +92,7 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <StatCard title="Growth Score" value={growthScoreValue} icon={growthScoreIcon} color={growthScoreColor} borderColor={growthScoreBorder} />
             <StatCard title="GBP Rating" value={gbpValue} icon={gbpIcon} color={gbpColor} borderColor={gbpBorder} />
-            <StatCard title="Brand DNA" value={dnaValue} icon={dnaIcon} color={dnaColor} borderColor={dnaBorder} />
+            <StatCard title="Review Health" value={reviewValue} icon={reviewIcon} color={reviewColor} borderColor={reviewBorder} />
             <StatCard title="Pending Tasks" value={taskValue} icon={taskIcon} color={taskColor} borderColor={taskBorder} />
         </div>
     );

@@ -22,8 +22,8 @@ import { Account } from './tools/Account';
 import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import type { Tool, GrowthPlanTask, ProfileData, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, ReadinessState } from './types';
-import { syncToSupabase, loadFromSupabase } from './utils/syncService';
+import type { Tool, GrowthPlanTask, ProfileData, ReadinessState } from './types';
+import { loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
@@ -43,9 +43,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [currentProfileData, setCurrentProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
-  
-  // NEW: Specifically track the count of pending tasks as verified by the database
   const [savedPendingTasksCount, setSavedPendingTasksCount] = useState(0);
+  
+  // NEW: State for Review Response Rate
+  const [reviewResponseRate, setReviewResponseRate] = useState(0);
 
   const supabase = getSupabaseClient();
 
@@ -77,10 +78,20 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         };
         setCurrentProfileData(profile);
 
+        // Fetch Review Stats for the new metric
+        const { data: reviews } = await supabase
+          .from('business_reviews')
+          .select('ai_response_sent')
+          .eq('business_id', activeBiz.id);
+        
+        if (reviews && reviews.length > 0) {
+          const responded = reviews.filter(r => r.ai_response_sent).length;
+          setReviewResponseRate(Math.round((responded / reviews.length) * 100));
+        }
+
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
         if (savedTasks) {
           setTasks(savedTasks);
-          // Sync the saved count
           const pendingCount = (savedTasks as GrowthPlanTask[]).filter(t => t.status !== 'completed').length;
           setSavedPendingTasksCount(pendingCount);
         }
@@ -132,7 +143,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     return 'Foundation Ready';
   };
   
-  // Callback for when tasks are manually saved to update the home screen count
   const handlePlanSaved = (savedTasks: GrowthPlanTask[]) => {
     const pendingCount = savedTasks.filter(t => t.status !== 'completed').length;
     setSavedPendingTasksCount(pendingCount);
@@ -172,16 +182,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetcompete':
         return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan 
-          tasks={tasks} 
-          setTasks={setTasks} 
-          setActiveTool={handleSetActiveTool} 
-          onTaskStatusChange={handleTaskStatusChange} 
-          growthScore={calculateGrowthScore()} 
-          userId={userId} 
-          activeBusinessId={activeBusinessId} 
-          onPlanSaved={handlePlanSaved} // Pass the callback
-        />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={handlePlanSaved} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':
@@ -199,7 +200,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           readinessState={readiness} 
           plan={{ name: 'Pro', profileLimit: 1 }} 
           growthScore={calculateGrowthScore()} 
-          pendingTasksCount={savedPendingTasksCount} // Use the persisted database count here
+          pendingTasksCount={savedPendingTasksCount}
+          reviewResponseRate={reviewResponseRate} // Pass the rate to Welcome
         />;
     }
   };

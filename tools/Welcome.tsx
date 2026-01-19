@@ -12,7 +12,8 @@ interface WelcomeProps {
     readinessState: ReadinessState;
     plan: { name: string, profileLimit: number };
     growthScore: number;
-    pendingTasksCount: number; // Added prop
+    pendingTasksCount: number;
+    reviewResponseRate: number; // Added prop
 }
 
 const RecommendedAction: React.FC<{
@@ -111,7 +112,7 @@ const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) 
     </footer>
 );
 
-export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore, pendingTasksCount }) => {
+export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore, pendingTasksCount, reviewResponseRate }) => {
     const getNextAction = () => {
         switch(readinessState) {
             case 'Setup Incomplete':
@@ -142,7 +143,8 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
         <QuickStatsCards 
             profileData={profileData} 
             growthScore={growthScore}
-            pendingTasksCount={pendingTasksCount} // Passed pending count
+            pendingTasksCount={pendingTasksCount}
+            reviewResponseRate={reviewResponseRate} // Passed rate
         />
 
         {/* Next Action Card */}
