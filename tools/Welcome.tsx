@@ -4,14 +4,15 @@ import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState } from '../types';
 import { ArrowRightIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
-import { QuickStatsCards } from '../components/QuickStatsCards'; // Import new component
+import { QuickStatsCards } from '../components/QuickStatsCards';
 
 interface WelcomeProps {
     setActiveTool: (tool: Tool | null, articleId?: string) => void;
     profileData: ProfileData;
     readinessState: ReadinessState;
     plan: { name: string, profileLimit: number };
-    growthScore: number; // ADDED
+    growthScore: number;
+    pendingTasksCount: number; // Added prop
 }
 
 const RecommendedAction: React.FC<{
@@ -110,7 +111,7 @@ const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) 
     </footer>
 );
 
-export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore }) => {
+export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore, pendingTasksCount }) => {
     const getNextAction = () => {
         switch(readinessState) {
             case 'Setup Incomplete':
@@ -137,14 +138,14 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
   return (
     <div className="h-full w-full space-y-8 pb-12">
         
-        {/* NEW: Quick Stats Cards */}
+        {/* Quick Stats Cards */}
         <QuickStatsCards 
             profileData={profileData} 
             growthScore={growthScore}
-            readinessState={readinessState} 
+            pendingTasksCount={pendingTasksCount} // Passed pending count
         />
 
-        {/* NEW: Next Action Card (Replaces old large header) */}
+        {/* Next Action Card */}
         <div className="bg-brand-card rounded-xl shadow-lg p-6 w-full border border-brand-border">
             <div className="flex items-center gap-4 mb-4">
                 <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0" />

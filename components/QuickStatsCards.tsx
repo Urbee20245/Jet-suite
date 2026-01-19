@@ -1,17 +1,17 @@
 "use client";
 
 import React from 'react';
-import type { ProfileData, ReadinessState } from '../types';
+import type { ProfileData } from '../types';
 import { BoltIcon, StarIcon, DnaIcon, CheckCircleIcon, ExclamationTriangleIcon, LockClosedIcon } from '../components/icons/MiniIcons';
 
 interface QuickStatsCardsProps {
     profileData: ProfileData;
     growthScore: number;
-    readinessState: ReadinessState;
+    pendingTasksCount: number; // Replaced readinessState
 }
 
 const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.ReactNode; color: string; borderColor: string; }> = ({ title, value, icon, color, borderColor }) => (
-    <div className={`bg-brand-card p-4 rounded-xl shadow-lg border ${borderColor} flex flex-col justify-between glow-card glow-card-rounded-xl`}>
+    <div className={`bg-brand-card p-4 rounded-xl shadow-lg border ${borderColor} flex flex-col justify-between glow-card glow-card-rounded-xl h-full`}>
         <div className="flex justify-between items-start">
             <h3 className="text-sm font-medium text-brand-text-muted">{title}</h3>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color} bg-opacity-10`}>
@@ -24,7 +24,7 @@ const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.Re
     </div>
 );
 
-export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, growthScore, readinessState }) => {
+export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, growthScore, pendingTasksCount }) => {
     const { googleBusiness, business } = profileData;
 
     // 1. Growth Score Card
@@ -60,9 +60,9 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
 
     // 3. DNA Status Card
     const dnaApproved = business.isDnaApproved;
-    const dnaColor = dnaApproved ? 'bg-accent-purple' : 'bg-red-500';
-    const dnaBorder = dnaApproved ? 'border-accent-purple/30' : 'border-red-500/30';
-    const dnaIconColor = dnaApproved ? 'text-accent-purple' : 'text-red-500';
+    const dnaColor = dnaApproved ? 'bg-green-500' : 'bg-red-500';
+    const dnaBorder = dnaApproved ? 'border-green-500/30' : 'border-red-500/30';
+    const dnaIconColor = dnaApproved ? 'text-green-500' : 'text-red-500';
     const dnaIcon = <DnaIcon className={`w-5 h-5 ${dnaIconColor}`} />;
     const dnaValue = (
         <>
@@ -73,34 +73,20 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
         </>
     );
 
-    // 4. Profile Readiness Card
-    let readinessIcon;
-    let readinessColor;
-    let readinessBorder;
-    let readinessText;
-    if (readinessState === 'Foundation Ready') {
-        readinessIcon = <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-        readinessColor = 'bg-green-500';
-        readinessBorder = 'border-green-500/30';
-        readinessText = 'Ready';
-    } else if (readinessState === 'Foundation Weak') {
-        readinessIcon = <ExclamationTriangleIcon className="w-5 h-5 text-yellow-500" />;
-        readinessColor = 'bg-yellow-500';
-        readinessBorder = 'border-yellow-500/30';
-        readinessText = 'Weak';
-    } else {
-        readinessIcon = <LockClosedIcon className="w-5 h-5 text-red-500" />;
-        readinessColor = 'bg-red-500';
-        readinessBorder = 'border-red-500/30';
-        readinessText = 'Incomplete';
-    }
+    // 4. Pending Tasks Card (Replaces Readiness)
+    const taskColor = pendingTasksCount === 0 ? 'bg-green-500' : pendingTasksCount <= 3 ? 'bg-blue-500' : 'bg-yellow-500';
+    const taskBorder = pendingTasksCount === 0 ? 'border-green-500/30' : pendingTasksCount <= 3 ? 'border-blue-500/30' : 'border-yellow-500/30';
+    const taskIconColor = pendingTasksCount === 0 ? 'text-green-500' : pendingTasksCount <= 3 ? 'text-blue-500' : 'text-yellow-500';
+    const taskIcon = pendingTasksCount === 0 ? <CheckCircleIcon className="w-5 h-5 text-green-500" /> : <BoltIcon className={`w-5 h-5 ${taskIconColor}`} />;
     
-    const readinessValue = (
+    const taskValue = (
         <>
-            <p className="text-xl font-extrabold text-brand-text flex items-center gap-2">
-                {readinessText}
+            <p className="text-2xl font-extrabold text-brand-text">
+                {pendingTasksCount}
             </p>
-            <p className="text-xs text-brand-text-muted mt-1">Profile Readiness</p>
+            <p className="text-xs text-brand-text-muted mt-1">
+                {pendingTasksCount === 0 ? 'All caught up! 🎉' : pendingTasksCount === 1 ? 'Task to complete' : 'Tasks to complete'}
+            </p>
         </>
     );
 
@@ -109,7 +95,7 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
             <StatCard title="Growth Score" value={growthScoreValue} icon={growthScoreIcon} color={growthScoreColor} borderColor={growthScoreBorder} />
             <StatCard title="GBP Rating" value={gbpValue} icon={gbpIcon} color={gbpColor} borderColor={gbpBorder} />
             <StatCard title="Brand DNA" value={dnaValue} icon={dnaIcon} color={dnaColor} borderColor={dnaBorder} />
-            <StatCard title="Readiness" value={readinessValue} icon={readinessIcon} color={readinessColor} borderColor={readinessBorder} />
+            <StatCard title="Pending Tasks" value={taskValue} icon={taskIcon} color={taskColor} borderColor={taskBorder} />
         </div>
     );
 };

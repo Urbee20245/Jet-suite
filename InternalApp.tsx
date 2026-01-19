@@ -64,7 +64,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
         const profile: ProfileData = {
           user: { id: userId, firstName: '', lastName: '', email: userEmail, phone: '', role: 'Owner' },
-          business: activeBiz,
+          business: {
+            ...activeBiz,
+            isDnaApproved: activeBiz.is_dna_approved, // Map database snake_case to camelCase for the UI
+          },
           googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
           isProfileActive: activeBiz.is_complete,
           brandDnaProfile: activeBiz.brand_dna_profile
@@ -108,7 +111,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (!currentProfileData) return 0;
     let score = 0;
     if (currentProfileData.business.is_complete) score += 10;
-    if (currentProfileData.business.is_dna_approved) score += 10;
+    if (currentProfileData.business.isDnaApproved) score += 10;
     if (currentProfileData.googleBusiness.status === 'Verified') score += 15;
     const completedCount = tasks.filter(t => t.status === 'completed').length;
     score += Math.min(completedCount * 5, 50);
@@ -117,7 +120,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   const getReadiness = (): ReadinessState => {
     if (!currentProfileData?.business.is_complete) return 'Setup Incomplete';
-    if (!currentProfileData?.business.is_dna_approved) return 'Foundation Weak';
+    if (!currentProfileData?.business.isDnaApproved) return 'Foundation Weak';
     return 'Foundation Ready';
   };
 
@@ -167,7 +170,14 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'adminpanel':
         return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={loadData} />;
       default:
-        return <Welcome setActiveTool={handleSetActiveTool} profileData={currentProfileData} readinessState={readiness} plan={{ name: 'Pro', profileLimit: 1 }} growthScore={calculateGrowthScore()} />;
+        return <Welcome 
+          setActiveTool={handleSetActiveTool} 
+          profileData={currentProfileData} 
+          readinessState={readiness} 
+          plan={{ name: 'Pro', profileLimit: 1 }} 
+          growthScore={calculateGrowthScore()} 
+          pendingTasksCount={tasks.filter(t => t.status !== 'completed').length} // Passed pending count
+        />;
     }
   };
 
