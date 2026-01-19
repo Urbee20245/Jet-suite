@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import type { GrowthPlanTask, Tool } from '../types';
 import { ALL_TOOLS } from '../constants';
-import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
-import { syncToSupabase } from '../utils/syncService'; // Import sync utility
+import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
 
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
@@ -11,8 +11,8 @@ interface GrowthPlanProps {
   setActiveTool: (tool: Tool | null) => void;
   onTaskStatusChange: (taskId: string, newStatus: GrowthPlanTask['status']) => void;
   growthScore: number;
-  userId: string; // Added userId
-  activeBusinessId: string | null; // Added activeBusinessId
+  userId: string;
+  activeBusinessId: string | null;
 }
 
 const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: string } } = {
@@ -24,35 +24,33 @@ const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: 
 const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; onRemove: (id: string) => void; }> = ({ task, onStatusChange, onRemove }) => {
   
   const handleMarkComplete = () => {
-    if (window.confirm("Warning: Marking this task as complete will remove it from your active Growth Plan and contribute to your Growth Score. Are you sure you want to complete this task?")) {
-        onStatusChange(task.id, 'completed');
-        // CRITICAL: Delete the task immediately upon confirmation of completion
-        onRemove(task.id);
-    }
+    onStatusChange(task.id, 'completed');
   };
 
   return (
     <div className="p-5 rounded-xl shadow-md border bg-white border-brand-border hover:border-accent-purple/50 glow-card glow-card-rounded-xl">
         <div className="flex justify-between items-start">
             <h3 className="text-lg font-bold text-brand-text pr-4">{task.title}</h3>
-            <div className="relative flex-shrink-0">
-                <select 
-                    value={task.status} 
-                    onChange={(e) => {
-                        const newStatus = e.target.value as GrowthPlanTask['status'];
-                        if (newStatus === 'completed') {
-                            handleMarkComplete();
-                        } else {
-                            onStatusChange(task.id, newStatus);
-                        }
-                    }} 
-                    className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
+            <div className="flex items-center gap-2">
+                <div className="relative flex-shrink-0">
+                    <select 
+                        value={task.status} 
+                        onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} 
+                        className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
+                    >
+                        <option value="to_do">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                    <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <button 
+                  onClick={() => onRemove(task.id)}
+                  className="p-1 hover:bg-red-50 rounded transition-colors"
+                  title="Delete Task"
                 >
-                    <option value="to_do">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                </select>
-                <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <TrashIcon className="w-4 h-4 text-red-400 hover:text-red-600" />
+                </button>
             </div>
         </div>
       
@@ -62,7 +60,6 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
                 <p className="text-brand-text">{task.whyItMatters}</p>
             </div>
 
-            {/* HIGHLIGHTED HOW TO DO IT SECTION */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg">
                 <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
@@ -81,8 +78,14 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
   );
 };
 
-const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; }> = ({ task, onStatusChange }) => {
+const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; onRemove: (id: string) => void; }> = ({ task, onStatusChange, onRemove }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+
+    const handleDelete = () => {
+      if (window.confirm("Warning: This will permanently delete this completed task. Are you sure?")) {
+        onRemove(task.id);
+      }
+    };
 
     return (
         <div className="p-4 rounded-xl bg-green-50 border border-green-200">
@@ -92,9 +95,12 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
                     <span className="ml-3 text-brand-text-muted line-through">{task.title}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-brand-text-muted hidden sm:inline">Completed: {new Date(task.completionDate!).toLocaleDateString()}</span>
+                    <span className="text-xs text-brand-text-muted hidden sm:inline">Completed: {task.completionDate ? new Date(task.completionDate).toLocaleDateString() : 'N/A'}</span>
                     <button onClick={() => setIsExpanded(!isExpanded)} className="text-xs font-semibold text-accent-purple hover:underline">{isExpanded ? 'Collapse' : 'Expand'}</button>
                     <button onClick={() => onStatusChange(task.id, 'to_do')} className="text-xs font-semibold text-brand-text-muted hover:underline">Mark Incomplete</button>
+                    <button onClick={handleDelete} title="Permanently Delete">
+                      <TrashIcon className="w-4 h-4 text-red-400 hover:text-red-600" />
+                    </button>
                 </div>
             </div>
             {isExpanded && (
@@ -116,7 +122,8 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
 export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [isRetrieving, setIsRetrieving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   const pendingTasks = useMemo(() => tasks.filter(t => t.status !== 'completed'), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(t => t.status === 'completed'), [tasks]);
@@ -125,35 +132,57 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
 
   const handleRemoveTask = (taskId: string) => {
     setTasks(tasks.filter(t => t.id !== taskId));
-    setSaveMessage('Task deleted. Click Save Plan to finalize.');
+    setStatusMessage('Task removed from list. Click Save Plan to finalize.');
   };
 
   const handleClearCompleted = () => {
-    if (window.confirm('Warning: Clearing completed tasks will permanently remove them from your history and Growth Plan. Are you sure you want to clear all completed tasks?')) {
+    if (window.confirm('Warning: This will permanently remove all completed tasks from your history. Are you sure?')) {
       setTasks(tasks.filter(t => t.status !== 'completed'));
-      setSaveMessage('Completed tasks cleared. Click Save Plan to finalize.');
+      setStatusMessage('Completed tasks cleared. Click Save Plan to finalize.');
     }
   };
   
   const handleManualSave = async () => {
     if (!userId || !activeBusinessId) {
-        setSaveMessage('Error: Cannot save without active user or business ID.');
+        setStatusMessage('Error: Cannot save without active user or business ID.');
         return;
     }
     
     setIsSaving(true);
-    setSaveMessage('Saving plan...');
+    setStatusMessage('Saving all tasks...');
     
     try {
-        // The sync service handles the upsert/delete logic on the backend
         await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
-        setSaveMessage('✅ Growth Plan saved successfully!');
+        setStatusMessage('✅ Growth Plan saved successfully!');
     } catch (error) {
-        setSaveMessage('❌ Failed to save plan. Please try again.');
+        setStatusMessage('❌ Failed to save plan. Please try again.');
         console.error('Manual save failed:', error);
     } finally {
         setIsSaving(false);
-        setTimeout(() => setSaveMessage(''), 3000);
+        setTimeout(() => setStatusMessage(''), 4000);
+    }
+  };
+
+  const handleRetrieveTasks = async () => {
+    if (!userId || !activeBusinessId) return;
+
+    setIsRetrieving(true);
+    setStatusMessage('Retrieving tasks from database...');
+
+    try {
+      const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+      if (data) {
+        setTasks(data);
+        setStatusMessage('✅ Successfully retrieved your tasks.');
+      } else {
+        setStatusMessage('ℹ️ No saved tasks found in database.');
+      }
+    } catch (error) {
+      setStatusMessage('❌ Failed to retrieve tasks.');
+      console.error('Retrieve failed:', error);
+    } finally {
+      setIsRetrieving(false);
+      setTimeout(() => setStatusMessage(''), 4000);
     }
   };
 
@@ -161,7 +190,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
     <div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            {/* Left Column: Title and Score */}
             <div>
                 <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -177,19 +205,32 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
                 </div>
             </div>
 
-            {/* Right Column: Save Section */}
             <div className="bg-brand-light/50 p-5 rounded-xl border border-brand-border flex flex-col gap-3">
-                <button
-                    onClick={handleManualSave}
-                    disabled={isSaving}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
-                >
-                    {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
-                </button>
-                <div className="flex items-start gap-2">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-brand-text mb-2">Step 1: Save plan changes</h4>
+                    <button
+                        onClick={handleManualSave}
+                        disabled={isSaving || isRetrieving}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
+                    >
+                        {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
+                    </button>
+                  </div>
+                  
+                  <button
+                      onClick={handleRetrieveTasks}
+                      disabled={isSaving || isRetrieving}
+                      className="w-full text-accent-purple hover:text-accent-pink font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                  >
+                      {isRetrieving ? 'Retrieving...' : <><ArrowPathIcon className="w-4 h-4" /> Retrieve Pending & Completed Tasks</>}
+                  </button>
+                </div>
+
+                <div className="flex items-start gap-2 pt-2 border-t border-brand-border">
                     <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
                     <p className="text-sm text-brand-text-muted leading-snug">
-                        {saveMessage || 'Save your changes (status updates, task deletions) to persist them across sessions.'}
+                        {statusMessage || 'Save your changes to persist them across sessions. Click retrieve to sync with the database.'}
                     </p>
                 </div>
             </div>
@@ -236,7 +277,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
             </div>
             {showCompleted && completedTasks.length > 0 && (
                 <div className="space-y-3">
-                    {completedTasks.map(task => <CompletedTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} /> )}
+                    {completedTasks.map(task => <CompletedTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
                 </div>
             )}
           </div>
