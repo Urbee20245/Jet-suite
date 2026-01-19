@@ -62,9 +62,10 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
                 <p className="text-sm text-brand-text">{task.whyItMatters}</p>
             </div>
 
-            <div>
-                <h4 className="text-sm font-semibold text-brand-text-muted mb-1">How to do it</h4>
-                <p className="text-sm text-brand-text whitespace-pre-wrap">{task.description}</p>
+            {/* HIGHLIGHTED HOW TO DO IT SECTION */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg">
+                <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
+                <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
             </div>
         </div>
 
