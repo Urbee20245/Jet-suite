@@ -59,7 +59,7 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
         <div className="mt-4 space-y-3">
             <div>
                 <h4 className="text-sm font-semibold text-brand-text-muted mb-1 flex items-center"><InformationCircleIcon className="w-4 h-4 mr-1"/>Why this matters</h4>
-                <p className="text-sm text-brand-text">{task.whyItMatters}</p>
+                <p className="text-brand-text">{task.whyItMatters}</p>
             </div>
 
             {/* HIGHLIGHTED HOW TO DO IT SECTION */}
@@ -160,35 +160,43 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   return (
     <div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="flex justify-between items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* Left Column: Title and Score */}
             <div>
-                <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
-                <p className="text-brand-text-muted mt-1">
-                    Your prioritized action items for business growth. <strong className="text-accent-purple">Complete these steps in order.</strong>
-                </p>
+                <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                        <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
+                        <p className="text-brand-text-muted mt-2 leading-relaxed">
+                            Your prioritized action items for business growth. <strong className="text-accent-purple">Complete these steps in order.</strong>
+                        </p>
+                    </div>
+                    <div className="text-right ml-4">
+                        <span className="text-sm font-semibold text-brand-text-muted">Growth Score</span>
+                        <div className="text-4xl font-bold text-accent-purple">{growthScore}</div>
+                    </div>
+                </div>
             </div>
-            <div className="text-right">
-                <span className="text-sm font-semibold text-brand-text-muted">Growth Score</span>
-                <div className="text-4xl font-bold text-accent-purple">{growthScore}</div>
+
+            {/* Right Column: Save Section */}
+            <div className="bg-brand-light/50 p-5 rounded-xl border border-brand-border flex flex-col gap-3">
+                <button
+                    onClick={handleManualSave}
+                    disabled={isSaving}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
+                >
+                    {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
+                </button>
+                <div className="flex items-start gap-2">
+                    <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
+                    <p className="text-sm text-brand-text-muted leading-snug">
+                        {saveMessage || 'Save your changes (status updates, task deletions) to persist them across sessions.'}
+                    </p>
+                </div>
             </div>
-        </div>
-        
-        {/* Save Button and Status */}
-        <div className="mt-6 pt-4 border-t border-brand-border">
-            <button
-                onClick={handleManualSave}
-                disabled={isSaving}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
-            >
-                {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
-            </button>
-            <p className="text-center mt-2 text-xs text-brand-text-muted">
-                {saveMessage || 'Save your changes (status updates, task deletions) to persist them across sessions.'}
-            </p>
         </div>
 
         {tasks.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-8 pt-6 border-t border-brand-border">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-semibold text-brand-text">Overall Progress</span>
                     <span className="text-sm font-bold text-accent-purple">{completedTasks.length} of {tasks.length} tasks complete</span>
