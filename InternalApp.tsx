@@ -544,10 +544,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         onUpdate={handleUpdateProfileData} 
         setActiveTool={setActiveTool} 
         onBusinessUpdated={async () => {
-  await fetchBusinesses();
-  if (activeBusinessId) {
-    await loadBusinessData(activeBusinessId);
-  }
+          await fetchBusinesses();
+          if (activeBusinessId) {
+            await loadBusinessData(activeBusinessId);
+          }
+        }}
+      />;
       case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
       case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={activeProfile} />;
       case 'account': return <Account plan={plan} profileData={activeProfile} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
