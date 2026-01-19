@@ -185,28 +185,6 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                     />
                 ))}
             </div>
-            
-            <div className="mt-8">
-                <button
-                    onClick={async () => {
-                        console.log('💾 [JetViz] Saving tasks before navigation...');
-                        if (userId && activeBusinessId && growthPlanTasks.length > 0) {
-                            try {
-                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
-                                console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
-                            } catch (error) {
-                                console.error('❌ [JetViz] Failed to save tasks:', error);
-                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
-                            }
-                        }
-                        setActiveTool(ALL_TOOLS['growthplan']);
-                    }}
-                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
-                >
-                    Go to Growth Plan to Execute Tasks
-                    <ArrowPathIcon className="w-5 h-5" />
-                </button>
-            </div>
 
             <div className="flex justify-end items-center mt-6">
                 <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
@@ -225,6 +203,28 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                     />
                 ))}
             </div>
+        </div>
+
+        <div className="mt-8">
+            <button
+                onClick={async () => {
+                    console.log('💾 [JetViz] Saving tasks before navigation...');
+                    if (userId && activeBusinessId && growthPlanTasks.length > 0) {
+                        try {
+                            await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                            console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
+                        } catch (error) {
+                            console.error('❌ [JetViz] Failed to save tasks:', error);
+                            alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                        }
+                    }
+                    setActiveTool(ALL_TOOLS['growthplan']);
+                }}
+                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+            >
+                Go to Growth Plan to Execute Tasks
+                <ArrowPathIcon className="w-5 h-5" />
+            </button>
         </div>
     </div>
   );
@@ -305,23 +305,26 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       
       {!loading && result && (
         <>
-          <JetVizResultDisplay 
-            report={result} 
-            onRerun={(e) => handleSubmit(e, result.businessAddress)} 
-            isRunning={loading} 
-            growthPlanTasks={growthPlanTasks} 
-            setActiveTool={setActiveTool} 
-            onAddTask={addTasksToGrowthPlan}
-            userId={userId}
-            activeBusinessId={activeBusinessId}
-          />
-          
-          <button
-            onClick={handleStartOver}
-            className="w-full mt-6 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md"
-          >
-            Start New Scan
-          </button>
+            <div className="bg-brand-card p-4 sm:p-6 rounded-xl shadow-lg mb-6 flex justify-between items-center">
+              <div>
+                  <h2 className="text-lg font-bold text-brand-text">
+                      <span className="text-sm text-brand-text-muted font-normal">Analysis for:</span> 
+                      <span className="ml-2 font-extrabold">{result.businessName || result.businessAddress}</span>
+                  </h2>
+              </div>
+              <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
+            </div>
+            
+            <JetVizResultDisplay 
+                report={result} 
+                onRerun={(e) => handleSubmit(e, result.businessAddress)} 
+                isRunning={loading} 
+                growthPlanTasks={growthPlanTasks} 
+                setActiveTool={setActiveTool} 
+                onAddTask={addTasksToGrowthPlan}
+                userId={userId}
+                activeBusinessId={activeBusinessId}
+            />
         </>
       )}
 
