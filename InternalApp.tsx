@@ -114,14 +114,13 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const addTasksToGrowthPlan = async (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
     const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
       ...task,
-      id: uuidv4(), // Use proper UUID instead of random string
+      id: uuidv4(),
       status: 'to_do' as const,
       createdAt: new Date().toISOString(),
     }));
     const updatedTasks = [...tasks, ...tasksWithMetadata];
     setTasks(updatedTasks);
     
-    // CRITICAL: Await the save to ensure it completes before any navigation
     if (activeBusinessId) {
       try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
@@ -130,6 +129,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         console.error('❌ [InternalApp] Failed to save tasks:', error);
       }
     }
+
+    return updatedTasks; // Return the final combined list
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
@@ -140,7 +141,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     );
     setTasks(updatedTasks);
     
-    // CRITICAL: Await the save
     if (activeBusinessId) {
       try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
@@ -170,7 +170,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
 
-  // Auto-load tasks from database when Growth Plan is opened
   useEffect(() => {
     const autoLoadTasks = async () => {
       if (activeTool?.id === 'growthplan' && activeBusinessId && userId) {
@@ -180,8 +179,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           if (data && Array.isArray(data) && data.length > 0) {
             setTasks(data);
             console.log('✅ [InternalApp] Auto-loaded tasks from Supabase:', data.length);
-          } else {
-            console.log('ℹ️ [InternalApp] No saved tasks found in database');
           }
         } catch (error) {
           console.error('❌ [InternalApp] Failed to auto-load tasks:', error);
@@ -233,7 +230,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={loadData} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentUserProfile} onImpersonate={() => {}} onDataChange={loadData} />;
       default:
         return <Welcome 
           setActiveTool={handleSetActiveTool} 

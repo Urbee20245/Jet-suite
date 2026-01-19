@@ -9,7 +9,7 @@ import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
 
 interface JetBizProps {
   tool: Tool;
-  addTasksToGrowthPlan: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void;
+  addTasksToGrowthPlan: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => Promise<GrowthPlanTask[]>;
   onSaveAnalysis: (report: AuditReport | null) => void;
   profileData: ProfileData;
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
@@ -235,8 +235,9 @@ const JetBizResultDisplay: React.FC<{
     onRerun: (e: React.FormEvent) => Promise<void>, 
     isRunning: boolean, 
     onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void,
-    setActiveTool: (tool: Tool | null) => void 
-}> = ({ report, growthPlanTasks, onRerun, isRunning, onAddTask, setActiveTool }) => {
+    setActiveTool: (tool: Tool | null) => void,
+    onNavigate: () => void 
+}> = ({ report, growthPlanTasks, onRerun, isRunning, onAddTask, setActiveTool, onNavigate }) => {
 
   const existingTaskTitles = new Set(growthPlanTasks.map(t => t.title));
 
@@ -265,7 +266,7 @@ const JetBizResultDisplay: React.FC<{
                     <p className="font-bold">Your Action Plan is Ready!</p>
                     <p className="text-sm">
                         The recommended tasks below have been added to your Growth Plan.
-                        <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
+                        <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
                     </p>
                 </div>
             </div>
@@ -276,7 +277,7 @@ const JetBizResultDisplay: React.FC<{
                 <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
                 <p className="text-brand-text-muted mt-1">Focus on these high-impact tasks. They are already in your Growth Plan.</p>
             </div>
-            <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
+            <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
         </div>
          <div className="mb-4">
             <div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div></div>
@@ -373,14 +374,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       
       const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
       
-      // Add tasks to growth plan and wait for it to complete
-      await addTasksToGrowthPlan(newTasks);
-      
-      // Update local state with the newly updated task list
-      // We wrap this in a timeout to ensure parent state updates have cascaded
-      setTimeout(() => {
-        setLatestGeneratedTasks(growthPlanTasks);
-      }, 100);
+      // Add tasks to growth plan and get the updated list
+      const updatedTasks = await addTasksToGrowthPlan(newTasks);
+      setLatestGeneratedTasks(updatedTasks);
       
       onSaveAnalysis(analysis);
     } catch (err) { 
@@ -414,6 +410,29 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setLatestGeneratedTasks([]);
   }
 
+  const handleFinalNavigation = async () => {
+    console.log('💾 [JetBiz] Double-save: Ensuring all tasks are in Supabase before navigation...');
+    
+    // Wait a moment for any pending state to propagate
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    if (userId && activeBusinessId) {
+        try {
+            // Prioritize the tasks list we just generated
+            const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+            
+            if (tasksToSave.length > 0) {
+                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
+                console.log('✅ [JetBiz] Double-save completed. Tasks secured in Supabase.');
+            }
+        } catch (error) {
+            console.error('❌ [JetBiz] Double-save failed:', error);
+            console.log('⚠️ [JetBiz] Proceeding to Growth Plan (initial save likely succeeded)');
+        }
+    }
+    setActiveTool(ALL_TOOLS['growthplan']);
+  };
+
   const renderContent = () => {
     if (loading) return <SearchLoading />;
     if (deepAnalysisRunning) return <AnalysisLoading />;
@@ -438,30 +457,12 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 isRunning={deepAnalysisRunning} 
                 onAddTask={addTasksToGrowthPlan} 
                 setActiveTool={setActiveTool} 
+                onNavigate={handleFinalNavigation}
             />
             
             <div className="mt-6">
                 <button
-                    onClick={async () => {
-                        console.log('💾 [JetBiz] Double-save: Ensuring all tasks are in Supabase before navigation...');
-                        
-                        // Wait a moment for state to propagate from InternalApp
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        
-                        if (userId && activeBusinessId) {
-                            try {
-                                // Perform a safety save with the most current tasks from InternalApp state
-                                // This ensures persistence even if there were any timing issues
-                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
-                                console.log('✅ [JetBiz] Double-save completed. Tasks secured in Supabase. Navigating...');
-                            } catch (error) {
-                                console.error('❌ [JetBiz] Double-save failed:', error);
-                                // Still navigate - tasks were already saved by addTasksToGrowthPlan
-                                console.log('⚠️ [JetBiz] Proceeding to Growth Plan (initial save succeeded)');
-                            }
-                        }
-                        setActiveTool(ALL_TOOLS['growthplan']);
-                    }}
+                    onClick={handleFinalNavigation}
                     className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
                 >
                     Go to Growth Plan to Execute Tasks

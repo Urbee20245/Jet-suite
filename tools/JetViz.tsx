@@ -9,7 +9,7 @@ import { syncToSupabase } from '../utils/syncService';
 
 interface JetVizProps {
   tool: Tool;
-  addTasksToGrowthPlan: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void;
+  addTasksToGrowthPlan: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => Promise<GrowthPlanTask[]>;
   onSaveAnalysis: (report: LiveWebsiteAnalysis | null) => void;
   profileData: ProfileData;
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
@@ -147,7 +147,7 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
   );
 };
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; userId: string; activeBusinessId: string | null; }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask, userId, activeBusinessId }) => {
+const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; userId: string; activeBusinessId: string | null; onNavigate: () => void }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask, userId, activeBusinessId, onNavigate }) => {
     const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
     const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
@@ -170,7 +170,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
 
     return (
     <div className="space-y-8 mt-6">
-       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg"><div className="flex"><div className="py-1"><InformationCircleIcon className="w-6 h-6 mr-3"/></div><div><p className="font-bold">Your Action Plan is Ready!</p><p className="text-sm">All tasks from this analysis have been added to your Growth Plan. When you leave this page, you can find them there to track your progress and start executing. <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button></p></div></div></div>
+       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg"><div className="flex"><div className="py-1"><InformationCircleIcon className="w-6 h-6 mr-3"/></div><div><p className="font-bold">Your Action Plan is Ready!</p><p className="text-sm">All tasks from this analysis have been added to your Growth Plan. When you leave this page, you can find them there to track your progress and start executing. <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button></p></div></div></div>
         
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2><p className="text-brand-text-muted mt-1">Focus on these high-impact tasks to see the fastest results.</p></div></div>
@@ -187,7 +187,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
             </div>
 
             <div className="flex justify-end items-center mt-6">
-                <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
+                <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
             </div>
         </div>
 
@@ -242,14 +242,8 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       
       const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
       
-      // Add tasks to growth plan and wait for it to complete
-      await addTasksToGrowthPlan(newTasks);
-      
-      // Update local state with the newly updated task list
-      // We wrap this in a timeout to ensure parent state updates have cascaded
-      setTimeout(() => {
-        setLatestGeneratedTasks(growthPlanTasks);
-      }, 100);
+      const updatedTasks = await addTasksToGrowthPlan(newTasks);
+      setLatestGeneratedTasks(updatedTasks);
       
       onSaveAnalysis(analysis);
     } catch (err) { setError('Failed to get analysis. Please try again.'); console.error(err); } 
@@ -262,6 +256,27 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setUrlToAnalyze(profileData.business.business_website || '');
       setError('');
       setLatestGeneratedTasks([]);
+  };
+
+  const handleFinalNavigation = async () => {
+    console.log('💾 [JetViz] Double-save: Ensuring all tasks are in Supabase before navigation...');
+    
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    if (userId && activeBusinessId) {
+        try {
+            const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+            
+            if (tasksToSave.length > 0) {
+                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
+                console.log('✅ [JetViz] Double-save completed. Tasks secured in Supabase.');
+            }
+        } catch (error) {
+            console.error('❌ [JetViz] Double-save failed:', error);
+            console.log('⚠️ [JetViz] Proceeding to Growth Plan (initial save likely succeeded)');
+        }
+    }
+    setActiveTool(ALL_TOOLS['growthplan']);
   };
 
   return (
@@ -315,30 +330,12 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 onAddTask={addTasksToGrowthPlan}
                 userId={userId}
                 activeBusinessId={activeBusinessId}
+                onNavigate={handleFinalNavigation}
             />
             
             <div className="mt-8">
                 <button
-                    onClick={async () => {
-                        console.log('💾 [JetViz] Double-save: Ensuring all tasks are in Supabase before navigation...');
-                        
-                        // Wait a moment for state to propagate from InternalApp
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        
-                        if (userId && activeBusinessId) {
-                            try {
-                                // Perform a safety save with the most current tasks from InternalApp state
-                                // This ensures persistence even if there were any timing issues
-                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
-                                console.log('✅ [JetViz] Double-save completed. Tasks secured in Supabase. Navigating...');
-                            } catch (error) {
-                                console.error('❌ [JetViz] Double-save failed:', error);
-                                // Still navigate - tasks were already saved by addTasksToGrowthPlan
-                                console.log('⚠️ [JetViz] Proceeding to Growth Plan (initial save succeeded)');
-                            }
-                        }
-                        setActiveTool(ALL_TOOLS['growthplan']);
-                    }}
+                    onClick={handleFinalNavigation}
                     className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
                 >
                     Go to Growth Plan to Execute Tasks
