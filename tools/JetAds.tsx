@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import type { Tool } from '../types';
+import type { Tool, ProfileData } from '../types';
 import { generateAdCopy, generateImage } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
+import { InformationCircleIcon } from '../components/icons/MiniIcons';
+import { TOOLS } from '../constants';
 
 interface JetAdsProps {
   tool: Tool;
+  profileData: ProfileData;
+  setActiveTool: (tool: Tool | null) => void;
 }
 
 interface Ad {
@@ -17,13 +21,15 @@ interface Ad {
 
 type Platform = 'Facebook' | 'Google Ads' | 'Instagram';
 
-const platformDetails: { [key in Platform]: { aspectRatio: "1:1" | "16:9", postUrl: string } } = {
+const platformDetails: { [key in Platform]: { aspectRatio: "1:1" | "16:9" | "4:3", postUrl: string } } = {
     'Facebook': { aspectRatio: '1:1', postUrl: 'https://www.facebook.com/ads/manager/' },
-    'Google Ads': { aspectRatio: '1:1', postUrl: 'https://ads.google.com/home/' },
-    'Instagram': { aspectRatio: '1:1', postUrl: 'https://www.facebook.com/ads/manager/' },
+    'Google Ads': { aspectRatio: '16:9', postUrl: 'https://ads.google.com/home/' },
+    'Instagram': { aspectRatio: '1:1', postUrl: 'https://www.instagram.com' },
 };
 
-export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
+export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool }) => {
+  const businessType = profileData.business.industry;
+  
   const [product, setProduct] = useState('');
   const [platform, setPlatform] = useState<Platform>('Facebook');
   const [ads, setAds] = useState<Ad[]>([]);
@@ -49,8 +55,12 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
     try {
       const result = await generateAdCopy(product, platform);
       setAds(result.ads);
-    } catch (err) {
-      setError('Failed to generate ad copy. Please try again.');
+    } catch (err: any) {
+      if (err.message.includes("AI_KEY_MISSING")) {
+        setError("AI features are disabled due to missing API key.");
+      } else {
+        setError('Failed to generate ad copy. Please try again.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -81,6 +91,24 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool }) => {
       const postUrl = platformDetails[platform].postUrl;
       window.open(postUrl, '_blank');
   };
+
+  if (!businessType) {
+    return (
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
+        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
+        <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
+        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+          Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant ad copy.
+        </p>
+        <button
+          onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+        >
+          Go to Business Details
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div>
