@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon, ArrowDownTrayIcon, TrashIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
-import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
+import { syncToSupabase } from '../utils/syncService';
 
 interface JetVizProps {
   tool: Tool;
@@ -52,38 +52,12 @@ const LoadingState: React.FC = () => {
     );
 };
 
-
-const ScoreCircle: React.FC<{ score: number }> = ({ score }) => {
-    const getColor = (s: number) => s >= 90 ? 'text-green-500' : s >= 50 ? 'text-yellow-500' : 'text-red-500';
-    const color = getColor(score);
-    return (
-        <div className="relative w-24 h-24">
-            <svg className="w-full h-full" viewBox="0 0 36 36">
-                <path className="text-gray-200" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path className={color} strokeWidth="3" strokeDasharray={`${score}, 100`} strokeLinecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-2xl font-bold ${color}`}>{score}</span>
-            </div>
-        </div>
-    );
-};
-
-// --- CONSTANTS ---
-const statusStyles = {
-  to_do: { badge: 'bg-red-100 text-red-800', text: 'To Do' },
-  in_progress: { badge: 'bg-yellow-100 text-yellow-800', text: 'In Progress' },
-  completed: { badge: 'bg-green-100 text-green-800', text: 'Completed' },
-};
-
 const priorityStyles = {
   High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200' },
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200' },
 };
-// --- END CONSTANTS ---
 
-// --- TYPES ---
 interface SimpleTaskCardProps {
   task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
   isAdded: boolean;
@@ -95,9 +69,7 @@ interface SimpleIssueCardProps {
   isAdded: boolean;
   onAdd: () => void;
 }
-// --- END TYPES ---
 
-// --- COMPONENTS ---
 const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd }) => {
   return (
     <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
@@ -175,9 +147,7 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
   );
 };
 
-
 const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; userId: string; activeBusinessId: string | null; }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask, userId, activeBusinessId }) => {
-    const [showCompleted, setShowCompleted] = useState(false);
     const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
     const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
     const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
@@ -238,8 +208,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                 </button>
             </div>
 
-            <div className="flex justify-between items-center mt-6">
-                <label className="flex items-center text-sm"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show Completed</label>
+            <div className="flex justify-end items-center mt-6">
                 <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
             </div>
         </div>
@@ -268,19 +237,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [error, setError] = useState('');
   const [showPromo, setShowPromo] = useState(true);
   
-  const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showSavedList, setShowSavedList] = useState(false);
-  const [analysisName, setAnalysisName] = useState('');
-  
-  const supabase = getSupabaseClient();
-
-  useEffect(() => {
-    if (userId && activeBusinessId) {
-      loadSavedAnalyses();
-    }
-  }, [userId, activeBusinessId]);
-
   useEffect(() => {
     if (profileData.jetvizAnalysis) {
       setResult(profileData.jetvizAnalysis);
@@ -293,65 +249,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   if (!profileData.business.business_website && !result) {
     return (<div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center"><InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" /><h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2><p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p><button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button></div>);
   }
-
-  const loadSavedAnalyses = async () => {
-    if (!supabase || !userId || !activeBusinessId) return;
-    try {
-      const data = await loadFromSupabase(userId, activeBusinessId, 'jetviz');
-      if (data) {
-        const mappedData = Array.isArray(data) ? data.map((item: any) => ({
-          id: item.id,
-          created_at: item.created_at,
-          analysis_name: item.analysis_name,
-          target_url: item.target_url,
-          results: item.results,
-        })) : [];
-        setSavedAnalyses(mappedData);
-      } else {
-        setSavedAnalyses([]);
-      }
-    } catch (error) {
-      console.error('Error loading saved analyses:', error);
-    }
-  };
-
-  const handleSaveAnalysis = async () => {
-    if (!result || !activeBusinessId || !userId) return;
-    const nameToSave = analysisName.trim() || `JetViz Analysis - ${new Date().toLocaleDateString()}`;
-    setIsSaving(true);
-    try {
-      await syncToSupabase(userId, activeBusinessId, 'jetviz', result, nameToSave);
-      alert('Analysis saved successfully!');
-      setAnalysisName('');
-      loadSavedAnalyses();
-    } catch (error) {
-      console.error('Error saving analysis:', error);
-      alert('Failed to save analysis. Please try again.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleLoadAnalysis = (analysis: any) => {
-    const loadedReport = analysis.results as LiveWebsiteAnalysis;
-    setUrlToAnalyze(loadedReport.businessAddress);
-    setResult(loadedReport);
-    setShowSavedList(false);
-  };
-  
-  const handleDeleteAnalysis = async (analysisId: string) => {
-    if (!confirm('Are you sure you want to delete this saved analysis?')) return;
-    if (!supabase) return;
-    try {
-      const { error } = await supabase.from('audit_reports').delete().eq('id', analysisId);
-      if (error) throw error;
-      alert('Analysis deleted successfully!');
-      loadSavedAnalyses();
-    } catch (error) {
-      console.error('Error deleting analysis:', error);
-      alert('Failed to delete analysis. Please try again.');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent, rerunUrl?: string) => {
     e.preventDefault();
@@ -419,33 +316,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             activeBusinessId={activeBusinessId}
           />
           
-          <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
-                <h3 className="text-xl font-bold text-brand-text mb-4">Save Analysis</h3>
-                <div className="flex gap-4">
-                    <input
-                        type="text"
-                        value={analysisName}
-                        onChange={(e) => setAnalysisName(e.target.value)}
-                        placeholder={`e.g., Week 1 Analysis - ${new Date().toLocaleDateString()}`}
-                        className="flex-1 bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-                    />
-                    <button
-                      onClick={handleSaveAnalysis}
-                      disabled={isSaving}
-                      className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors shadow-md flex items-center gap-2"
-                    >
-                      {isSaving ? 'Saving...' : '💾 Save Report'}
-                    </button>
-                </div>
-                
-                <button
-                  onClick={() => setShowSavedList(!showSavedList)}
-                  className="mt-4 w-full px-6 py-3 bg-brand-light hover:bg-brand-border border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
-                >
-                  📂 View Saved Analyses ({savedAnalyses.length})
-                </button>
-          </div>
-
           <button
             onClick={handleStartOver}
             className="w-full mt-6 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors shadow-md"
@@ -467,69 +337,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
               {loading ? 'Auditing...' : 'Audit Website'}
             </button>
           </form>
-          
-          {savedAnalyses.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-brand-border">
-              <button
-                onClick={() => setShowSavedList(!showSavedList)}
-                className="w-full px-6 py-3 bg-brand-card hover:bg-brand-light border border-brand-border text-brand-text font-semibold rounded-lg transition-colors shadow-md flex items-center justify-center gap-2"
-              >
-                📂 View Saved Analyses ({savedAnalyses.length})
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {showSavedList && (
-        <div className="mt-6 bg-brand-card border border-brand-border rounded-lg p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-brand-text">Saved Analyses</h3>
-            <button
-              onClick={() => setShowSavedList(false)}
-              className="text-brand-text-muted hover:text-brand-text"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {savedAnalyses.length === 0 ? (
-            <p className="text-brand-text-muted text-center py-8">No saved analyses yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {savedAnalyses.map((analysis: any) => (
-                <div
-                  key={analysis.id}
-                  className="flex items-center justify-between p-4 bg-brand-light rounded-lg border border-brand-border hover:border-accent-purple transition-colors"
-                >
-                  <div className="flex-1 cursor-pointer" onClick={() => handleLoadAnalysis(analysis)}>
-                    <div className="font-semibold text-brand-text">{analysis.analysis_name || analysis.target_url}</div>
-                    <div className="text-sm text-brand-text-muted">
-                      {new Date(analysis.created_at).toLocaleDateString()} at{' '}
-                      {new Date(analysis.created_at).toLocaleTimeString()}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleLoadAnalysis(analysis)}
-                      className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      Load
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteAnalysis(analysis.id);
-                      }}
-                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>
