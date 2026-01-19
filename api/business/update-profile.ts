@@ -44,7 +44,6 @@ export default async function handler(
       isComplete,
       businessDescription,
       googleBusiness,
-      // DNA fields from request
       dna,
       brandDnaProfile,
       isDnaApproved,
@@ -57,10 +56,10 @@ export default async function handler(
       });
     }
 
-    // CRITICAL FIX: Get existing business data FIRST to preserve DNA
+    // CRITICAL: Fetch existing profile FIRST
     let query = supabase
       .from('business_profiles')
-      .select('*') // Select ALL fields to get existing DNA
+      .select('*')
       .eq('user_id', userId);
       
     if (businessId) {
@@ -91,28 +90,32 @@ export default async function handler(
     if (businessDescription !== undefined) updatePayload.business_description = businessDescription;
     if (googleBusiness !== undefined) updatePayload.google_business_profile = googleBusiness;
     
-    // CRITICAL FIX: Only update DNA fields if they have actual data
-    // Otherwise, preserve existing DNA from database
-    if (dna && Object.keys(dna).length > 0) {
+    // CRITICAL DNA PRESERVATION LOGIC
+    // Only update DNA if new data provided AND has content
+    // Otherwise preserve existing DNA from database
+    
+    if (dna && Object.keys(dna).length > 0 && (dna.logo || dna.colors?.length > 0)) {
       updatePayload.dna = dna;
-      console.log('✅ [API] Updating DNA with new data');
+      console.log('✅ [API] Updating with NEW DNA data');
     } else if (existingProfile?.dna) {
       updatePayload.dna = existingProfile.dna;
-      console.log('✅ [API] Preserving existing DNA from database');
+      console.log('✅ [API] PRESERVING existing DNA from database');
     }
     
     if (brandDnaProfile && Object.keys(brandDnaProfile).length > 0) {
       updatePayload.brand_dna_profile = brandDnaProfile;
-      console.log('✅ [API] Updating brand DNA profile with new data');
+      console.log('✅ [API] Updating with NEW brand profile');
     } else if (existingProfile?.brand_dna_profile) {
       updatePayload.brand_dna_profile = existingProfile.brand_dna_profile;
-      console.log('✅ [API] Preserving existing brand DNA profile from database');
+      console.log('✅ [API] PRESERVING existing brand profile from database');
     }
     
+    // CRITICAL: Preserve isDnaApproved
     if (isDnaApproved !== undefined) {
       updatePayload.is_dna_approved = isDnaApproved;
     } else if (existingProfile?.is_dna_approved !== undefined) {
       updatePayload.is_dna_approved = existingProfile.is_dna_approved;
+      console.log('✅ [API] PRESERVING is_dna_approved:', existingProfile.is_dna_approved);
     }
     
     if (dnaLastUpdatedAt !== undefined) {
@@ -121,8 +124,7 @@ export default async function handler(
       updatePayload.dna_last_updated_at = existingProfile.dna_last_updated_at;
     }
 
-    console.log('✅ [API] Update payload keys:', Object.keys(updatePayload));
-    console.log('✅ [API] DNA fields:', {
+    console.log('✅ [API] Final payload DNA status:', {
       hasDna: !!updatePayload.dna,
       hasBrandProfile: !!updatePayload.brand_dna_profile,
       isDnaApproved: updatePayload.is_dna_approved
@@ -130,7 +132,6 @@ export default async function handler(
 
     let result;
     if (existingProfile) {
-      // Update the existing business profile
       result = await supabase
         .from('business_profiles')
         .update(updatePayload)
@@ -138,7 +139,6 @@ export default async function handler(
         .select()
         .single();
     } else {
-      // If no profile exists, create one (onboarding case)
       const insertPayload = {
         user_id: userId,
         ...updatePayload,
@@ -163,7 +163,12 @@ export default async function handler(
       });
     }
 
-    console.log('✅ [API] Profile updated successfully with DNA preserved');
+    console.log('✅ [API] Profile saved. Final state:', {
+      isDnaApproved: result.data.is_dna_approved,
+      hasDna: !!result.data.dna,
+      hasBrandProfile: !!result.data.brand_dna_profile
+    });
+
     return res.status(200).json({ businessProfile: result.data });
   } catch (error: any) {
     console.error('Update business profile error:', error);
