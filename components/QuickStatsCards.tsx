@@ -8,7 +8,7 @@ interface QuickStatsCardsProps {
     profileData: ProfileData;
     growthScore: number;
     pendingTasksCount: number;
-    reviewResponseRate: number; // Added prop
+    reviewResponseRate: number;
 }
 
 const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.ReactNode; color: string; borderColor: string; }> = ({ title, value, icon, color, borderColor }) => (
@@ -26,7 +26,7 @@ const StatCard: React.FC<{ title: string; value: React.ReactNode; icon: React.Re
 );
 
 export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, growthScore, pendingTasksCount, reviewResponseRate }) => {
-    const { googleBusiness } = profileData;
+    const { googleBusiness, business } = profileData;
 
     // 1. Growth Score Card
     const growthScoreLevel = growthScore >= 80 ? 'Excellent' : growthScore >= 60 ? 'Strong' : 'Building';
@@ -51,6 +51,9 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
     const gbpIcon = <StarIcon className={`w-5 h-5 ${gbpIconColor}`} />;
     const gbpValue = (
         <>
+            <p className="text-[10px] font-bold text-accent-purple truncate mb-1 uppercase tracking-wider" title={business.business_name}>
+                {business.business_name}
+            </p>
             <p className="text-2xl font-extrabold text-brand-text flex items-center">
                 {gbpRating.toFixed(1)}
                 <span className="text-lg ml-1">★</span>
@@ -59,7 +62,7 @@ export const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({ profileData, g
         </>
     );
 
-    // 3. Review Response Rate Card (Replaced Brand DNA)
+    // 3. Review Response Rate Card
     const reviewColor = reviewResponseRate >= 90 ? 'bg-green-500' : reviewResponseRate >= 70 ? 'bg-blue-500' : 'bg-orange-500';
     const reviewBorder = reviewResponseRate >= 90 ? 'border-green-500/30' : reviewResponseRate >= 70 ? 'border-blue-500/30' : 'border-orange-500/30';
     const reviewIconColor = reviewResponseRate >= 90 ? 'text-green-500' : reviewResponseRate >= 70 ? 'text-blue-500' : 'text-orange-500';
