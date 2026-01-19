@@ -196,10 +196,12 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(['product', 'lifestyle', 'social']));
   
-  // New state for categorized UI
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof MOCKUP_STYLES>('product');
-  const [selectedStyle, setSelectedStyle] = useState<Style | null>(null);
+  // NEW STATE FOR TEXT OVERLAYS
+  const [productName, setProductName] = useState('');
+  const [headline, setHeadline] = useState('');
+  const [price, setPrice] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -250,10 +252,25 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       const tone = brandDna?.brand_tone?.primary_tone || 'professional';
       
       // Construct the final prompt, emphasizing the product and brand DNA
-      const finalPrompt = `Generate a high-quality, professional product mockup. 
-      Product context: ${prompt}. 
-      Brand DNA: Use colors ${brandColors} and a ${tone} tone. 
-      Focus on photorealism and commercial quality.`;
+      let finalPrompt = `Generate a high-quality, professional product mockup. 
+Product context: ${prompt}. 
+Brand DNA: Use colors ${brandColors} and a ${tone} tone. 
+Focus on photorealism and commercial quality.`;
+
+      // Add text overlays if provided
+      if (productName || headline || price) {
+        finalPrompt += '\n\nTEXT OVERLAYS TO INCLUDE:';
+        if (productName) {
+          finalPrompt += `\n- Product Name: "${productName}" (display prominently in elegant typography)`;
+        }
+        if (headline) {
+          finalPrompt += `\n- Headline: "${headline}" (bold, attention-grabbing text)`;
+        }
+        if (price) {
+          finalPrompt += `\n- Price: "${price}" (clear, readable pricing display)`;
+        }
+        finalPrompt += '\n\nPlace text overlays naturally in the composition with proper contrast and readability. Use brand colors for text where appropriate.';
+      }
 
       const base64Data = await generateImage(finalPrompt, imageSize, aspectRatio, inputImage);
       setGeneratedImageUrl(`data:image/png;base64,${base64Data}`);
@@ -274,16 +291,29 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
     a.click();
     document.body.removeChild(a);
   };
+  
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(category)) {
+            newSet.delete(category);
+        } else {
+            newSet.add(category);
+        }
+        return newSet;
+    });
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
       {showHowTo && (
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li>Upload a clear photo of your product (PNG or JPG).</li>
-                <li>Select a **Mockup Style** or enter a custom prompt (e.g., "on a wooden table next to a coffee cup").</li>
-                <li>The AI will generate a professional, branded mockup using your product and brand DNA.</li>
-                <li>Download the high-resolution image for your e-commerce store or social media.</li>
+                <li>Upload a clear photo of your product or business (PNG or JPG).</li>
+                <li>Select a **Mockup Style** from the categories (Product, Lifestyle, Social, Restaurant, Automotive, etc.).</li>
+                <li>Optionally add **Text Overlays** like product name, headline, or price.</li>
+                <li>The AI will generate a professional, branded mockup with your text beautifully integrated.</li>
+                <li>Download the high-resolution image for your marketing materials.</li>
             </ul>
         </HowToUse>
       )}
@@ -370,8 +400,67 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
                 </div>
               </div>
               
+              {/* NEW TEXT OVERLAYS SECTION */}
               <div>
-                <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">3. Custom Prompt (Optional)</label>
+                <label className="block text-sm font-medium text-brand-text mb-3">
+                  3. Text Overlays (Optional)
+                  <span className="text-xs text-brand-text-muted font-normal ml-2">Add text to your mockup</span>
+                </label>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="productName" className="block text-xs font-medium text-brand-text-muted mb-1">
+                      Product Name
+                    </label>
+                    <input
+                      id="productName"
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder="e.g., Premium Wireless Earbuds"
+                      className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="headline" className="block text-xs font-medium text-brand-text-muted mb-1">
+                      Headline/Tagline
+                    </label>
+                    <input
+                      id="headline"
+                      type="text"
+                      value={headline}
+                      onChange={(e) => setHeadline(e.target.value)}
+                      placeholder="e.g., Sound That Moves You"
+                      className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="price" className="block text-xs font-medium text-brand-text-muted mb-1">
+                      Price (Optional)
+                    </label>
+                    <input
+                      id="price"
+                      type="text"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="e.g., $99.99"
+                      className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                    />
+                  </div>
+                </div>
+                
+                {(productName || headline || price) && (
+                  <div className="mt-2 p-2 bg-accent-purple/5 border border-accent-purple/20 rounded text-xs text-brand-text-muted">
+                    💡 AI will add your text with professional typography and placement
+                  </div>
+                )}
+              </div>
+              {/* END NEW TEXT OVERLAYS SECTION */}
+
+              <div>
+                <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">4. Custom Prompt (Optional)</label>
                 <textarea id="prompt" rows={2} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'on a rustic wooden table with a cup of coffee'" className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none" />
               </div>
 
