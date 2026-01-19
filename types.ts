@@ -3,8 +3,9 @@ import type React from 'react';
 export interface Tool {
   id: string;
   name:string;
-  description: string;
-  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  description?: string; // Optional to support lite tool objects
+  icon?: React.FC<React.SVGProps<SVGSVGElement>>; // Optional to support lite tool objects
+  category?: string; // Added to support routing logic
   isComingSoon?: boolean;
 }
 

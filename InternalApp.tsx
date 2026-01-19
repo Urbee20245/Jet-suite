@@ -19,7 +19,7 @@ import { JetAds } from './tools/JetAds';
 import { GrowthPlan } from './tools/GrowthPlan';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
-import AdminPanel from './tools/AdminPanel';
+import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, ReadinessState } from './types';
