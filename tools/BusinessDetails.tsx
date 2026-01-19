@@ -362,22 +362,34 @@ const GbpConnect: React.FC<{
     ); 
 };
 
-const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean }> = ({ onLock, isDirty }) => (
+const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.FormEvent) => void }> = ({ onLock, isDirty, onSave }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
         <p className="text-brand-text-muted my-4 max-w-md mx-auto">
             All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
         </p>
-        <button 
-            onClick={onLock} 
-            disabled={isDirty}
-            className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-            <LockClosedIcon className="w-5 h-5" />
-            Lock Profile
-        </button>
-        {isDirty && <p className="text-xs text-red-500 mt-2 font-semibold">Save all changes before locking.</p>}
+        
+        {isDirty ? (
+            <div className="space-y-4">
+                <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
+                <button 
+                    onClick={onSave} 
+                    className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto"
+                >
+                    <CheckCircleIcon className="w-5 h-5" />
+                    Save All Changes
+                </button>
+            </div>
+        ) : (
+            <button 
+                onClick={onLock} 
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto"
+            >
+                <LockClosedIcon className="w-5 h-5" />
+                Lock Profile
+            </button>
+        )}
     </div>
 );
 
@@ -485,12 +497,34 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   useEffect(() => {
     if (profileData.business.location) setLocationType('physical');
-    else setLocationType('online'); 
+    else if (profileData.business.business_name) setLocationType('online'); 
     if (!business.location) setBusiness(prev => ({ ...prev, location: '' }));
   }, [profileData.business]);
 
   useEffect(() => {
-    const isBusinessDirty = JSON.stringify(profileData.business) !== JSON.stringify(business);
+    // Compare essential fields only to determine if save is needed
+    // This avoids blocking the lock action due to metadata or timestamp mismatches
+    const essentialBusiness = {
+        name: business.business_name?.trim(),
+        website: business.business_website?.trim(),
+        industry: business.industry?.trim(),
+        description: business.business_description?.trim(),
+        city: business.city,
+        state: business.state,
+        location: business.location?.trim()
+    };
+    
+    const essentialProfile = {
+        name: profileData.business.business_name?.trim(),
+        website: profileData.business.business_website?.trim(),
+        industry: profileData.business.industry?.trim(),
+        description: profileData.business.business_description?.trim(),
+        city: profileData.business.city,
+        state: profileData.business.state,
+        location: profileData.business.location?.trim()
+    };
+
+    const isBusinessDirty = JSON.stringify(essentialBusiness) !== JSON.stringify(essentialProfile);
     const isGbpDirty = JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness);
     setIsDirty(isBusinessDirty || isGbpDirty); 
   }, [business, googleBusiness, profileData]);
@@ -852,7 +886,14 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                         </div>
                     )}
                 </div>
-                {isDirty && <div className="flex justify-end pt-2"><button type="submit" className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save Changes</button></div>}
+                {/* ALWAYS show save button if unlocked to allow the user to clear dirty state and lock */}
+                {!isLocked && (
+                    <div className="flex justify-end pt-2">
+                        <button type="submit" className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all">
+                            Save Changes
+                        </button>
+                    </div>
+                )}
             </form>
         </StepCard>
         <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick} hint={hints.step2}>
@@ -874,7 +915,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             <SocialAccountsStep userId={profileData.user.id} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
         {allStepsComplete && !isLocked && (
-            <LockInCard onLock={handleLockProfile} isDirty={isDirty} />
+            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} />
         )}
     </div>
   );
