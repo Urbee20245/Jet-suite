@@ -186,6 +186,28 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                 ))}
             </div>
 
+            <div className="mt-8">
+                <button
+                    onClick={async () => {
+                        console.log('💾 [JetViz] Saving tasks before navigation...');
+                        if (userId && activeBusinessId && growthPlanTasks.length > 0) {
+                            try {
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
+                            } catch (error) {
+                                console.error('❌ [JetViz] Failed to save tasks:', error);
+                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                            }
+                        }
+                        setActiveTool(ALL_TOOLS['growthplan']);
+                    }}
+                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                >
+                    Go to Growth Plan to Execute Tasks
+                    <ArrowPathIcon className="w-5 h-5" />
+                </button>
+            </div>
+
             <div className="flex justify-end items-center mt-6">
                 <button onClick={() => setActiveTool(ALL_TOOLS['growthplan'])} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
             </div>
@@ -204,28 +226,6 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
                 ))}
             </div>
         </div>
-
-        <div className="mt-8">
-            <button
-                onClick={async () => {
-                    console.log('💾 [JetViz] Saving tasks before navigation...');
-                    if (userId && activeBusinessId && growthPlanTasks.length > 0) {
-                        try {
-                            await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
-                            console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
-                        } catch (error) {
-                            console.error('❌ [JetViz] Failed to save tasks:', error);
-                            alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
-                        }
-                    }
-                    setActiveTool(ALL_TOOLS['growthplan']);
-                }}
-                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
-            >
-                Go to Growth Plan to Execute Tasks
-                <ArrowPathIcon className="w-5 h-5" />
-            </button>
-        </div>
     </div>
   );
 };
@@ -236,6 +236,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPromo, setShowPromo] = useState(true);
+  const [latestGeneratedTasks, setLatestGeneratedTasks] = useState<GrowthPlanTask[]>([]);
   
   useEffect(() => {
     if (profileData.jetvizAnalysis) {
@@ -260,7 +261,18 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
     try {
       const analysis = await analyzeWebsiteWithLiveApis(url);
       setResult(analysis);
-      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
+      
+      const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
+      
+      // Add tasks to growth plan and wait for it to complete
+      await addTasksToGrowthPlan(newTasks);
+      
+      // Update local state with the newly updated task list
+      // We wrap this in a timeout to ensure parent state updates have cascaded
+      setTimeout(() => {
+        setLatestGeneratedTasks(growthPlanTasks);
+      }, 100);
+      
       onSaveAnalysis(analysis);
     } catch (err) { setError('Failed to get analysis. Please try again.'); console.error(err); } 
     finally { setLoading(false); }
@@ -271,6 +283,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setResult(null);
       setUrlToAnalyze(profileData.business.business_website || '');
       setError('');
+      setLatestGeneratedTasks([]);
   };
 
   return (
@@ -325,6 +338,30 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 userId={userId}
                 activeBusinessId={activeBusinessId}
             />
+            
+            <div className="mt-8">
+                <button
+                    onClick={async () => {
+                        console.log('💾 [JetViz] Saving tasks before navigation...');
+                        const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+                        
+                        if (userId && activeBusinessId && tasksToSave.length > 0) {
+                            try {
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
+                                console.log('✅ [JetViz] Tasks saved successfully. Navigating to Growth Plan...');
+                            } catch (error) {
+                                console.error('❌ [JetViz] Failed to save tasks:', error);
+                                alert('Failed to save tasks. Please try clicking "Save Plan" in Growth Plan manually.');
+                            }
+                        }
+                        setActiveTool(ALL_TOOLS['growthplan']);
+                    }}
+                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                >
+                    Go to Growth Plan to Execute Tasks
+                    <ArrowPathIcon className="w-5 h-5" />
+                </button>
+            </div>
         </>
       )}
 

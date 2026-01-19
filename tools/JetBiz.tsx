@@ -319,6 +319,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [deepAnalysisRunning, setDeepAnalysisRunning] = useState(false);
   const [error, setError] = useState('');
+  const [latestGeneratedTasks, setLatestGeneratedTasks] = useState<GrowthPlanTask[]>([]);
   
   const supabase = getSupabaseClient();
 
@@ -369,7 +370,18 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       const [analysis] = await Promise.all([analysisPromise, minDelayPromise]);
 
       setAuditReport(analysis);
-      addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
+      
+      const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
+      
+      // Add tasks to growth plan and wait for it to complete
+      await addTasksToGrowthPlan(newTasks);
+      
+      // Update local state with the newly updated task list
+      // We wrap this in a timeout to ensure parent state updates have cascaded
+      setTimeout(() => {
+        setLatestGeneratedTasks(growthPlanTasks);
+      }, 100);
+      
       onSaveAnalysis(analysis);
     } catch (err) { 
       setError('Failed to get analysis. Please try again.'); 
@@ -399,6 +411,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setSelectedBusiness(null);
       setAuditReport(null);
       setError('');
+      setLatestGeneratedTasks([]);
   }
 
   const renderContent = () => {
@@ -431,9 +444,11 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 <button
                     onClick={async () => {
                         console.log('💾 [JetBiz] Saving tasks before navigation...');
-                        if (userId && activeBusinessId && growthPlanTasks.length > 0) {
+                        const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+                        
+                        if (userId && activeBusinessId && tasksToSave.length > 0) {
                             try {
-                                await syncToSupabase(userId, activeBusinessId, 'tasks', growthPlanTasks);
+                                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
                                 console.log('✅ [JetBiz] Tasks saved successfully. Navigating to Growth Plan...');
                             } catch (error) {
                                 console.error('❌ [JetBiz] Failed to save tasks:', error);
