@@ -56,16 +56,16 @@ export default async function handler(
       });
     }
 
-    // CRITICAL: Fetch existing profile FIRST
+    // CRITICAL: Fetch existing profile FIRST with ALL fields
     let query = supabase
       .from('business_profiles')
       .select('*')
       .eq('user_id', userId);
       
     if (businessId) {
-        query = query.eq('id', businessId);
+      query = query.eq('id', businessId);
     } else {
-        query = query.eq('is_primary', true);
+      query = query.eq('is_primary', true);
     }
 
     const { data: existingProfile, error: fetchError } = await query.maybeSingle();
@@ -79,7 +79,7 @@ export default async function handler(
       updated_at: new Date().toISOString(),
     };
 
-    // Add regular fields
+    // Add regular fields only if provided
     if (businessName !== undefined) updatePayload.business_name = businessName;
     if (websiteUrl !== undefined) updatePayload.business_website = websiteUrl;
     if (industry !== undefined) updatePayload.industry = industry;
@@ -91,10 +91,10 @@ export default async function handler(
     if (googleBusiness !== undefined) updatePayload.google_business_profile = googleBusiness;
     
     // CRITICAL DNA PRESERVATION LOGIC
-    // Only update DNA if new data provided AND has content
-    // Otherwise preserve existing DNA from database
+    // Only update DNA if new data provided AND has actual content
+    // Otherwise ALWAYS preserve existing DNA from database
     
-    if (dna && Object.keys(dna).length > 0 && (dna.logo || dna.colors?.length > 0)) {
+    if (dna && Object.keys(dna).length > 0 && (dna.logo || dna.colors?.length > 0 || dna.fonts)) {
       updatePayload.dna = dna;
       console.log('✅ [API] Updating with NEW DNA data');
     } else if (existingProfile?.dna) {
@@ -110,9 +110,10 @@ export default async function handler(
       console.log('✅ [API] PRESERVING existing brand profile from database');
     }
     
-    // CRITICAL: Preserve isDnaApproved
+    // CRITICAL: ALWAYS preserve isDnaApproved unless explicitly set to false
     if (isDnaApproved !== undefined) {
       updatePayload.is_dna_approved = isDnaApproved;
+      console.log('✅ [API] Setting is_dna_approved to:', isDnaApproved);
     } else if (existingProfile?.is_dna_approved !== undefined) {
       updatePayload.is_dna_approved = existingProfile.is_dna_approved;
       console.log('✅ [API] PRESERVING is_dna_approved:', existingProfile.is_dna_approved);
@@ -124,10 +125,11 @@ export default async function handler(
       updatePayload.dna_last_updated_at = existingProfile.dna_last_updated_at;
     }
 
-    console.log('✅ [API] Final payload DNA status:', {
+    console.log('✅ [API] Final update payload:', {
       hasDna: !!updatePayload.dna,
       hasBrandProfile: !!updatePayload.brand_dna_profile,
-      isDnaApproved: updatePayload.is_dna_approved
+      isDnaApproved: updatePayload.is_dna_approved,
+      businessName: updatePayload.business_name
     });
 
     let result;
@@ -142,9 +144,9 @@ export default async function handler(
       const insertPayload = {
         user_id: userId,
         ...updatePayload,
-        business_name: businessName,
-        business_website: websiteUrl,
-        industry: industry,
+        business_name: businessName || 'New Business',
+        business_website: websiteUrl || '',
+        industry: industry || 'General',
         is_primary: isPrimary ?? true,
         is_complete: isComplete ?? false,
       };
@@ -163,7 +165,7 @@ export default async function handler(
       });
     }
 
-    console.log('✅ [API] Profile saved. Final state:', {
+    console.log('✅ [API] Profile saved successfully. Final database state:', {
       isDnaApproved: result.data.is_dna_approved,
       hasDna: !!result.data.dna,
       hasBrandProfile: !!result.data.brand_dna_profile
