@@ -415,9 +415,11 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
 
   const renderContent = () => {
-    if (loading && step !== 'result') {
+    // CRITICAL FIX: Show loading screen if analysis is running (loading is true) AND we don't have the report yet.
+    if (loading && !auditReport) {
         return <AnalysisLoading />;
     }
+
     if (step === 'result' && auditReport) {
         return (
           <>
