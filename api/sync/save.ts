@@ -29,20 +29,24 @@ export default async function handler(
 
     switch (dataType) {
       case 'tasks':
-        // Delete and reinsert tasks
+        // Delete and reinsert tasks for this specific business
         await supabase.from('growth_plan_tasks').delete().eq('business_id', businessId);
+        
         if (Array.isArray(data) && data.length > 0) {
           const tasksToInsert = data.map(task => ({
             user_id: userId,
             business_id: businessId,
-            task_id: task.id,
             title: task.title,
             description: task.description || null,
-            source_module: task.sourceModule,
-            priority: task.priority || null,
+            why_it_matters: task.whyItMatters || null,
+            source_module: task.sourceModule || null,
+            priority: task.priority || 'Medium',
+            effort: task.effort || 'Low',
             status: task.status || 'to_do',
-            completion_date: task.completionDate || null,
+            completed_at: task.completionDate || null,
+            created_at: task.createdAt || new Date().toISOString()
           }));
+          
           result = await supabase.from('growth_plan_tasks').insert(tasksToInsert);
         }
         break;
@@ -83,7 +87,6 @@ export default async function handler(
         break;
 
       case 'keywords':
-        // Delete and reinsert keywords
         await supabase.from('saved_keywords').delete().eq('business_id', businessId);
         if (Array.isArray(data) && data.length > 0) {
           const keywordsToInsert = data.map(kw => ({
@@ -98,21 +101,12 @@ export default async function handler(
         break;
 
       case 'social_posts':
-        // Save social posts
         result = await supabase
           .from('social_posts')
           .insert({ user_id: userId, business_id: businessId, post_data: data });
         break;
 
-      case 'content_draft':
-        // Save content draft
-        result = await supabase
-          .from('content_drafts')
-          .insert({ user_id: userId, business_id: businessId, content_type: data.type || 'general', content_data: data });
-        break;
-
       case 'preferences':
-        // Upsert user preferences
         const { data: existingPref } = await supabase
           .from('user_preferences')
           .select('id')
@@ -137,7 +131,7 @@ export default async function handler(
 
     if (result?.error) {
       console.error(`Error saving ${dataType}:`, result.error);
-      return res.status(500).json({ error: `Failed to save ${dataType}` });
+      return res.status(500).json({ error: `Failed to save ${dataType}`, details: result.error.message });
     }
 
     return res.status(200).json({ success: true });

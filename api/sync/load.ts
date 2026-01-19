@@ -36,21 +36,23 @@ export default async function handler(
           .eq('business_id', businessId)
           .order('created_at', { ascending: true });
 
+        // Map database columns back to frontend type (GrowthPlanTask)
         result = (tasks || []).map(task => ({
-          id: task.task_id,
+          id: task.id,
           title: task.title,
           description: task.description,
+          whyItMatters: task.why_it_matters,
           sourceModule: task.source_module,
+          effort: task.effort,
           priority: task.priority,
           status: task.status,
-          completionDate: task.completion_date,
+          completionDate: task.completed_at,
           createdAt: task.created_at,
         }));
         break;
 
       case 'jetbiz':
       case 'jetviz':
-        // Fetch ALL reports for this business/type
         const { data: reports } = await supabase
           .from('audit_reports')
           .select('id, report_data, analysis_name, created_at, updated_at')
@@ -59,7 +61,6 @@ export default async function handler(
           .eq('report_type', dataType)
           .order('created_at', { ascending: false });
 
-        // Map to a cleaner structure for the frontend
         result = (reports || []).map(report => ({
             id: report.id,
             created_at: report.created_at,
@@ -90,16 +91,6 @@ export default async function handler(
           .order('created_at', { ascending: false });
 
         result = posts || [];
-        break;
-
-      case 'content_drafts':
-        const { data: drafts } = await supabase
-          .from('content_drafts')
-          .select('*')
-          .eq('business_id', businessId)
-          .order('created_at', { ascending: false });
-
-        result = drafts || [];
         break;
 
       case 'preferences':
