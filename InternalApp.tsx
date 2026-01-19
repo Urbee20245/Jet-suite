@@ -43,6 +43,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [currentProfileData, setCurrentProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
+  
+  // NEW: Specifically track the count of pending tasks as verified by the database
+  const [savedPendingTasksCount, setSavedPendingTasksCount] = useState(0);
 
   const supabase = getSupabaseClient();
 
@@ -66,7 +69,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           user: { id: userId, firstName: '', lastName: '', email: userEmail, phone: '', role: 'Owner' },
           business: {
             ...activeBiz,
-            isDnaApproved: activeBiz.is_dna_approved, // Map database snake_case to camelCase for the UI
+            isDnaApproved: activeBiz.is_dna_approved,
           },
           googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
           isProfileActive: activeBiz.is_complete,
@@ -75,7 +78,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         setCurrentProfileData(profile);
 
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
-        if (savedTasks) setTasks(savedTasks);
+        if (savedTasks) {
+          setTasks(savedTasks);
+          // Sync the saved count
+          const pendingCount = (savedTasks as GrowthPlanTask[]).filter(t => t.status !== 'completed').length;
+          setSavedPendingTasksCount(pendingCount);
+        }
       }
     } catch (error) {
       console.error('Error loading app data:', error);
@@ -123,6 +131,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (!currentProfileData?.business.isDnaApproved) return 'Foundation Weak';
     return 'Foundation Ready';
   };
+  
+  // Callback for when tasks are manually saved to update the home screen count
+  const handlePlanSaved = (savedTasks: GrowthPlanTask[]) => {
+    const pendingCount = savedTasks.filter(t => t.status !== 'completed').length;
+    setSavedPendingTasksCount(pendingCount);
+  };
 
   const renderActiveTool = () => {
     if (!currentProfileData) return null;
@@ -158,7 +172,16 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetcompete':
         return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <GrowthPlan 
+          tasks={tasks} 
+          setTasks={setTasks} 
+          setActiveTool={handleSetActiveTool} 
+          onTaskStatusChange={handleTaskStatusChange} 
+          growthScore={calculateGrowthScore()} 
+          userId={userId} 
+          activeBusinessId={activeBusinessId} 
+          onPlanSaved={handlePlanSaved} // Pass the callback
+        />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':
@@ -176,7 +199,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           readinessState={readiness} 
           plan={{ name: 'Pro', profileLimit: 1 }} 
           growthScore={calculateGrowthScore()} 
-          pendingTasksCount={tasks.filter(t => t.status !== 'completed').length} // Passed pending count
+          pendingTasksCount={savedPendingTasksCount} // Use the persisted database count here
         />;
     }
   };
