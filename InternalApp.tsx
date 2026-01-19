@@ -22,7 +22,7 @@ import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
 import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
-import UserSupportTickets from './tools/UserSupportTickets'; // Fixed default import
+import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
@@ -65,10 +65,16 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         const activeBiz = businessList.find(b => b.id === activeBusinessId) || businessList[0];
         setActiveBusinessId(activeBiz.id);
 
+        // Construct location string for tools
+        const locationStr = activeBiz.city && activeBiz.state 
+          ? `${activeBiz.city}, ${activeBiz.state}` 
+          : activeBiz.city || activeBiz.state || '';
+
         const profile: ProfileData = {
           user: { id: userId, firstName: '', lastName: '', email: userEmail, phone: '', role: 'Owner' },
           business: {
             ...activeBiz,
+            location: locationStr, // Explicitly set location for tools like JetKeywords
             isDnaApproved: activeBiz.is_dna_approved,
           },
           googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
@@ -131,7 +137,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       }
     }
 
-    return updatedTasks; // Return the final combined list
+    return updatedTasks; 
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
