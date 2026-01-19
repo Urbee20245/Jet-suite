@@ -14,7 +14,7 @@ import {
   LogIn,
   Mail,
 } from 'lucide-react';
-import { SubscriptionStatusBadge } from '../SubscriptionStatusBadge';
+import { SubscriptionStatusBadge } from '../../../components/SubscriptionStatusBadge';
 
 interface HeaderProps {
   navigate: (path: string) => void;
