@@ -609,7 +609,17 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   }, [business, googleBusiness, profileData]);
 
   const step1Completed = !!business.business_name && !!business.business_website && !!business.industry && (locationType === 'online' || locationType === 'home' || (!!business.location && business.location.includes(',')));
-  const step2Completed = profileData.business.isDnaApproved;
+  const step2Completed = profileData.business.isDnaApproved || profileData.business.is_dna_approved || false;
+
+  // Add debug logging
+  console.log('🔍 [BusinessDetails] Step 2 check:', {
+    isDnaApproved: profileData.business.isDnaApproved,
+    is_dna_approved: profileData.business.is_dna_approved,
+    step2Completed: step2Completed,
+    hasDna: !!profileData.business.dna,
+    hasBrandProfile: !!profileData.brandDnaProfile
+  });
+
   const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
   
@@ -668,7 +678,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         throw new Error('Failed to save DNA to database');
       }
 
-      // CRITICAL: Call onBusinessUpdated to refresh from database
+      console.log('✅ [BusinessDetails] DNA saved, calling onBusinessUpdated()');
+      
+      // CRITICAL: Refresh data from database
       onBusinessUpdated();
       
       setExtractionStage('idle'); 
