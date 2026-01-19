@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Tool, BusinessProfile } from '../types';
-import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon } from '../components/icons/MiniIcons';
+import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon } from './icons/MiniIcons';
+import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { ALL_TOOLS } from '../constants';
 
 interface HeaderProps {
@@ -9,8 +10,9 @@ interface HeaderProps {
   businesses: BusinessProfile[];
   activeBusinessId: string | null;
   onSwitchBusiness: (id: string) => void;
-  onAddBusiness: () => void; // NEW PROP
+  onAddBusiness: () => void; 
   setActiveTool: (tool: Tool | null) => void;
+  userId?: string; 
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -19,17 +21,16 @@ export const Header: React.FC<HeaderProps> = ({
   businesses, 
   activeBusinessId, 
   onSwitchBusiness,
-  onAddBusiness, // Use new prop
-  setActiveTool
+  onAddBusiness, 
+  setActiveTool,
+  userId
 }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const activeBusiness = businesses.find(b => b.id === activeBusinessId);
   const title = activeTool ? activeTool.name : 'Command Center';
   
-  // Derived value for display
   const activeBusinessName = activeBusiness?.business_name || 'Loading Business...';
   
-  // Get GBP data from the active business profile
   const gbpData = activeBusiness?.google_business_profile;
   const reviewCount = gbpData?.reviewCount || 0;
   const rating = gbpData?.rating || 0;
@@ -38,7 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-brand-card shadow-sm border-b border-brand-border p-4 flex items-center justify-between h-16 flex-shrink-0 relative z-50">
       
-      {/* LEFT: Logo + Business Switcher + Page Title */}
       <div className="flex items-center">
         <img
           src="/Jetsuitewing.png"
@@ -46,7 +46,6 @@ export const Header: React.FC<HeaderProps> = ({
           className="h-8 w-auto"
         />
 
-        {/* Business Switcher Dropdown */}
         <div className="relative ml-4">
           <button 
             onClick={() => setIsSwitcherOpen(!isSwitcherOpen)}
@@ -104,7 +103,6 @@ export const Header: React.FC<HeaderProps> = ({
                 ))}
               </div>
 
-              {/* WIRING: Call the onAddBusiness handler */}
               <button 
                 onClick={() => {
                   onAddBusiness();
@@ -118,19 +116,17 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Divider */}
         <span className="mx-3 text-brand-text-muted hidden sm:inline">/</span>
 
-        {/* Page Title */}
         <h2 className="text-xl font-semibold text-brand-text hidden sm:block">
           {title}
         </h2>
       </div>
 
-      {/* RIGHT: Growth Score + GBP Reviews */}
       <div className="flex items-center space-x-4">
+        {/* Glowing Status Indicator */}
+        {userId && <SubscriptionStatusBadge userId={userId} />}
         
-        {/* GBP Review Status */}
         {isVerified && (
             <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
                 <div className="flex items-center">
@@ -146,14 +142,12 @@ export const Header: React.FC<HeaderProps> = ({
                     GBP Reviews
                 </span>
                 
-                {/* Tooltip for sync delay */}
                 <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
                     <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
                 </div>
             </div>
         )}
         
-        {/* Growth Score */}
         <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
           <BoltIcon className="w-5 h-5 text-yellow-500" />
           <span className="ml-2 text-sm font-bold text-brand-text">

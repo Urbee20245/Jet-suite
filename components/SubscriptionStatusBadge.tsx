@@ -8,18 +8,21 @@ interface SubscriptionStatusBadgeProps {
 
 /**
  * SubscriptionStatusBadge Component
- * Displays a glowing green indicator if the user has an active subscription.
+ * Displays a glowing green indicator if the user has an active plan or granted access.
  */
 export const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = ({ userId }) => {
-  const [isActive, setIsActive] = useState<boolean | null>(null);
+  const [statusInfo, setStatusInfo] = useState<{ active: boolean; isFree: boolean } | null>(null);
 
   useEffect(() => {
     const checkStatus = async () => {
       try {
         const billing = await getBillingAccount(userId);
-        setIsActive(billing?.subscription_status === 'active' || billing?.subscription_status === 'trialing');
+        const active = billing?.subscription_status === 'active' || billing?.subscription_status === 'trialing';
+        const isFree = billing?.subscription_plan?.includes('free') || billing?.subscription_plan === 'admin_granted_free';
+        
+        setStatusInfo({ active, isFree });
       } catch (error) {
-        setIsActive(false);
+        setStatusInfo({ active: false, isFree: false });
       }
     };
 
@@ -28,7 +31,7 @@ export const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = (
     }
   }, [userId]);
 
-  if (!isActive) return null;
+  if (!statusInfo?.active) return null;
 
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.2)] animate-in fade-in zoom-in duration-500">
@@ -37,7 +40,7 @@ export const SubscriptionStatusBadge: React.FC<SubscriptionStatusBadgeProps> = (
         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500 shadow-[0_0_8px_#22c55e]"></span>
       </div>
       <span className="text-[10px] sm:text-xs font-bold text-green-500 uppercase tracking-wider">
-        Active Subscription
+        {statusInfo.isFree ? 'Active Access' : 'Active Subscription'}
       </span>
     </div>
   );

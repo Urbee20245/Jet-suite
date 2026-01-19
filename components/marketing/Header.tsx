@@ -12,8 +12,9 @@ import {
   Calculator,
   PlayCircle,
   LogIn,
-  Mail, // Import Mail icon for Contact
+  Mail,
 } from 'lucide-react';
+import { SubscriptionStatusBadge } from '../SubscriptionStatusBadge';
 
 interface HeaderProps {
   navigate: (path: string) => void;
@@ -21,18 +22,22 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ navigate }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [toolsOpen, setToolsOpen] = useState(false);
-  const [freeToolsOpen, setFreeToolsOpen] = useState(false); // 1. ADD STATE
+  const [freeToolsOpen, setFreeToolsOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    // Get userId from localStorage to show badge if logged in
+    const storedUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userId') : null;
+    setUserId(storedUserId);
+  }, []);
+
   const closeMobile = () => {
     setMobileOpen(false);
-    setToolsOpen(false);
-    setFreeToolsOpen(false); // Close free tools dropdown too
+    setFreeToolsOpen(false);
   };
   
-  // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -106,8 +111,10 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
 
           {/* DESKTOP CTAs */}
           <div className="hidden md:flex items-center gap-4">
+            
+            {/* Glowing Status Indicator (only if logged in) */}
+            {userId && <SubscriptionStatusBadge userId={userId} />}
 
-            {/* 2. REPLACE DESKTOP "Try Free Tools" button with dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setFreeToolsOpen(!freeToolsOpen)}
@@ -160,16 +167,14 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               )}
             </div>
 
-            {/* LOGIN (PRIMARY CTA) */}
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate(userId ? '/app' : '/login')}
               className="px-6 py-2.5 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold rounded-lg transition-opacity shadow-lg shadow-accent-purple/20"
             >
-              Login
+              {userId ? 'Go to App' : 'Login'}
             </button>
           </div>
 
-          {/* MOBILE MENU TOGGLE */}
           <button
             className="md:hidden text-white"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -178,12 +183,17 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
           </button>
         </div>
 
-        {/* MOBILE MENU */}
         {mobileOpen && (
           <div className="md:hidden pb-6">
             <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900/90 p-4 space-y-3">
+              
+              {/* Mobile Status Indicator */}
+              {userId && (
+                <div className="flex justify-center py-2">
+                  <SubscriptionStatusBadge userId={userId} />
+                </div>
+              )}
 
-              {/* 3. REPLACE MOBILE "Try Free Tools" button with dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setFreeToolsOpen(!freeToolsOpen)}
@@ -235,21 +245,19 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                 )}
               </div>
 
-              {/* LOGIN (PRIMARY MOBILE CTA) */}
               <button
                 onClick={() => {
-                  navigate('/login');
+                  navigate(userId ? '/app' : '/login');
                   closeMobile();
                 }}
                 className="w-full bg-gradient-to-r from-accent-purple to-accent-pink
                            text-white font-bold px-4 py-3 rounded-xl
                            flex items-center justify-center gap-2"
               >
-                <LogIn className="w-5 h-5" />
-                Login
+                {userId ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                {userId ? 'Go to App' : 'Login'}
               </button>
 
-              {/* NAV ITEMS (WITH ICONS ON MOBILE) */}
               <button onClick={() => { navigate('/features'); closeMobile(); }}
                 className="mobile-item">
                 <LayoutDashboard size={18} /> Features
@@ -275,7 +283,6 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                 <HelpCircle size={18} /> FAQ
               </button>
               
-              {/* NEW CONTACT LINK */}
               <button onClick={() => { navigate('/contact'); closeMobile(); }}
                 className="mobile-item">
                 <Mail size={18} /> Contact Us
