@@ -130,7 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
         {isVerified && (
             <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
                 <div className="flex items-center">
-                    <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-400" />
                     <span className="ml-1 text-sm font-bold text-brand-text">
                         {rating.toFixed(1)}
                     </span>

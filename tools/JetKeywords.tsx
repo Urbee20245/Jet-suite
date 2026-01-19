@@ -3,7 +3,7 @@ import type { Tool, ProfileData, KeywordAnalysisResult, KeywordSearchResult } fr
 import { findKeywords } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon, MapPinIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, MapPinIcon, PlusIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 
 interface JetKeywordsProps {
@@ -50,7 +50,6 @@ const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[]
 export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, setActiveTool }) => {
   const service = profileData.business.industry;
   
-  // Resolve location: Profile -> GBP -> Empty
   const [targetLocation, setTargetLocation] = useState(
     profileData.business.location || profileData.googleBusiness.address || ''
   );
@@ -61,24 +60,46 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
 
-  // Sync target location if profile updates
   useEffect(() => {
     if (!targetLocation) {
         setTargetLocation(profileData.business.location || profileData.googleBusiness.address || '');
     }
   }, [profileData]);
 
+  // Suggestions based on category
+  const getSuggestions = () => {
+    const defaultSuggestions = ["local service", "professional company", "trusted expert", "near me", "best in town", "affordable prices", "high quality", "customer choice", "top rated", "certified"];
+    
+    const categoryMap: Record<string, string[]> = {
+        "Web Design & Digital Marketing Agency": ["custom web design", "seo services", "ppc management", "social media marketing", "local seo", "responsive website", "ecommerce solutions", "branding services", "ui/ux design", "lead generation", "conversion optimization", "content marketing"],
+        "Plumber": ["emergency plumbing", "drain cleaning", "leak repair", "water heater install", "pipe bursting", "clogged toilet", "commercial plumbing", "residential plumber", "water pressure fix", "sump pump service"],
+        "HVAC Contractor": ["ac repair", "furnace maintenance", "hvac installation", "emergency heating", "air duct cleaning", "thermostat setup", "heat pump service", "central air fix", "indoor air quality", "hvac contractor"],
+        "Attorney / Law Firm": ["legal advice", "litigation services", "family law", "personal injury", "corporate law", "criminal defense", "estate planning", "legal consultation", "court representation", "legal experts"],
+        "Medical Practice": ["patient care", "health screening", "medical checkup", "primary care", "specialist doctor", "family medicine", "telehealth", "preventative care", "pediatrics", "internal medicine"]
+    };
+
+    return categoryMap[service] || defaultSuggestions;
+  };
+
+  const handleAddSuggestion = (suggestion: string) => {
+    const current = descriptiveKeywords.split(',').map(s => s.trim()).filter(Boolean);
+    if (!current.includes(suggestion)) {
+        const newVal = [...current, suggestion].join(', ');
+        setDescriptiveKeywords(newVal);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!targetLocation) {
-        setError('Please specify a target location (e.g., a city or region) for your research.');
+        setError('Please specify a target location.');
         return;
     }
 
-    const keywordArray = descriptiveKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
-    if (keywordArray.length < 5) {
-      setError('Please enter at least 5 descriptive keywords, separated by commas.');
+    const keywordArray = descriptiveKeywords.split(',').map(k => k.trim()).filter(Boolean);
+    if (keywordArray.length < 3) {
+      setError('Please enter at least 3 descriptive keywords.');
       return;
     }
     
@@ -89,8 +110,7 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
       const keywords = await findKeywords(service, targetLocation, keywordArray.join(', '));
       setResult(keywords);
     } catch (err) {
-      setError('Failed to find keywords. The AI may be having trouble with this request. Please try again.');
-      console.error(err);
+      setError('Failed to find keywords. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -120,9 +140,8 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>Your primary service is pulled from your profile.</li>
-                <li>Set a **Target Location** to find keywords for a specific city or region.</li>
-                <li>Enter at least 5 keywords that describe your services (e.g., 'web design', 'SEO').</li>
-                <li>Click 'Find Keywords' to see what your local customers are actually searching for.</li>
+                <li>Set a **Target Location** for specific results.</li>
+                <li>Use the suggestions below to quickly build your search.</li>
             </ul>
         </HowToUse>
       )}
@@ -154,20 +173,36 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
           </div>
           
           <div className="mb-6">
-            <label htmlFor="descriptive-keywords" className="block text-sm font-medium text-brand-text mb-2">
-              Your Descriptive Keywords (Min 5, separated by commas)
-            </label>
+            <div className="flex justify-between items-center mb-2">
+                <label htmlFor="descriptive-keywords" className="text-sm font-medium text-brand-text">
+                  Your Descriptive Keywords
+                </label>
+                <span className="text-xs text-brand-text-muted">Separated by commas</span>
+            </div>
+            
+            {/* Suggestion Tags */}
+            <div className="flex flex-wrap gap-2 mb-4">
+                {getSuggestions().map(suggestion => (
+                    <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => handleAddSuggestion(suggestion)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-accent-purple/10 hover:border-accent-purple hover:text-accent-purple transition-all"
+                    >
+                        <PlusIcon className="w-3 h-3" />
+                        {suggestion}
+                    </button>
+                ))}
+            </div>
+
             <textarea
               id="descriptive-keywords"
               rows={3}
               value={descriptiveKeywords}
               onChange={(e) => setDescriptiveKeywords(e.target.value)}
-              placeholder="e.g., custom website design, local SEO services, high converting websites, small business marketing, digital agency"
+              placeholder="e.g., custom website design, local SEO services, high converting websites..."
               className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
             />
-            <p className="text-xs text-brand-text-muted mt-1">
-              Enter keywords that accurately describe your specific services.
-            </p>
           </div>
           
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
