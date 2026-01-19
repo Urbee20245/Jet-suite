@@ -1,42 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { getSupabaseClient } from './integrations/supabase/client';
-import { syncToSupabase, loadFromSupabase } from './utils/syncService';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { Welcome } from './tools/Welcome';
-import { BusinessDetails } from './tools/BusinessDetails';
-import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import { Account } from './tools/Account';
-import { KnowledgeBase } from './tools/KnowledgeBase';
-import { JetBiz } from './tools/JetBiz';
-import { JetViz } from './tools/JetViz';
-import { JetCompete } from './tools/JetCompete';
-import { JetKeywords } from './tools/JetKeywords';
-import { JetPost } from './tools/JetPost';
-import { JetContent } from './tools/JetContent';
-import { JetImage } from './tools/JetImage';
-import { JetCreate } from './tools/JetCreate';
-import { JetReply } from './tools/JetReply';
-import { JetTrust } from './tools/JetTrust';
-import { JetLeads } from './tools/JetLeads';
-import { JetEvents } from './tools/JetEvents';
-import { JetAds } from './tools/JetAds';
-import { GrowthPlan } from './tools/GrowthPlan';
-import UserSupportTickets from './tools/UserSupportTickets';
-import { AdminPanel } from './tools/AdminPanel';
-import { Planner } from './tools/Planner';
-import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna, UserProfile } from './types';
-import { ALL_TOOLS } from './constants';
+import InternalApp from './InternalApp';
+import { MarketingWebsite } from './pages/MarketingWebsite';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { SubscriptionGuard } from './components/SubscriptionGuard';
+import { checkSubscriptionAccess } from './services/subscriptionService';
+import { fetchRealDateTime } from './utils/realTime';
+import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
+import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
+import { ContactPage } from './pages/ContactPage'; // Import ContactPage
+import Admin from './pages/Admin'; // Import Admin page
 import { EyeIcon } from './components/icons/MiniIcons';
 import SupportChatbot from './components/SupportChatbot';
+import { BusinessProfile, ProfileData, GrowthPlanTask, SavedKeyword, KeywordData, AuditReport, LiveWebsiteAnalysis, Tool, ReadinessState, GoogleBusinessProfile, BrandDnaProfile, BusinessDna, UserProfile } from './types';
+import { ALL_TOOLS } from './constants';
+import { syncToSupabase, loadFromSupabase } from './utils/syncService';
+
+// Fetch real current time on app load (with timeout to prevent hanging)
+if (typeof window !== 'undefined') {
+  const initRealTime = async () => {
+    try {
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      await Promise.race([fetchRealDateTime(), timeout]);
+      console.log('✅ Real date/time initialized');
+    } catch (error) {
+      console.warn('⚠️ Could not fetch real time, using system time');
+    }
+  };
+  initRealTime();
+}
+
+console.log('[App] Component module loaded');
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
-
-interface InternalAppProps {
-    onLogout: () => void;
-    userEmail: string;
-    userId: string;
-}
 
 const createInitialProfile = (id: string, email: string, firstName: string, lastName: string): ProfileData => ({
     user: { id, firstName, lastName, email, phone: '', role: 'Owner' },
@@ -70,585 +69,337 @@ const createInitialProfile = (id: string, email: string, firstName: string, last
     brandDnaProfile: undefined,
 });
 
-const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
-  const [activeTool, setActiveToolState] = useState<Tool | null>(null);
-  const [activeKbArticle, setActiveKbArticle] = useState<string | null>(null);
+
+const App: React.FC = () => {
+  console.log('[App] Component rendering');
   
   const supabase = getSupabaseClient();
-
-  // --- Multi-Business Management ---
-  const [businesses, setBusinesses] = useState<BusinessProfile[]>([]);
-  const [activeBusinessId, setActiveBusinessId] = useState<string | null>(
-    localStorage.getItem('jetsuite_active_biz_id')
-  );
-
-  // --- Identity & State Management ---
-  const [impersonatedProfile, setImpersonatedProfile] = useState<ProfileData | null>(null);
-  const activeUserId = impersonatedProfile?.user.id || userId;
-  const isAdmin = userEmail === ADMIN_EMAIL;
-
-  const [growthPlanTasks, setGrowthPlanTasks] = useState<GrowthPlanTask[]>([]);
-  const [savedKeywords, setSavedKeywords] = useState<SavedKeyword[]>([]);
-  const [jetContentInitialProps, setJetContentInitialProps] = useState<{keyword: KeywordData, type: string} | null>(null);
   
-  const [growthScore, setGrowthScore] = useState(0);
+  // 1. Identity State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  const [allAdminProfiles, setAllAdminProfiles] = useState<ProfileData[]>([]);
+  // 2. Resolution Flags
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [isAccessTierResolved, setIsAccessTierResolved] = useState(false);
+  const [subscriptionRedirect, setSubscriptionRedirect] = useState<string | null>(null);
+  const [isOnboardingResolved, setIsOnboardingResolved] = useState(false);
+  // CHANGED: Check for existence of ANY business profile, not just completion status
+  const [hasAnyBusinessProfile, setHasAnyBusinessProfile] = useState(false);
 
-  const [allProfiles, setAllProfiles] = useState<ProfileData[]>(() => {
-      return [createInitialProfile(userId, userEmail, 'Loading', 'User')];
+  // 3. Navigation State
+  const [currentPath, setCurrentPath] = useState(() => {
+    try {
+      return typeof window !== 'undefined' ? window.location.pathname : '/';
+    } catch (e) {
+      return '/';
+    }
   });
-  
-  const activeProfile = allProfiles.find(p => p.user.id === activeUserId) || allProfiles[0];
 
-  const fetchBusinesses = async () => {
-    if (!supabase || !activeUserId) return;
-    try {
-      const { data, error } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('user_id', activeUserId);
-
-      if (error) throw error;
-      
-      const loadedBusinesses = data as BusinessProfile[];
-      setBusinesses(loadedBusinesses);
-
-      if (!activeBusinessId && loadedBusinesses.length > 0) {
-        const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0].id;
-        setActiveBusinessId(primaryBiz);
-        localStorage.setItem('jetsuite_active_biz_id', primaryBiz);
-      } else if (activeBusinessId && !loadedBusinesses.find(b => b.id === activeBusinessId)) {
-        const primaryBiz = loadedBusinesses.find(b => b.is_primary)?.id || loadedBusinesses[0]?.id;
-        if (primaryBiz) {
-          setActiveBusinessId(primaryBiz);
-          localStorage.setItem('jetsuite_active_biz_id', primaryBiz);
-        }
+  const navigate = (path: string) => {
+      if (typeof window === 'undefined') return;
+      try {
+        window.history.pushState({}, '', path);
+        setCurrentPath(path);
+      } catch (e) {
+        console.warn('Could not navigate:', e);
       }
-    } catch (error) {
-      console.error('Error fetching businesses:', error);
-    }
   };
 
-  const loadBusinessData = async (businessId: string) => {
-    if (!supabase || !activeUserId) return;
-    
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .eq('id', businessId)
-        .single();
-      
-      if (profileError) throw profileError;
-      
-      // DEBUGGING: Log raw data from Supabase
-      console.log('✅ [InternalApp] Raw business profile from DB:', profile);
-      
-      const loadedBusiness = profile as unknown as BusinessProfile;
-      const loadedGbp = loadedBusiness.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' } as GoogleBusinessProfile;
-      const loadedBrandDnaProfile = loadedBusiness.brand_dna_profile || undefined;
-      
-      setAllProfiles(prev => {
-        const updated = [...prev];
-        const index = updated.findIndex(p => p.user.id === activeUserId);
-        if (index !== -1) {
-          const currentProfile = updated[index];
-          
-          const reconstructedLocation = (loadedBusiness.city && loadedBusiness.state) 
-            ? `${loadedBusiness.city}, ${loadedBusiness.state}` 
-            : (loadedBusiness.city || loadedBusiness.state || '');
-          
-          const syncedProfile: ProfileData = {
-            ...currentProfile,
-            business: {
-              ...loadedBusiness,
-              location: reconstructedLocation,
-              isDnaApproved: loadedBusiness.is_dna_approved,
-              dnaLastUpdatedAt: loadedBusiness.dna_last_updated_at,
-              dna: loadedBusiness.dna || { logo: '', colors: [], fonts: '', style: '' } as BusinessDna, 
-            } as BusinessProfile,
-            googleBusiness: loadedGbp, 
-            brandDnaProfile: loadedBrandDnaProfile, 
-            isProfileActive: !!loadedBusiness.is_complete,
-          };
-          
-          // DEBUGGING: Log reconstructed profile
-          console.log('✅ [InternalApp] Reconstructed profile to be set in state:', {
-            business_name: syncedProfile.business.business_name,
-            is_dna_approved: syncedProfile.business.is_dna_approved,
-            brand_dna_profile_exists: !!syncedProfile.brandDnaProfile,
-            is_complete: syncedProfile.business.is_complete,
-          });
-          
-          updated[index] = syncedProfile;
-        }
-        return updated;
-      });
-      
-      const tasks = await loadFromSupabase(activeUserId, businessId, 'tasks');
-      setGrowthPlanTasks(tasks || []);
-      
-      const keywords = await loadFromSupabase(activeUserId, businessId, 'keywords');
-      setSavedKeywords(keywords || []);
-      
-      const jetbizReport = await loadFromSupabase(activeUserId, businessId, 'jetbiz');
-      if (jetbizReport) {
-        setAllProfiles(prev => {
-          const updated = [...prev];
-          const index = updated.findIndex(p => p.user.id === activeUserId);
-          if (index !== -1) {
-            updated[index] = { ...updated[index], jetbizAnalysis: jetbizReport as AuditReport };
-          }
-          return updated;
-        });
-      }
-      
-      const jetvizReport = await loadFromSupabase(activeUserId, businessId, 'jetviz');
-      if (jetvizReport) {
-        setAllProfiles(prev => {
-          const updated = [...prev];
-          const index = updated.findIndex(p => p.user.id === activeUserId);
-          if (index !== -1) {
-            updated[index] = { ...updated[index], jetvizAnalysis: jetvizReport as LiveWebsiteAnalysis };
-          }
-          return updated;
-        });
-      }
-      
-      console.log('✅ [InternalApp] All business data loaded from Supabase');
-      
-    } catch (error) {
-      console.error('Error loading business data:', error);
-      setSavedKeywords([]);
-      setGrowthPlanTasks([]);
-    }
-  };
-
-  const fetchAndMergeProfile = async (uid: string, email: string, isCurrentUser: boolean) => {
-    let defaultProfile = createInitialProfile(uid, email, isCurrentUser ? 'Owner' : 'Test', isCurrentUser ? 'User' : 'User');
-
-    try {
-        const response = await fetch(`/api/user/get-profile?userId=${uid}`);
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType?.includes('application/json')) {
-          console.error('Profile fetch: Server returned HTML instead of JSON');
-          return defaultProfile;
-        }
-
-        if (!response.ok) throw new Error('Failed to fetch profile from API');
-        
-        const { profile: dbProfile } = await response.json();
-        
-        if (dbProfile) {
-            return {
-                ...defaultProfile,
-                user: {
-                    ...defaultProfile.user,
-                    id: dbProfile.id,
-                    firstName: dbProfile.first_name || defaultProfile.user.firstName,
-                    lastName: dbProfile.last_name || defaultProfile.user.lastName,
-                    email: dbProfile.email || defaultProfile.user.email,
-                    role: dbProfile.role || defaultProfile.user.role,
-                    phone: dbProfile.phone || defaultProfile.user.phone,
-                }
-            };
-        }
-        
-        return defaultProfile;
-
-    } catch (error) {
-        console.error(`Error fetching profile:`, error);
-        return defaultProfile;
-    }
-  };
-
-  const fetchAllAdminProfiles = async () => {
-    if (!isAdmin) return;
-    
-    try {
-        const response = await fetch('/api/admin/get-all-profiles', {
-            headers: {
-                'x-user-email': userEmail 
-            }
-        });
-        
-        if (!response.ok) return;
-        const data = await response.json();
-        setAllAdminProfiles(data.profiles as ProfileData[]);
-        
-    } catch (error) {
-        console.error('Error fetching all admin profiles:', error);
-    }
-  };
-
-  useEffect(() => {
-    const loadInitial = async () => {
-        const currentUserProfile = await fetchAndMergeProfile(userId, userEmail, true);
-        setAllProfiles([currentUserProfile]);
-        await fetchBusinesses();
-        if (isAdmin) {
-            fetchAllAdminProfiles();
-        }
-    };
-    
-    loadInitial();
-  }, [userId, userEmail, isAdmin]);
-
-  useEffect(() => {
-    if (activeBusinessId) {
-      loadBusinessData(activeBusinessId);
-    }
-  }, [activeBusinessId]);
-
-  const handleBusinessSwitch = async (businessId: string) => {
-    if (activeBusinessId === businessId) return;
-    localStorage.setItem('jetsuite_active_biz_id', businessId);
-    setActiveBusinessId(businessId);
-    setSavedKeywords([]);
-    setGrowthPlanTasks([]);
-    setJetContentInitialProps(null);
-  };
-  
-  const handleAddBusiness = async () => {
-    if (!supabase || !activeUserId) return;
-    
-    const { data: billingAccount } = await supabase
-      .from('billing_accounts')
-      .select('business_count')
-      .eq('user_id', activeUserId)
-      .maybeSingle();
-    
-    const limit = billingAccount?.business_count || 1;
-    
-    if (businesses.length >= limit) {
-      alert(`You have reached your business limit (${limit}). Please upgrade your plan to add more businesses.`);
+  // Helper to verify subscription and update resolution state
+  const verifySubscription = async (uid: string) => {
+    if (!supabase) {
+      // If Supabase is disabled, assume no subscription/onboarding is possible
+      setSubscriptionRedirect('/billing/locked');
+      setIsAccessTierResolved(true);
+      setIsOnboardingResolved(true);
       return;
     }
     
     try {
-      const { data: newBusiness, error } = await supabase
+      // 1. Check Subscription
+      const result = await checkSubscriptionAccess(uid);
+      // If access is denied, redirect them to the LOCKED page first, not pricing directly
+      setSubscriptionRedirect(result.hasAccess ? null : '/billing/locked');
+      setIsAccessTierResolved(true);
+
+      // 2. Check Onboarding (Existence of ANY business profile)
+      // We check if the user has ever created a business profile.
+      const { count: profileCount } = await supabase
         .from('business_profiles')
-        .insert({
-          user_id: activeUserId,
-          business_name: 'New Business Profile',
-          business_website: 'https://new-business.com',
-          industry: 'General',
-          city: 'City',
-          state: 'State',
-          is_primary: false,
-          is_complete: false,
-        })
-        .select()
-        .single();
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', uid);
       
-      if (error) throw error;
-      
-      if (newBusiness) {
-        setBusinesses(prev => [...prev, newBusiness as BusinessProfile]);
-        handleBusinessSwitch(newBusiness.id);
-        setActiveTool(ALL_TOOLS['businessdetails']);
-      }
+      setHasAnyBusinessProfile(!!profileCount && profileCount > 0);
+      setIsOnboardingResolved(true);
     } catch (error) {
-      console.error('Error creating business:', error);
-      alert('Failed to create new business. Please try again.');
+      console.error('[App] Verification failed:', error);
+      setSubscriptionRedirect('/billing/locked');
+      setIsAccessTierResolved(true);
+      setIsOnboardingResolved(true);
     }
   };
 
-  const handleImpersonate = (profileToImpersonate: ProfileData | null) => {
-    if (profileToImpersonate) {
-        setImpersonatedProfile(profileToImpersonate);
-        if (profileToImpersonate.business.id !== 'no-business') {
-            handleBusinessSwitch(profileToImpersonate.business.id);
-        }
-    } else {
-        setImpersonatedProfile(null);
-        const currentUserPrimaryBiz = businesses.find(b => b.is_primary)?.id || businesses[0]?.id;
-        if (currentUserPrimaryBiz) {
-            handleBusinessSwitch(currentUserPrimaryBiz);
-        }
-    }
-  };
-
-  const setProfileData = (newProfileData: ProfileData) => {
-    setAllProfiles(prev => {
-        const isSelf = newProfileData.user.id === userId;
-        const index = isSelf ? 0 : prev.findIndex(p => p.user.id === newProfileData.user.id);
-        const updatedProfiles = [...prev];
-        if (index !== -1) {
-            updatedProfiles[index] = newProfileData;
-        } else if (!isSelf) {
-            updatedProfiles.push(newProfileData);
-        }
-        return updatedProfiles;
-    });
-  };
-
+  // Check Supabase session on mount
   useEffect(() => {
-    if (activeBusinessId && businesses.length > 0) {
-      const activeBiz = businesses.find(b => b.id === activeBusinessId);
-      if (activeBiz) {
-        setAllProfiles(prev => {
-          const updated = [...prev];
-          const index = updated.findIndex(p => p.user.id === activeUserId);
-          if (index !== -1) {
-            updated[index] = {
-              ...updated[index],
-              business: activeBiz,
-              googleBusiness: activeBiz.google_business_profile || { profileName: '', mapsUrl: '', status: 'Not Created' },
-              brandDnaProfile: activeBiz.brand_dna_profile || undefined,
-              isProfileActive: !!activeBiz.is_complete,
-            };
-          }
-          return updated;
-        });
+    const checkSession = async () => {
+      if (!supabase) {
+        setIsLoggedIn(false);
+        setSessionChecked(true);
+        return;
       }
-    }
-  }, [activeBusinessId, businesses, activeUserId]);
-
-  useEffect(() => {
-    if (activeBusinessId && activeUserId && growthPlanTasks.length >= 0) {
-      syncToSupabase(activeUserId, activeBusinessId, 'tasks', growthPlanTasks);
-    }
-  }, [growthPlanTasks, activeBusinessId, activeUserId]);
-
-  useEffect(() => {
-    if (activeBusinessId && activeUserId && savedKeywords.length >= 0) {
-      syncToSupabase(activeUserId, activeBusinessId, 'keywords', savedKeywords);
-    }
-  }, [savedKeywords, activeBusinessId, activeUserId]);
-
-  const [plan] = useState({ name: 'Tier 1', profileLimit: 1 });
-
-  const setActiveTool = (tool: Tool | null, articleId?: string) => {
-    setJetContentInitialProps(null); 
-    setActiveToolState(tool);
-    if (tool?.id === 'knowledgebase') {
-      setActiveKbArticle(articleId || 'introduction');
-    }
-  };
-
-  useEffect(() => {
-    let score = 0;
-    const { business, googleBusiness } = activeProfile;
-    const totalTasks = growthPlanTasks.length;
-    const completedTasks = growthPlanTasks.filter(t => t.status === 'completed').length;
-    const inProgressTasks = growthPlanTasks.filter(t => t.status === 'in_progress').length;
-    
-    if (business.business_name && business.location && business.business_website) {
-      score += 10;
-    } else if (business.business_name || business.location || business.business_website) {
-      score += 3;
-    }
-    
-    if (business.isDnaApproved) {
-      score += 10;
-    }
-    
-    if (googleBusiness.status === 'Verified') {
-      score += 15;
-    } else if (googleBusiness.status === 'Not Verified') {
-      score += 5;
-    }
-    
-    if (totalTasks > 0) {
-      const completedPoints = Math.min(completedTasks * 5, 50);
-      score += completedPoints;
-      const inProgressPoints = Math.min(inProgressTasks * 2, 10);
-      score += inProgressPoints;
-      if (totalTasks >= 4 && completedTasks >= Math.ceil(totalTasks * 0.25)) {
-        score += 5;
-      }
-    } else {
-      score = Math.max(0, score - 10);
-    }
-    
-    score = Math.min(score, 99);
-    setGrowthScore(score);
-  }, [activeProfile, growthPlanTasks]);
-
-  const handleUpdateProfileData = (newProfileData: ProfileData) => {
-    const { business_name, location, business_website } = newProfileData.business;
-    if (business_name && location && business_website && !newProfileData.isProfileActive) { 
-      setProfileData({ ...newProfileData, isProfileActive: true }); 
-    } else { 
-      setProfileData(newProfileData); 
-    }
-  };
-
-  const addTasksToGrowthPlan = (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
-    setGrowthPlanTasks(prevTasks => {
-      const existingTitles = new Set(prevTasks.map(t => t.title));
-      const tasksToAdd = newTasks
-        .filter(newTask => !existingTitles.has(newTask.title))
-        .map(task => ({ 
-          ...task, 
-          id: `${task.sourceModule.toLowerCase()}_${Math.random().toString(36).substr(2, 9)}`, 
-          status: 'to_do' as const, 
-          createdAt: new Date().toISOString() 
-        }));
-      return [...prevTasks, ...tasksToAdd];
-    });
-  };
-
-  const handleTaskStatusChange = (taskId: string, newStatus: GrowthPlanTask['status']) => {
-      setGrowthPlanTasks(prevTasks => 
-        prevTasks.map(task => 
-          task.id === taskId 
-            ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
-            : task
-        )
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Session check timeout')), 5000)
       );
-  };
 
-  const handleSaveAnalysis = async (type: 'jetbiz' | 'jetviz', report: AuditReport | LiveWebsiteAnalysis | null) => {
-    const newProfileData = { ...activeProfile, [`${type}Analysis`]: report };
-    handleUpdateProfileData(newProfileData);
-    
-    if (report && activeBusinessId) {
-      await syncToSupabase(activeUserId, activeBusinessId, type, report);
-    }
-  };
-  
-  const isStep1Complete = !!activeProfile.business.business_name && !!activeProfile.business.location && !!activeProfile.business.business_website;
-  const isStep2Complete = activeProfile.business.isDnaApproved;
-
-  let readinessState: ReadinessState = 'Setup Incomplete';
-  if (isStep1Complete && isStep2Complete) readinessState = 'Foundation Ready';
-  else if (isStep1Complete) readinessState = 'Foundation Weak';
-
-  const isBusinessDetailsComplete = isStep1Complete && isStep2Complete;
-  
-  const toolCompletionStatus = {
-      'businessdetails': isBusinessDetailsComplete,
-  };
-
-  const renderActiveTool = () => {
-    if (isAdmin && activeTool?.id === 'adminpanel') {
-        return <AdminPanel 
-            allProfiles={allAdminProfiles.length > 0 ? allAdminProfiles : allProfiles} 
-            setAllProfiles={setAllAdminProfiles} 
-            onDataChange={fetchAllAdminProfiles}
-            currentUserProfile={activeProfile} 
-            setCurrentUserProfile={setProfileData} 
-            onImpersonate={handleImpersonate} 
-        />;
-    }
-    if (!activeTool || activeTool.id === 'home') {
-      return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} growthScore={growthScore} />;
-    }
-    switch (activeTool.id) {
-      case 'businessdetails': return <BusinessDetails 
-        profileData={activeProfile} 
-        onUpdate={handleUpdateProfileData} 
-        setActiveTool={setActiveTool} 
-        onBusinessUpdated={async () => {
-          await fetchBusinesses();
-          if (activeBusinessId) {
-            await loadBusinessData(activeBusinessId);
-          }
-        }}
-      />;
-      case 'planner': return <Planner userId={activeUserId} growthPlanTasks={growthPlanTasks} />;
-      case 'growthscore': return <GrowthScoreHistory growthScore={growthScore} profileData={activeProfile} />;
-      case 'account': return <Account plan={plan} profileData={activeProfile} onLogout={onLogout} onUpdateProfile={handleUpdateProfileData} userId={userId} setActiveTool={setActiveTool} />;
-      case 'knowledgebase': return <KnowledgeBase setActiveTool={setActiveTool} initialArticleId={activeKbArticle} />;
-      case 'jetbiz': return <JetBiz 
-        tool={activeTool} 
-        addTasksToGrowthPlan={addTasksToGrowthPlan} 
-        onSaveAnalysis={(report) => handleSaveAnalysis('jetbiz', report)} 
-        profileData={activeProfile} 
-        setActiveTool={setActiveTool} 
-        growthPlanTasks={growthPlanTasks} 
-        onTaskStatusChange={handleTaskStatusChange}
-        userId={activeUserId}
-        activeBusinessId={activeBusinessId}
-      />;
-      case 'jetviz': return <JetViz 
-        tool={activeTool} 
-        addTasksToGrowthPlan={addTasksToGrowthPlan} 
-        onSaveAnalysis={(report) => handleSaveAnalysis('jetviz', report)} 
-        profileData={activeProfile} 
-        setActiveTool={setActiveTool} 
-        growthPlanTasks={growthPlanTasks} 
-        onTaskStatusChange={handleTaskStatusChange} 
-        userId={activeUserId}
-        activeBusinessId={activeBusinessId}
-      />;
-      case 'jetcompete': return <JetCompete tool={activeTool} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetkeywords': return <JetKeywords tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetpost': return <JetPost tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetcontent': return <JetContent tool={activeTool} initialProps={jetContentInitialProps} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetimage': return <JetImage tool={activeTool} profileData={activeProfile} />;
-      case 'jetcreate': return <JetCreate tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} onUpdateProfile={handleUpdateProfileData} />;
-      case 'jetreply': return <JetReply tool={activeTool} profileData={activeProfile} readinessState={readinessState} setActiveTool={setActiveTool} />;
-      case 'jettrust': return <JetTrust tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetleads': return <JetLeads tool={activeTool} profileData={activeProfile} setActiveTool={setActiveTool} />;
-      case 'jetevents': return <JetEvents tool={activeTool} />;
-      case 'jetads': return <JetAds tool={activeTool} />;
-      case 'growthplan': return <GrowthPlan 
-        tasks={growthPlanTasks} 
-        setTasks={setGrowthPlanTasks} 
-        setActiveTool={setActiveTool} 
-        onTaskStatusChange={handleTaskStatusChange} 
-        growthScore={growthScore} 
-        userId={activeUserId}
-        activeBusinessId={activeBusinessId}
-      />;
-      case 'support': return <UserSupportTickets />;
-      default: return <Welcome setActiveTool={setActiveTool} profileData={activeProfile} readinessState={readinessState} plan={plan} growthScore={growthScore} />;
-    }
-  };
-  
-  const isJetCreateActive = activeTool?.id === 'jetcreate';
-
-  return (
-    <div className="flex h-screen text-brand-text font-sans bg-brand-light">
-      {!isJetCreateActive && <Sidebar 
-        activeTool={activeTool} 
-        setActiveTool={setActiveTool} 
-        isAdmin={isAdmin} 
-        onLogout={onLogout} 
-        toolCompletionStatus={toolCompletionStatus}
-      />}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {impersonatedProfile && ( 
-          <div className="bg-red-600 text-white text-center py-2 font-bold flex items-center justify-center gap-2"> 
-            <EyeIcon className="w-5 h-5"/> 
-            Viewing as {impersonatedProfile.user.email}. 
-            <button onClick={() => handleImpersonate(null)} className="underline ml-2">Return to Admin</button> 
-          </div> 
-        )}
-        {!isJetCreateActive && (
-          <Header 
-            activeTool={activeTool} 
-            growthScore={growthScore} 
-            businesses={businesses}
-            activeBusinessId={activeBusinessId}
-            onSwitchBusiness={handleBusinessSwitch}
-            onAddBusiness={handleAddBusiness}
-            setActiveTool={setActiveTool}
-          />
-        )}
-        <main className={`flex-1 overflow-x-hidden overflow-y-auto ${ isJetCreateActive ? 'bg-pomelli-dark' : 'bg-brand-light p-6 sm:p-8 lg:p-10' }`}>
-          {renderActiveTool()}
-        </main>
+      try {
+        const result: any = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
         
-        {activeTool?.id === 'support' && (
-          <SupportChatbot context={{ 
-            user_id: userId,
-            user_email: userEmail,
-            business_name: activeProfile.business.business_name,
-            current_page: activeTool?.id || 'home',
-            subscription_status: 'active',
-            conversation_turns: 0,
-            mentioned_topics: []
-          }} />
-        )}
-      </div>
-    </div>
-  );
+        const { data: { session }, error } = result;
+        
+        if (error || !session?.user) {
+          setIsLoggedIn(false);
+          setCurrentUserEmail(null);
+          setCurrentUserId(null);
+          localStorage.removeItem('jetsuite_userId'); // Clear on no session
+          setSessionChecked(true);
+          return;
+        }
+        
+        console.log('[App] Valid session found:', session.user.email);
+        setIsLoggedIn(true);
+        setCurrentUserEmail(session.user.email || null);
+        setCurrentUserId(session.user.id);
+        localStorage.setItem('jetsuite_userId', session.user.id); // Save on valid session
+        
+        // Block sessionChecked until subscription and onboarding are also verified
+        await verifySubscription(session.user.id);
+        setSessionChecked(true);
+      } catch (error) {
+        console.error('[App] Session check failed:', error);
+        setIsLoggedIn(false);
+        setSessionChecked(true);
+      }
+    };
+    
+    checkSession();
+  }, [supabase]);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    if (!supabase) return;
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[App] Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        setIsLoggedIn(true);
+        setCurrentUserEmail(session.user.email || null);
+        setCurrentUserId(session.user.id);
+        localStorage.setItem('jetsuite_userId', session.user.id); // Save on sign in
+        verifySubscription(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setIsLoggedIn(false);
+        setCurrentUserEmail(null);
+        setCurrentUserId(null);
+        localStorage.removeItem('jetsuite_userId'); // Clear on sign out
+        setIsAccessTierResolved(false);
+        setSubscriptionRedirect(null);
+        setIsOnboardingResolved(false);
+        setHasAnyBusinessProfile(false);
+      }
+    });
+    
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  // Sync currentPath with browser forward/back buttons
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onLocationChange = () => setCurrentPath(window.location.pathname);
+    window.addEventListener('popstate', onLocationChange);
+    return () => window.removeEventListener('popstate', onLocationChange);
+  }, []);
+
+  /**
+   * UNIFIED NAVIGATION GUARD
+   */
+  useEffect(() => {
+    if (!sessionChecked) return;
+    if (isLoggedIn && (!isAccessTierResolved || !isOnboardingResolved)) return;
+
+    if (isLoggedIn) {
+      if (subscriptionRedirect) {
+        // WHITELIST: If they are on a billing/pricing page, don't force the locked redirect
+        const isWhitelisted = 
+          currentPath === '/pricing' || 
+          currentPath === '/account' || 
+          currentPath.startsWith('/billing/') ||
+          currentPath === '/contact' ||
+          currentPath === '/savings' ||
+          currentPath === '/admin'; // Allow admin access
+          
+        if (isWhitelisted) return;
+
+        // Otherwise, kick them to the locked page
+        if (currentPath !== subscriptionRedirect) {
+          navigate(subscriptionRedirect);
+        }
+        return;
+      }
+
+      if (!hasAnyBusinessProfile) {
+        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact') && currentPath !== '/admin') {
+          navigate('/onboarding');
+        }
+        return;
+      }
+      
+      const isWhitelistedMarketingPage = 
+        currentPath.startsWith('/billing') ||
+        currentPath.startsWith('/pricing') ||
+        currentPath.startsWith('/account') ||
+        currentPath.startsWith('/demo') ||
+        currentPath.startsWith('/get-started') ||
+        currentPath.startsWith('/privacy') ||
+        currentPath.startsWith('/terms') ||
+        currentPath.startsWith('/savings') ||
+        currentPath.startsWith('/features') ||
+        currentPath.startsWith('/how-it-works') ||
+        currentPath.startsWith('/faq') ||
+        currentPath.startsWith('/contact') ||
+        currentPath === '/admin'; // Allow admin access
+
+      if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
+        navigate('/app');
+      }
+    } else {
+      if (currentPath.startsWith('/app') || currentPath === '/onboarding' || currentPath === '/admin') {
+        navigate('/');
+      }
+    }
+  }, [isLoggedIn, currentPath, sessionChecked, isAccessTierResolved, isOnboardingResolved, subscriptionRedirect, hasAnyBusinessProfile]);
+
+  const handleLoginSuccess = (email: string) => {
+      setIsLoggedIn(true);
+      setCurrentUserEmail(email);
+  };
+  
+  const handleLogout = async () => {
+      if (supabase) {
+        try { await supabase.auth.signOut(); } catch (error) {}
+      }
+      setIsLoggedIn(false);
+      setCurrentUserEmail(null);
+      setCurrentUserId(null);
+      localStorage.removeItem('jetsuite_userId'); 
+      setIsAccessTierResolved(false);
+      setSubscriptionRedirect(null);
+      setIsOnboardingResolved(false);
+      setHasAnyBusinessProfile(false);
+      navigate('/');
+  }
+
+  const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
+    console.log('[App] Subscription access denied:', { status, redirectTo });
+    // When the guard triggers, we go to the dedicated locked page instead of pricing directly
+    navigate('/billing/locked'); 
+  };
+
+  try {
+    const normalizedPath = currentPath.replace(/\/$/, '') || '/';
+    
+    if (normalizedPath === '/privacy') return <PrivacyPolicy />;
+    if (normalizedPath === '/terms') return <TermsOfService />;
+    if (normalizedPath === '/contact') return <ContactPage />;
+    
+    // Admin route - must be logged in to access
+    if (normalizedPath === '/admin') {
+      return <Admin navigate={navigate} />;
+    }
+
+    if (!sessionChecked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-brand-dark">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Loading JetSuite...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // RENDER ONBOARDING PAGE ONLY IF NO BUSINESS PROFILE EXISTS YET
+    if (isLoggedIn && currentUserId && !hasAnyBusinessProfile && currentPath === '/onboarding') {
+      return <OnboardingPage navigate={navigate} userId={currentUserId} />;
+    }
+
+    // CHECK IF WE SHOULD APPLY THE GUARD
+    // We only apply the guard if the user is trying to access protected "/app" routes
+    const isProtectedRoute = currentPath.startsWith('/app');
+
+    if (isLoggedIn && currentUserId && currentUserEmail) {
+      if (isProtectedRoute) {
+        return (
+          <SubscriptionGuard 
+            userId={currentUserId}
+            onAccessDenied={handleSubscriptionAccessDenied}
+          >
+            <InternalApp 
+              onLogout={handleLogout} 
+              userEmail={currentUserEmail} 
+              userId={currentUserId}
+            />
+          </SubscriptionGuard>
+        );
+      } else {
+        // If logged in but on a marketing page, render the marketing site/account pages normally
+        return <MarketingWebsite 
+          currentPath={currentPath} 
+          navigate={navigate} 
+          onLoginSuccess={handleLoginSuccess} 
+          onLogout={handleLogout}
+        />;
+      }
+    }
+
+    // Valid marketing routes for non-logged in users
+    const validMarketingRoutes = [
+      '/',
+      '/features',
+      '/how-it-works',
+      '/pricing',
+      '/faq',
+      '/get-started',
+      '/demo/jetviz',
+      '/demo/jetbiz',
+      '/savings',
+      '/login',
+      '/billing/success',
+      '/billing/locked',
+      '/contact'
+    ];
+
+    if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
+      return <MarketingWebsite 
+        currentPath={currentPath} 
+        navigate={navigate} 
+        onLoginSuccess={handleLoginSuccess} 
+        onLogout={handleLogout}
+      />;
+    }
+
+    return <NotFoundPage navigate={navigate} />;
+    
+  } catch (error) {
+    console.error('[App] Critical render error:', error);
+    return <div className="p-10 text-white">Application crashed. Please check console.</div>;
+  }
 };
 
-export default InternalApp;
+export default App;

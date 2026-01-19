@@ -74,6 +74,78 @@ const DnaField: React.FC<{ label: string; value: string | string[] | boolean | u
     );
 };
 
+
+const DnaDisplay: React.FC<{ dna: BrandDnaProfile }> = ({ dna }) => (
+  <div className="space-y-6">
+    <DnaSection title="Brand Tone & Voice">
+        <DnaField label="Primary Tone" value={dna.brand_tone.primary_tone} isEditable={false} />
+        <DnaField label="Secondary Modifiers" value={dna.brand_tone.secondary_modifiers} isEditable={false} />
+        <DnaField label="Writing Style" value={dna.brand_tone.writing_style} isEditable={false} />
+        <DnaField label="Emotional Positioning" value={dna.brand_tone.emotional_positioning} isEditable={false} />
+    </DnaSection>
+
+    <DnaSection title="Visual Identity">
+        <DnaField label="Primary Colors" value={dna.visual_identity.primary_colors} isEditable={false} />
+        <DnaField label="Secondary Colors" value={dna.visual_identity.secondary_colors} isEditable={false} />
+        <DnaField label="Color Mood" value={dna.visual_identity.color_mood} isEditable={false} />
+        <DnaField label="Typography Style" value={dna.visual_identity.typography_style} isEditable={false} />
+        <DnaField label="Layout Style" value={dna.visual_identity.layout_style} isEditable={false} />
+    </DnaSection>
+    
+    <DnaSection title="Logo Profile">
+        <DnaField label="Has Logo?" value={dna.logo_profile.has_logo} isEditable={false} />
+        <DnaField label="Logo Style" value={dna.logo_profile.logo_style} isEditable={false} />
+        <DnaField label="Dominant Logo Colors" value={dna.logo_profile.dominant_colors} isEditable={false} />
+        <DnaField label="Is Reusable for Creatives?" value={dna.logo_profile.is_reusable} isEditable={false} />
+    </DnaSection>
+
+    <DnaSection title="Brand Positioning">
+        <DnaField label="Core Value Proposition" value={dna.brand_positioning.value_proposition} isEditable={false} />
+        <DnaField label="Primary Customer Intent" value={dna.brand_positioning.primary_customer_intent} isEditable={false} />
+        <DnaField label="Local vs. National" value={dna.brand_positioning.local_vs_national} isEditable={false} />
+        <DnaField label="Differentiation Signals" value={dna.brand_positioning.differentiation_signals} isEditable={false} />
+    </DnaSection>
+
+     <DnaSection title="Audience Profile">
+        <DnaField label="Target Audience" value={dna.audience_profile.target_audience} isEditable={false} />
+    </DnaSection>
+
+    <DnaSection title="Industry & Context">
+        <DnaField label="Category Confirmation" value={dna.industry_context.category_confirmation} isEditable={false} />
+        <DnaField label="Service Focus Areas" value={dna.industry_context.service_focus_areas} isEditable={false} />
+        <DnaField label="Local Relevance Signals" value={dna.industry_context.local_relevance_signals} isEditable={false} />
+        <DnaField label="Professionalism Cues" value={dna.industry_context.professionalism_cues} isEditable={false} />
+    </DnaSection>
+  </div>
+);
+
+const DnaExtractionLoading: React.FC = () => {
+    const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
+    const [currentStep, setCurrentStep] = useState(0);
+    useEffect(() => { const interval = setInterval(() => { setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev)); }, 2000); return () => clearInterval(interval); }, []);
+    return (<div className="text-center p-8 bg-brand-light rounded-xl border-2 border-dashed border-brand-border"><h3 className="text-xl font-bold text-brand-text">Analyzing Your Website...</h3><p className="text-brand-text-muted my-2">This usually takes 2-5 minutes.</p><div className="w-full max-w-xs mx-auto my-6"><div className="relative pt-1"><div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-accent-purple/20"><div style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-purple transition-all duration-500"></div></div></div><ul className="text-left text-sm text-brand-text-muted space-y-2">{steps.map((step, index) => (<li key={step} className={`flex items-center transition-opacity duration-300 ${index <= currentStep ? 'opacity-100' : 'opacity-40'}`}>{index < currentStep ? <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> : <div className="w-4 h-4 mr-2"><Loader /></div>}{step}</li>))}</ul></div><p className="text-xs text-brand-text-muted">Please don't close this page.</p></div>);
+};
+
+const DnaField: React.FC<{ label: string; value: string | string[] | boolean | undefined; isEditable: boolean }> = ({ label, value, isEditable }) => {
+    let displayValue: React.ReactNode = '-';
+
+    if (Array.isArray(value)) {
+        displayValue = value.length > 0 ? value.join(', ') : '-';
+    } else if (typeof value === 'boolean') {
+        displayValue = value ? 'Yes' : 'No';
+    } else if (value) {
+        displayValue = value;
+    }
+
+    return (
+        <div>
+            <p className="font-semibold text-brand-text-muted">{label}</p>
+            <p className="text-brand-text whitespace-pre-wrap">{displayValue}</p>
+        </div>
+    );
+};
+
+
 const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (newProfile: BrandDnaProfile) => void, isEditable: boolean, openSections: string[], toggleSection: (key: string) => void }> = ({ dnaProfile, onUpdate, isEditable, openSections, toggleSection }) => {
     const handleFieldChange = (section: keyof BrandDnaProfile, field: any, value: any) => { onUpdate({ ...dnaProfile, [section]: { ...dnaProfile[section], [field]: value } }); };
     
@@ -529,7 +601,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     }
   }, [profileData.business]);
 
-  useEffect(() => { 
+  useEffect(() => {
     // Deep comparison to check if form state differs from saved profile data
     const isBusinessDirty = JSON.stringify(profileData.business) !== JSON.stringify(business);
     const isGbpDirty = JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness);
@@ -581,8 +653,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     if (!editableDna || !editableBrandProfile) return; 
     setExtractionStage('saving'); 
     
-    const newGbpData = googleBusiness; 
-    
     try {
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
@@ -598,25 +668,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         throw new Error('Failed to save DNA to database');
       }
 
-      const updatedBusiness = { 
-        ...business, 
-        dna: editableDna, 
-        isDnaApproved: true, 
-        dnaLastUpdatedAt: new Date().toISOString(),
-        google_business_profile: newGbpData,
-        brand_dna_profile: editableBrandProfile,
-      };
-      
-      onUpdate({ 
-        ...profileData, 
-        business: updatedBusiness, 
-        brandDnaProfile: editableBrandProfile, 
-        googleBusiness: newGbpData 
-      });
+      // CRITICAL: Call onBusinessUpdated to refresh from database
+      onBusinessUpdated();
       
       setExtractionStage('idle'); 
-      
       alert('✅ Business DNA saved successfully!');
+      
     } catch (error) {
       console.error('Error saving DNA:', error);
       alert('Failed to save DNA. Please try again.');
@@ -726,7 +783,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         onUpdate({ 
             ...profileData, 
             business: updatedBusiness,
-            brandDnaProfile: brandProfileToPreserve,
+            brandDnaProfile: brandProfileToPresserve,
         });
         
         // 4. Refresh data from database to ensure consistency
