@@ -28,20 +28,26 @@ const gbpFacts = [
   "Optimizing for 'near me' searches is crucial. 76% of people who search for something nearby on their smartphone visit a related business within a day."
 ];
 
+const SearchLoading: React.FC = () => (
+    <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg mt-6 text-center">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-accent-blue rounded-full mx-auto animate-spin"></div>
+        <h3 className="text-xl font-bold text-brand-text mt-4">Searching Google Maps...</h3>
+        <p className="text-brand-text-muted mt-2">Finding verified listings that match your business.</p>
+    </div>
+);
+
 const AnalysisLoading: React.FC = () => {
     const [currentFactIndex, setCurrentFactIndex] = useState(0);
     const [progress, setProgress] = useState(0);
 
     useEffect(() => {
-        // Cycle through facts every 3.5 seconds
         const factInterval = setInterval(() => {
             setCurrentFactIndex(prev => (prev + 1) % gbpFacts.length);
         }, 3500);
         
-        // Animate progress bar over 10 seconds (estimated max analysis time)
         const progressInterval = setInterval(() => {
             setProgress(prev => {
-                if (prev >= 95) return prev; // Stop just before 100
+                if (prev >= 95) return prev;
                 return prev + 5;
             });
         }, 500);
@@ -55,10 +61,9 @@ const AnalysisLoading: React.FC = () => {
     return (
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg mt-6 text-center">
             <Loader />
-            <h3 className="text-xl font-bold text-brand-text mt-4">Analyzing Your Profile...</h3>
-            <p className="text-brand-text-muted mt-2">This may take up to 5 minutes as we compare you to local competitors.</p>
+            <h3 className="text-xl font-bold text-brand-text mt-4">Performing Competitive AI Audit...</h3>
+            <p className="text-brand-text-muted mt-2">This is a deep analysis of your profile vs. your local competitors.</p>
             
-            {/* Progress Bar */}
             <div className="w-full max-w-md mx-auto my-6">
                 <div className="relative pt-1">
                     <div className="overflow-hidden h-2 mb-2 text-xs flex rounded bg-accent-purple/20">
@@ -68,7 +73,6 @@ const AnalysisLoading: React.FC = () => {
                 </div>
             </div>
 
-            {/* Rotating Fact */}
             <div className="mt-6 bg-brand-darker p-4 rounded-lg border border-slate-700 min-h-[90px] flex items-center justify-center transition-opacity duration-500">
                 <p className="text-white text-sm italic">
                     {gbpFacts[currentFactIndex]}
@@ -141,25 +145,19 @@ const priorityStyles = {
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', iconColor: 'text-yellow-500' },
   Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200', iconColor: 'text-blue-500' },
 };
-// --- END CONSTANTS ---
 
-// --- TYPES ---
-// Simplified TaskCardProps: No longer needs onStatusChange
 interface SimpleTaskCardProps {
   task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
   isAdded: boolean;
   onAdd: () => void;
 }
 
-// Simplified IssueCardProps: No longer needs onStatusChange
 interface SimpleIssueCardProps {
   issue: AuditIssue;
   isAdded: boolean;
   onAdd: () => void;
 }
-// --- END TYPES ---
 
-// --- COMPONENTS ---
 const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd }) => {
   return (
     <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
@@ -325,6 +323,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   
   const [auditReport, setAuditReport] = useState<AuditReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deepAnalysisRunning, setDeepAnalysisRunning] = useState(false);
   const [error, setError] = useState('');
   
   const supabase = getSupabaseClient();
@@ -368,33 +367,27 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   };
 
   const runAnalysis = async (business: ConfirmedBusiness) => {
-    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 1500)); // Minimum 1.5s delay
+    setDeepAnalysisRunning(true);
+    const minDelayPromise = new Promise(resolve => setTimeout(resolve, 2000));
     
     try {
       const analysisPromise = analyzeBusinessListing(business);
-      
-      // Wait for both analysis and minimum delay
-      const [analysis] = await Promise.all([
-        analysisPromise,
-        minDelayPromise
-      ]);
+      const [analysis] = await Promise.all([analysisPromise, minDelayPromise]);
 
       setAuditReport(analysis);
-      // Tasks are automatically added to the Growth Plan via this call
       addTasksToGrowthPlan([...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))]);
-      // Report is saved to the active profile via this call
       onSaveAnalysis(analysis);
     } catch (err) { 
       setError('Failed to get analysis. Please try again.'); 
     } 
     finally { 
-      setLoading(false); 
+      setDeepAnalysisRunning(false); 
     }
   }
 
   const handleConfirm = async () => {
     if (!selectedBusiness) return;
-    setError(''); setLoading(true); setAuditReport(null);
+    setError(''); setDeepAnalysisRunning(true); setAuditReport(null);
     setStep('result');
     await runAnalysis(selectedBusiness);
   };
@@ -402,7 +395,7 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const handleRerun = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!auditReport) return;
-      setError(''); setLoading(true); setAuditReport(null);
+      setError(''); setDeepAnalysisRunning(true); setAuditReport(null);
       await runAnalysis({ name: auditReport.businessName, address: auditReport.businessAddress, rating: 0, reviewCount: 0, category: ''});
   }
   
@@ -415,10 +408,8 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
 
   const renderContent = () => {
-    // CRITICAL FIX: Show loading screen if analysis is running (loading is true) AND we don't have the report yet.
-    if (loading && !auditReport) {
-        return <AnalysisLoading />;
-    }
+    if (loading) return <SearchLoading />;
+    if (deepAnalysisRunning) return <AnalysisLoading />;
 
     if (step === 'result' && auditReport) {
         return (
@@ -437,12 +428,11 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 report={auditReport} 
                 growthPlanTasks={growthPlanTasks} 
                 onRerun={handleRerun} 
-                isRunning={loading} 
+                isRunning={deepAnalysisRunning} 
                 onAddTask={addTasksToGrowthPlan} 
                 setActiveTool={setActiveTool} 
             />
             
-            {/* Single button to move to the next step */}
             <div className="mt-6">
                 <button
                     onClick={() => setActiveTool(ALL_TOOLS['growthplan'])}
@@ -458,8 +448,8 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
 
     switch (step) {
       case 'initial': return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><form onSubmit={handleSearch}><button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-lg">{loading ? 'Searching...' : 'Analyze My Business'}</button></form></div> );
-      case 'select': return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold">Is this your business?</h2><p className="mb-6">Please choose the correct listing.</p><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{searchResults.map((biz, i) => <BusinessResultCard key={i} business={biz} onSelect={(b) => { setSelectedBusiness(b); setStep('confirm'); }} />)}</div></div> );
-      case 'confirm': if (!selectedBusiness) return null; return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold">Confirm Your Selection</h2><p className="mb-6">Please confirm this is correct before we run the analysis.</p><div className="bg-brand-light border rounded-lg p-4"><h3 className="font-bold text-lg">{selectedBusiness.name}</h3><p className="text-sm mt-1">{selectedBusiness.address}</p></div><div className="flex justify-between mt-6"><button onClick={() => setStep('select')} className="text-sm font-semibold">&larr; Choose a different listing</button><button onClick={handleConfirm} disabled={loading} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-lg">{loading ? 'Analyzing...' : 'Confirm & Analyze'}</button></div></div> );
+      case 'select': return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold text-brand-text">Is this your business?</h2><p className="mb-6 text-brand-text-muted">Please choose the correct listing from Google Maps.</p><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{searchResults.map((biz, i) => <BusinessResultCard key={i} business={biz} onSelect={(b) => { setSelectedBusiness(b); setStep('confirm'); }} />)}</div></div> );
+      case 'confirm': if (!selectedBusiness) return null; return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold text-brand-text">Confirm Your Selection</h2><p className="mb-6 text-brand-text-muted">Is this the profile you want us to audit?</p><div className="bg-brand-light border rounded-lg p-4"><h3 className="font-bold text-lg text-brand-text">{selectedBusiness.name}</h3><p className="text-sm mt-1 text-brand-text-muted">{selectedBusiness.address}</p></div><div className="flex justify-between mt-6"><button onClick={() => setStep('select')} className="text-sm font-semibold text-brand-text-muted hover:text-brand-text">&larr; Choose a different listing</button><button onClick={handleConfirm} disabled={deepAnalysisRunning} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-lg shadow-md">{deepAnalysisRunning ? 'Starting Audit...' : 'Confirm & Start Deep Audit'}</button></div></div> );
       default: return null;
     }
   };

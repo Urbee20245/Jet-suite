@@ -25,21 +25,25 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    console.log(`[Sync Save] Saving ${dataType} for user ${userId}, business ${businessId}`);
+
     let result;
 
     switch (dataType) {
       case 'tasks':
-        // Delete and reinsert tasks for this specific business
-        await supabase.from('growth_plan_tasks').delete().eq('business_id', businessId);
+        // 1. Delete existing tasks for this specific business
+        const { error: deleteError } = await supabase.from('growth_plan_tasks').delete().eq('business_id', businessId);
+        if (deleteError) throw deleteError;
         
+        // 2. Map and insert new tasks
         if (Array.isArray(data) && data.length > 0) {
           const tasksToInsert = data.map(task => ({
             user_id: userId,
             business_id: businessId,
             title: task.title,
             description: task.description || null,
-            why_it_matters: task.whyItMatters || null,
-            source_module: task.sourceModule || null,
+            why_it_matters: task.whyItMatters || null, // Ensure this matches DB column
+            source_module: task.sourceModule || null,   // Ensure this matches DB column
             priority: task.priority || 'Medium',
             effort: task.effort || 'Low',
             status: task.status || 'to_do',
@@ -48,12 +52,14 @@ export default async function handler(
           }));
           
           result = await supabase.from('growth_plan_tasks').insert(tasksToInsert);
+          console.log(`[Sync Save] Successfully saved ${tasksToInsert.length} tasks.`);
+        } else {
+          console.log('[Sync Save] No tasks provided to save.');
         }
         break;
 
       case 'jetbiz':
       case 'jetviz':
-        // Upsert report
         const { data: existing } = await supabase
           .from('audit_reports')
           .select('id')
@@ -100,12 +106,6 @@ export default async function handler(
         }
         break;
 
-      case 'social_posts':
-        result = await supabase
-          .from('social_posts')
-          .insert({ user_id: userId, business_id: businessId, post_data: data });
-        break;
-
       case 'preferences':
         const { data: existingPref } = await supabase
           .from('user_preferences')
@@ -130,13 +130,13 @@ export default async function handler(
     }
 
     if (result?.error) {
-      console.error(`Error saving ${dataType}:`, result.error);
+      console.error(`[Sync Save] Error saving ${dataType}:`, result.error);
       return res.status(500).json({ error: `Failed to save ${dataType}`, details: result.error.message });
     }
 
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('Save error:', error);
+    console.error('[Sync Save] Fatal Error:', error);
     return res.status(500).json({ error: error.message });
   }
 }

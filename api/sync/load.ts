@@ -25,41 +25,48 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    console.log(`[Sync Load] Loading ${dataType} for user ${userId}, business ${businessId}`);
+
     let result;
 
     switch (dataType) {
       case 'tasks':
-        const { data: tasks } = await supabase
+        const { data: tasks, error: taskError } = await supabase
           .from('growth_plan_tasks')
           .select('*')
           .eq('user_id', userId)
           .eq('business_id', businessId)
           .order('created_at', { ascending: true });
 
-        // Map database columns back to frontend type (GrowthPlanTask)
+        if (taskError) throw taskError;
+
+        // Map database columns (snake_case) back to frontend type (camelCase)
         result = (tasks || []).map(task => ({
           id: task.id,
           title: task.title,
           description: task.description,
-          whyItMatters: task.why_it_matters,
-          sourceModule: task.source_module,
+          whyItMatters: task.why_it_matters, // Critical mapping
+          sourceModule: task.source_module,   // Critical mapping
           effort: task.effort,
           priority: task.priority,
           status: task.status,
           completionDate: task.completed_at,
           createdAt: task.created_at,
         }));
+        console.log(`[Sync Load] Successfully loaded ${result.length} tasks.`);
         break;
 
       case 'jetbiz':
       case 'jetviz':
-        const { data: reports } = await supabase
+        const { data: reports, error: reportError } = await supabase
           .from('audit_reports')
           .select('id, report_data, analysis_name, created_at, updated_at')
           .eq('user_id', userId)
           .eq('business_id', businessId)
           .eq('report_type', dataType)
           .order('created_at', { ascending: false });
+
+        if (reportError) throw reportError;
 
         result = (reports || []).map(report => ({
             id: report.id,
@@ -71,26 +78,18 @@ export default async function handler(
         break;
 
       case 'keywords':
-        const { data: keywords } = await supabase
+        const { data: keywords, error: kwError } = await supabase
           .from('saved_keywords')
           .select('*')
           .eq('business_id', businessId);
+
+        if (kwError) throw kwError;
 
         result = (keywords || []).map(kw => ({
           keyword: kw.keyword,
           searchVolume: kw.search_volume,
           competition: kw.competition,
         }));
-        break;
-
-      case 'social_posts':
-        const { data: posts } = await supabase
-          .from('social_posts')
-          .select('*')
-          .eq('business_id', businessId)
-          .order('created_at', { ascending: false });
-
-        result = posts || [];
         break;
 
       case 'preferences':
@@ -109,7 +108,7 @@ export default async function handler(
 
     return res.status(200).json({ data: result });
   } catch (error: any) {
-    console.error('Load error:', error);
+    console.error('[Sync Load] Error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
