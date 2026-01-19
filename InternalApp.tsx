@@ -43,7 +43,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [currentProfileData, setCurrentProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
-  const [savedPendingTasksCount, setSavedPendingTasksCount] = useState(0);
   
   // NEW: State for Review Response Rate
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
@@ -92,8 +91,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
         if (savedTasks) {
           setTasks(savedTasks);
-          const pendingCount = (savedTasks as GrowthPlanTask[]).filter(t => t.status !== 'completed').length;
-          setSavedPendingTasksCount(pendingCount);
         }
       }
     } catch (error) {
@@ -142,11 +139,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (!currentProfileData?.business.isDnaApproved) return 'Foundation Weak';
     return 'Foundation Ready';
   };
-  
-  const handlePlanSaved = (savedTasks: GrowthPlanTask[]) => {
-    const pendingCount = savedTasks.filter(t => t.status !== 'completed').length;
-    setSavedPendingTasksCount(pendingCount);
-  };
+
+  // Calculate live pending task count for the home dashboard
+  const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
 
   const renderActiveTool = () => {
     if (!currentProfileData) return null;
@@ -177,12 +172,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetLeads tool={{ id: 'jetleads', name: 'JetLeads', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetevents':
         return <JetEvents tool={{ id: 'jetevents', name: 'JetEvents', category: 'engage' }} />;
-      case 'jetads':
-        return <JetAds tool={{ id: 'jetads', name: 'JetAds', category: 'grow' }} />;
       case 'jetcompete':
         return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={handlePlanSaved} />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':
@@ -200,8 +193,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           readinessState={readiness} 
           plan={{ name: 'Pro', profileLimit: 1 }} 
           growthScore={calculateGrowthScore()} 
-          pendingTasksCount={savedPendingTasksCount}
-          reviewResponseRate={reviewResponseRate} // Pass the rate to Welcome
+          pendingTasksCount={pendingTasksCount}
+          reviewResponseRate={reviewResponseRate} 
         />;
     }
   };

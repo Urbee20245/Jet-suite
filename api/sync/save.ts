@@ -42,8 +42,8 @@ export default async function handler(
             business_id: businessId,
             title: task.title,
             description: task.description || null,
-            why_it_matters: task.whyItMatters || null, // Ensure this matches DB column
-            source_module: task.sourceModule || null,   // Ensure this matches DB column
+            why_it_matters: task.whyItMatters || null, 
+            source_module: task.sourceModule || null,   
             priority: task.priority || 'Medium',
             effort: task.effort || 'Low',
             status: task.status || 'to_do',
@@ -52,7 +52,7 @@ export default async function handler(
           }));
           
           result = await supabase.from('growth_plan_tasks').insert(tasksToInsert);
-          console.log(`[Sync Save] Successfully saved ${tasksToInsert.length} tasks.`);
+          console.log(`[Sync Save] Successfully saved ${tasksToInsert.length} tasks to Supabase.`);
         } else {
           console.log('[Sync Save] No tasks provided to save.');
         }
