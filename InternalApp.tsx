@@ -23,7 +23,7 @@ import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState } from './types';
-import { loadFromSupabase } from './utils/syncService';
+import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
@@ -43,8 +43,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [currentProfileData, setCurrentProfileData] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
-  
-  // NEW: State for Review Response Rate
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
 
   const supabase = getSupabaseClient();
@@ -77,7 +75,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         };
         setCurrentProfileData(profile);
 
-        // Fetch Review Stats for the new metric
         const { data: reviews } = await supabase
           .from('business_reviews')
           .select('ai_response_sent')
@@ -88,6 +85,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           setReviewResponseRate(Math.round((responded / reviews.length) * 100));
         }
 
+        // CRITICAL: Always load tasks from Supabase on mount/biz switch
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
         if (savedTasks) {
           setTasks(savedTasks);
@@ -107,20 +105,40 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const handleSetActiveTool = (tool: Tool | null, articleId?: string) => {
     setActiveTool(tool);
     setKbArticleId(articleId || null);
+    
+    // Auto-sync tasks from DB when switching back to home or growth plan
+    if (!tool || tool.id === 'growthplan' || tool.id === 'home') {
+        loadData();
+    }
   };
 
-  const addTasksToGrowthPlan = (newTasks: any[]) => {
+  /**
+   * CRITICAL: Adds tasks to local state AND saves immediately to Supabase
+   */
+  const addTasksAndSave = async (newTasks: any[]) => {
     const tasksWithMetadata = newTasks.map(t => ({
       ...t,
       id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       status: 'to_do' as const,
       createdAt: new Date().toISOString()
     }));
-    setTasks(prev => [...prev, ...tasksWithMetadata]);
+    
+    const updatedTasks = [...tasks, ...tasksWithMetadata];
+    setTasks(updatedTasks);
+    
+    if (userId && activeBusinessId) {
+        console.log('[InternalApp] Auto-saving tasks to Supabase...');
+        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+    }
   };
 
-  const handleTaskStatusChange = (taskId: string, status: GrowthPlanTask['status']) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status, completionDate: status === 'completed' ? new Date().toISOString() : undefined } : t));
+  const handleTaskStatusChange = async (taskId: string, status: GrowthPlanTask['status']) => {
+    const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, status, completionDate: status === 'completed' ? new Date().toISOString() : undefined } : t);
+    setTasks(updatedTasks);
+    // Auto-save on status change
+    if (userId && activeBusinessId) {
+        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+    }
   };
 
   const calculateGrowthScore = () => {
@@ -140,7 +158,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     return 'Foundation Ready';
   };
 
-  // Calculate live pending task count for the home dashboard
   const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
 
   const renderActiveTool = () => {
@@ -151,9 +168,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'businessdetails':
         return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={loadData} />;
       case 'jetbiz':
-        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':
-        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetkeywords':
         return <JetKeywords tool={{ id: 'jetkeywords', name: 'JetKeywords', category: 'analyze' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcreate':
@@ -173,9 +190,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetevents':
         return <JetEvents tool={{ id: 'jetevents', name: 'JetEvents', category: 'engage' }} />;
       case 'jetcompete':
-        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
+        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={loadData} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':
