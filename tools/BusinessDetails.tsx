@@ -39,96 +39,57 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
         });
     } catch (error) {
         console.error("CORS error fetching image, returning original URL:", error);
-        return url; // Return original URL on failure
+        return url; 
     }
 };
 
 // --- Constants ---
 const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other" ];
 
-// --- Component Definitions (to fix TS2304 errors) ---
+// --- UI Components ---
 
 const DnaExtractionLoading: React.FC = () => {
     const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
     const [currentStep, setCurrentStep] = useState(0);
-    useEffect(() => { const interval = setInterval(() => { setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev)); }, 2000); return () => clearInterval(interval); }, []);
-    return (<div className="text-center p-8 bg-brand-light rounded-xl border-2 border-dashed border-brand-border"><h3 className="text-xl font-bold text-brand-text">Analyzing Your Website...</h3><p className="text-brand-text-muted my-2">This usually takes 2-5 minutes.</p><div className="w-full max-w-xs mx-auto my-6"><div className="relative pt-1"><div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-accent-purple/20"><div style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-purple transition-all duration-500"></div></div></div><ul className="text-left text-sm text-brand-text-muted space-y-2">{steps.map((step, index) => (<li key={step} className={`flex items-center transition-opacity duration-300 ${index <= currentStep ? 'opacity-100' : 'opacity-40'}`}>{index < currentStep ? <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> : <div className="w-4 h-4 mr-2"><Loader /></div>}{step}</li>))}</ul></div><p className="text-xs text-brand-text-muted">Please don't close this page.</p></div>);
-};
-
-const DnaField: React.FC<{ label: string; value: string | string[] | boolean | undefined; isEditable: boolean }> = ({ label, value, isEditable }) => {
-    let displayValue: React.ReactNode = '-';
-
-    if (Array.isArray(value)) {
-        displayValue = value.length > 0 ? value.join(', ') : '-';
-    } else if (typeof value === 'boolean') {
-        displayValue = value ? 'Yes' : 'No';
-    } else if (value) {
-        displayValue = value;
-    }
-
+    useEffect(() => { 
+        const interval = setInterval(() => { 
+            setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev)); 
+        }, 2000); 
+        return () => clearInterval(interval); 
+    }, []);
     return (
-        <div>
-            <p className="font-semibold text-brand-text-muted">{label}</p>
-            <p className="text-brand-text whitespace-pre-wrap">{displayValue}</p>
+        <div className="text-center p-8 bg-brand-light rounded-xl border-2 border-dashed border-brand-border">
+            <h3 className="text-xl font-bold text-brand-text">Analyzing Your Website...</h3>
+            <p className="text-brand-text-muted my-2">This usually takes 2-5 minutes.</p>
+            <div className="w-full max-w-xs mx-auto my-6">
+                <div className="relative pt-1">
+                    <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-accent-purple/20">
+                        <div style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-purple transition-all duration-500"></div>
+                    </div>
+                </div>
+                <ul className="text-left text-sm text-brand-text-muted space-y-2">
+                    {steps.map((step, index) => (
+                        <li key={step} className={`flex items-center transition-opacity duration-300 ${index <= currentStep ? 'opacity-100' : 'opacity-40'}`}>
+                            {index < currentStep ? <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> : <div className="w-4 h-4 mr-2"><Loader /></div>}
+                            {step}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <p className="text-xs text-brand-text-muted">Please don't close this page.</p>
         </div>
     );
 };
 
-
-const DnaDisplay: React.FC<{ dna: BrandDnaProfile }> = ({ dna }) => (
-  <div className="space-y-6">
-    <DnaSection title="Brand Tone & Voice">
-        <DnaField label="Primary Tone" value={dna.brand_tone.primary_tone} isEditable={false} />
-        <DnaField label="Secondary Modifiers" value={dna.brand_tone.secondary_modifiers} isEditable={false} />
-        <DnaField label="Writing Style" value={dna.brand_tone.writing_style} isEditable={false} />
-        <DnaField label="Emotional Positioning" value={dna.brand_tone.emotional_positioning} isEditable={false} />
-    </DnaSection>
-
-    <DnaSection title="Visual Identity">
-        <DnaField label="Primary Colors" value={dna.visual_identity.primary_colors} isEditable={false} />
-        <DnaField label="Secondary Colors" value={dna.visual_identity.secondary_colors} isEditable={false} />
-        <DnaField label="Color Mood" value={dna.visual_identity.color_mood} isEditable={false} />
-        <DnaField label="Typography Style" value={dna.visual_identity.typography_style} isEditable={false} />
-        <DnaField label="Layout Style" value={dna.visual_identity.layout_style} isEditable={false} />
-    </DnaSection>
-    
-    <DnaSection title="Logo Profile">
-        <DnaField label="Has Logo?" value={dna.logo_profile.has_logo} isEditable={false} />
-        <DnaField label="Logo Style" value={dna.logo_profile.logo_style} isEditable={false} />
-        <DnaField label="Dominant Logo Colors" value={dna.logo_profile.dominant_colors} isEditable={false} />
-        <DnaField label="Is Reusable for Creatives?" value={dna.logo_profile.is_reusable} isEditable={false} />
-    </DnaSection>
-
-    <DnaSection title="Brand Positioning">
-        <DnaField label="Core Value Proposition" value={dna.brand_positioning.value_proposition} isEditable={false} />
-        <DnaField label="Primary Customer Intent" value={dna.brand_positioning.primary_customer_intent} isEditable={false} />
-        <DnaField label="Local vs. National" value={dna.brand_positioning.local_vs_national} isEditable={false} />
-        <DnaField label="Differentiation Signals" value={dna.brand_positioning.differentiation_signals} isEditable={false} />
-    </DnaSection>
-
-     <DnaSection title="Audience Profile">
-        <DnaField label="Target Audience" value={dna.audience_profile.target_audience} isEditable={false} />
-    </DnaSection>
-
-    <DnaSection title="Industry & Context">
-        <DnaField label="Category Confirmation" value={dna.industry_context.category_confirmation} isEditable={false} />
-        <DnaField label="Service Focus Areas" value={dna.industry_context.service_focus_areas} isEditable={false} />
-        <DnaField label="Local Relevance Signals" value={dna.industry_context.local_relevance_signals} isEditable={false} />
-        <DnaField label="Professionalism Cues" value={dna.industry_context.professionalism_cues} isEditable={false} />
-    </DnaSection>
+const DnaSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div className="bg-brand-light p-4 rounded-lg border border-brand-border">
+    <h3 className="text-lg font-bold text-accent-purple mb-3">{title}</h3>
+    <div className="space-y-3 text-sm">{children}</div>
   </div>
 );
 
-const DnaExtractionLoading: React.FC = () => {
-    const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
-    const [currentStep, setCurrentStep] = useState(0);
-    useEffect(() => { const interval = setInterval(() => { setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev)); }, 2000); return () => clearInterval(interval); }, []);
-    return (<div className="text-center p-8 bg-brand-light rounded-xl border-2 border-dashed border-brand-border"><h3 className="text-xl font-bold text-brand-text">Analyzing Your Website...</h3><p className="text-brand-text-muted my-2">This usually takes 2-5 minutes.</p><div className="w-full max-w-xs mx-auto my-6"><div className="relative pt-1"><div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-accent-purple/20"><div style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-accent-purple transition-all duration-500"></div></div></div><ul className="text-left text-sm text-brand-text-muted space-y-2">{steps.map((step, index) => (<li key={step} className={`flex items-center transition-opacity duration-300 ${index <= currentStep ? 'opacity-100' : 'opacity-40'}`}>{index < currentStep ? <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500" /> : <div className="w-4 h-4 mr-2"><Loader /></div>}{step}</li>))}</ul></div><p className="text-xs text-brand-text-muted">Please don't close this page.</p></div>);
-};
-
-const DnaField: React.FC<{ label: string; value: string | string[] | boolean | undefined; isEditable: boolean }> = ({ label, value, isEditable }) => {
+const DnaField: React.FC<{ label: string; value: string | string[] | boolean | undefined; isEditable: boolean }> = ({ label, value }) => {
     let displayValue: React.ReactNode = '-';
-
     if (Array.isArray(value)) {
         displayValue = value.length > 0 ? value.join(', ') : '-';
     } else if (typeof value === 'boolean') {
@@ -136,7 +97,6 @@ const DnaField: React.FC<{ label: string; value: string | string[] | boolean | u
     } else if (value) {
         displayValue = value;
     }
-
     return (
         <div>
             <p className="font-semibold text-brand-text-muted">{label}</p>
@@ -145,10 +105,8 @@ const DnaField: React.FC<{ label: string; value: string | string[] | boolean | u
     );
 };
 
-
 const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (newProfile: BrandDnaProfile) => void, isEditable: boolean, openSections: string[], toggleSection: (key: string) => void }> = ({ dnaProfile, onUpdate, isEditable, openSections, toggleSection }) => {
     const handleFieldChange = (section: keyof BrandDnaProfile, field: any, value: any) => { onUpdate({ ...dnaProfile, [section]: { ...dnaProfile[section], [field]: value } }); };
-    
     return (
         <div className="space-y-3">
             {Object.entries(dnaProfile).map(([sectionKey, sectionValue]) => (
@@ -172,7 +130,7 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
                                     ) : (
                                         <DnaField 
                                             label={fieldKey.replace(/_/g, ' ')} 
-                                            value={fieldValue as string | string[] | boolean | undefined} // FIX: Explicit cast
+                                            value={fieldValue as string | string[] | boolean | undefined}
                                             isEditable={false} 
                                         /> 
                                     )}
@@ -296,8 +254,6 @@ const DnaReviewAndSaved: React.FC<{
                 </div>
             </div>
             
-            {/* Removed GBP Detected Card from Step 2 */}
-            
             <div>
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-lg font-bold text-brand-text">Extracted Brand DNA Profile</h3>
@@ -328,33 +284,6 @@ const DnaReviewAndSaved: React.FC<{
     );
 };
 
-// --- Sub-components for GBP Workflow ---
-const GbpDetectedCard: React.FC<{ detectedGbp: BusinessSearchResult; isConfirmed: boolean; onConfirm: () => void; onReject: () => void; }> = ({ detectedGbp, isConfirmed, onConfirm, onReject }) => (
-    <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg mb-4">
-        <div className="flex items-start justify-between">
-            <div className="flex items-start">
-                <InfoIcon className="w-6 h-6 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                    <p className="font-bold">Google Business Profile Detected</p>
-                    <p className="text-sm">We found a potential match for your business during DNA extraction:</p>
-                    <div className="mt-2 bg-white p-3 rounded-lg border border-yellow-200">
-                        <p className="font-semibold text-brand-text">{detectedGbp.name}</p>
-                        <p className="text-xs text-brand-text-muted">{detectedGbp.address}</p>
-                        <p className="text-xs text-brand-text-muted flex items-center gap-1 mt-1">
-                            <StarIcon className="w-3 h-3 text-yellow-400" /> {detectedGbp.rating} ({detectedGbp.reviewCount} reviews)
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <button type="button" onClick={onReject} className="text-sm font-semibold text-red-500 hover:underline">Ignore</button>
-        </div>
-        <div className="mt-4 flex justify-end gap-3">
-            <button type="button" onClick={onConfirm} className={`text-sm font-bold py-2 px-4 rounded-lg transition-colors ${isConfirmed ? 'bg-green-500 text-white' : 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500'}`}>
-                {isConfirmed ? '✓ Confirmed' : 'Confirm & Connect'}
-            </button>
-        </div>
-    </div>
-);
 const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button type="button" onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
 const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
 const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
@@ -371,7 +300,6 @@ const GbpConnect: React.FC<{
     searchTerm: string,
     setSearchTerm: (term: string) => void,
 }> = ({ profileData, onSearch, searchResults, loading, error, onSelect, selected, onConfirm, onCancel, searchTerm, setSearchTerm }) => { 
-    
     if (loading) {
         return (
             <div className="bg-brand-light p-6 rounded-lg border text-center">
@@ -381,7 +309,6 @@ const GbpConnect: React.FC<{
             </div>
         );
     }
-    
     if (selected) return (
         <div className="bg-brand-light p-6 rounded-lg border text-center">
             <h4 className="font-bold text-brand-text">Confirm This Business</h4>
@@ -399,7 +326,6 @@ const GbpConnect: React.FC<{
             </div>
         </div>
     );
-
     return ( 
         <div className="bg-brand-light p-6 rounded-lg border space-y-4"> 
             <h4 className="font-bold text-brand-text">Connect Your Verified Profile</h4> 
@@ -418,7 +344,6 @@ const GbpConnect: React.FC<{
                 <button type="submit" disabled={!searchTerm} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
                     Find & Connect
                 </button>
-                
                 <div className="space-y-2 mt-4">
                     {searchResults.map(r => 
                         <button 
@@ -436,14 +361,6 @@ const GbpConnect: React.FC<{
         </div> 
     ); 
 };
-const renderSocialContent = (userId: string) => { 
-    // FIX: Pass the correct handlers to SocialAccountsStep
-    return <SocialAccountsStep 
-        userId={userId} 
-        onContinue={() => {}} 
-        onSkip={() => {}} 
-    />; 
-  };
 
 const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean }> = ({ onLock, isDirty }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
@@ -486,7 +403,6 @@ const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ on
 const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; hint?: string; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick, hint }) => { 
     const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
     const [isOpen, setIsOpen] = useState(defaultOpen);
-
     const handleClick = () => {
         if (isLocked) {
             onLockedClick(number);
@@ -494,7 +410,6 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
             setIsOpen(!isOpen);
         }
     };
-
     return (
         <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
             {isLocked && (
@@ -522,7 +437,6 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
                     {isOpen ? <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" /> : <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />}
                 </div>
             </button>
-            
             <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="p-6 sm:p-8 pt-0">
                     <div className={isLocked ? 'pointer-events-none' : ''}>
@@ -533,6 +447,7 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
         </div>
     );
 };
+
 const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
 
 // --- Main Component ---
@@ -549,13 +464,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
   const [isGbpSkipped, setIsGbpSkipped] = useState(false);
   const [isDnaEditing, setIsDnaEditing] = useState(false);
-  
   const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>('physical');
-  
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
-  
-  const userId = profileData.user.id;
-  
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
   const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
@@ -563,46 +473,23 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [searchError, setSearchError] = useState('');
   
   useEffect(() => { 
-    console.log('✅ [BusinessDetails] useEffect triggered with profileData:', {
-      business: profileData.business,
-      brandDnaProfile: profileData.brandDnaProfile,
-      isDnaApproved: profileData.business.isDnaApproved,
-      hasDna: !!profileData.business.dna
-    });
-
     setBusiness(profileData.business); 
     setGoogleBusiness(profileData.googleBusiness); 
-    
-    // CRITICAL: Always set editableDna from the saved DNA
-    if (profileData.business.dna) {
-        console.log('✅ [BusinessDetails] Setting editableDna from saved business.dna');
-        setEditableDna(profileData.business.dna);
-    }
-    
+    if (profileData.business.dna) setEditableDna(profileData.business.dna);
     if (profileData.brandDnaProfile) {
-        console.log('✅ [BusinessDetails] DNA Profile found, setting editable state.');
         setEditableDna(profileData.business.dna);
         setEditableBrandProfile(profileData.brandDnaProfile);
-    } else {
-        console.log('🟡 [BusinessDetails] No DNA Profile found in props.');
     }
-    
     setIsDnaEditing(false);
   }, [profileData]);
 
   useEffect(() => {
-    if (profileData.business.location) {
-      setLocationType('physical');
-    } else {
-      setLocationType('online'); 
-    }
-    if (!business.location) {
-      setBusiness(prev => ({ ...prev, location: '' }));
-    }
+    if (profileData.business.location) setLocationType('physical');
+    else setLocationType('online'); 
+    if (!business.location) setBusiness(prev => ({ ...prev, location: '' }));
   }, [profileData.business]);
 
   useEffect(() => {
-    // Deep comparison to check if form state differs from saved profile data
     const isBusinessDirty = JSON.stringify(profileData.business) !== JSON.stringify(business);
     const isGbpDirty = JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness);
     setIsDirty(isBusinessDirty || isGbpDirty); 
@@ -610,24 +497,10 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const step1Completed = !!business.business_name && !!business.business_website && !!business.industry && (locationType === 'online' || locationType === 'home' || (!!business.location && business.location.includes(',')));
   const step2Completed = profileData.business.isDnaApproved || profileData.business.is_dna_approved || false;
-
-  // Add debug logging
-  console.log('🔍 [BusinessDetails] Step 2 check:', {
-    isDnaApproved: profileData.business.isDnaApproved,
-    is_dna_approved: profileData.business.is_dna_approved,
-    step2Completed: step2Completed,
-    hasDna: !!profileData.business.dna,
-    hasBrandProfile: !!profileData.brandDnaProfile
-  });
-
   const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
   const step4Completed = true;
-  
-  // CRITICAL FIX: Update allStepsComplete to require Step 3
   const allStepsComplete = step1Completed && step2Completed && step3Completed;
-  
   const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
-  
   const isLocked = profileData.business.is_complete;
 
   const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -637,20 +510,16 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     if (!step1Completed) return; 
     setAnalysisError(''); 
     setExtractionStage('extracting'); 
-    
     try { 
       const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
         extractWebsiteDna(business.business_website), 
         extractBrandDnaProfile(business)
       ]); 
-      
       const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; 
       const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; 
-      
       setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); 
       setEditableBrandProfile(brandDnaProfileResult); 
       setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); 
-      
       setExtractionStage('reviewing'); 
     } catch (e) { 
       console.error("Analysis failed:", e); 
@@ -662,30 +531,16 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const handleInitialSaveDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
     setExtractionStage('saving'); 
-    
     try {
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId: business.id,
-          dna: editableDna,
-          brandDnaProfile: editableBrandProfile,
-        }),
+        body: JSON.stringify({ businessId: business.id, dna: editableDna, brandDnaProfile: editableBrandProfile }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save DNA to database');
-      }
-
-      console.log('✅ [BusinessDetails] DNA saved, calling onBusinessUpdated()');
-      
-      // CRITICAL: Refresh data from database
+      if (!response.ok) throw new Error('Failed to save DNA to database');
       onBusinessUpdated();
-      
       setExtractionStage('idle'); 
       alert('✅ Business DNA saved successfully!');
-      
     } catch (error) {
       console.error('Error saving DNA:', error);
       alert('Failed to save DNA. Please try again.');
@@ -695,36 +550,15 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const handleUpdateDna = async () => { 
     if (!editableDna || !editableBrandProfile) return; 
-    
     try {
       const response = await fetch('/api/business/save-dna', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessId: business.id,
-          dna: editableDna,
-          brandDnaProfile: editableBrandProfile,
-        }),
+        body: JSON.stringify({ businessId: business.id, dna: editableDna, brandDnaProfile: editableBrandProfile }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to save DNA to database');
-      }
-
-      const updatedBusiness = { 
-        ...business, 
-        dna: editableDna, 
-        isDnaApproved: true, 
-        dnaLastUpdatedAt: new Date().toISOString(),
-        brand_dna_profile: editableBrandProfile,
-      }; 
-      
-      onUpdate({ 
-        ...profileData, 
-        business: updatedBusiness, 
-        brandDnaProfile: editableBrandProfile 
-      }); 
-      
+      if (!response.ok) throw new Error('Failed to save DNA to database');
+      const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString(), brand_dna_profile: editableBrandProfile }; 
+      onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile }); 
       setIsDnaEditing(false);
       alert('✅ Business DNA updated successfully!');
     } catch (error) {
@@ -735,17 +569,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
     try {
-        // 1. Validation (Ensure no unsaved changes if locking)
-        if (lockStatus && isDirty) {
-            alert('Please save all pending changes in Step 1 before locking the profile.');
-            return;
-        }
-        
-        // CRITICAL: Preserve DNA from ALL possible sources
+        if (lockStatus && isDirty) { alert('Please save all pending changes in Step 1 before locking the profile.'); return; }
         const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
         const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
-        
-        // 2. Prepare payload for lock/unlock - CRITICAL: Send full state to preserve JSONB fields
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -753,8 +579,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 userId: profileData.user.id,
                 businessId: business.id,
                 isComplete: lockStatus,
-                
-                // CRITICAL FIX: Include all complex fields to ensure they are preserved
                 businessName: business.business_name,
                 websiteUrl: business.business_website,
                 industry: business.industry,
@@ -763,63 +587,32 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 isPrimary: business.is_primary,
                 businessDescription: business.business_description,
                 googleBusiness: googleBusiness,
-                
-                // CRITICAL: Preserve DNA from ALL possible sources
                 dna: dnaToPreserve,
                 brandDnaProfile: brandProfileToPreserve,
                 isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
                 dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
             }),
         });
-
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('[BusinessDetails] Lock API Error:', errorData);
             throw new Error(errorData.message || 'Failed to update profile lock status.');
         }
-
-        // 3. Update local state
-        const updatedBusiness = { 
-            ...business, 
-            is_complete: lockStatus,
-            // CRITICAL: Preserve DNA in local state
-            dna: dnaToPreserve,
-            brand_dna_profile: brandProfileToPreserve,
-            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
-        };
-        
+        const updatedBusiness = { ...business, is_complete: lockStatus, dna: dnaToPreserve, brand_dna_profile: brandProfileToPreserve, isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved, dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt };
         setBusiness(updatedBusiness);
-        
-        // Update parent component
-        onUpdate({ 
-            ...profileData, 
-            business: updatedBusiness,
-            brandDnaProfile: brandProfileToPresserve,
-        });
-        
-        // 4. Refresh data from database to ensure consistency
+        onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: brandProfileToPreserve });
         onBusinessUpdated();
-        
-        console.log(`✅ Profile ${lockStatus ? 'locked' : 'unlocked'} successfully.`);
-
     } catch (err: any) {
-        console.error('[BusinessDetails] Lock/Unlock failed:', err);
         alert(`Failed to update profile lock status. Details: ${err.message}`);
     }
   };
 
   const handleLockProfile = async () => {
     if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
-    
-    // Check for dirty state again before proceeding
     if (isDirty) {
         setNotification({ message: 'Please save all pending changes in Step 1 before locking.', type: 'error' });
         setTimeout(() => setNotification(null), 3000);
         return;
     }
-
-    // Perform the lock operation
     await updateProfileLockStatus(true);
   };
 
@@ -828,40 +621,23 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     await updateProfileLockStatus(false);
   };
 
-
   const handleSaveInfo = async (e: React.FormEvent) => { 
     e.preventDefault(); 
-    
     try {
         let city = '';
         let state = '';
-        
         if (locationType === 'physical' && business.location) {
             const locationParts = (business.location || '').split(',').map(s => s.trim());
             city = locationParts[0] || '';
             state = locationParts[1] || '';
-            
-            if (!city || !state) {
-                alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)');
-                return;
-            }
+            if (!city || !state) { alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)'); return; }
         }
-
         if (!business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
             alert('Business Name, Website, and Category are required.');
             return;
         }
-
-        console.log('💾 Saving business info with DNA preservation:', {
-          hasSavedDna: !!profileData.business.dna,
-          hasEditableDna: !!editableDna,
-          isDnaApproved: business.isDnaApproved
-        });
-
-        // CRITICAL: Always include existing DNA data - check multiple sources
         const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
         const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
-        
         const payload = {
             userId: profileData.user.id,
             businessId: business.id,
@@ -874,52 +650,28 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             isComplete: isLocked,
             businessDescription: business.business_description,
             googleBusiness: googleBusiness,
-            // CRITICAL: Preserve DNA from ALL possible sources
             dna: dnaToPreserve,
             brandDnaProfile: brandProfileToPreserve,
             isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
             dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
         };
-
         const response = await fetch('/api/business/update-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'API route failed to save business profile.');
         }
-
-        // Update local state with ALL preserved data
-        const updatedBusiness = {
-            ...business,
-            city: city || null,
-            state: state || null,
-            // CRITICAL: Preserve DNA in local state
-            dna: dnaToPreserve,
-            brand_dna_profile: brandProfileToPreserve,
-            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
-        };
-        
+        const updatedBusiness = { ...business, city: city || null, state: state || null, dna: dnaToPreserve, brand_dna_profile: brandProfileToPreserve, isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved, dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt };
         setBusiness(updatedBusiness);
-        
-        // Update parent component with ALL preserved data
-        onUpdate({ 
-            ...profileData, 
-            business: updatedBusiness, 
-            googleBusiness 
-        }); 
-        
+        onUpdate({ ...profileData, business: updatedBusiness, googleBusiness }); 
         setIsDirty(false);
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
         onBusinessUpdated();
-
     } catch (err: any) {
-        console.error('[BusinessDetails] Database save failed:', err);
         alert(`Failed to save business details. Details: ${err.message}`);
     }
   };
@@ -930,31 +682,18 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setIsSearchingGbp(true);
     setSearchResults([]);
     setSelectedGbp(null);
-
     const query = searchTerm.trim() || `${business.business_name}, ${business.location}`;
-    
     try {
         const results = await searchGoogleBusiness(query);
-        if (results.length === 0) {
-            setSearchError('No businesses found matching your query. Try updating your profile.');
-        } else {
-            setSearchResults(results);
-        }
-    } catch (err) {
-        setSearchError('Failed to search Google Business Profiles. Please try again.');
-    } finally {
-        setIsSearchingGbp(false);
-    }
+        if (results.length === 0) setSearchError('No businesses found matching your query. Try updating your profile.');
+        else setSearchResults(results);
+    } catch (err) { setSearchError('Failed to search Google Business Profiles. Please try again.'); } 
+    finally { setIsSearchingGbp(false); }
   };
 
-  const handleGbpSelect = (gbp: BusinessSearchResult) => {
-    setSelectedGbp(gbp);
-    setSearchResults([]);
-  };
-
+  const handleGbpSelect = (gbp: BusinessSearchResult) => { setSelectedGbp(gbp); setSearchResults([]); };
   const handleGbpConfirm = async () => {
     if (!selectedGbp) return;
-
     const newGbp: ProfileData['googleBusiness'] = {
         profileName: selectedGbp.name,
         mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
@@ -964,7 +703,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         reviewCount: selectedGbp.reviewCount,
         address: selectedGbp.address,
     };
-    
     setGoogleBusiness(newGbp);
     await handleSaveInfo(new Event('submit') as unknown as React.FormEvent);
     setSelectedGbp(null);
@@ -972,11 +710,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setSearchResults([]);
   };
 
-  const handleGbpCancel = () => {
-    setSelectedGbp(null);
-    setSearchResults([]);
-  };
-
+  const handleGbpCancel = () => { setSelectedGbp(null); setSearchResults([]); };
   const handleGbpDisconnect = () => { 
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
@@ -985,31 +719,18 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
   
   const handleGenerateDescription = async () => { 
-    if (!business.business_website) { 
-        alert("Please enter your Website URL first."); 
-        return; 
-    } 
+    if (!business.business_website) { alert("Please enter your Website URL first."); return; } 
     setIsGeneratingDescription(true); 
     setSuggestedCategory(null);
     try { 
         const { description, suggestedCategory } = await generateBusinessDescription(business.business_website); 
         setBusiness(b => ({ ...b, business_description: description })); 
         setSuggestedCategory(suggestedCategory);
-    } catch (e) { 
-        alert("Failed to generate description. Check your API key."); 
-    } finally { 
-        setIsGeneratingDescription(false); 
-    }
+    } catch (e) { alert("Failed to generate description. Check your API key."); } 
+    finally { setIsGeneratingDescription(false); }
   };
   
   const renderDnaContent = () => {
-    console.log('✅ [BusinessDetails] renderDnaContent called. State:', {
-      isDnaApproved_prop: profileData.business.isDnaApproved,
-      brandDnaProfile_prop_exists: !!profileData.brandDnaProfile,
-      extractionStage: extractionStage,
-      isDnaEditing: isDnaEditing,
-    });
-
     if (profileData.business.isDnaApproved && profileData.brandDnaProfile) {
         return <DnaReviewAndSaved 
             visualDna={isDnaEditing ? editableDna! : business.dna} 
@@ -1038,6 +759,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
       default: return null;
     }
   };
+
   const renderGbpContent = () => { 
     if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') { 
         return (
@@ -1047,54 +769,25 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </div>
         ); 
     } 
-    
     const onUpdateStatus = (s: GbpStatus) => { 
         const newGbp = {...googleBusiness, status: s}; 
         setGoogleBusiness(newGbp); 
     }; 
-    
     switch (googleBusiness.status) { 
         case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; 
         case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; 
-        case 'Verified': return <GbpConnect 
-            profileData={profileData} 
-            onSearch={handleGbpSearch}
-            searchResults={searchResults}
-            loading={isSearchingGbp}
-            error={searchError}
-            onSelect={handleGbpSelect}
-            selected={selectedGbp}
-            onConfirm={handleGbpConfirm}
-            onCancel={handleGbpCancel}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-        />; 
+        case 'Verified': return <GbpConnect profileData={profileData} onSearch={handleGbpSearch} searchResults={searchResults} loading={isSearchingGbp} error={searchError} onSelect={handleGbpSelect} selected={selectedGbp} onConfirm={handleGbpConfirm} onCancel={handleGbpCancel} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />; 
         default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
     } 
-  };
-  const renderSocialContent = (userId: string) => { 
-    // FIX: Pass the correct handlers to SocialAccountsStep
-    return <SocialAccountsStep 
-        userId={userId} 
-        onContinue={() => {}} 
-        onSkip={() => {}} 
-    />; 
   };
 
   const handleLockedClick = (stepNumber: number) => {
     let message = '';
     switch (stepNumber) {
-        case 2:
-            message = 'Please complete Step 1 (Business Information) first.';
-            break;
-        case 3:
-            message = 'Please complete Step 2 (Business DNA) first.';
-            break;
-        case 4:
-            message = 'Please complete Step 3 (Google Business Profile) first.';
-            break;
-        default:
-            message = 'This step is locked until the previous step is complete.';
+        case 2: message = 'Please complete Step 1 (Business Information) first.'; break;
+        case 3: message = 'Please complete Step 2 (Business DNA) first.'; break;
+        case 4: message = 'Please complete Step 3 (Google Business Profile) first.'; break;
+        default: message = 'This step is locked until the previous step is complete.';
     }
     setNotification({ message, type: 'info' });
     setTimeout(() => setNotification(null), 3000);
@@ -1118,14 +811,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         )}
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
-        
-        {isLocked && (
-            <LockedView 
-                onUnlock={handleUnlockProfile} 
-                onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} 
-            />
-        )}
-
+        {isLocked && <LockedView onUnlock={handleUnlockProfile} onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} />}
         <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked} hint={hints.step1}>
             <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
             {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
@@ -1140,9 +826,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                         <button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription} className="flex items-center gap-1 text-xs font-semibold bg-accent-purple/10 text-accent-purple px-2 py-1 rounded-md hover:bg-accent-purple/20">
                             {isGeneratingDescription ? <><Loader /> Generating...</> : <><SparklesIcon className="w-3 h-3"/> Generate with AI</>}
                         </button>
-                        <span className="text-xs text-brand-text-muted">or write your own below</span>
                     </div>
-                    <textarea name="business_description" value={business.business_description} onChange={handleBusinessChange} rows={3} maxLength={500} placeholder="Use AI to generate one..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
+                    <textarea name="business_description" value={business.business_description} onChange={handleBusinessChange} rows={3} maxLength={500} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
                     <p className="text-right text-xs text-brand-text-muted">{business.business_description?.length || 0} / 500</p>
                 </div>
                 <div>
@@ -1152,109 +837,29 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                     <datalist id="business-categories">{BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}</datalist>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-brand-text mb-2">
-                        Business Location Type
-                    </label>
+                    <label className="block text-sm font-medium text-brand-text mb-2">Business Location Type</label>
                     <div className="grid grid-cols-3 gap-2 mb-3">
-                        <button
-                            type="button"
-                            onClick={() => setLocationType('physical')}
-                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
-                                locationType === 'physical'
-                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
-                            }`}
-                        >
-                            🏢 Physical Location
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setLocationType('online')}
-                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
-                                locationType === 'online'
-                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
-                            }`}
-                        >
-                            🌐 Online Only
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setLocationType('home')}
-                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
-                                locationType === 'home'
-                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
-                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
-                            }`}
-                        >
-                            🏠 Home-Based
-                        </button>
+                        {['physical', 'online', 'home'].map((type) => (
+                            <button key={type} type="button" onClick={() => setLocationType(type as any)} className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${locationType === type ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'}`}>
+                                {type === 'physical' ? '🏢 Physical' : type === 'online' ? '🌐 Online' : '🏠 Home-Based'}
+                            </button>
+                        ))}
                     </div>
-                    
                     {locationType === 'physical' && (
                         <div>
-                            <label className="block text-sm font-medium text-brand-text mb-1">
-                                Primary Location (City, State) <span className="text-red-500">*</span>
-                            </label>
-                            <input 
-                                type="text" 
-                                name="location" 
-                                value={business.location || ''} 
-                                onChange={handleBusinessChange} 
-                                placeholder="e.g., Loganville, Georgia"
-                                className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
-                                required
-                            />
-                        </div>
-                    )}
-                    
-                    {locationType === 'online' && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <p className="text-sm text-blue-800">
-                                ✓ Online-only business. No physical location needed.
-                            </p>
-                        </div>
-                    )}
-                    
-                    {locationType === 'home' && (
-                        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                            <p className="text-sm text-purple-800">
-                                ✓ Home-based business. Location details are private.
-                            </p>
+                            <label className="block text-sm font-medium text-brand-text mb-1">Primary Location (City, State) <span className="text-red-500">*</span></label>
+                            <input type="text" name="location" value={business.location || ''} onChange={handleBusinessChange} placeholder="e.g., Loganville, Georgia" className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/>
                         </div>
                     )}
                 </div>
                 {isDirty && <div className="flex justify-end pt-2"><button type="submit" className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save Changes</button></div>}
             </form>
         </StepCard>
-
         <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick} hint={hints.step2}>
             {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
         </StepCard>
-
         <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick} hint={hints.step3}>
-            {locationType !== 'physical' && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-yellow-800 font-semibold">
-                        ℹ️ Google Business Profile is primarily for businesses with physical locations.
-                        Since you're {locationType === 'online' ? 'online-only' : 'home-based'}, 
-                        this step is optional but can still help with brand visibility.
-                    </p>
-                </div>
-            )}
-            <div className="mb-6 bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border border-accent-purple/30 rounded-lg p-4">
-                <h3 className="font-semibold text-accent-purple mb-3 flex items-center"><span className="text-lg mr-2">🎯</span>Why Connect Your GBP?</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-brand-text-muted">
-                    <div className="flex items-start"><span className="text-green-500 mr-2 mt-0.5">✓</span><span>Run local SEO audits with <strong className="text-brand-text">JetBiz</strong></span></div>
-                    <div className="flex items-start"><span className="text-green-500 mr-2 mt-0.5">✓</span><span>Auto-fetch reviews for <strong className="text-brand-text">JetReply & JetTrust</strong></span></div>
-                    <div className="flex items-start"><span className="text-green-500 mr-2 mt-0.5">✓</span><span>Get hyper-local content from <strong className="text-brand-text">JetCreate</strong></span></div>
-                    <div className="flex items-start"><span className="text-green-500 mr-2 mt-0.5">✓</span><span>Improve your <strong className="text-brand-text">Growth Score</strong> accuracy</span></div>
-                </div>
-            </div>
-            <div className="flex justify-between items-start mb-4">
-                <div><p className="text-brand-text-muted">Critical for local visibility and map rankings.</p></div>
-                {step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified' && <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">✓ Connected</span>}
-            </div>
+            {locationType !== 'physical' && <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p className="text-sm text-yellow-800 font-semibold">ℹ️ Google Business Profile is primarily for businesses with physical locations.</p></div>}
             <div className="mt-4">
                 <label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label>
                 <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step3Completed && !isGbpSkipped}>
@@ -1265,37 +870,11 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 {renderGbpContent()}
             </div>
         </StepCard>
-
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
-            {renderSocialContent(userId)}
+            <SocialAccountsStep userId={userId} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
-        
-        {/* NEW: Lock Profile Button (Appears when all steps are complete and unlocked) */}
         {allStepsComplete && !isLocked && (
-            <LockInCard 
-                onLock={handleLockProfile} 
-                isDirty={isDirty}
-            />
-        )}
-        
-        {/* NEW: Locked View (Appears when profile is locked) */}
-        {isLocked && (
-            <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl relative">
-                <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
-                <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
-                <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                    This profile is locked to maintain brand consistency across all tools.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onClick={handleUnlockProfile} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                        <LockOpenIcon className="w-5 h-5" />
-                        Unlock to Edit
-                    </button>
-                    <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                        Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
+            <LockInCard onLock={handleLockProfile} isDirty={isDirty} />
         )}
     </div>
   );
