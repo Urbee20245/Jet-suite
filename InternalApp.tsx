@@ -211,6 +211,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetkeywords':
         return <JetKeywords tool={{ id: 'jetkeywords', name: 'JetKeywords', category: 'analyze' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
+      case 'jetcompete':
+        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcreate':
         return <JetCreate tool={{ id: 'jetcreate', name: 'JetCreate', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetpost':
@@ -227,8 +229,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetLeads tool={{ id: 'jetleads', name: 'JetLeads', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetevents':
         return <JetEvents tool={{ id: 'jetevents', name: 'JetEvents', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
-      case 'jetcompete':
-        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
+      case 'jetads': // ADDED JETADS ROUTE
+        return <JetAds tool={{ id: 'jetads', name: 'JetAds', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
         return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={() => loadData(false)} />;
       case 'planner':
