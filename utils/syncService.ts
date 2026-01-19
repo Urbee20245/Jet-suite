@@ -6,6 +6,12 @@ export const syncToSupabase = async (
   data: any,
   analysisName?: string
 ) => {
+  console.log(`🔄 [syncService] Starting sync: ${dataType}`, {
+    userId: userId?.substring(0, 8),
+    businessId: businessId?.substring(0, 8),
+    dataLength: Array.isArray(data) ? data.length : 'N/A'
+  });
+
   try {
     const response = await fetch('/api/sync/save', {
       method: 'POST',
@@ -15,20 +21,21 @@ export const syncToSupabase = async (
 
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
-      console.error(`Sync ${dataType}: Server returned HTML instead of JSON. API route may not exist.`);
+      console.error(`❌ [syncService] Sync ${dataType}: Server returned HTML instead of JSON. API route may not exist.`);
       return null;
     }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown' }));
-      console.error(`Sync ${dataType} failed:`, error);
-      return null;
+      console.error(`❌ [syncService] Sync ${dataType} failed:`, error);
+      throw new Error(error.error || 'Failed to sync');
     }
 
+    console.log('✅ [syncService] Sync successful:', dataType);
     return await response.json();
   } catch (error) {
-    console.error(`Error syncing ${dataType}:`, error);
-    return null;
+    console.error(`❌ [syncService] Sync error for ${dataType}:`, error);
+    throw error;
   }
 };
 
