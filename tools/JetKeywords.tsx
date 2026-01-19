@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, KeywordAnalysisResult, KeywordSearchResult } from '../types';
 import { findKeywords } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, MapPinIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 
 interface JetKeywordsProps {
@@ -48,16 +48,34 @@ const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[]
 };
 
 export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, setActiveTool }) => {
-  const { industry: service, location } = profileData.business;
+  const service = profileData.business.industry;
+  
+  // Resolve location: Profile -> GBP -> Empty
+  const [targetLocation, setTargetLocation] = useState(
+    profileData.business.location || profileData.googleBusiness.address || ''
+  );
+  
   const [descriptiveKeywords, setDescriptiveKeywords] = useState('');
   const [result, setResult] = useState<KeywordAnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
 
+  // Sync target location if profile updates
+  useEffect(() => {
+    if (!targetLocation) {
+        setTargetLocation(profileData.business.location || profileData.googleBusiness.address || '');
+    }
+  }, [profileData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!targetLocation) {
+        setError('Please specify a target location (e.g., a city or region) for your research.');
+        return;
+    }
+
     const keywordArray = descriptiveKeywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
     if (keywordArray.length < 5) {
       setError('Please enter at least 5 descriptive keywords, separated by commas.');
@@ -68,7 +86,7 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
     setLoading(true);
     setResult(null);
     try {
-      const keywords = await findKeywords(service, location, keywordArray.join(', '));
+      const keywords = await findKeywords(service, targetLocation, keywordArray.join(', '));
       setResult(keywords);
     } catch (err) {
       setError('Failed to find keywords. The AI may be having trouble with this request. Please try again.');
@@ -78,13 +96,13 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
     }
   };
   
-  if (!service || !location) {
+  if (!service) {
     return (
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
             <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-            <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2>
+            <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
             <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                Please set your business category and location in your profile to find relevant keywords.
+                Please set your business category in your profile to find relevant keywords.
             </p>
             <button
                 onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
@@ -101,9 +119,10 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
       {showHowTo && (
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li>Your primary service and location are automatically used from your active profile.</li>
-                <li>Enter at least 5 keywords that describe your business or services, separated by commas.</li>
-                <li>Click 'Find Keywords' to get a categorized list of valuable local search terms.</li>
+                <li>Your primary service is pulled from your profile.</li>
+                <li>Set a **Target Location** to find keywords for a specific city or region.</li>
+                <li>Enter at least 5 keywords that describe your services (e.g., 'web design', 'SEO').</li>
+                <li>Click 'Find Keywords' to see what your local customers are actually searching for.</li>
             </ul>
         </HowToUse>
       )}
@@ -118,9 +137,19 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
                 <span className="text-sm font-medium text-brand-text mr-2">Primary Service:</span>
                 <span className="font-semibold text-brand-text">{service}</span>
             </div>
-            <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
-                <span className="text-sm font-medium text-brand-text mr-2">Location:</span>
-                <span className="font-semibold text-brand-text">{location}</span>
+            <div className="relative">
+                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Location (Required)</label>
+                <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
+                    <MapPinIcon className="w-4 h-4 text-accent-purple mr-2" />
+                    <input 
+                        type="text" 
+                        value={targetLocation} 
+                        onChange={e => setTargetLocation(e.target.value)} 
+                        placeholder="e.g., Metro Atlanta" 
+                        className="bg-transparent border-none p-0 text-brand-text font-semibold focus:ring-0 w-full"
+                        required
+                    />
+                </div>
             </div>
           </div>
           
@@ -133,11 +162,11 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
               rows={3}
               value={descriptiveKeywords}
               onChange={(e) => setDescriptiveKeywords(e.target.value)}
-              placeholder="e.g., emergency plumber, water heater repair, drain cleaning, affordable plumbing, 24/7 service"
+              placeholder="e.g., custom website design, local SEO services, high converting websites, small business marketing, digital agency"
               className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
             />
             <p className="text-xs text-brand-text-muted mt-1">
-              Enter keywords that accurately describe your business and services.
+              Enter keywords that accurately describe your specific services.
             </p>
           </div>
           
@@ -153,9 +182,9 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
       </div>
       {loading && <Loader />}
       {result && (
-        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
+        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-brand-text">Keyword Ideas</h3>
+              <h3 className="text-2xl font-bold text-brand-text">Keyword Ideas for {targetLocation}</h3>
               <div className="hidden sm:flex items-center space-x-2 text-xs text-brand-text-muted">
                 <span>Vol/Mo</span>
                 <span>Difficulty</span>
