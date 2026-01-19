@@ -13,7 +13,6 @@ export default async function handler(
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase environment variables');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -23,19 +22,16 @@ export default async function handler(
     const { businessId, dna, brandDnaProfile } = req.body;
 
     if (!businessId || !dna || !brandDnaProfile) {
-      console.error('[Save DNA] Missing fields:', { businessId: !!businessId, dna: !!dna, brandDnaProfile: !!brandDnaProfile });
-      return res.status(400).json({ error: 'Missing required fields: businessId, dna, brandDnaProfile' });
+      return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    console.log(`[Save DNA] Attempting to save DNA for business ID: ${businessId}`);
-
-    // Update business_profiles with DNA data
+    // Update business_profiles with DNA data and set approved flag
     const { data, error } = await supabase
       .from('business_profiles')
       .update({
-        dna: dna, // Visual DNA (logo, colors, fonts)
-        brand_dna_profile: brandDnaProfile, // Detailed brand profile
-        is_dna_approved: true, // CRITICAL: Explicitly set to true
+        dna: dna,
+        brand_dna_profile: brandDnaProfile,
+        is_dna_approved: true,
         dna_last_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -44,26 +40,16 @@ export default async function handler(
       .single();
 
     if (error) {
-      console.error('[Save DNA] Supabase DNA save error:', error);
-      return res.status(500).json({ 
-        error: 'Failed to save DNA', 
-        message: error.message 
-      });
+      return res.status(500).json({ error: 'Database update failed', details: error.message });
     }
-    
-    console.log(`[Save DNA] Successfully saved DNA for business ID: ${businessId}. is_dna_approved set to true.`);
 
     return res.status(200).json({ 
       success: true, 
-      message: 'DNA saved successfully',
+      message: 'Business DNA saved and approved successfully',
       data 
     });
 
   } catch (error: any) {
-    console.error('[Save DNA] General error:', error);
-    return res.status(500).json({ 
-      error: 'Failed to save DNA', 
-      message: error.message 
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
