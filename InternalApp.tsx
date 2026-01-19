@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Welcome } from './tools/Welcome';
@@ -85,7 +86,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           setReviewResponseRate(Math.round((responded / reviews.length) * 100));
         }
 
-        // CRITICAL: Always load tasks from Supabase on mount/biz switch
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
         if (savedTasks) {
           setTasks(savedTasks);
@@ -106,19 +106,15 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     setActiveTool(tool);
     setKbArticleId(articleId || null);
     
-    // Auto-sync tasks from DB when switching back to home or growth plan
     if (!tool || tool.id === 'growthplan' || tool.id === 'home') {
         loadData();
     }
   };
 
-  /**
-   * CRITICAL: Adds tasks to local state AND saves immediately to Supabase
-   */
   const addTasksAndSave = async (newTasks: any[]) => {
     const tasksWithMetadata = newTasks.map(t => ({
       ...t,
-      id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: uuidv4(),
       status: 'to_do' as const,
       createdAt: new Date().toISOString()
     }));
@@ -135,7 +131,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const handleTaskStatusChange = async (taskId: string, status: GrowthPlanTask['status']) => {
     const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, status, completionDate: status === 'completed' ? new Date().toISOString() : undefined } : t);
     setTasks(updatedTasks);
-    // Auto-save on status change
     if (userId && activeBusinessId) {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
     }
@@ -202,7 +197,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={loadData} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentUserProfile} onImpersonate={() => {}} onDataChange={loadData} />;
       default:
         return <Welcome 
           setActiveTool={handleSetActiveTool} 
