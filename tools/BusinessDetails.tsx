@@ -370,26 +370,33 @@ const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: R
             All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
         </p>
         
-        {isDirty ? (
-            <div className="space-y-4">
-                <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
-                <button 
-                    onClick={onSave} 
-                    className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto"
-                >
-                    <CheckCircleIcon className="w-5 h-5" />
-                    Save All Changes
-                </button>
-            </div>
-        ) : (
+        <div className="flex flex-col items-center gap-4">
+            {isDirty && (
+                <div className="space-y-4 w-full max-w-xs">
+                    <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
+                    <button 
+                        onClick={onSave} 
+                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <CheckCircleIcon className="w-5 h-5" />
+                        Save All Changes
+                    </button>
+                </div>
+            )}
+            
             <button 
                 onClick={onLock} 
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 mx-auto"
+                disabled={isDirty}
+                className={`w-full max-w-xs font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
+                    isDirty 
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300' 
+                    : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
             >
                 <LockClosedIcon className="w-5 h-5" />
                 Lock Profile
             </button>
-        )}
+        </div>
     </div>
 );
 
@@ -656,7 +663,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleSaveInfo = async (e: React.FormEvent) => { 
-    e.preventDefault(); 
+    if (e) e.preventDefault(); 
     try {
         let city = '';
         let state = '';
