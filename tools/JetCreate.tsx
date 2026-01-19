@@ -13,7 +13,8 @@ import {
     ChevronLeftIcon,
     PhotoIcon,
     CalendarDaysIcon,
-    XMarkIcon
+    XMarkIcon,
+    LockClosedIcon
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
@@ -143,11 +144,12 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
     const [isLoadingAssets, setIsLoadingAssets] = useState(false);
     const [error, setError] = useState('');
-    const [showWhy, setShowWhy] = useState(false);
 
     const [connections, setConnections] = useState<SocialConnection[]>([]);
     const [schedulingAsset, setSchedulingAsset] = useState<SocialPostAsset | AdCopyAsset | null>(null);
     const [scheduleSuccess, setScheduleSuccess] = useState('');
+
+    const isProfileLocked = profileData.business.is_complete;
 
     useEffect(() => {
         if (profileData.user.id) {
@@ -164,32 +166,47 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     }, [profileData.user.id]);
 
     // Generate campaign images using Business DNA
-    const generateCampaignImage = async (campaign: CampaignIdea): Promise<string> => {
+    const generateBrandedImage = async (basePrompt: string, aspectRatio: "1:1" | "16:9" | "4:3"): Promise<string> => {
         const brandDna = profileData.brandDnaProfile;
         const business = profileData.business;
         
+        // 1. Force the color palette using hex codes
         const colorPalette = brandDna?.visual_identity?.primary_colors?.join(', ') || 'professional business colors';
         const style = brandDna?.visual_identity?.layout_style || 'modern and clean';
         const tone = brandDna?.brand_tone?.primary_tone || 'professional';
         
-        const imagePrompt = `Create a premium marketing campaign visual for "${campaign.name}". 
-Business: ${business.business_name} (${business.industry}).
-Style: ${style}, ${tone} tone.
-Colors: ${colorPalette}.
-Design: Editorial, sophisticated, minimalist. NOT clip art or amateur.
-The image should feel like it was designed by a professional brand agency.`;
+        // 2. Strict branded prompt
+        const brandedPrompt = `STRICT BRAND GUIDELINES: 
+Use this exact color palette: ${colorPalette}. 
+Visual style: ${style}, ${tone} tone.
+Primary focus: ${basePrompt}.
+Business: ${business.business_name}.
+DESIGN RULES: Incorporate the provided business logo into the composition. Ensure the final result is high-end, editorial, and looks designed by a professional agency. NO generic stock photos.`;
+
+        // 3. Prepare logo if available
+        const logoData = business.dna?.logo;
+        const inputImage = (logoData && logoData.startsWith('data:image')) ? {
+            base64: logoData.split(',')[1],
+            mimeType: logoData.split(';')[0].split(':')[1]
+        } : undefined;
 
         try {
-            const base64Image = await generateImage(imagePrompt, '1K', '16:9');
+            // Pass the logo as a reference image to the AI
+            const base64Image = await generateImage(brandedPrompt, '1K', aspectRatio, inputImage);
             return `data:image/png;base64,${base64Image}`;
         } catch (error) {
-            console.error('Failed to generate campaign image:', error);
+            console.error('Failed to generate branded image:', error);
             return '';
         }
     };
 
+    const generateCampaignImage = async (campaign: CampaignIdea) => {
+        return await generateBrandedImage(`A premium marketing campaign visual for "${campaign.name}"`, '16:9');
+    };
+
     useEffect(() => {
-        if (profileData.brandDnaProfile) {
+        // Only fetch ideas if the profile is locked and DNA exists
+        if (profileData.brandDnaProfile && isProfileLocked) {
             const fetchCampaigns = async () => {
                 setIsLoadingCampaigns(true);
                 setError('');
@@ -214,7 +231,7 @@ The image should feel like it was designed by a professional brand agency.`;
             };
             fetchCampaigns();
         }
-    }, [profileData]);
+    }, [profileData, isProfileLocked]);
 
     const handleSelectCampaign = async (campaign: CampaignIdea, modifier?: string) => {
         setSelectedCampaign(campaign);
@@ -327,28 +344,16 @@ The image should feel like it was designed by a professional brand agency.`;
     const handleRegenerateImage = async (index: number, type: 'social' | 'ad') => {
         if (!assets || !selectedCampaign) return;
         
-        const itemId = type === 'social' ? assets.social_posts[index].id : assets.ad_copy[index].id;
+        const item = type === 'social' ? assets.social_posts[index] : assets.ad_copy[index];
+        const itemId = item.id;
         setGeneratingImageFor(itemId || '');
         
         try {
-            const brandDna = profileData.brandDnaProfile;
-            const business = profileData.business;
-            
-            const item = type === 'social' ? assets.social_posts[index] : assets.ad_copy[index];
             const description = type === 'social' 
                 ? (item as SocialPostAsset).visual_suggestion 
                 : `${(item as AdCopyAsset).headline} - ${(item as AdCopyAsset).description}`;
             
-            const colorPalette = brandDna?.visual_identity?.primary_colors?.join(', ') || 'professional colors';
-            const style = brandDna?.visual_identity?.layout_style || 'modern';
-            
-            const imagePrompt = `Create a premium ${type === 'social' ? 'social media post' : 'advertisement'} image for: ${description}.
-Business: ${business.business_name} (${business.industry}).
-Style: ${style}. Colors: ${colorPalette}.
-Design: Editorial, sophisticated, brand-focused. Professional quality.`;
-            
-            const base64Image = await generateImage(imagePrompt, '1K', type === 'social' ? '1:1' : '4:3');
-            const imageUrl = `data:image/png;base64,${base64Image}`;
+            const imageUrl = await generateBrandedImage(description, type === 'social' ? '1:1' : '4:3');
             
             setAssets(assets => {
                 if (!assets) return null;
@@ -393,6 +398,44 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
         handleDownloadAsset(content, `${selectedCampaign.name.replace(/\s+/g, '_')}_assets.txt`);
     };
 
+    // 1. BLOCKING STATE: If profile is not locked, we must stop and ask the user to confirm DNA.
+    if (!isProfileLocked) {
+        return (
+            <div className="h-full flex items-center justify-center text-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
+                <div className="bg-brand-card p-8 rounded-2xl max-w-lg shadow-xl border border-brand-border">
+                    <LockClosedIcon className="w-16 h-16 mx-auto mb-4 text-red-500" />
+                    <h2 className="text-2xl font-bold text-brand-text mb-2">Profile Confirmation Required</h2>
+                    <p className="text-sm text-brand-text-muted mb-6">
+                        Before JetCreate can generate on-brand campaigns, you must verify your **Logo and Brand Colors** 
+                        and click **"Lock Profile"** in your Business Details.
+                    </p>
+
+                    <button
+                        onClick={() => {
+                            const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
+                            if (businessDetailsTool) setActiveTool(businessDetailsTool);
+                        }}
+                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                        Review & Lock Profile
+                    </button>
+                    
+                    <div className="mt-6 p-4 bg-brand-light rounded-lg text-left text-xs text-brand-text-muted">
+                        <p className="font-semibold text-brand-text mb-2 flex items-center gap-2">
+                            <SparklesIcon className="w-3 h-3 text-accent-purple" />
+                            Why is this required?
+                        </p>
+                        <p>
+                            To ensure your campaigns use your specific color scheme and logo, we need you to 
+                            officially approve the extracted Brand DNA. This prevents generic AI results.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 2. BLOCKING STATE: If DNA extraction was somehow skipped but profile is locked.
     if (!profileData.brandDnaProfile) {
         return (
             <div className="h-full flex items-center justify-center text-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
@@ -413,25 +456,6 @@ Design: Editorial, sophisticated, brand-focused. Professional quality.`;
                     >
                         Complete Business Details
                     </button>
-                    
-                    <button 
-                        onClick={() => setShowWhy(!showWhy)} 
-                        className="mt-4 text-accent-purple hover:text-accent-pink text-sm font-semibold transition-colors flex items-center justify-center w-full gap-2"
-                    >
-                        <InformationCircleIcon className="w-4 h-4" />
-                        Why is this required?
-                    </button>
-                    
-                    {showWhy && (
-                        <div className="mt-4 bg-brand-light p-4 rounded-lg text-left text-sm text-brand-text-muted">
-                            <p className="font-semibold text-brand-text mb-2">Brand Consistency Matters</p>
-                            <p>
-                                JetCreate generates campaigns, images, and copy tailored to YOUR brand voice, 
-                                colors, and style. Without Business DNA, we can't ensure brand consistency 
-                                across your marketing materials.
-                            </p>
-                        </div>
-                    )}
                 </div>
             </div>
         );
