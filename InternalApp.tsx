@@ -111,28 +111,43 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     }
   };
 
-  const addTasksAndSave = async (newTasks: any[]) => {
-    const tasksWithMetadata = newTasks.map(t => ({
-      ...t,
-      id: uuidv4(),
+  const addTasksToGrowthPlan = async (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
+    const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
+      ...task,
+      id: uuidv4(), // Use proper UUID instead of random string
       status: 'to_do' as const,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     }));
-    
     const updatedTasks = [...tasks, ...tasksWithMetadata];
     setTasks(updatedTasks);
     
-    if (userId && activeBusinessId) {
-        console.log('[InternalApp] Auto-saving tasks to Supabase...');
+    // CRITICAL: Await the save to ensure it completes before any navigation
+    if (activeBusinessId) {
+      try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+        console.log('✅ [InternalApp] Tasks saved to Supabase:', updatedTasks.length);
+      } catch (error) {
+        console.error('❌ [InternalApp] Failed to save tasks:', error);
+      }
     }
   };
 
-  const handleTaskStatusChange = async (taskId: string, status: GrowthPlanTask['status']) => {
-    const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, status, completionDate: status === 'completed' ? new Date().toISOString() : undefined } : t);
+  const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
+    const updatedTasks = tasks.map(task => 
+      task.id === taskId 
+        ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
+        : task
+    );
     setTasks(updatedTasks);
-    if (userId && activeBusinessId) {
+    
+    // CRITICAL: Await the save
+    if (activeBusinessId) {
+      try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+        console.log('✅ [InternalApp] Task status updated in Supabase');
+      } catch (error) {
+        console.error('❌ [InternalApp] Failed to save task status:', error);
+      }
     }
   };
 
@@ -155,6 +170,27 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   const pendingTasksCount = tasks.filter(t => t.status !== 'completed').length;
 
+  // Auto-load tasks from database when Growth Plan is opened
+  useEffect(() => {
+    const autoLoadTasks = async () => {
+      if (activeTool?.id === 'growthplan' && activeBusinessId && userId) {
+        console.log('🔄 [InternalApp] Auto-loading tasks for Growth Plan...');
+        try {
+          const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+          if (data && Array.isArray(data) && data.length > 0) {
+            setTasks(data);
+            console.log('✅ [InternalApp] Auto-loaded tasks from Supabase:', data.length);
+          } else {
+            console.log('ℹ️ [InternalApp] No saved tasks found in database');
+          }
+        } catch (error) {
+          console.error('❌ [InternalApp] Failed to auto-load tasks:', error);
+        }
+      }
+    };
+    autoLoadTasks();
+  }, [activeTool?.id, activeBusinessId, userId]);
+
   const renderActiveTool = () => {
     if (!currentProfileData) return null;
     const readiness = getReadiness();
@@ -163,9 +199,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'businessdetails':
         return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={loadData} />;
       case 'jetbiz':
-        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':
-        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetkeywords':
         return <JetKeywords tool={{ id: 'jetkeywords', name: 'JetKeywords', category: 'analyze' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcreate':
@@ -185,7 +221,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetevents':
         return <JetEvents tool={{ id: 'jetevents', name: 'JetEvents', category: 'engage' }} />;
       case 'jetcompete':
-        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksAndSave} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
+        return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
         return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={loadData} />;
       case 'planner':
@@ -197,7 +233,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentUserProfile} onImpersonate={() => {}} onDataChange={loadData} />;
+        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentUserProfile={setCurrentProfileData} onImpersonate={() => {}} onDataChange={loadData} />;
       default:
         return <Welcome 
           setActiveTool={handleSetActiveTool} 
