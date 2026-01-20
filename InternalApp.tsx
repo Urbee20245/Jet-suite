@@ -25,7 +25,7 @@ import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState } from './types';
+import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
 import JethelperApp from './jethelper/JethelperApp'; // Import JethelperApp
@@ -158,44 +158,43 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const addTasksToGrowthPlan = async (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
-    if (newTasks.length === 0) return tasks;
+    if (!activeBusinessId || newTasks.length === 0) return tasks;
 
     const sourceModule = newTasks[0].sourceModule;
-
-    const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
-      ...task,
-      id: uuidv4(),
-      priority: task.priority || 'Medium',
-      status: 'to_do' as const,
-      createdAt: new Date().toISOString(),
-    }));
-
-    // Filter out old tasks from the same source module to prevent duplicates on re-run
-    const otherTasks = tasks.filter(t => t.sourceModule !== sourceModule);
     
-    const updatedTasks = [...otherTasks, ...tasksWithMetadata];
-    setTasks(updatedTasks); // Optimistic update
-    
-    if (activeBusinessId) {
-      try {
-        console.log(`💾 [InternalApp] Saving ${updatedTasks.length} tasks to Supabase...`);
-        // The API will replace all tasks for the business with this new complete list
-        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
-        console.log('✅ [InternalApp] Tasks successfully saved to database');
+    try {
+        // 1. Get current tasks from DB to avoid stale state
+        const currentTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks') || [];
+
+        // 2. Prepare new tasks with metadata
+        const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
+            ...task,
+            id: uuidv4(),
+            priority: task.priority || 'Medium',
+            status: 'to_do' as const,
+            createdAt: new Date().toISOString(),
+        }));
+
+        // 3. Filter out old tasks from the same source module
+        const otherTasks = currentTasks.filter((t: GrowthPlanTask) => t.sourceModule !== sourceModule);
         
-        // Verify by reloading from the database to ensure consistency
-        const verifyTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks');
-        if (verifyTasks && Array.isArray(verifyTasks)) {
-          console.log(`✅ [InternalApp] Verified ${verifyTasks.length} tasks in database`);
-          setTasks(verifyTasks);
-          return verifyTasks;
-        }
-      } catch (error) {
-        console.error('❌ [InternalApp] Failed to save tasks:', error);
-        // Revert optimistic update on failure? For now, just log it.
-      }
+        // 4. Combine and create the final list
+        const updatedTasks = [...otherTasks, ...tasksWithMetadata];
+
+        // 5. Save the complete list back to the database
+        console.log(`💾 [InternalApp] Saving ${updatedTasks.length} tasks to Supabase...`);
+        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+        console.log('✅ [InternalApp] Tasks successfully saved.');
+
+        // 6. Update local state with the definitive list from the database
+        setTasks(updatedTasks);
+        return updatedTasks;
+
+    } catch (error) {
+        console.error('❌ [InternalApp] Failed to add and save tasks:', error);
+        // Don't update state on error to avoid data loss
+        return tasks;
     }
-    return updatedTasks; 
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
@@ -212,6 +211,24 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       } catch (error) {
         console.error('❌ [InternalApp] Failed to save task status:', error);
       }
+    }
+  };
+
+  const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis | null, toolId: 'jetbiz' | 'jetviz') => {
+    if (report && activeBusinessId) {
+        try {
+            await syncToSupabase(userId, activeBusinessId, toolId, report);
+            // Update profile data optimistically
+            setCurrentProfileData(prev => {
+                if (!prev) return null;
+                return {
+                    ...prev,
+                    [`${toolId}Analysis`]: report
+                };
+            });
+        } catch (error) {
+            console.error(`Failed to save ${toolId} analysis:`, error);
+        }
     }
   };
 
@@ -242,9 +259,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'businessdetails':
         return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={() => loadData(false)} />;
       case 'jetbiz':
-        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis(report, 'jetbiz')} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':
-        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={() => {}} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <JetViz tool={{ id: 'jetviz', name: 'JetViz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis(report, 'jetviz')} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetkeywords':
         return <JetKeywords tool={{ id: 'jetkeywords', name: 'JetKeywords', category: 'analyze' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcompete':
@@ -270,7 +287,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetads': // ADDED JETADS ROUTE
         return <JetAds tool={{ id: 'jetads', name: 'JetAds', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} onPlanSaved={() => loadData(false)} />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} />;
       case 'growthscore':

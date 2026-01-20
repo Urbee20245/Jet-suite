@@ -13,7 +13,6 @@ interface GrowthPlanProps {
   growthScore: number;
   userId: string;
   activeBusinessId: string | null;
-  onPlanSaved?: (tasks: GrowthPlanTask[]) => void; // New prop
 }
 
 const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: string } } = {
@@ -120,7 +119,7 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
     )
 }
 
-export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId, onPlanSaved }) => {
+export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isRetrieving, setIsRetrieving] = useState(false);
@@ -155,7 +154,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
     try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
         setStatusMessage('✅ Growth Plan saved successfully!');
-        if (onPlanSaved) onPlanSaved(tasks); // Trigger update for Home page
     } catch (error) {
         setStatusMessage('❌ Failed to save plan. Please try again.');
         console.error('Manual save failed:', error);
@@ -176,7 +174,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
       if (data && Array.isArray(data)) {
         setTasks(data);
         setStatusMessage('✅ Successfully retrieved your tasks.');
-        if (onPlanSaved) onPlanSaved(data); // Sync home count with retrieved data
       } else {
         setStatusMessage('ℹ️ No saved tasks found in database.');
       }

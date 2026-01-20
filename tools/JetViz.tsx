@@ -267,8 +267,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   };
 
   const handleFinalNavigation = () => {
-    // The saving logic is now fully handled by addTasksToGrowthPlan.
-    // This function just needs to navigate the user.
     setActiveTool(ALL_TOOLS['growthplan']);
   };
 
