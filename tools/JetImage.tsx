@@ -448,7 +448,7 @@ VISUAL REQUIREMENTS:
               </div>
               {isLoadingStyles ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {[...Array(8)].map((_, i) => (
+                  {[...Array(12)].map((_, i) => (
                     <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-20 animate-pulse">
                       <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
                       <div className="h-2 bg-gray-200 rounded w-full"></div>
