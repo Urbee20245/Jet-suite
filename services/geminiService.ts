@@ -26,7 +26,51 @@ const injectDateContext = (prompt: string): string => {
   return `${dateContext}\n\n${prompt}`;
 };
 
-// ... keep existing business search and DNA functions ...
+const auditReportSchema = {
+    type: Type.OBJECT,
+    properties: {
+        timestamp: { type: Type.STRING },
+        issues: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    id: { type: Type.STRING },
+                    issue: { type: Type.STRING },
+                    whyItMatters: { type: Type.STRING },
+                    fix: { type: Type.STRING },
+                    priority: { type: STRING },
+                    task: {
+                        type: Type.OBJECT,
+                        properties: {
+                            title: { type: Type.STRING },
+                            description: { type: Type.STRING },
+                            effort: { type: Type.STRING },
+                            sourceModule: { type: Type.STRING }
+                        },
+                        required: ["title", "description", "effort", "sourceModule"]
+                    }
+                },
+                required: ["id", "issue", "whyItMatters", "fix", "priority", "task"]
+            }
+        },
+        weeklyActions: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title: { type: Type.STRING },
+                    description: { type: Type.STRING },
+                    whyItMatters: { type: Type.STRING },
+                    effort: { type: Type.STRING },
+                    sourceModule: { type: Type.STRING }
+                },
+                required: ["title", "description", "whyItMatters", "effort", "sourceModule"]
+            }
+        }
+    },
+    required: ["timestamp", "issues", "weeklyActions"]
+};
 
 export const searchGoogleBusiness = async (query: string): Promise<BusinessSearchResult[]> => {
     try {
@@ -117,52 +161,6 @@ export const extractBrandDnaProfile = async (business: BusinessProfile): Promise
         }
         throw error;
     }
-};
-
-const auditReportSchema = {
-    type: Type.OBJECT,
-    properties: {
-        timestamp: { type: Type.STRING },
-        issues: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    id: { type: Type.STRING },
-                    issue: { type: Type.STRING },
-                    whyItMatters: { type: Type.STRING },
-                    fix: { type: Type.STRING },
-                    priority: { type: Type.STRING },
-                    task: {
-                        type: Type.OBJECT,
-                        properties: {
-                            title: { type: Type.STRING },
-                            description: { type: Type.STRING },
-                            effort: { type: Type.STRING },
-                            sourceModule: { type: Type.STRING }
-                        },
-                        required: ["title", "description", "effort", "sourceModule"]
-                    }
-                },
-                required: ["id", "issue", "whyItMatters", "fix", "priority", "task"]
-            }
-        },
-        weeklyActions: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    whyItMatters: { type: Type.STRING },
-                    effort: { type: Type.STRING },
-                    sourceModule: { type: Type.STRING }
-                },
-                required: ["title", "description", "whyItMatters", "effort", "sourceModule"]
-            }
-        }
-    },
-    required: ["timestamp", "issues", "weeklyActions"]
 };
 
 export const analyzeBusinessListing = async (business: ConfirmedBusiness): Promise<AuditReport> => {
@@ -305,8 +303,6 @@ export const generateLocalContent = async (businessType: string, topic: string, 
         throw error;
     }
 };
-
-// ... keep existing ad, competitor, events, keyword functions ...
 
 export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[]) => {
     try {
@@ -551,6 +547,103 @@ CRITICAL QUALITY REQUIREMENTS:
         console.error('[generateImage] Complete failure:', error);
         throw error; 
     }
+};
+
+export const generateBusinessDescription = async (url: string): Promise<{ description: string; suggestedCategory: string }> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Analyze ${url}. Generate 2-3 sentence business description and suggest category from list. JSON output.`;
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: injectDateContext(prompt),
+            config: {
+                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: { description: { type: Type.STRING }, suggestedCategory: { type: Type.STRING } },
+                    required: ["description", "suggestedCategory"]
+                }
+            },
+        });
+        return JSON.parse(response.text.trim());
+    } catch (error) { return { description: "AI features disabled.", suggestedCategory: "Other" }; }
+};
+
+export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string; faviconUrl: string;}> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Extract logo, colors, fonts, style, favicon from ${url}. JSON output.`;
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: injectDateContext(prompt),
+            config: {
+                tools: [{ googleSearch: {} }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: { logoUrl: { type: Type.STRING }, colors: { type: Type.ARRAY, items: { type: Type.STRING } }, fonts: { type: Type.STRING }, style: { type: Type.STRING }, faviconUrl: { type: Type.STRING } },
+                    required: ["logoUrl", "colors", "fonts", "style", "faviconUrl"]
+                }
+            },
+        });
+        return JSON.parse(response.text.trim());
+    } catch (error) { throw error; }
+};
+
+export const generateCampaignIdeas = async (profileData: ProfileData): Promise<CampaignIdea[]> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Generate 5 campaign ideas for ${profileData.business.business_name}. JSON output.`;
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: injectDateContext(prompt),
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  campaigns: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, description: { type: Type.STRING }, channels: { type: Type.ARRAY, items: { type: Type.STRING } } }, required: ["id", "name", "description", "channels"] } }
+                }
+              }
+            }
+        });
+        return JSON.parse(response.text.trim()).campaigns || [];
+    } catch (error) { throw error; }
+};
+
+export const generateCreativeAssets = async (campaign: CampaignIdea, profileData: ProfileData, refinement?: string): Promise<CreativeAssets> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Generate social posts and ads for campaign ${campaign.name}. JSON output. ${refinement ? `Refinement: ${refinement}` : ''}`;
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: injectDateContext(prompt),
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  social_posts: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { platform: { type: Type.STRING }, copy: { type: Type.STRING }, visual_suggestion: { type: Type.STRING } }, required: ["platform", "copy", "visual_suggestion"] } },
+                  ad_copy: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { headline: { type: Type.STRING }, description: { type: Type.STRING }, cta: { type: Type.STRING } }, required: ["headline", "description", "cta"] } }
+                },
+                required: ["social_posts", "ad_copy"]
+              }
+            }
+        });
+        return JSON.parse(response.text.trim()) as CreativeAssets;
+    } catch (error) { throw error; }
+};
+
+export const generateYoutubeThumbnailPrompt = async (request: YoutubeThumbnailRequest): Promise<string> => {
+    try {
+        const ai = getAiClient();
+        const prompt = `Create high-CTR YouTube thumbnail prompt for "${request.videoTitle}".`;
+        const response = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: injectDateContext(prompt), config: { tools: [{ googleSearch: {} }] } });
+        return response.text ?? '';
+    } catch (error) { throw error; }
 };
 
 export const getTrendingImageStyles = async (): Promise<Array<{ name: string; description: string; prompt: string }>> => {
