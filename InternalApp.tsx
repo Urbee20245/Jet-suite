@@ -1,3 +1,4 @@
+setCurrentUserProfile).">
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './components/Sidebar';
@@ -166,7 +167,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
     const updatedTasks = tasks.map(task => 
-      task.id === taskId 
+      task.id === taskId
         ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
         : task
     );
@@ -246,7 +247,14 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel allProfiles={allProfiles} setAllProfiles={setAllProfiles} currentUserProfile={currentProfileData} setCurrentProfileData={setCurrentProfileData} onImpersonate={() => {}} onDataChange={() => loadData(false)} />;
+        return <AdminPanel 
+          allProfiles={allProfiles} 
+          setAllProfiles={setAllProfiles} 
+          currentUserProfile={currentProfileData} 
+          setCurrentUserProfile={setCurrentProfileData} // FIX APPLIED HERE
+          onImpersonate={() => {}} 
+          onDataChange={() => loadData(false)} 
+        />;
       case 'support':
         return <UserSupportTickets />;
       default:
