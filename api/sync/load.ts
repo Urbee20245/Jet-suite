@@ -45,13 +45,13 @@ export default async function handler(
           id: task.id,
           title: task.title,
           description: task.description,
-          whyItMatters: task.why_it_matters, // Critical mapping
-          sourceModule: task.source_module,   // Critical mapping
+          whyItMatters: task.why_it_matters,
+          sourceModule: task.source_module,
           effort: task.effort,
           priority: task.priority,
           status: task.status,
-          completionDate: task.completed_at,
           createdAt: task.created_at,
+          completionDate: task.completed_at,
         }));
         console.log(`[Sync Load] Successfully loaded ${result.length} tasks.`);
         break;

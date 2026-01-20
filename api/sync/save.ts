@@ -38,17 +38,18 @@ export default async function handler(
         // 2. Map and insert new tasks
         if (Array.isArray(data) && data.length > 0) {
           const tasksToInsert = data.map(task => ({
+            id: task.id,
             user_id: userId,
             business_id: businessId,
             title: task.title,
             description: task.description || null,
-            why_it_matters: task.whyItMatters || null, 
-            source_module: task.sourceModule || null,   
-            priority: task.priority || 'Medium',
+            why_it_matters: task.whyItMatters || null,
+            source_module: task.sourceModule || null,
             effort: task.effort || 'Low',
+            priority: task.priority || 'Medium',
             status: task.status || 'to_do',
+            created_at: task.createdAt || new Date().toISOString(),
             completed_at: task.completionDate || null,
-            created_at: task.createdAt || new Date().toISOString()
           }));
           
           result = await supabase.from('growth_plan_tasks').insert(tasksToInsert);

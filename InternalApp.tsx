@@ -161,6 +161,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
       ...task,
       id: uuidv4(),
+      priority: task.priority || 'Medium', // ADD THIS LINE
       status: 'to_do' as const,
       createdAt: new Date().toISOString(),
     }));
