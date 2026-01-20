@@ -515,8 +515,34 @@ Focus on photorealism and commercial quality.`;
         </HowToUse>
       )}
       
+      {/* START: Minimal Generations Meter */}
+      {!loadingCredits && (
+        <div className={`mb-4 flex items-center justify-between p-3 rounded-xl border ${
+            creditsUsed >= creditsLimit 
+                ? 'bg-red-50 border-red-300' 
+                : 'bg-accent-purple/5 border-accent-purple/30'
+        }`}>
+            <div className="flex items-center gap-2">
+                <SparklesIcon className={`w-5 h-5 ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`} />
+                <span className="text-sm font-semibold text-brand-text">
+                    AI Generations Remaining:
+                </span>
+            </div>
+            <div className="flex items-center gap-2">
+                <span className={`text-lg font-bold ${creditsUsed >= creditsLimit ? 'text-red-600' : 'text-accent-purple'}`}>
+                    {creditsRemaining}
+                </span>
+                <span className="text-sm text-brand-text-muted">/ {creditsLimit}</span>
+            </div>
+        </div>
+      )}
+      {loadingCredits && (
+        <div className="mb-4 h-12 w-full bg-brand-light rounded-xl animate-pulse"></div>
+      )}
+      {/* END: Minimal Generations Meter */}
+      
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        {/* MODIFIED HEADER START */}
+        {/* MODIFIED HEADER START (Removed old badge) */}
         <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-4">
                 <JetProductIcon className="w-8 h-8 text-accent-purple" />
@@ -527,22 +553,6 @@ Focus on photorealism and commercial quality.`;
                     </p>
                 </div>
             </div>
-            
-            {/* NEW COMPACT CREDIT BADGE */}
-            {!loadingCredits && (
-                <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                    creditsUsed >= creditsLimit 
-                        ? 'bg-red-100 text-red-800 border border-red-300' 
-                        : 'bg-accent-purple/10 text-accent-purple border border-accent-purple/30'
-                }`}>
-                    <SparklesIcon className="w-4 h-4" />
-                    <span>{creditsRemaining} Credits</span>
-                </div>
-            )}
-            {loadingCredits && (
-                <div className="h-7 w-20 bg-gray-100 rounded-full animate-pulse"></div>
-            )}
-            {/* END NEW COMPACT CREDIT BADGE */}
         </div>
         {/* MODIFIED HEADER END */}
         
@@ -797,7 +807,7 @@ Focus on photorealism and commercial quality.`;
       {loading && <Loader />}
       
       {generatedImageUrl && (
-        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
+        <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
           <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Mockup</h3>
           <img src={generatedImageUrl} alt="Generated Product Mockup" className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
