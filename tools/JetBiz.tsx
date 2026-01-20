@@ -142,19 +142,15 @@ const priorityStyles = {
 
 interface SimpleTaskCardProps {
   task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
-  isAdded: boolean;
-  onAdd: () => void;
 }
 
 interface SimpleIssueCardProps {
   issue: AuditIssue;
-  isAdded: boolean;
-  onAdd: () => void;
 }
 
-const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd }) => {
+const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task }) => {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
+    <div className="p-4 rounded-lg border bg-green-50/50 border-green-200">
       <div className="flex items-start justify-between">
         <div className="flex-1">
             <h4 className="font-bold text-brand-text">{task.title}</h4>
@@ -164,48 +160,32 @@ const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd })
                 <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
             </div>
         </div>
-        <button 
-            onClick={onAdd} 
-            disabled={isAdded}
-            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
-                isAdded 
-                    ? 'bg-green-500 text-white cursor-default' 
-                    : 'bg-accent-purple hover:bg-accent-pink text-white'
-            }`}
-        >
-            {isAdded ? '✓ Added' : 'Add to Plan'}
-        </button>
+        <div className="flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold bg-green-500 text-white">
+            ✓ Added to Plan
+        </div>
       </div>
     </div>
   );
 };
 
-const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd }) => {
+const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue }) => {
   const styles = priorityStyles[issue.priority];
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white'}`}>
+    <div className="p-4 rounded-lg border bg-green-50/50 border-green-200">
       <div className="flex items-start justify-between">
         <div className="flex items-start">
            <div className="ml-3">
-              <h4 className={`font-bold text-brand-text`}>{issue.issue}</h4>
-              {isAdded && <p className="text-xs text-brand-text-muted mt-1">Task already added to Growth Plan.</p>}
+              <h4 className="font-bold text-brand-text">{issue.issue}</h4>
+              <p className="text-xs text-brand-text-muted mt-1">Task added to Growth Plan automatically.</p>
            </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${styles.badge}`}>{issue.priority}</span>
-          <button 
-            onClick={onAdd} 
-            disabled={isAdded}
-            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
-                isAdded 
-                    ? 'bg-green-500 text-white cursor-default' 
-                    : 'bg-accent-purple hover:bg-accent-pink text-white'
-            }`}
-        >
-            {isAdded ? '✓ Added' : 'Add to Plan'}
-        </button>
+          <div className="flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold bg-green-500 text-white">
+              ✓ Added to Plan
+          </div>
         </div>
       </div>
       <div className="ml-8 mt-2">
@@ -231,30 +211,11 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
 
 const JetBizResultDisplay: React.FC<{ 
     report: AuditReport, 
-    growthPlanTasks: GrowthPlanTask[], 
     onRerun: (e: React.FormEvent) => Promise<void>, 
     isRunning: boolean, 
-    onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void,
     setActiveTool: (tool: Tool | null) => void,
     onNavigate: () => void 
-}> = ({ report, growthPlanTasks, onRerun, isRunning, onAddTask, setActiveTool, onNavigate }) => {
-
-  const existingTaskTitles = new Set(growthPlanTasks.map(t => t.title));
-
-  const handleAddWeeklyAction = (task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>) => {
-    onAddTask([task]);
-  };
-  
-  const handleAddIssueTask = (issue: AuditIssue) => {
-    onAddTask([{
-        title: issue.task.title,
-        description: issue.task.description,
-        whyItMatters: issue.whyItMatters,
-        effort: issue.task.effort,
-        sourceModule: issue.task.sourceModule,
-        priority: issue.priority
-    }]);
-  };
+}> = ({ report, onRerun, isRunning, setActiveTool, onNavigate }) => {
 
   return (
     <div className="space-y-8 mt-6">
@@ -266,7 +227,7 @@ const JetBizResultDisplay: React.FC<{
                 <div>
                     <p className="font-bold">Your Action Plan is Ready!</p>
                     <p className="text-sm">
-                        The recommended tasks below have been added to your Growth Plan.
+                        All recommended tasks below have been automatically added to your Growth Plan.
                         <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
                     </p>
                 </div>
@@ -276,7 +237,7 @@ const JetBizResultDisplay: React.FC<{
         <div className="flex justify-between items-center mb-4">
             <div>
                 <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
-                <p className="text-brand-text-muted mt-1">Focus on these high-impact tasks. They are already in your Growth Plan.</p>
+                <p className="text-brand-text-muted mt-1">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
             </div>
             <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
         </div>
@@ -285,27 +246,16 @@ const JetBizResultDisplay: React.FC<{
         </div>
         <div className="space-y-4">
           {(report.weeklyActions || []).map((task, index) => (
-            <SimpleTaskCard 
-                key={index} 
-                task={task} 
-                isAdded={existingTaskTitles.has(task.title)}
-                onAdd={() => handleAddWeeklyAction(task)}
-            />
+            <SimpleTaskCard key={index} task={task} />
           ))}
         </div>
       </div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
         <div className="space-y-4">
-          {(report.issues || []).map(issue => {
-            const isAdded = existingTaskTitles.has(issue.task.title);
-            return <SimpleIssueCard 
-                key={issue.id} 
-                issue={issue} 
-                isAdded={isAdded}
-                onAdd={() => handleAddIssueTask(issue)}
-            />;
-          })}
+          {(report.issues || []).map(issue => (
+            <SimpleIssueCard key={issue.id} issue={issue} />
+          ))}
         </div>
       </div>
     </div>
@@ -321,7 +271,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [deepAnalysisRunning, setDeepAnalysisRunning] = useState(false);
   const [error, setError] = useState('');
-  const [latestGeneratedTasks, setLatestGeneratedTasks] = useState<GrowthPlanTask[]>([]);
   
   const supabase = getSupabaseClient();
 
@@ -382,13 +331,15 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
         }))
       ];
       
-      // Add tasks to growth plan and get the updated list
-      const updatedTasks = await addTasksToGrowthPlan(newTasks);
-      setLatestGeneratedTasks(updatedTasks);
+      // Add tasks to growth plan automatically
+      console.log('🚀 [JetBiz] Automatically adding', newTasks.length, 'tasks to Growth Plan...');
+      await addTasksToGrowthPlan(newTasks);
+      console.log('✅ [JetBiz] Tasks added successfully to Growth Plan');
       
       onSaveAnalysis(analysis);
     } catch (err) { 
       setError('Failed to get analysis. Please try again.'); 
+      console.error('❌ [JetBiz] Analysis failed:', err);
     } 
     finally { 
       setDeepAnalysisRunning(false); 
@@ -415,7 +366,6 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setSelectedBusiness(null);
       setAuditReport(null);
       setError('');
-      setLatestGeneratedTasks([]);
   }
 
   const handleFinalNavigation = () => {
@@ -441,10 +391,8 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay 
                 report={auditReport} 
-                growthPlanTasks={growthPlanTasks} 
                 onRerun={handleRerun} 
                 isRunning={deepAnalysisRunning} 
-                onAddTask={addTasksToGrowthPlan} 
                 setActiveTool={setActiveTool} 
                 onNavigate={handleFinalNavigation}
             />
