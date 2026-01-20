@@ -77,10 +77,7 @@ export const JetCompete: React.FC<JetCompeteProps> = ({ tool, addTasksToGrowthPl
         </HowToUse>
       )}
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-2">{tool.description}</p>
-        <p className="text-sm text-brand-text-muted mb-6">
-          Replaces: <span className="text-accent-purple font-semibold">Competitor Research Service ($300-1,500/mo)</span>
-        </p>
+        <p className="text-brand-text-muted mb-6">{tool.description}</p>
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <input

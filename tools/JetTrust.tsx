@@ -486,9 +486,6 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       {/* Tool Description */}
       <div className="bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
         <p className="text-brand-text-muted mb-2">{tool.description}</p>
-        <p className="text-sm text-brand-text-muted">
-          Replaces: <span className="text-accent-purple font-semibold">Review Widget Service ($50-200/mo)</span>
-        </p>
       </div>
 
       {/* Connected Business Info */}

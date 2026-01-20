@@ -97,10 +97,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       )}
       
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <p className="text-brand-text-muted mb-2">{tool.description}</p>
-        <p className="text-sm text-brand-text-muted mb-6">
-          Replaces: <span className="text-accent-purple font-semibold">Blog/Content Writer ($400-1,200/mo)</span>
-        </p>
+        <p className="text-brand-text-muted mb-6">{tool.description}</p>
 
         {/* Title Brainstorming Section */}
         <div className="mb-8 p-6 bg-accent-blue/5 rounded-xl border border-accent-blue/20">

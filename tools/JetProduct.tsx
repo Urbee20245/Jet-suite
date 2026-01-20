@@ -545,9 +545,6 @@ Focus on photorealism and commercial quality.`;
                 <JetProductIcon className="w-8 h-8 text-accent-purple" />
                 <div>
                     <p className="text-brand-text-muted mb-1">{tool.description}</p>
-                    <p className="text-sm text-brand-text-muted">
-                        Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($1,000-3,000/mo)</span>
-                    </p>
                 </div>
             </div>
         </div>

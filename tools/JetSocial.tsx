@@ -313,10 +313,7 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
           )}
           
           <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <p className="text-brand-text-muted mb-2">{tool.description}</p>
-            <p className="text-sm text-brand-text-muted mb-6">
-              Replaces: <span className="text-accent-purple font-semibold">Social Media Manager ($800-2,500/mo)</span>
-            </p>
+            <p className="text-brand-text-muted mb-6">{tool.description}</p>
             
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

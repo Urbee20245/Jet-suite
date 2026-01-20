@@ -508,7 +508,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     <div>
                         <h1 className="text-xl font-bold text-brand-text">JetCreate</h1>
                         <p className="text-xs text-brand-text-muted">
-                            AI-powered campaign creation • Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+                            AI-powered campaign creation
                         </p>
                     </div>
                 </div>

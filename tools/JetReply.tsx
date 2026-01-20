@@ -232,10 +232,7 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
 
       {/* Connected Business Info */}
       <div className="mb-6 bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
-        <p className="text-brand-text-muted mb-2">{tool.description}</p>
-        <p className="text-sm text-brand-text-muted mb-3">
-          Replaces: <span className="text-accent-purple font-semibold">Reputation Management ($200-800/mo)</span>
-        </p>
+        <p className="text-brand-text-muted mb-3">{tool.description}</p>
         <div className="flex items-center justify-between bg-accent-purple/5 p-3 rounded-lg border border-accent-purple/20">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
