@@ -663,7 +663,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     await updateProfileLockStatus(false);
   };
 
-  const handleSaveInfo = async (e?: React.FormEvent | React.MouseEvent) => { 
+  const handleSaveInfo = async (e?: React.FormEvent | React.MouseEvent, gbpOverride?: ProfileData['googleBusiness']) => { 
     if (e && 'preventDefault' in e) e.preventDefault(); 
     setIsSavingInfo(true);
     try {
@@ -682,6 +682,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         }
         const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
         const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
+        
+        const gbpToSave = gbpOverride || googleBusiness;
+
         const payload = {
             userId: profileData.user.id,
             businessId: business.id,
@@ -693,7 +696,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             isPrimary: business.is_primary,
             isComplete: isLocked,
             businessDescription: business.business_description,
-            googleBusiness: googleBusiness,
+            googleBusiness: gbpToSave,
             dna: dnaToPreserve,
             brandDnaProfile: brandProfileToPreserve,
             isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
@@ -710,7 +713,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         }
         const updatedBusiness = { ...business, city: city || null, state: state || null, dna: dnaToPreserve, brand_dna_profile: brandProfileToPreserve, isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved, dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt };
         setBusiness(updatedBusiness);
-        onUpdate({ ...profileData, business: updatedBusiness, googleBusiness }); 
+        
+        onUpdate({ ...profileData, business: updatedBusiness, googleBusiness: gbpToSave }); 
+        
         setIsDirty(false);
         setSaveSuccess('Business Information saved!'); 
         setTimeout(() => setSaveSuccess(''), 3000); 
@@ -738,6 +743,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const handleGbpSelect = (gbp: BusinessSearchResult) => { setSelectedGbp(gbp); setSearchResults([]); };
+  
   const handleGbpConfirm = async () => {
     if (!selectedGbp) return;
     const newGbp: ProfileData['googleBusiness'] = {
@@ -750,18 +756,18 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         address: selectedGbp.address,
     };
     setGoogleBusiness(newGbp);
-    await handleSaveInfo();
+    await handleSaveInfo(undefined, newGbp);
     setSelectedGbp(null);
     setSearchTerm('');
     setSearchResults([]);
   };
 
   const handleGbpCancel = () => { setSelectedGbp(null); setSearchResults([]); };
-  const handleGbpDisconnect = () => { 
+  
+  const handleGbpDisconnect = async () => { 
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
-    onUpdate({...profileData, googleBusiness: newGbp});
-    handleSaveInfo();
+    await handleSaveInfo(undefined, newGbp);
   };
   
   const handleGenerateDescription = async () => { 
