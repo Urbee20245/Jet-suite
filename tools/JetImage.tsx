@@ -3,8 +3,9 @@ import type { Tool, ProfileData } from '../types';
 import { generateImage, getTrendingImageStyles, generateYoutubeThumbnailPrompt } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { getCurrentDate } from '../utils/dateTimeUtils';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetImageProps {
   tool: Tool;
@@ -98,6 +99,70 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   const thumbnailFileInputRef = useRef<HTMLInputElement>(null);
   const [showYoutubeGenerator, setShowYoutubeGenerator] = useState(false);
 
+  // MONTHLY CREDIT SYSTEM
+  const [creditsUsed, setCreditsUsed] = useState(0);
+  const [creditsLimit, setCreditsLimit] = useState(60);
+  const [loadingCredits, setLoadingCredits] = useState(true);
+  const MONTHLY_CREDIT_LIMIT = 60;
+
+  // Load monthly credits on component mount
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setLoadingCredits(false);
+      return;
+    }
+    
+    const loadCredits = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoadingCredits(false);
+          return;
+        }
+
+        const currentMonthYear = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
+        // Try to get existing record for this month
+        const { data: creditRecord } = await supabase
+          .from('user_credits')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('month_year', currentMonthYear)
+          .maybeSingle();
+
+        if (creditRecord) {
+          // Record exists
+          setCreditsUsed(creditRecord.credits_used);
+          setCreditsLimit(creditRecord.credits_limit);
+        } else {
+          // No record for this month - create new one
+          const { data: newRecord } = await supabase
+            .from('user_credits')
+            .insert({
+              user_id: user.id,
+              month_year: currentMonthYear,
+              credits_used: 0,
+              credits_limit: MONTHLY_CREDIT_LIMIT
+            })
+            .select()
+            .single();
+
+          if (newRecord) {
+            setCreditsUsed(0);
+            setCreditsLimit(MONTHLY_CREDIT_LIMIT);
+          }
+        }
+      } catch (err) {
+        console.error('[JetImage] Error loading credits:', err);
+      } finally {
+        setLoadingCredits(false);
+      }
+    };
+
+    loadCredits();
+  }, [profileData.user.id]);
+
   useEffect(() => {
     const fetchStyles = async () => {
       setIsLoadingStyles(true);
@@ -184,6 +249,12 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (creditsUsed >= creditsLimit) {
+      setError(`Monthly limit reached! You've used all ${creditsLimit} generations this month. Your limit resets on the 1st of next month.`);
+      return;
+    }
+    
     if (!prompt) {
       setError('Please enter a prompt to describe the image you want to generate.');
       return;
@@ -197,6 +268,27 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
       setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
       const watermarkedUrl = await addWatermark(base64Data);
       setWatermarkedImageUrl(watermarkedUrl);
+      
+      // Increment credit usage in Supabase
+      const supabase = getSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const currentMonthYear = new Date().toISOString().slice(0, 7);
+        const newCreditsUsed = creditsUsed + 1;
+        
+        await supabase
+          .from('user_credits')
+          .update({ 
+            credits_used: newCreditsUsed,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .eq('month_year', currentMonthYear);
+        
+        setCreditsUsed(newCreditsUsed);
+      }
+      
     } catch (err: any) {
       console.error(err);
       setError('Failed to generate image. Please try again or refine your prompt.');
@@ -207,6 +299,12 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   
   const handleGenerateThumbnail = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (creditsUsed >= creditsLimit) {
+      setError(`Monthly limit reached! You've used all ${creditsLimit} generations this month. Your limit resets on the 1st of next month.`);
+      return;
+    }
+    
     if (!videoTitle || !videoTopic) {
       setError('Please enter both the video title and topic.');
       return;
@@ -237,6 +335,26 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
         setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
         const watermarkedUrl = await addWatermark(base64Data);
         setWatermarkedImageUrl(watermarkedUrl);
+        
+        // Increment credit usage in Supabase
+        const supabase = getSupabaseClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+            const currentMonthYear = new Date().toISOString().slice(0, 7);
+            const newCreditsUsed = creditsUsed + 1;
+            
+            await supabase
+              .from('user_credits')
+              .update({ 
+                credits_used: newCreditsUsed,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', user.id)
+              .eq('month_year', currentMonthYear);
+            
+            setCreditsUsed(newCreditsUsed);
+        }
 
     } catch (err: any) {
         console.error(err);
@@ -287,6 +405,8 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   };
 
   const downloadsRemaining = USAGE_LIMIT - usage.count;
+  const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const creditsRemaining = creditsLimit - creditsUsed;
 
   return (
     <div>
@@ -316,7 +436,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
                     <SparklesIcon className="w-5 h-5" />
                     AI YouTube Thumbnail Generator (High CTR)
                 </h3>
-                <svg className={`w-5 h-5 text-accent-cyan transition-transform ${showYoutubeGenerator ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <ChevronDownIcon className={`w-5 h-5 text-accent-cyan transition-transform ${showYoutubeGenerator ? 'rotate-180' : ''}`} />
             </button>
             
             {showYoutubeGenerator && (
@@ -348,7 +468,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
                         <label className="block text-sm font-medium text-brand-text mb-1">Video Topic/Summary</label>
                         <textarea rows={2} value={videoTopic} onChange={e => setVideoTopic(e.target.value)} placeholder="e.g., Common errors homeowners make with their AC units" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm resize-none" required />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
+                    <button type="submit" disabled={loading || creditsUsed >= creditsLimit || loadingCredits} className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
                         {loading ? 'Generating Thumbnail...' : 'Generate High-CTR Thumbnail'}
                     </button>
                     <p className="text-xs text-brand-text-muted mt-2">
@@ -409,7 +529,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
           </div>
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           
-          <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
+          <button type="submit" disabled={loading || creditsUsed >= creditsLimit || loadingCredits} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
             {loading ? 'Generating Preview...' : 'Generate Watermarked Preview'}
           </button>
         </form>
