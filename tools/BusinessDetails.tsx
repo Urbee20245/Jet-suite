@@ -14,6 +14,7 @@ interface BusinessDetailsProps {
     onUpdate: (data: ProfileData) => void; 
     setActiveTool: (tool: Tool | null) => void; 
     onBusinessUpdated: () => void;
+    isAdmin: boolean;
 }
 type ExtractionStage = 'idle' | 'extracting' | 'reviewing' | 'saving';
 
@@ -322,7 +323,7 @@ const GbpConnect: React.FC<{
             </div>
             <div className="flex gap-4 justify-center">
                 <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">No, search again</button>
-                <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Yes, Connect</button>
+                <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save & Connect Profile</button>
             </div>
         </div>
     );
@@ -471,7 +472,7 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
 const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
 
 // --- Main Component ---
-export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated }) => {
+export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated, isAdmin }) => {
   const [business, setBusiness] = useState(profileData.business);
   const [googleBusiness, setGoogleBusiness] = useState(profileData.googleBusiness);
   const [saveSuccess, setSaveSuccess] = useState('');
@@ -746,6 +747,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   
   const handleGbpConfirm = async () => {
     if (!selectedGbp) return;
+    setIsSavingInfo(true);
+    setSearchError('');
+
     const newGbp: ProfileData['googleBusiness'] = {
         profileName: selectedGbp.name,
         mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
@@ -755,11 +759,40 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         reviewCount: selectedGbp.reviewCount,
         address: selectedGbp.address,
     };
-    setGoogleBusiness(newGbp);
-    await handleSaveInfo(undefined, newGbp);
-    setSelectedGbp(null);
-    setSearchTerm('');
-    setSearchResults([]);
+
+    try {
+        const response = await fetch('/api/business/update-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: profileData.user.id,
+                businessId: business.id,
+                googleBusiness: newGbp,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save Google Business Profile.');
+        }
+
+        // On success, trigger a full data reload from the parent component
+        onBusinessUpdated();
+
+        // Reset local search state
+        setSelectedGbp(null);
+        setSearchTerm('');
+        setSearchResults([]);
+        
+        setSaveSuccess('Google Business Profile connected and saved successfully!');
+        setTimeout(() => setSaveSuccess(''), 3000);
+
+    } catch (err: any) {
+        setSearchError(err.message || 'An unexpected error occurred.');
+        console.error('Error confirming GBP:', err);
+    } finally {
+        setIsSavingInfo(false);
+    }
   };
 
   const handleGbpCancel = () => { setSelectedGbp(null); setSearchResults([]); };
@@ -909,6 +942,22 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                     <div className="flex justify-end pt-2">
                         <button type="submit" disabled={isSavingInfo} className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all disabled:opacity-50">
                             {isSavingInfo ? 'Saving Changes...' : 'Save Changes'}
+                        </button>
+                    </div>
+                )}
+                {isAdmin && !isLocked && (
+                    <div className="mt-6 pt-4 border-t border-dashed border-red-300">
+                        <h4 className="text-sm font-bold text-red-600">Admin Action</h4>
+                        <p className="text-xs text-gray-500 mb-2">Bypass checks and lock this profile. This will save any unsaved changes first.</p>
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                await handleSaveInfo();
+                                await updateProfileLockStatus(true);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
+                        >
+                            Force Save & Lock Profile
                         </button>
                     </div>
                 )}

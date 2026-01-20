@@ -51,6 +51,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
 
   const supabase = getSupabaseClient();
+  const isAdmin = userEmail === ADMIN_EMAIL;
 
   const fetchAllProfiles = async () => {
     if (userEmail !== ADMIN_EMAIL) return;
@@ -257,7 +258,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
     switch (activeTool?.id) {
       case 'businessdetails':
-        return <BusinessDetails profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={() => loadData(false)} />;
+        return <BusinessDetails isAdmin={isAdmin} profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={() => loadData(false)} />;
       case 'jetbiz':
         return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis(report, 'jetbiz')} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':
