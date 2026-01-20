@@ -153,7 +153,13 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const addTasksToGrowthPlan = async (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
-    if (!activeBusinessId || newTasks.length === 0) return tasks;
+    if (!activeBusinessId) {
+      alert('Please select a business first');
+      console.error('[InternalApp] Cannot save tasks: No business selected');
+      return tasks;
+    }
+    
+    if (newTasks.length === 0) return tasks;
 
     const sourceModule = newTasks[0].sourceModule;
     
@@ -185,6 +191,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const handleTaskStatusChange = async (taskId: string, newStatus: GrowthPlanTask['status']) => {
+    if (!activeBusinessId) {
+      alert('Please select a business first');
+      console.error('[InternalApp] Cannot update task status: No business selected');
+      return;
+    }
+    
     const updatedTasks = tasks.map(task => 
       task.id === taskId
         ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
@@ -297,7 +309,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <Welcome 
           setActiveTool={handleSetActiveTool} 
           profileData={currentProfileData} 
-          readinessState={readiness} 
+          readinessState={getReadiness()} 
           plan={{ name: 'Pro', profileLimit: 1 }} 
           growthScore={calculateGrowthScore()} 
           pendingTasksCount={pendingTasksCount}
@@ -346,6 +358,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
+      <JethelperApp />
     </div>
   );
 };
