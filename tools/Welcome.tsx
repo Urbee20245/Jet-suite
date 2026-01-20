@@ -182,7 +182,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
                 title="2. Marketing and Brand Strategy"
                 description="Turn strategy into on-brand content that attracts customers."
                 recommendedToolId="jetcreate"
-                otherToolIds={['jetpost', 'jetimage', 'jetcontent']}
+                otherToolIds={['jetsocial', 'jetimage', 'jetcontent']}
                 kbArticleId="create-publish/jetcreate"
                 setActiveTool={setActiveTool}
             />
