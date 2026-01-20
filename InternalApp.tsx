@@ -140,7 +140,20 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     
     // Background refresh for specific navigation points
     if (!tool || tool.id === 'growthplan' || tool.id === 'home') {
-        loadData(false);
+      loadData(false);
+    }
+    
+    // CRITICAL FIX: Force task reload specifically when navigating TO Growth Plan
+    if (tool?.id === 'growthplan' && userId && activeBusinessId) {
+      // Immediately reload tasks from database
+      loadFromSupabase(userId, activeBusinessId, 'tasks')
+        .then(savedTasks => {
+          if (savedTasks && Array.isArray(savedTasks)) {
+            console.log('✅ [Navigation] Loaded tasks for Growth Plan:', savedTasks.length);
+            setTasks(savedTasks);
+          }
+        })
+        .catch(err => console.error('❌ [Navigation] Failed to load tasks:', err));
     }
   };
 
@@ -156,7 +169,17 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     
     if (activeBusinessId) {
       try {
+        console.log(`💾 [InternalApp] Saving ${updatedTasks.length} tasks to Supabase...`);
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+        console.log('✅ [InternalApp] Tasks successfully saved to database');
+        
+        // CRITICAL FIX: Verify the save by reloading from database
+        const verifyTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+        if (verifyTasks && Array.isArray(verifyTasks)) {
+          console.log(`✅ [InternalApp] Verified ${verifyTasks.length} tasks in database`);
+          setTasks(verifyTasks); // Update with database version to ensure consistency
+          return verifyTasks;
+        }
       } catch (error) {
         console.error('❌ [InternalApp] Failed to save tasks:', error);
       }

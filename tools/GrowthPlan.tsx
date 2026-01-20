@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { GrowthPlanTask, Tool } from '../types';
 import { ALL_TOOLS } from '../constants';
 import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
@@ -125,6 +125,36 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   const [isSaving, setIsSaving] = useState(false);
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  useEffect(() => {
+    const reloadTasks = async () => {
+      if (!userId || !activeBusinessId) {
+        setIsInitialLoad(false);
+        return;
+      }
+      
+      setIsInitialLoad(true);
+      console.log('🔄 [GrowthPlan] Component mounted, checking for latest tasks...');
+      try {
+        const savedTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+        if (savedTasks && Array.isArray(savedTasks)) {
+          console.log(`✅ [GrowthPlan] Loaded ${savedTasks.length} tasks from database`);
+          setTasks(savedTasks);
+          if (onPlanSaved) onPlanSaved(savedTasks);
+        } else {
+          console.log('ℹ️ [GrowthPlan] No saved tasks found in database');
+          setTasks([]);
+        }
+      } catch (error) {
+        console.error('❌ [GrowthPlan] Failed to reload tasks:', error);
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+    
+    reloadTasks();
+  }, [userId, activeBusinessId]);
 
   const pendingTasks = useMemo(() => tasks.filter(t => t.status !== 'completed'), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(t => t.status === 'completed'), [tasks]);
@@ -188,6 +218,15 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
       setTimeout(() => setStatusMessage(''), 4000);
     }
   };
+
+  if (isInitialLoad) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-purple"></div>
+        <span className="ml-4 text-brand-text-muted">Loading your growth plan...</span>
+      </div>
+    );
+  }
 
   return (
     <div>

@@ -411,25 +411,27 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }
 
   const handleFinalNavigation = async () => {
-    console.log('💾 [JetBiz] Double-save: Ensuring all tasks are in Supabase before navigation...');
+    console.log('💾 [JetBiz] Ensuring all tasks are saved before navigation...');
     
-    // Wait a moment for any pending state to propagate
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
     
     if (userId && activeBusinessId) {
-        try {
-            // Prioritize the tasks list we just generated
-            const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
-            
-            if (tasksToSave.length > 0) {
-                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
-                console.log('✅ [JetBiz] Double-save completed. Tasks secured in Supabase.');
-            }
-        } catch (error) {
-            console.error('❌ [JetBiz] Double-save failed:', error);
-            console.log('⚠️ [JetBiz] Proceeding to Growth Plan (initial save likely succeeded)');
+      try {
+        const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
+        
+        if (tasksToSave.length > 0) {
+          console.log(`💾 [JetBiz] Saving ${tasksToSave.length} tasks to Supabase...`);
+          await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
+          console.log('✅ [JetBiz] Tasks saved to database');
+          
+          const verified = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+          console.log(`✅ [JetBiz] Verified ${verified?.length || 0} tasks in database`);
         }
+      } catch (error) {
+        console.error('❌ [JetBiz] Save failed:', error);
+      }
     }
+    
     setActiveTool(ALL_TOOLS['growthplan']);
   };
 
