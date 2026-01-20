@@ -9,7 +9,7 @@ import { JetViz } from './tools/JetViz';
 import { JetKeywords } from './tools/JetKeywords';
 import { JetCompete } from './tools/JetCompete';
 import { JetCreate } from './tools/JetCreate';
-import { JetPost } from './tools/JetPost';
+import { JetSocial } from './tools/JetSocial';
 import { JetContent } from './tools/JetContent';
 import { JetImage } from './tools/JetImage';
 import { JetReply } from './tools/JetReply';
@@ -217,8 +217,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetCompete tool={{ id: 'jetcompete', name: 'JetCompete', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcreate':
         return <JetCreate tool={{ id: 'jetcreate', name: 'JetCreate', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
-      case 'jetpost':
-        return <JetPost tool={{ id: 'jetpost', name: 'JetPost', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
+      case 'jetsocial':
+        return <JetSocial tool={{ id: 'jetsocial', name: 'JetSocial', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetimage':
         return <JetImage tool={{ id: 'jetimage', name: 'JetImage', category: 'create' }} profileData={currentProfileData} />;
       case 'jetproduct': // NEW ROUTE

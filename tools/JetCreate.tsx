@@ -108,7 +108,7 @@ const ScheduleModal: React.FC<{
                                     <span className="text-sm font-semibold text-brand-text">{PLATFORM_INFO[conn.platform]?.name}</span>
                                     <span className="text-xs text-brand-text-muted ml-auto">@{conn.platform_username}</span>
                                 </label>
-                            )) : <p className="text-sm text-brand-text-muted">No social accounts connected. Connect them in JetPost.</p>}
+                            )) : <p className="text-sm text-brand-text-muted">No social accounts connected. Connect them in JetSocial.</p>}
                         </div>
                     </div>
 

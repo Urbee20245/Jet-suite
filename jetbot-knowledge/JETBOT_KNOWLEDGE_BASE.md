@@ -16,7 +16,7 @@
     - **JetKeywords:** Keyword research.
     - **JetCompete:** Competitor analysis.
     - **JetCreate:** Marketing campaign asset generation.
-    - **JetPost:** Social media post generation.
+    - **JetSocial:** Social media post generation.
     - **JetReply:** Review response generation.
     - **JetTrust:** Review widgets.
     - **JetLeads:** Lead generation.
@@ -32,10 +32,6 @@
 ### JetBiz (Google Business Profile)
 - **Connection Issues:** Ensure the Google account connected has "Manager" or "Owner" access to the business profile.
 - **Verification:** JetSuite cannot verify a profile; this must be done through Google directly.
-
-### JetViz (Website Audit)
-- **Scan Failed:** Ensure the website is publicly accessible (no password protection).
-- **Low Score:** Explain that scores are based on Google's Core Web Vitals and best practices.
 
 ### Billing
 - ** refunds:** You cannot process refunds. Escalate to a ticket.

@@ -47,10 +47,10 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
 
   // Create & Publish Tools
   jetcreate: { id: 'jetcreate', name: 'JetCreate', description: 'Create stunning, on-brand marketing campaigns and assets.', icon: JetCreateIcon },
-  jetpost: { id: 'jetpost', name: 'JetPost', description: 'Generate engaging social media posts for your business.', icon: JetPostIcon },
+  jetsocial: { id: 'jetsocial', name: 'JetSocial', description: 'Generate engaging social media posts for your business.', icon: JetPostIcon },
   jetcontent: { id: 'jetcontent', name: 'JetContent', description: 'Create SEO-friendly blog posts and articles for your website.', icon: JetContentIcon },
   jetimage: { id: 'jetimage', name: 'JetImage', description: 'Generate high-quality images for your marketing materials.', icon: JetImageIcon },
-  jetproduct: { id: 'jetproduct', name: 'JetProduct', description: 'Generate professional product mockups and lifestyle shots.', icon: JetProductIcon }, // NEW TOOL
+  jetproduct: { id: 'jetproduct', name: 'JetProduct', description: 'Generate professional product mockups and lifestyle shots.', icon: JetProductIcon },
   
   // Engage & Convert Tools
   jetreply: { id: 'jetreply', name: 'JetReply', description: 'Craft professional AI-assisted responses to customer reviews.', icon: JetReplyIcon },
@@ -79,7 +79,7 @@ export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', '
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
-  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetpost', 'jetimage', 'jetcontent', 'jetproduct'] }, // Added jetproduct
+  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetproduct'] },
   { name: 'Customer Engagement', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 

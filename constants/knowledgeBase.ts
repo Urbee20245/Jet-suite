@@ -120,17 +120,17 @@ export const KNOWLEDGE_BASE_ARTICLES: Record<string, KbArticle> = {
     skip: 'Skipping this means manually creating content, which is slow, expensive, and often inconsistent.',
     how: 'Select a campaign idea or enter a custom prompt. JetCreate generates all assets instantly.',
     next: {
-      text: 'Next: Generate Social Posts with JetPost',
-      articleId: 'create-publish/jetpost',
+      text: 'Next: Generate Social Posts with JetSocial',
+      articleId: 'create-publish/jetsocial',
     },
   },
-  'create-publish/jetpost': {
-    title: 'JetPost: Social Media Content Generator',
-    what: 'JetPost creates engaging, platform-specific social media posts (Facebook, Instagram, X, LinkedIn) based on your topic and tone.',
-    why: 'Consistent social media presence builds brand awareness and drives traffic. JetPost makes daily posting easy.',
+  'create-publish/jetsocial': {
+    title: 'JetSocial: Social Media Content Generator',
+    what: 'JetSocial creates engaging, platform-specific social media posts (Facebook, Instagram, X, LinkedIn) based on your topic and tone.',
+    why: 'Consistent social media presence builds brand awareness and drives traffic. JetSocial makes daily posting easy.',
     when: 'Use this weekly to fill your content calendar and maintain engagement.',
     skip: 'Inconsistent social media activity leads to low engagement and missed opportunities.',
-    how: 'Enter a topic, select platforms, and choose a tone. JetPost generates optimized copy and visual suggestions.',
+    how: 'Enter a topic, select platforms, and choose a tone. JetSocial generates optimized copy and visual suggestions.',
     next: {
       text: 'Next: Create Blog Content with JetContent',
       articleId: 'create-publish/jetcontent',
@@ -213,7 +213,7 @@ export const KNOWLEDGE_BASE_ARTICLES: Record<string, KbArticle> = {
   'engage-convert/jetevents': {
     title: 'JetEvents: Event & Promotion Ideas',
     what: 'JetEvents brainstorms creative local events, seasonal promotions, and community engagement strategies tailored to your business.',
-    why: 'Local events drive foot traffic, build community ties, and generate valuable local media coverage.',
+    why: 'Local events drive foot traffic and build community ties, and generate valuable local media coverage.',
     when: 'Use this quarterly for seasonal planning or before slow business periods.',
     skip: 'Without proactive promotions, your business relies solely on organic search, missing out on immediate revenue boosts.',
     how: 'Enter your business type and goal. JetEvents provides a list of actionable event concepts and marketing plans.',

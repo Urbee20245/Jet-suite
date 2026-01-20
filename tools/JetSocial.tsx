@@ -10,7 +10,7 @@ import { SevenDayPlanner } from '../components/SevenDayPlanner';
 import { TOOLS } from '../constants';
 import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
 
-interface JetPostProps {
+interface JetSocialProps {
   tool: Tool;
   profileData: ProfileData;
   setActiveTool: (tool: Tool | null) => void;
@@ -46,7 +46,7 @@ const platformNameToPlatformId: { [key: string]: string } = {
 
 type ViewMode = 'generate' | 'planner' | 'connections';
 
-export const JetPost: React.FC<JetPostProps> = ({ tool, profileData, setActiveTool }) => {
+export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActiveTool }) => {
   const { industry: businessType } = profileData.business;
   
   // Get userId from localStorage (matching App.tsx pattern)

@@ -120,7 +120,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             featured: true
         },
         { 
-            name: "JetPost", 
+            name: "JetSocial", 
             tagline: "Social Media Content Generator", 
             brief: "Creates platform-specific posts (Facebook, Instagram, LinkedIn) tailored to your brand voice.", 
             replaces: "Social Media Manager",
@@ -442,7 +442,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
       {/* 9. VALUE COMPARISON */}
       <section className="py-24 px-4 bg-slate-900">
         <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-white text-center mb-12">Replace $15,000+/Month in Services</h2>
+            <h2 className="text-3xl font-bold text-white text-center mb-12">Replace $15,000/Month in Services</h2>
              <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
                 <div className="grid grid-cols-2 bg-slate-800 border-b border-slate-700 p-4 font-bold text-white">
                     <div>Service Replaced</div>
