@@ -13,6 +13,7 @@ interface GrowthPlanProps {
   growthScore: number;
   userId: string;
   activeBusinessId: string | null;
+  onPlanSaved?: (tasks: GrowthPlanTask[]) => void; // New prop
 }
 
 const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: string } } = {
@@ -119,14 +120,21 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
     )
 }
 
-export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId }) => {
+export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId, onPlanSaved }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
-  const pendingTasks = useMemo(() => tasks.filter(t => t.status !== 'completed'), [tasks]);
-  const completedTasks = useMemo(() => tasks.filter(t => t.status === 'completed'), [tasks]);
+  const { jetbizTasks, jetvizTasks, otherTasks, completedTasks } = useMemo(() => {
+    const jetbizTasks = tasks.filter(t => t.sourceModule === 'JetBiz' && t.status !== 'completed');
+    const jetvizTasks = tasks.filter(t => t.sourceModule === 'JetViz' && t.status !== 'completed');
+    const otherTasks = tasks.filter(t => t.sourceModule !== 'JetBiz' && t.sourceModule !== 'JetViz' && t.status !== 'completed');
+    const completedTasks = tasks.filter(t => t.status === 'completed');
+    return { jetbizTasks, jetvizTasks, otherTasks, completedTasks };
+  }, [tasks]);
+
+  const pendingTasksCount = jetbizTasks.length + jetvizTasks.length + otherTasks.length;
   
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
@@ -154,6 +162,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
     try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
         setStatusMessage('✅ Growth Plan saved successfully!');
+        if (onPlanSaved) onPlanSaved(tasks); // Trigger update for Home page
     } catch (error) {
         setStatusMessage('❌ Failed to save plan. Please try again.');
         console.error('Manual save failed:', error);
@@ -174,6 +183,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
       if (data && Array.isArray(data)) {
         setTasks(data);
         setStatusMessage('✅ Successfully retrieved your tasks.');
+        if (onPlanSaved) onPlanSaved(data); // Sync home count with retrieved data
       } else {
         setStatusMessage('ℹ️ No saved tasks found in database.');
       }
@@ -251,13 +261,36 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
       
       {tasks.length > 0 ? (
         <div className="mt-8">
-          <h3 className="text-xl font-bold text-brand-text mb-4">Pending Tasks ({pendingTasks.length})</h3>
-          <p className="text-sm text-brand-text-muted mb-4">
-            These tasks will remain here until you mark them as completed.
-          </p>
-          {pendingTasks.length > 0 ? (
-            <div className="space-y-4">
-              {pendingTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
+          <h3 className="text-xl font-bold text-brand-text mb-4">Pending Tasks ({pendingTasksCount})</h3>
+          
+          {pendingTasksCount > 0 ? (
+            <div className="space-y-8">
+              {jetbizTasks.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-brand-text mb-3">Your Business Analysis (JetBiz)</h4>
+                  <div className="space-y-4">
+                    {jetbizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
+                  </div>
+                </div>
+              )}
+              
+              {jetvizTasks.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-brand-text mb-3">Your Visual Analysis (JetViz)</h4>
+                  <div className="space-y-4">
+                    {jetvizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
+                  </div>
+                </div>
+              )}
+
+              {otherTasks.length > 0 && (
+                <div>
+                  <h4 className="text-lg font-semibold text-brand-text mb-3">Other Tasks</h4>
+                  <div className="space-y-4">
+                    {otherTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
              <div className="text-center bg-brand-card p-12 rounded-xl shadow-lg border-2 border-dashed border-green-400">
