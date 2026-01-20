@@ -406,4 +406,5 @@ export interface YoutubeThumbnailRequest {
   businessName: string;
   brandTone: string;
   brandColors: string[];
+  targetEmotion: string;
 }
