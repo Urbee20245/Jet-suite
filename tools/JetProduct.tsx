@@ -4,7 +4,6 @@ import { generateImage, getTrendingImageStyles } from '../services/geminiService
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
-import { getCurrentDate } from '../utils/dateTimeUtils';
 import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetProductProps {
@@ -83,9 +82,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [inputImage, setInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const USAGE_LIMIT = 2;
-  const [usage, setUsage] = useState({ count: 0, date: getCurrentDate() });
-
   // Product Mockup Specific States
   const [productName, setProductName] = useState('');
   const [headline, setHeadline] = useState('');
@@ -153,25 +149,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
 
     loadCredits();
   }, [profileData.user.id]);
-
-  useEffect(() => {
-    const savedUsage = localStorage.getItem('jetsuite_jetimage_download_usage');
-    const today = getCurrentDate();
-    if (savedUsage) {
-      const parsed = JSON.parse(savedUsage);
-      if (parsed.date === today) {
-        setUsage(parsed);
-      } else {
-        const newUsage = { count: 0, date: today };
-        localStorage.setItem('jetsuite_jetimage_download_usage', JSON.stringify(newUsage));
-        setUsage(newUsage);
-      }
-    } else {
-      const newUsage = { count: 0, date: today };
-      localStorage.setItem('jetsuite_jetimage_download_usage', JSON.stringify(newUsage));
-      setUsage(newUsage);
-    }
-  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -285,16 +262,7 @@ Focus on photorealism and commercial quality.`;
   };
 
   const handleDownload = (format: DownloadFormat) => {
-    if (usage.count >= USAGE_LIMIT) {
-      setError(`Daily download limit of ${USAGE_LIMIT} reached. Please try again tomorrow.`);
-      return;
-    }
     if (!originalImageUrl) return;
-
-    const newCount = usage.count + 1;
-    const newUsage = { ...usage, count: newCount };
-    setUsage(newUsage);
-    localStorage.setItem('jetsuite_jetimage_download_usage', JSON.stringify(newUsage));
 
     if (format === 'jpeg') {
       const canvas = document.createElement('canvas');
@@ -315,7 +283,6 @@ Focus on photorealism and commercial quality.`;
     }
   };
 
-  const downloadsRemaining = USAGE_LIMIT - usage.count;
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const creditsRemaining = creditsLimit - creditsUsed;
 
@@ -465,25 +432,30 @@ Focus on photorealism and commercial quality.`;
       {loading && <Loader />}
       {watermarkedImageUrl && (
         <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
-          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Preview</h3>
-          <img src={watermarkedImageUrl} alt={prompt} className="rounded-lg w-full h-auto" />
+          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Mockup</h3>
+          <img src={watermarkedImageUrl} alt={prompt} className="rounded-lg w-full h-auto shadow-lg" />
           
-          <div className="mt-6 bg-brand-light p-4 rounded-lg border border-brand-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-brand-text">Download Clean Image</h4>
-                <p className="text-sm text-brand-text-muted">This will use one of your daily credits.</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-brand-text">{downloadsRemaining} / {USAGE_LIMIT}</p>
-                <p className="text-xs text-brand-text-muted">downloads left</p>
-              </div>
+          <div className="mt-6 bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
+            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2">
+              <ArrowDownTrayIcon className="w-5 h-5 text-accent-purple" />
+              Download Your Mockup
+            </h4>
+            <p className="text-sm text-brand-text-muted mb-4">Clean version without watermark</p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => handleDownload('png')} 
+                className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-4 rounded-lg transition shadow hover:shadow-lg"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" /> Download PNG
+              </button>
+              <button 
+                onClick={() => handleDownload('jpeg')} 
+                className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition shadow hover:shadow-lg"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" /> Download JPEG
+              </button>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button onClick={() => handleDownload('png')} disabled={downloadsRemaining <= 0} className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50"><ArrowDownTrayIcon className="w-5 h-5" /> Download PNG</button>
-              <button onClick={() => handleDownload('jpeg')} disabled={downloadsRemaining <= 0} className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-4 rounded-lg transition disabled:opacity-50"><ArrowDownTrayIcon className="w-5 h-5" /> Download JPEG</button>
-            </div>
-            {downloadsRemaining <= 0 && <p className="text-red-500 text-xs text-center mt-3 font-semibold">You've reached your daily download limit.</p>}
           </div>
         </div>
       )}
