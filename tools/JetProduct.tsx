@@ -399,7 +399,7 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       return;
     }
     if (!prompt) {
-      setError('Please select a mockup style.');
+      setError('Please select a mockup style or write a prompt.');
       return;
     }
     
@@ -515,7 +515,6 @@ Focus on photorealism and commercial quality.`;
         </HowToUse>
       )}
       
-      {/* START: Minimal Generations Meter */}
       {!loadingCredits && (
         <div className={`mb-4 flex items-center justify-between p-3 rounded-xl border ${
             creditsUsed >= creditsLimit 
@@ -539,10 +538,8 @@ Focus on photorealism and commercial quality.`;
       {loadingCredits && (
         <div className="mb-4 h-12 w-full bg-brand-light rounded-xl animate-pulse"></div>
       )}
-      {/* END: Minimal Generations Meter */}
       
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        {/* MODIFIED HEADER START (Removed old badge) */}
         <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-4">
                 <JetProductIcon className="w-8 h-8 text-accent-purple" />
@@ -554,7 +551,6 @@ Focus on photorealism and commercial quality.`;
                 </div>
             </div>
         </div>
-        {/* MODIFIED HEADER END */}
         
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -576,12 +572,10 @@ Focus on photorealism and commercial quality.`;
               )}
             </div>
 
-            {/* Right: Style Selection */}
+            {/* Right: Style Selection & Prompt */}
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-brand-text mb-2">2. Select Mockup Style</label>
-                
-                {/* Category Tabs */}
                 <div className="flex flex-wrap gap-2 mb-4">
                     {(Object.keys(MOCKUP_STYLES) as Array<keyof typeof MOCKUP_STYLES>).map(category => (
                         <button
@@ -603,9 +597,7 @@ Focus on photorealism and commercial quality.`;
                         </button>
                     ))}
                 </div>
-                
-                {/* Style Options */}
-                <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">
                     {MOCKUP_STYLES[selectedCategory].map(style => (
                         <button 
                             type="button" 
@@ -621,40 +613,33 @@ Focus on photorealism and commercial quality.`;
                             }`}
                         >
                             <p className="text-sm font-bold text-brand-text">{style.name}</p>
-                            <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.prompt.substring(0, 80)}...</p>
                         </button>
                     ))}
                 </div>
               </div>
+
+              <div className="mb-6">
+                <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">
+                  3. Edit or Refine Your Prompt
+                </label>
+                <textarea
+                  id="prompt"
+                  rows={4}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Select a style above or write your own prompt..."
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
+                />
+              </div>
               
-              {/* Text Overlays */}
               <div>
                 <label className="block text-sm font-medium text-brand-text mb-3">
-                  3. Text Overlays (Optional)
+                  4. Text Overlays (Optional)
                 </label>
-                
                 <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder="Product Name"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    value={headline}
-                    onChange={(e) => setHeadline(e.target.value)}
-                    placeholder="Headline/Offer"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="Price (e.g., $99.99)"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
-                  />
+                  <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Product Name" className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm" />
+                  <input type="text" value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Headline/Offer" className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm" />
+                  <input type="text" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price (e.g., $99.99)" className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm" />
                 </div>
               </div>
 
@@ -675,116 +660,39 @@ Focus on photorealism and commercial quality.`;
             </div>
           </div>
           
-          {/* Text Styling Controls */}
           {(productName || headline || price) && (
             <div className="mt-4 space-y-3 p-4 bg-brand-light border border-brand-border rounded-lg">
               <p className="text-xs font-semibold text-brand-text mb-2">Text Styling Options</p>
-              
-              {/* Font Selection */}
               <div>
-                <label htmlFor="textFont" className="block text-xs font-medium text-brand-text-muted mb-1">
-                  Font Style
-                </label>
-                <select
-                  id="textFont"
-                  value={textFont}
-                  onChange={(e) => setTextFont(e.target.value)}
-                  className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-                >
-                  {FONT_OPTIONS.map(font => (
-                    <option key={font.id} value={font.id}>
-                      {font.name} - {font.description}
-                    </option>
-                  ))}
+                <label htmlFor="textFont" className="block text-xs font-medium text-brand-text-muted mb-1">Font Style</label>
+                <select id="textFont" value={textFont} onChange={(e) => setTextFont(e.target.value)} className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition">
+                  {FONT_OPTIONS.map(font => (<option key={font.id} value={font.id}>{font.name} - {font.description}</option>))}
                 </select>
               </div>
-              
-              {/* Text Size */}
               <div>
                 <label className="block text-xs font-medium text-brand-text-muted mb-2">Text Size</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['small', 'medium', 'large'] as const).map(size => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setTextSize(size)}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${
-                        textSize === size
-                          ? 'bg-accent-purple text-white shadow'
-                          : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {(['small', 'medium', 'large'] as const).map(size => (<button key={size} type="button" onClick={() => setTextSize(size)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${textSize === size ? 'bg-accent-purple text-white shadow' : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'}`}>{size}</button>))}
                 </div>
               </div>
-              
-              {/* Text Color */}
               <div>
-                <label htmlFor="textColor" className="block text-xs font-medium text-brand-text-muted mb-1">
-                  Text Color (Optional)
-                  <span className="ml-1 text-[10px]">Leave empty for brand colors</span>
-                </label>
-                <input
-                  id="textColor"
-                  type="text"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  placeholder="e.g., #FF5733, white, or black"
-                  className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-                />
+                <label htmlFor="textColor" className="block text-xs font-medium text-brand-text-muted mb-1">Text Color (Optional)<span className="ml-1 text-[10px]">Leave empty for brand colors</span></label>
+                <input id="textColor" type="text" value={textColor} onChange={(e) => setTextColor(e.target.value)} placeholder="e.g., #FF5733, white, or black" className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" />
               </div>
-              
-              {/* Text Position */}
               <div>
                 <label className="block text-xs font-medium text-brand-text-muted mb-2">Text Position</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['top', 'center', 'bottom'] as const).map(position => (
-                    <button
-                      key={position}
-                      type="button"
-                      onClick={() => setTextPosition(position)}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${
-                        textPosition === position
-                          ? 'bg-accent-purple text-white shadow'
-                          : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'
-                      }`}
-                    >
-                      {position}
-                    </button>
-                  ))}
+                  {(['top', 'center', 'bottom'] as const).map(position => (<button key={position} type="button" onClick={() => setTextPosition(position)} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${textPosition === position ? 'bg-accent-purple text-white shadow' : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'}`}>{position}</button>))}
                 </div>
               </div>
-              
-              <div className="pt-2 border-t border-brand-border">
-                <p className="text-[10px] text-brand-text-muted">
-                  💡 Don't like the result? Use "Try Different Style" after generating
-                </p>
-              </div>
+              <div className="pt-2 border-t border-brand-border"><p className="text-[10px] text-brand-text-muted">💡 Don't like the result? Use "Try Different Style" after generating</p></div>
             </div>
           )}
 
           {error && <p className="text-red-500 text-sm my-4">{error}</p>}
           
-          <button 
-            type="submit" 
-            disabled={loading || !inputImage || !prompt || creditsUsed >= creditsLimit || loadingCredits} 
-            className="w-full mt-6 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Generating Mockup...
-              </>
-            ) : loadingCredits ? (
-              'Loading...'
-            ) : (
-              <>
-                <SparklesIcon className="w-5 h-5" /> 
-                Generate Professional Mockup
-              </>
-            )}
+          <button type="submit" disabled={loading || !inputImage || !prompt || creditsUsed >= creditsLimit || loadingCredits} className="w-full mt-6 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg flex items-center justify-center gap-2">
+            {loading ? (<><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>Generating Mockup...</>) : loadingCredits ? ('Loading...') : (<><SparklesIcon className="w-5 h-5" /> Generate Professional Mockup</>)}
           </button>
 
           {creditsUsed >= creditsLimit && (
@@ -793,10 +701,7 @@ Focus on photorealism and commercial quality.`;
                 <div className="text-2xl">⚠️</div>
                 <div>
                   <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
-                  <p className="text-xs text-red-700 mt-1">
-                    You've used all {creditsLimit} generations for {new Date().toLocaleDateString('en-US', { month: 'long' })}. 
-                    Your limit will reset on {nextResetDate}.
-                  </p>
+                  <p className="text-xs text-red-700 mt-1">You've used all {creditsLimit} generations for {new Date().toLocaleDateString('en-US', { month: 'long' })}. Your limit will reset on {nextResetDate}.</p>
                 </div>
               </div>
             </div>
@@ -812,53 +717,11 @@ Focus on photorealism and commercial quality.`;
           <img src={generatedImageUrl} alt="Generated Product Mockup" className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
           <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
-            {/* Download Button */}
-            <button 
-              onClick={handleDownload} 
-              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
-            >
-              <ArrowDownTrayIcon className="w-5 h-5" /> Download PNG
-            </button>
-            
-            {/* Try Different Style Button (only if text exists) */}
+            <button onClick={handleDownload} className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"><ArrowDownTrayIcon className="w-5 h-5" /> Download PNG</button>
             {(productName || headline || price) && (
-              <button 
-                onClick={async () => {
-                  // Trigger form submit to regenerate with new variation
-                  const form = document.querySelector('form');
-                  if (form) {
-                    const event = new Event('submit', { cancelable: true, bubbles: true });
-                    form.dispatchEvent(event);
-                  }
-                }}
-                disabled={loading}
-                className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <SparklesIcon className="w-5 h-5" /> Try Different Text Style
-              </button>
+              <button onClick={async () => { const form = document.querySelector('form'); if (form) { const event = new Event('submit', { cancelable: true, bubbles: true }); form.dispatchEvent(event); } }} disabled={loading} className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"><SparklesIcon className="w-5 h-5" /> Try Different Text Style</button>
             )}
-            
-            {/* New Mockup Button */}
-            <button 
-              onClick={() => {
-                setGeneratedImageUrl(null);
-                setInputImage(null);
-                setProductName('');
-                setHeadline('');
-                setPrice('');
-                // Reset text styling controls
-                setTextFont('elegant-serif');
-                setTextSize('medium');
-                setTextColor('');
-                setTextPosition('center');
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                }
-              }}
-              className="flex items-center justify-center gap-2 bg-brand-light hover:bg-brand-border text-brand-text font-semibold py-3 px-6 rounded-lg transition border border-brand-border"
-            >
-              Start New Mockup
-            </button>
+            <button onClick={() => { setGeneratedImageUrl(null); setInputImage(null); setProductName(''); setHeadline(''); setPrice(''); setTextFont('elegant-serif'); setTextSize('medium'); setTextColor(''); setTextPosition('center'); if (fileInputRef.current) { fileInputRef.current.value = ''; } }} className="flex items-center justify-center gap-2 bg-brand-light hover:bg-brand-border text-brand-text font-semibold py-3 px-6 rounded-lg transition border border-brand-border">Start New Mockup</button>
           </div>
         </div>
       )}
