@@ -11,12 +11,13 @@ import { JetCompete } from './tools/JetCompete';
 import { JetCreate } from './tools/JetCreate';
 import { JetSocial } from './tools/JetSocial';
 import { JetImage } from './tools/JetImage';
+import { JetContent } from './tools/JetContent'; // ADDED MISSING IMPORT
 import { JetReply } from './tools/JetReply';
 import { JetTrust } from './tools/JetTrust';
 import { JetLeads } from './tools/JetLeads';
 import { JetEvents } from './tools/JetEvents';
 import { JetAds } from './tools/JetAds';
-import { JetProduct } from './tools/JetProduct'; // Import JetProduct
+import { JetProduct } from './tools/JetProduct';
 import { GrowthPlan } from './tools/GrowthPlan';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
@@ -27,7 +28,7 @@ import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
-import JethelperApp from './jethelper/JethelperApp'; // Import JethelperApp
+import JethelperApp from './jethelper/JethelperApp';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -87,7 +88,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         setBusinesses(businessList);
         const activeBiz = businessList.find(b => b.id === activeBusinessId) || businessList[0];
         
-        // Only set if different to avoid infinite loops
         if (activeBiz.id !== activeBusinessId) {
           setActiveBusinessId(activeBiz.id);
         }
@@ -115,7 +115,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         }
       }
 
-      // If user is admin, refresh the master list
       if (userEmail === ADMIN_EMAIL && (isInitial || activeTool?.id === 'adminpanel')) {
         await fetchAllProfiles();
       }
@@ -129,7 +128,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     }
   }, [supabase, userId, activeBusinessId, userEmail, activeTool?.id]);
 
-  // Initial load only
   useEffect(() => {
     loadData(true);
   }, [userId]);
@@ -138,14 +136,11 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     setActiveTool(tool);
     setKbArticleId(articleId || null);
     
-    // Background refresh for specific navigation points
     if (!tool || tool.id === 'growthplan' || tool.id === 'home') {
       loadData(false);
     }
     
-    // CRITICAL FIX: Force task reload specifically when navigating TO Growth Plan
     if (tool?.id === 'growthplan' && userId && activeBusinessId) {
-      // Immediately reload tasks from database
       loadFromSupabase(userId, activeBusinessId, 'tasks')
         .then(savedTasks => {
           if (savedTasks && Array.isArray(savedTasks)) {
@@ -163,10 +158,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     const sourceModule = newTasks[0].sourceModule;
     
     try {
-        // 1. Get current tasks from DB to avoid stale state
         const currentTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks') || [];
 
-        // 2. Prepare new tasks with metadata
         const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
             ...task,
             id: uuidv4(),
@@ -175,24 +168,18 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
             createdAt: new Date().toISOString(),
         }));
 
-        // 3. Filter out old tasks from the same source module
         const otherTasks = currentTasks.filter((t: GrowthPlanTask) => t.sourceModule !== sourceModule);
-        
-        // 4. Combine and create the final list
         const updatedTasks = [...otherTasks, ...tasksWithMetadata];
 
-        // 5. Save the complete list back to the database
         console.log(`💾 [InternalApp] Saving ${updatedTasks.length} tasks to Supabase...`);
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
         console.log('✅ [InternalApp] Tasks successfully saved.');
 
-        // 6. Update local state with the definitive list from the database
         setTasks(updatedTasks);
         return updatedTasks;
 
     } catch (error) {
         console.error('❌ [InternalApp] Failed to add and save tasks:', error);
-        // Don't update state on error to avoid data loss
         return tasks;
     }
   };
@@ -218,7 +205,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     if (report && activeBusinessId) {
         try {
             await syncToSupabase(userId, activeBusinessId, toolId, report);
-            // Update profile data optimistically
             setCurrentProfileData(prev => {
                 if (!prev) return null;
                 return {
@@ -272,7 +258,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetSocial tool={{ id: 'jetsocial', name: 'JetSocial', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetimage':
         return <JetImage tool={{ id: 'jetimage', name: 'JetImage', category: 'create' }} profileData={currentProfileData} />;
-      case 'jetproduct': // NEW ROUTE
+      case 'jetproduct':
         return <JetProduct tool={{ id: 'jetproduct', name: 'JetProduct', category: 'create' }} profileData={currentProfileData} />;
       case 'jetcontent':
         return <JetContent tool={{ id: 'jetcontent', name: 'JetContent', category: 'create' }} initialProps={null} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
@@ -284,7 +270,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetLeads tool={{ id: 'jetleads', name: 'JetLeads', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetevents':
         return <JetEvents tool={{ id: 'jetevents', name: 'JetEvents', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
-      case 'jetads': // ADDED JETADS ROUTE
+      case 'jetads':
         return <JetAds tool={{ id: 'jetads', name: 'JetAds', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
         return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
@@ -301,7 +287,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           allProfiles={allProfiles} 
           setAllProfiles={setAllProfiles} 
           currentUserProfile={currentProfileData} 
-          setCurrentUserProfile={setCurrentProfileData} // FIX APPLIED HERE
+          setCurrentUserProfile={setCurrentProfileData}
           onImpersonate={() => {}} 
           onDataChange={() => loadData(false)} 
         />;
@@ -360,7 +346,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
-      {/* JetBot Chatbot is now only rendered inside UserSupportTickets.tsx */}
     </div>
   );
 };
