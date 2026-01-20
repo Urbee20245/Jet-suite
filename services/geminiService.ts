@@ -39,7 +39,7 @@ const auditReportSchema = {
                     issue: { type: Type.STRING },
                     whyItMatters: { type: Type.STRING },
                     fix: { type: Type.STRING },
-                    priority: { type: STRING },
+                    priority: { type: Type.STRING },
                     task: {
                         type: Type.OBJECT,
                         properties: {
