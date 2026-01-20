@@ -39,6 +39,7 @@ export interface AuditIssue {
     title: string;
     description: string;
     effort: 'Low' | 'Medium' | 'High';
+    priority: 'High' | 'Medium' | 'Low';
     sourceModule: string;
   };
 }
