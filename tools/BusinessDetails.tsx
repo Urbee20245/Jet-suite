@@ -743,6 +743,12 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     setSearchResults([]);
   };
 
+  const handleGbpCancel = () => {
+    setSelectedGbp(null);
+    setSearchResults([]);
+    setSearchTerm('');
+  };
+
   const handleGbpDisconnect = async () => { 
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
