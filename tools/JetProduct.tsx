@@ -323,7 +323,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
 
         const currentMonthYear = new Date().toISOString().slice(0, 7); // "YYYY-MM"
 
-        // Try to get existing record for this month
         const { data: creditRecord } = await supabase
           .from('user_credits')
           .select('*')
@@ -335,7 +334,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
           setCreditsUsed(creditRecord.credits_used);
           setCreditsLimit(creditRecord.credits_limit);
         } else {
-          // No record for this month - create new one
           const { data: newRecord } = await supabase
             .from('user_credits')
             .insert({
@@ -484,7 +482,7 @@ Focus on photorealism and commercial quality.`;
       
     } catch (err: any) {
       console.error(err);
-      setError('Failed to generate mockup. Please try again or refine your prompt.');
+      setError('Failed to generate mockup. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -518,15 +516,35 @@ Focus on photorealism and commercial quality.`;
       )}
       
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="flex items-center gap-4 mb-4">
-            <JetProductIcon className="w-8 h-8 text-accent-purple" />
-            <div>
-                <p className="text-brand-text-muted mb-1">{tool.description}</p>
-                <p className="text-sm text-brand-text-muted">
-                    Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($1,000-3,000/mo)</span>
-                </p>
+        {/* MODIFIED HEADER START */}
+        <div className="flex justify-between items-start mb-4">
+            <div className="flex items-center gap-4">
+                <JetProductIcon className="w-8 h-8 text-accent-purple" />
+                <div>
+                    <p className="text-brand-text-muted mb-1">{tool.description}</p>
+                    <p className="text-sm text-brand-text-muted">
+                        Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($1,000-3,000/mo)</span>
+                    </p>
+                </div>
             </div>
+            
+            {/* NEW COMPACT CREDIT BADGE */}
+            {!loadingCredits && (
+                <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
+                    creditsUsed >= creditsLimit 
+                        ? 'bg-red-100 text-red-800 border border-red-300' 
+                        : 'bg-accent-purple/10 text-accent-purple border border-accent-purple/30'
+                }`}>
+                    <SparklesIcon className="w-4 h-4" />
+                    <span>{creditsRemaining} Credits</span>
+                </div>
+            )}
+            {loadingCredits && (
+                <div className="h-7 w-20 bg-gray-100 rounded-full animate-pulse"></div>
+            )}
+            {/* END NEW COMPACT CREDIT BADGE */}
         </div>
+        {/* MODIFIED HEADER END */}
         
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -543,7 +561,7 @@ Focus on photorealism and commercial quality.`;
                   <ArrowUpTrayIcon className="w-10 h-10 mx-auto text-brand-text-muted" />
                   <p className="mt-3 text-sm text-brand-text">Click to upload or drag & drop</p>
                   <p className="text-xs text-brand-text-muted">PNG or JPG</p>
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" required />
+                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
               )}
             </div>
@@ -737,46 +755,6 @@ Focus on photorealism and commercial quality.`;
             </div>
           )}
 
-          {/* Monthly Credit Counter */}
-          {!loadingCredits && (
-            <div className="mt-4 p-4 bg-gradient-to-r from-brand-light to-white border border-brand-border rounded-xl shadow-sm">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <span className="text-sm font-semibold text-brand-text">Monthly Generations</span>
-                  <p className="text-xs text-brand-text-muted mt-0.5">
-                    Resets {nextResetDate}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className={`text-2xl font-bold ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`}>
-                    {creditsUsed}
-                  </span>
-                  <span className="text-lg text-brand-text-muted"> / {creditsLimit}</span>
-                </div>
-              </div>
-              
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div 
-                  className={`h-3 rounded-full transition-all duration-500 ${
-                    creditsUsed >= creditsLimit 
-                      ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                      : 'bg-gradient-to-r from-accent-purple to-accent-pink'
-                  }`}
-                  style={{ width: `${Math.min((creditsUsed / creditsLimit) * 100, 100)}%` }}
-                ></div>
-              </div>
-              
-              <div className="mt-2 text-center">
-                <p className={`text-sm font-medium ${creditsUsed >= creditsLimit ? 'text-red-600' : 'text-accent-purple'}`}>
-                  {creditsUsed >= creditsLimit 
-                    ? '🚫 No generations remaining' 
-                    : `✨ ${creditsRemaining} generations remaining this month`
-                  }
-                </p>
-              </div>
-            </div>
-          )}
-
           {error && <p className="text-red-500 text-sm my-4">{error}</p>}
           
           <button 
@@ -836,8 +814,6 @@ Focus on photorealism and commercial quality.`;
             {(productName || headline || price) && (
               <button 
                 onClick={async () => {
-                  setTextVariationSeed(prev => prev + 1);
-                  setGeneratedImageUrl(null);
                   // Trigger form submit to regenerate with new variation
                   const form = document.querySelector('form');
                   if (form) {
@@ -860,7 +836,7 @@ Focus on photorealism and commercial quality.`;
                 setProductName('');
                 setHeadline('');
                 setPrice('');
-                setTextVariationSeed(0);
+                // Reset text styling controls
                 setTextFont('elegant-serif');
                 setTextSize('medium');
                 setTextColor('');
@@ -874,14 +850,6 @@ Focus on photorealism and commercial quality.`;
               Start New Mockup
             </button>
           </div>
-          
-          {(productName || headline || price) && textVariationSeed > 0 && (
-            <div className="mt-4 text-center">
-              <p className="text-xs text-brand-text-muted">
-                🎨 Style Variation #{textVariationSeed + 1} - Keep clicking for more options
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>
