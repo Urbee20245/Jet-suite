@@ -471,17 +471,33 @@ export const generateImage = async (prompt: string, imageSize: '1K' | '2K' | '4K
     try {
         const ai = getAiClient();
         const parts: any[] = [];
-        if (inputImage) parts.push({ inlineData: { data: inputImage.base64, mimeType: inputImage.mimeType } });
-        parts.push({ text: prompt });
-        const modelName = inputImage ? 'gemini-1.5-flash-latest' : 'gemini-3-pro-image-preview';
-        const config: any = {};
-        if (modelName === 'gemini-3-pro-image-preview') config.imageConfig = { imageSize, aspectRatio };
-        const response = await ai.models.generateContent({ model: modelName, contents: { parts }, config });
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) return part.inlineData.data;
+        
+        // For image-to-image (product mockups), use the correct model
+        if (inputImage) {
+            parts.push({ inlineData: { data: inputImage.base64, mimeType: inputImage.mimeType } });
         }
-        throw new Error('No image found');
-    } catch (error) { throw error; }
+        parts.push({ text: prompt });
+        
+        // FIXED: Use gemini-3-pro-image-preview for ALL image generation (with or without input)
+        const modelName = 'gemini-3-pro-image-preview';
+        const config: any = { imageConfig: { imageSize, aspectRatio } };
+        
+        const response = await ai.models.generateContent({ 
+            model: modelName, 
+            contents: { parts }, 
+            config 
+        });
+        
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+                return part.inlineData.data;
+            }
+        }
+        throw new Error('No image found in response');
+    } catch (error) { 
+        console.error('Image generation error:', error);
+        throw error; 
+    }
 };
 
 export const generateBusinessDescription = async (url: string): Promise<{ description: string; suggestedCategory: string }> => {

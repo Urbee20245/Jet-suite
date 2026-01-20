@@ -334,7 +334,7 @@ Focus on photorealism and commercial quality.`;
           finalPrompt += `\n- Headline/Tagline: "${headline}" (bold and attention-grabbing)`;
         }
         if (price) {
-          finalPrompt += `\n- Price: "${price}" (clear and readable)`;
+          finalPrompt += `\n- Price: "${price}" (clear and readable pricing display)`;
         }
         
         finalPrompt += '\n\nEnsure text has proper contrast with background for maximum readability. Apply consistent typography across all text elements. Professional, commercial-quality text integration.';
