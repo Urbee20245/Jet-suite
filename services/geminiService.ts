@@ -467,134 +467,90 @@ export const findKeywords = async (service: string, location: string, descriptiv
     } catch (error) { throw error; }
 };
 
-export const generateImage = async (prompt: string, imageSize: '1K' | '2K' | '4K', aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1", inputImage?: { base64: string; mimeType: string }) => {
+export const generateImage = async (
+  prompt: string, 
+  imageSize: '1K' | '2K' | '4K', 
+  aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1", 
+  inputImage?: { base64: string; mimeType: string }
+): Promise<string> => {
     try {
         const ai = getAiClient();
+        
+        // Enhanced prompt for maximum quality
+        const enhancedPrompt = `ULTRA HIGH QUALITY COMMERCIAL PHOTOGRAPHY:
+
+${prompt}
+
+CRITICAL QUALITY REQUIREMENTS:
+- Professional studio photography with dramatic lighting
+- VIVID, highly saturated colors with rich contrast and depth
+- Photorealistic textures and materials
+- Magazine cover or luxury brand advertising quality
+- Sharp focus with beautiful depth of field
+- Professional color grading and post-processing
+- Award-winning commercial product photography composition`;
+
         const parts: any[] = [];
         
-        // For image-to-image (product mockups), use the correct model
         if (inputImage) {
             parts.push({ inlineData: { data: inputImage.base64, mimeType: inputImage.mimeType } });
         }
-        parts.push({ text: prompt });
+        parts.push({ text: enhancedPrompt });
         
-        // FIXED: Use gemini-3-pro-image-preview for ALL image generation (with or without input)
-        const modelName = 'gemini-3-pro-image-preview';
-        const config: any = { imageConfig: { imageSize, aspectRatio } };
-        
-        const response = await ai.models.generateContent({ 
-            model: modelName, 
-            contents: { parts }, 
-            config 
-        });
-        
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
-                return part.inlineData.data;
+        // TRY IMAGEN 3 FIRST (best quality)
+        try {
+            console.log('[generateImage] Attempting Imagen 3 generation...');
+            
+            const imagenConfig: any = {
+                generationConfig: {
+                    sampleCount: 1,
+                    aspectRatio: aspectRatio,
+                }
+            };
+            
+            const imagenResponse = await ai.models.generateContent({ 
+                model: 'imagen-3.0-generate-001',
+                contents: { parts }, 
+                config: imagenConfig
+            });
+            
+            for (const part of imagenResponse.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+                    console.log('[generateImage] Imagen 3 success!');
+                    return part.inlineData.data;
+                }
             }
+            
+            throw new Error('No image in Imagen 3 response');
+            
+        } catch (imagenError) {
+            // FALLBACK TO GEMINI if Imagen 3 fails
+            console.warn('[generateImage] Imagen 3 failed, falling back to Gemini:', imagenError);
+            
+            const geminiConfig: any = { 
+                imageConfig: { imageSize, aspectRatio } 
+            };
+            
+            const geminiResponse = await ai.models.generateContent({ 
+                model: 'gemini-3-pro-image-preview',
+                contents: { parts }, 
+                config: geminiConfig
+            });
+            
+            for (const part of geminiResponse.candidates[0].content.parts) {
+                if (part.inlineData && part.inlineData.mimeType.startsWith('image/')) {
+                    console.log('[generateImage] Gemini fallback success');
+                    return part.inlineData.data;
+                }
+            }
+            
+            throw new Error('No image found in Gemini response');
         }
-        throw new Error('No image found in response');
+        
     } catch (error) { 
-        console.error('Image generation error:', error);
+        console.error('[generateImage] Complete failure:', error);
         throw error; 
     }
-};
-
-export const generateBusinessDescription = async (url: string): Promise<{ description: string; suggestedCategory: string }> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `Analyze ${url}. Generate 2-3 sentence business description and suggest category from list. JSON output.`;
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: injectDateContext(prompt),
-            config: {
-                tools: [{ googleSearch: {} }],
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: { description: { type: Type.STRING }, suggestedCategory: { type: Type.STRING } },
-                    required: ["description", "suggestedCategory"]
-                }
-            },
-        });
-        return JSON.parse(response.text.trim());
-    } catch (error) { return { description: "AI features disabled.", suggestedCategory: "Other" }; }
-};
-
-export const extractWebsiteDna = async (url: string): Promise<{logoUrl: string; colors: string[]; fonts: string; style: string; faviconUrl: string;}> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `Extract logo, colors, fonts, style, favicon from ${url}. JSON output.`;
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: injectDateContext(prompt),
-            config: {
-                tools: [{ googleSearch: {} }],
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: { logoUrl: { type: Type.STRING }, colors: { type: Type.ARRAY, items: { type: Type.STRING } }, fonts: { type: Type.STRING }, style: { type: Type.STRING }, faviconUrl: { type: Type.STRING } },
-                    required: ["logoUrl", "colors", "fonts", "style", "faviconUrl"]
-                }
-            },
-        });
-        return JSON.parse(response.text.trim());
-    } catch (error) { throw error; }
-};
-
-export const generateCampaignIdeas = async (profileData: ProfileData): Promise<CampaignIdea[]> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `Generate 5 campaign ideas for ${profileData.business.business_name}. JSON output.`;
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: injectDateContext(prompt),
-            config: {
-              tools: [{ googleSearch: {} }],
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  campaigns: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, description: { type: Type.STRING }, channels: { type: Type.ARRAY, items: { type: Type.STRING } } }, required: ["id", "name", "description", "channels"] } }
-                }
-              }
-            }
-        });
-        return JSON.parse(response.text.trim()).campaigns || [];
-    } catch (error) { throw error; }
-};
-
-export const generateCreativeAssets = async (campaign: CampaignIdea, profileData: ProfileData, refinement?: string): Promise<CreativeAssets> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `Generate social posts and ads for campaign ${campaign.name}. JSON output. ${refinement ? `Refinement: ${refinement}` : ''}`;
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: injectDateContext(prompt),
-            config: {
-              tools: [{ googleSearch: {} }],
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  social_posts: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { platform: { type: Type.STRING }, copy: { type: Type.STRING }, visual_suggestion: { type: Type.STRING } }, required: ["platform", "copy", "visual_suggestion"] } },
-                  ad_copy: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { headline: { type: Type.STRING }, description: { type: Type.STRING }, cta: { type: Type.STRING } }, required: ["headline", "description", "cta"] } }
-                },
-                required: ["social_posts", "ad_copy"]
-              }
-            }
-        });
-        return JSON.parse(response.text.trim()) as CreativeAssets;
-    } catch (error) { throw error; }
-};
-
-export const generateYoutubeThumbnailPrompt = async (request: YoutubeThumbnailRequest): Promise<string> => {
-    try {
-        const ai = getAiClient();
-        const prompt = `Create high-CTR YouTube thumbnail prompt for "${request.videoTitle}".`;
-        const response = await ai.models.generateContent({ model: 'gemini-3-pro-preview', contents: injectDateContext(prompt), config: { tools: [{ googleSearch: {} }] } });
-        return response.text ?? '';
-    } catch (error) { throw error; }
 };
 
 export const getTrendingImageStyles = async (): Promise<Array<{ name: string; description: string; prompt: string }>> => {
