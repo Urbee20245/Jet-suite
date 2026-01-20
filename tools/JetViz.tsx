@@ -60,19 +60,15 @@ const priorityStyles = {
 
 interface SimpleTaskCardProps {
   task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>;
-  isAdded: boolean;
-  onAdd: () => void;
 }
 
 interface SimpleIssueCardProps {
   issue: AuditIssue;
-  isAdded: boolean;
-  onAdd: () => void;
 }
 
-const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd }) => {
+const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task }) => {
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white shadow glow-card glow-card-rounded-lg'}`}>
+    <div className="p-4 rounded-lg border bg-green-50/50 border-green-200">
       <div className="flex items-start justify-between">
         <div className="flex-1">
             <h4 className="font-bold text-brand-text">{task.title}</h4>
@@ -82,48 +78,32 @@ const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task, isAdded, onAdd })
                 <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
             </div>
         </div>
-        <button 
-            onClick={onAdd} 
-            disabled={isAdded}
-            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
-                isAdded 
-                    ? 'bg-green-500 text-white cursor-default' 
-                    : 'bg-accent-purple hover:bg-accent-pink text-white'
-            }`}
-        >
-            {isAdded ? '✓ Added' : 'Add to Plan'}
-        </button>
+        <div className="flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold bg-green-500 text-white">
+            ✓ Added to Plan
+        </div>
       </div>
     </div>
   );
 };
 
-const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd }) => {
+const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue }) => {
   const styles = priorityStyles[issue.priority];
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className={`p-4 rounded-lg border transition-all ${isAdded ? 'bg-green-50/50' : 'bg-white'}`}>
+    <div className="p-4 rounded-lg border bg-green-50/50 border-green-200">
       <div className="flex items-start justify-between">
         <div className="flex items-start">
            <div className="ml-3">
-              <h4 className={`font-bold text-brand-text`}>{issue.issue}</h4>
-              {isAdded && <p className="text-xs text-brand-text-muted mt-1">Task already added to Growth Plan.</p>}
+              <h4 className="font-bold text-brand-text">{issue.issue}</h4>
+              <p className="text-xs text-brand-text-muted mt-1">Task added to Growth Plan automatically.</p>
            </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
           <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full border ${styles.badge}`}>{issue.priority}</span>
-          <button 
-            onClick={onAdd} 
-            disabled={isAdded}
-            className={`flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
-                isAdded 
-                    ? 'bg-green-500 text-white cursor-default' 
-                    : 'bg-accent-purple hover:bg-accent-pink text-white'
-            }`}
-        >
-            {isAdded ? '✓ Added' : 'Add to Plan'}
-        </button>
+          <div className="flex-shrink-0 ml-4 px-3 py-1 rounded-lg text-sm font-semibold bg-green-500 text-white">
+              ✓ Added to Plan
+          </div>
         </div>
       </div>
       <div className="ml-8 mt-2">
@@ -147,48 +127,48 @@ const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue, isAdded, onAdd
   );
 };
 
-const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: React.FormEvent) => Promise<void>; isRunning: boolean; growthPlanTasks: GrowthPlanTask[]; setActiveTool: (tool: Tool | null) => void; onAddTask: (tasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => void; userId: string; activeBusinessId: string | null; onNavigate: () => void }> = ({ report, onRerun, isRunning, growthPlanTasks, setActiveTool, onAddTask, userId, activeBusinessId, onNavigate }) => {
-    const weeklyActionTasks = (report.weeklyActions || []).map(action => growthPlanTasks.find(t => t.title === action.title)).filter(Boolean) as GrowthPlanTask[];
-    const completedWeeklyTasks = weeklyActionTasks.filter(t => t.status === 'completed').length;
-    const progress = weeklyActionTasks.length > 0 ? (completedWeeklyTasks / weeklyActionTasks.length) * 100 : 0;
-    
-    const existingTaskTitles = new Set(growthPlanTasks.map(t => t.title));
-
-    const handleAddWeeklyAction = (task: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>) => {
-        onAddTask([task]);
-    };
-    
-    const handleAddIssueTask = (issue: AuditIssue) => {
-        onAddTask([{
-            title: issue.task.title,
-            description: issue.task.description,
-            whyItMatters: issue.whyItMatters,
-            effort: issue.task.effort,
-            sourceModule: issue.task.sourceModule,
-            priority: issue.priority
-        }]);
-    };
+const JetVizResultDisplay: React.FC<{ 
+    report: LiveWebsiteAnalysis; 
+    onRerun: (e: React.FormEvent) => Promise<void>; 
+    isRunning: boolean; 
+    setActiveTool: (tool: Tool | null) => void; 
+    onNavigate: () => void 
+}> = ({ report, onRerun, isRunning, setActiveTool, onNavigate }) => {
 
     return (
     <div className="space-y-8 mt-6">
-       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg"><div className="flex"><div className="py-1"><InformationCircleIcon className="w-6 h-6 mr-3"/></div><div><p className="font-bold">Your Action Plan is Ready!</p><p className="text-sm">All tasks from this analysis have been added to your Growth Plan. When you leave this page, you can find them there to track your progress and start executing. <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button></p></div></div></div>
+       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg">
+            <div className="flex">
+                <div className="py-1">
+                    <InformationCircleIcon className="w-6 h-6 mr-3"/>
+                </div>
+                <div>
+                    <p className="font-bold">Your Action Plan is Ready!</p>
+                    <p className="text-sm">
+                        All recommended tasks below have been automatically added to your Growth Plan.
+                        <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
+                    </p>
+                </div>
+            </div>
+        </div>
         
         <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <div className="flex justify-between items-center mb-4"><div><h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2><p className="text-brand-text-muted mt-1">Focus on these high-impact tasks to see the fastest results.</p></div></div>
-            <div className="mb-4"><div className="flex justify-between items-center mb-1"><span className="text-sm font-semibold">{completedWeeklyTasks} of {weeklyActionTasks.length} done</span><span className="text-sm font-bold">{Math.round(progress)}%</span></div><div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `${progress}%` }}></div></div></div>
-            <div className="space-y-4">
-                {(report.weeklyActions || []).map(task => (
-                    <SimpleTaskCard 
-                        key={task.title} 
-                        task={task} 
-                        isAdded={existingTaskTitles.has(task.title)}
-                        onAdd={() => handleAddWeeklyAction(task)}
-                    />
-                ))}
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
+                    <p className="text-brand-text-muted mt-1">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
+                </div>
+                <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
             </div>
-
-            <div className="flex justify-end items-center mt-6">
-                <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline">Manage all tasks in Growth Plan &rarr;</button>
+            <div className="mb-4">
+                <div className="w-full bg-brand-light rounded-full h-2">
+                    <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div>
+                </div>
+            </div>
+            <div className="space-y-4">
+                {(report.weeklyActions || []).map((task, index) => (
+                    <SimpleTaskCard key={index} task={task} />
+                ))}
             </div>
         </div>
 
@@ -196,12 +176,7 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
             <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
             <div className="space-y-4">
                 {(report.issues || []).map(issue => (
-                    <SimpleIssueCard 
-                        key={issue.id} 
-                        issue={issue} 
-                        isAdded={existingTaskTitles.has(issue.task.title)}
-                        onAdd={() => handleAddIssueTask(issue)}
-                    />
+                    <SimpleIssueCard key={issue.id} issue={issue} />
                 ))}
             </div>
         </div>
@@ -215,7 +190,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPromo, setShowPromo] = useState(true);
-  const [latestGeneratedTasks, setLatestGeneratedTasks] = useState<GrowthPlanTask[]>([]);
   
   useEffect(() => {
     if (profileData.jetvizAnalysis) {
@@ -227,7 +201,14 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
   }, [profileData]);
 
   if (!profileData.business.business_website && !result) {
-    return (<div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center"><InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" /><h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2><p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p><button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button></div>);
+    return (
+        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
+            <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
+            <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2>
+            <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p>
+            <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button>
+        </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent, rerunUrl?: string) => {
@@ -250,11 +231,16 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
         }))
       ];
       
-      const updatedTasks = await addTasksToGrowthPlan(newTasks);
-      setLatestGeneratedTasks(updatedTasks);
+      // Add tasks to growth plan automatically
+      console.log('🚀 [JetViz] Automatically adding', newTasks.length, 'tasks to Growth Plan...');
+      await addTasksToGrowthPlan(newTasks);
+      console.log('✅ [JetViz] Tasks added successfully to Growth Plan');
       
       onSaveAnalysis(analysis);
-    } catch (err) { setError('Failed to get analysis. Please try again.'); console.error(err); } 
+    } catch (err) { 
+        setError('Failed to get analysis. Please try again.'); 
+        console.error('❌ [JetViz] Analysis failed:', err);
+    } 
     finally { setLoading(false); }
   };
   
@@ -263,7 +249,6 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setResult(null);
       setUrlToAnalyze(profileData.business.business_website || '');
       setError('');
-      setLatestGeneratedTasks([]);
   };
 
   const handleFinalNavigation = () => {
@@ -313,11 +298,7 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
                 report={result} 
                 onRerun={(e) => handleSubmit(e, result.businessAddress)} 
                 isRunning={loading} 
-                growthPlanTasks={growthPlanTasks} 
                 setActiveTool={setActiveTool} 
-                onAddTask={addTasksToGrowthPlan}
-                userId={userId}
-                activeBusinessId={activeBusinessId}
                 onNavigate={handleFinalNavigation}
             />
             
