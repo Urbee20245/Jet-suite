@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool, ProfileData } from '../types';
-import { generateImage, getTrendingImageStyles } from '../services/geminiService';
+import { generateImage } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, ArrowDownTrayIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
+import { JetProductIcon } from '../components/icons/ToolIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetProductProps {
@@ -12,14 +13,180 @@ interface JetProductProps {
 }
 
 type ImageSize = '1K' | '2K' | '4K';
-type DownloadFormat = 'png' | 'jpeg';
 type AspectRatio = "1:1" | "3:4" | "4:3" | "9:16" | "16:9";
 
 interface Style {
   name: string;
-  description: string;
   prompt: string;
 }
+
+const MOCKUP_STYLES = {
+    // PRODUCT & E-COMMERCE
+    product: [
+        { 
+            name: "E-commerce White", 
+            prompt: "Professional product photography on pure white background (#FFFFFF). Perfect studio lighting with softbox setup creating soft, even shadows. Product centered and properly aligned. Professional color accuracy. Retail-ready e-commerce photo. 8K resolution, razor sharp focus." 
+        },
+        { 
+            name: "Multi-Angle", 
+            prompt: "Professional e-commerce product photography showing the item from 3 different angles (front, side, 45-degree). Pure white background. Studio lighting. Product details clearly visible. High-end retail photography. 8K resolution." 
+        },
+        { 
+            name: "3D Render Style", 
+            prompt: "Hyper-realistic 3D render style product photography. Dramatic shadows and reflections. Perfect geometry. Studio lighting. Commercial CGI quality. Ultra-detailed. 8K resolution." 
+        },
+    ],
+    
+    // LIFESTYLE & SCENES
+    lifestyle: [
+        { 
+            name: "Desk Scene", 
+            prompt: "Professional lifestyle product photography on modern minimalist desk. Marble or wood surface, coffee cup, laptop, small plant. Natural window lighting. Product is hero, sharp focus. Warm workspace aesthetic. Magazine-quality. 8K." 
+        },
+        { 
+            name: "Kitchen Scene", 
+            prompt: "Lifestyle photography with product in modern, clean kitchen. Natural lighting. Marble countertop. Fresh ingredients nearby. Warm, homey atmosphere. Food photography style. Magazine-quality. 8K." 
+        },
+        { 
+            name: "Outdoor Natural", 
+            prompt: "Lifestyle product photography in natural outdoor setting. Wooden surface or stone. Greenery in soft background blur. Natural daylight. Fresh, organic feel. Beautiful bokeh. Environmental portrait style. 8K." 
+        },
+    ],
+    
+    // SOCIAL MEDIA
+    social: [
+        { 
+            name: "Instagram Post", 
+            prompt: "Eye-catching Instagram advertisement. Product against modern gradient background using brand colors. Bold, minimal text overlay space. Clean, contemporary. High engagement design. Mobile optimized. Square 1:1. Vibrant." 
+        },
+        { 
+            name: "Story/Reels", 
+            prompt: "Dynamic vertical format social content. Product with motion-inspired composition. Bold colors. Text space at top and bottom. Optimized for Instagram Stories, TikTok, Reels. Eye-catching, mobile-first. 9:16." 
+        },
+        { 
+            name: "Carousel Slide", 
+            prompt: "Clean social media carousel design. Product centered with negative space. Brand colors. Room for swipe prompts and text. Professional social marketing. Consistent style. Instagram carousel optimized." 
+        },
+    ],
+    
+    // HERO BANNERS
+    hero: [
+        { 
+            name: "Website Hero", 
+            prompt: "Website hero banner featuring product as focal point. Wide 16:9 format. Minimalist background with negative space for text on left. Dramatic side lighting. Product positioned right third. Premium, luxury aesthetic. Space for headline and CTA." 
+        },
+        { 
+            name: "Landing Page", 
+            prompt: "Full-width landing page banner. Product hero shot with cinematic lighting. Dramatic shadows and highlights. Sleek, modern. Ample space for marketing copy. Product off-center. Premium brand feel. High-conversion design style. 16:9 format." 
+        },
+    ],
+    
+    // ACTION & IN-USE
+    action: [
+        { 
+            name: "Action Shot", 
+            prompt: "Dynamic action photograph showing product being used. Sports/lifestyle photography style. Motion blur in background. Product in sharp focus. Natural outdoor lighting. Authentic, aspirational. Magazine-quality action. Energetic. 8K." 
+        },
+        { 
+            name: "Hands-On Demo", 
+            prompt: "Professional lifestyle showing hands using/holding product. Clean, modern. Product clearly visible and focused. Natural skin tones and lighting. Demonstrates scale and usability. Commercial product photography. Authentic, relatable." 
+        },
+    ],
+    
+    // RESTAURANT & FOOD
+    restaurant: [
+        { 
+            name: "Menu Hero", 
+            prompt: "Professional food photography of dish as hero shot. Overhead or 45-degree angle. Perfectly plated on elegant dishware. Natural window lighting with soft shadows. Restaurant-quality presentation. Food magazine editorial. Rich colors, mouthwatering. 8K." 
+        },
+        { 
+            name: "Table Setting", 
+            prompt: "Restaurant ambiance shot with dish on elegantly set table. Wine glass, cutlery, ambient candles or flowers. Warm, inviting lighting. Upscale dining atmosphere. Dish is hero. Fine dining photography style. Creates desire. High-end." 
+        },
+        { 
+            name: "Chef's Special", 
+            prompt: "Editorial food photography with dish on rustic wooden board or modern plate. Ingredients artfully scattered. Chef's hands in background blur. Professional kitchen atmosphere. Natural light. Food magazine cover quality. Artisanal feel. 8K." 
+        },
+    ],
+    
+    // AUTOMOTIVE
+    automotive: [
+        { 
+            name: "Showroom", 
+            prompt: "Professional automotive photography in pristine showroom. Dramatic studio lighting highlighting curves. Reflective floor mirror effect. Clean, modern environment. Vehicle at 3/4 front angle. Luxury automotive advertising. Showroom quality. 8K." 
+        },
+        { 
+            name: "Lifestyle Drive", 
+            prompt: "Lifestyle automotive photography in scenic location. Mountain road, coastal highway, or urban skyline. Golden hour lighting. Vehicle positioned heroically. Adventure and freedom. Automotive magazine editorial. Aspirational. 8K." 
+        },
+        { 
+            name: "Detail Shot", 
+            prompt: "Close-up automotive photography showcasing features. Dramatic lighting emphasizing lines and details. Wheel, grille, headlight, or interior detail. Luxury automotive advertising. Sharp focus. Shows craftsmanship. High-end dealership marketing. 8K." 
+        },
+    ],
+    
+    // SALON & BEAUTY
+    beauty: [
+        { 
+            name: "Salon Glamour", 
+            prompt: "Professional beauty salon photography. Before/after styling result or showcasing work. Bright, clean salon environment. Professional lighting. Subject polished and confident. Fashion magazine aesthetic. Glamorous, aspirational. Shows transformation. 8K." 
+        },
+        { 
+            name: "Product Beauty", 
+            prompt: "High-end beauty product photography. Clean, minimal background with luxury aesthetic. Soft, flattering lighting. Product bottles/packaging displayed elegantly. Professional beauty editorial. Cosmetic advertising quality. Sleek, modern. Premium and desirable. 8K." 
+        },
+    ],
+    
+    // FITNESS & GYM
+    fitness: [
+        { 
+            name: "Gym Action", 
+            prompt: "Dynamic fitness photography showing equipment or facility in use. Athlete in action with energy. Dramatic gym lighting. Motion and power captured. Professional sports photography. Motivational, inspirational. High-end gym marketing. Shows results. 8K." 
+        },
+        { 
+            name: "Facility Tour", 
+            prompt: "Professional gym interior photography. Clean, modern fitness facility. Equipment perfectly arranged. Bright, motivating lighting. Shows space, cleanliness, quality equipment. Wide angle showcasing full facility. High-end gym marketing. Makes viewer want to join. 8K." 
+        },
+    ],
+    
+    // REAL ESTATE
+    realestate: [
+        { 
+            name: "Property Exterior", 
+            prompt: "Professional real estate photography of property exterior. Golden hour lighting creating warm glow. Perfectly maintained landscaping. Clear blue sky. Wide angle showing full property. Architecture details sharp. Luxury real estate marketing. Premium and desirable. 8K." 
+        },
+        { 
+            name: "Interior Luxury", 
+            prompt: "High-end real estate interior photography. Beautifully staged room with natural light. Shows space, style, luxury. Wide angle but not distorted. Professional architectural photography. Clean, bright, aspirational. Makes viewer imagine living there. 8K." 
+        },
+    ],
+    
+    // RETAIL STOREFRONT
+    retail: [
+        { 
+            name: "Storefront", 
+            prompt: "Professional storefront photography. Clean, inviting exterior. Well-lit windows showing displays. Bright daylight or warm evening glow. Shows business pride and professionalism. Inviting entrance. Retail photography. Makes customers want to visit. 8K." 
+        },
+        { 
+            name: "Interior Store", 
+            prompt: "Professional retail interior photography. Well-organized, clean store layout. Products beautifully displayed. Bright, welcoming lighting. Shows professionalism and quality. Wide angle showcasing space. Retail marketing. Looks established and trustworthy." 
+        },
+    ],
+};
+
+const CATEGORY_LABELS: Record<keyof typeof MOCKUP_STYLES, { label: string; icon: string }> = {
+    product: { label: "Product & E-commerce", icon: "📦" },
+    lifestyle: { label: "Lifestyle Scenes", icon: "🏡" },
+    social: { label: "Social Media", icon: "📱" },
+    hero: { label: "Hero Banners", icon: "🎯" },
+    action: { label: "Action & In-Use", icon: "⚡" },
+    restaurant: { label: "Restaurant & Food", icon: "🍽️" },
+    automotive: { label: "Automotive", icon: "🚗" },
+    beauty: { label: "Salon & Beauty", icon: "💇" },
+    fitness: { label: "Fitness & Gym", icon: "💪" },
+    realestate: { label: "Real Estate", icon: "🏠" },
+    retail: { label: "Retail Store", icon: "🏪" },
+};
 
 const addWatermark = async (base64Data: string): Promise<string> => {
   return new Promise((resolve) => {
@@ -70,19 +237,18 @@ const addWatermark = async (base64Data: string): Promise<string> => {
 };
 
 export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => {
+  const [inputImage, setInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
   const [prompt, setPrompt] = useState('');
-  const [imageSize, setImageSize] = useState<ImageSize>('1K');
+  const [imageSize, setImageSize] = useState<ImageSize>('2K');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
-  const [watermarkedImageUrl, setWatermarkedImageUrl] = useState<string | null>(null);
-  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
-
-  const [inputImage, setInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Product Mockup Specific States
+  const [selectedCategory, setSelectedCategory] = useState<keyof typeof MOCKUP_STYLES>('product');
+  const [selectedStyle, setSelectedStyle] = useState<Style | null>(null);
+  
+  // TEXT OVERLAYS
   const [productName, setProductName] = useState('');
   const [headline, setHeadline] = useState('');
   const [price, setPrice] = useState('');
@@ -93,7 +259,9 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [loadingCredits, setLoadingCredits] = useState(true);
   const MONTHLY_CREDIT_LIMIT = 60;
 
-  // Load monthly credits on component mount
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load monthly credits on mount
   useEffect(() => {
     const supabase = getSupabaseClient();
     if (!supabase) {
@@ -109,9 +277,8 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
           return;
         }
 
-        const currentMonthYear = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+        const currentMonthYear = new Date().toISOString().slice(0, 7);
 
-        // Try to get existing record for this month
         const { data: creditRecord } = await supabase
           .from('user_credits')
           .select('*')
@@ -123,7 +290,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
           setCreditsUsed(creditRecord.credits_used);
           setCreditsLimit(creditRecord.credits_limit);
         } else {
-          // No record for this month - create new one
           const { data: newRecord } = await supabase
             .from('user_credits')
             .insert({
@@ -148,7 +314,7 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
     };
 
     loadCredits();
-  }, [profileData.user.id]);
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -156,12 +322,13 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        const imageObject = {
+        setInputImage({
           dataUrl: dataUrl,
           base64: dataUrl.split(',')[1],
           mimeType: file.type,
-        };
-        setInputImage(imageObject);
+        });
+        setGeneratedImageUrl(null);
+        setError('');
       };
       reader.readAsDataURL(file);
     }
@@ -169,6 +336,7 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
 
   const clearInputImage = () => {
     setInputImage(null);
+    setGeneratedImageUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -187,14 +355,13 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       return;
     }
     if (!prompt) {
-      setError('Please enter a mockup style or context.');
+      setError('Please select a mockup style.');
       return;
     }
     
     setError('');
     setLoading(true);
-    setWatermarkedImageUrl(null);
-    setOriginalImageUrl(null);
+    setGeneratedImageUrl(null);
     
     try {
       const brandDna = profileData.brandDnaProfile;
@@ -221,10 +388,9 @@ Focus on photorealism and commercial quality.`;
       }
 
       const base64Data = await generateImage(finalPrompt, imageSize, aspectRatio, inputImage);
-      setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
-      const watermarkedUrl = await addWatermark(base64Data);
-      setWatermarkedImageUrl(watermarkedUrl);
+      setGeneratedImageUrl(`data:image/png;base64,${base64Data}`);
       
+      // Increment credits
       const supabase = getSupabaseClient();
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -246,108 +412,166 @@ Focus on photorealism and commercial quality.`;
       
     } catch (err: any) {
       console.error(err);
-      setError('Failed to generate mockup. Please try again or refine your prompt.');
+      setError('Failed to generate mockup. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-  
-  const triggerDownload = (url: string, extension: string) => {
+
+  const handleDownload = () => {
+    if (!generatedImageUrl) return;
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `${prompt.substring(0, 30).replace(/\s/g, '_') || 'jetproduct'}.${extension}`;
+    a.href = generatedImageUrl;
+    a.download = `${profileData.business.business_name.replace(/\s/g, '_')}_mockup.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  };
-
-  const handleDownload = (format: DownloadFormat) => {
-    if (!originalImageUrl) return;
-
-    if (format === 'jpeg') {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      img.onload = () => {
-        if (ctx) {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          const jpegUrl = canvas.toDataURL('image/jpeg', 0.9);
-          triggerDownload(jpegUrl, 'jpeg');
-        }
-      };
-      img.src = originalImageUrl;
-    } else {
-      triggerDownload(originalImageUrl, 'png');
-    }
   };
 
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const creditsRemaining = creditsLimit - creditsUsed;
 
   return (
-    <div>
+    <div className="max-w-5xl mx-auto">
       {showHowTo && (
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
           <ul className="list-disc pl-5 space-y-1 mt-2">
-            <li>Upload your product image to use as the base.</li>
-            <li>Describe the scene or style for the mockup (e.g., 'Studio Shot', 'Lifestyle Scene').</li>
-            <li>Add optional text overlays like product name, headline, and price.</li>
-            <li>Generate professional, on-brand mockups instantly.</li>
+            <li>Upload your product or business image.</li>
+            <li>Select a professional mockup style from 28 categories.</li>
+            <li>Optionally add text overlays (product name, headline, price).</li>
+            <li>Generate AI-powered, branded mockups instantly.</li>
+            <li>Download unlimited times after generation.</li>
           </ul>
         </HowToUse>
       )}
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-2">{tool.description}</p>
-        <p className="text-sm text-brand-text-muted mb-6">
-          Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($1,000-3,000/mo)</span>
-        </p>
+      
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
+        <div className="flex items-center gap-4 mb-4">
+            <JetProductIcon className="w-8 h-8 text-accent-purple" />
+            <div>
+                <p className="text-brand-text-muted mb-1">{tool.description}</p>
+                <p className="text-sm text-brand-text-muted">
+                    Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($500-2,000/mo)</span>
+                </p>
+            </div>
+        </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-brand-text mb-2">1. Upload Product Image <span className="text-red-500">*</span></label>
-            {inputImage ? (
-              <div className="relative group w-32 h-32">
-                <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
-              </div>
-            ) : (
-              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
-                <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
-                <p className="mt-2 text-sm text-brand-text">Click to upload or drag & drop</p>
-                <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
-                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" required />
-              </div>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">2. Mockup Context / Style <span className="text-red-500">*</span></label>
-            <textarea id="prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'place the product on a wooden table with soft studio lighting' or 'lifestyle shot with a happy customer'" className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" required />
-          </div>
-          
-          <div className="mb-6 p-4 bg-brand-light rounded-lg border border-brand-border">
-            <h4 className="text-sm font-bold text-brand-text mb-3 flex items-center gap-2"><SparklesIcon className="w-4 h-4 text-accent-purple"/> 3. Text Overlays (Optional)</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" value={productName} onChange={e => setProductName(e.target.value)} placeholder="Product Name" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
-                <input type="text" value={headline} onChange={e => setHeadline(e.target.value)} placeholder="Headline/Offer" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
-                <input type="text" value={price} onChange={e => setPrice(e.target.value)} placeholder="Price (e.g., $49.99)" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
-            </div>
-          </div>
-
-          <div className="mb-6 grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left: Image Upload */}
             <div>
-                <span className="block text-sm font-medium text-brand-text mb-2">Image Size</span>
-                <div className="flex space-x-2">
-                {(['1K', '2K', '4K'] as ImageSize[]).map(size => (<button type="button" key={size} onClick={() => setImageSize(size)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${imageSize === size ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{size}</button>))}
+              <label className="block text-sm font-medium text-brand-text mb-2">1. Upload Product Image <span className="text-red-500">*</span></label>
+              {inputImage ? (
+                <div className="relative group aspect-square w-full max-w-xs mx-auto">
+                  <img src={inputImage.dataUrl} alt="Input product" className="w-full h-full object-contain rounded-lg border-2 border-brand-border" />
+                  <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
                 </div>
+              ) : (
+                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-8 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors aspect-square flex flex-col items-center justify-center">
+                  <ArrowUpTrayIcon className="w-10 h-10 mx-auto text-brand-text-muted" />
+                  <p className="mt-3 text-sm text-brand-text">Click to upload or drag & drop</p>
+                  <p className="text-xs text-brand-text-muted">PNG or JPG</p>
+                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" required />
+                </div>
+              )}
             </div>
-            <div>
-                <span className="block text-sm font-medium text-brand-text mb-2">Aspect Ratio</span>
-                <div className="flex space-x-2">
-                {(['1:1', '16:9', '4:3', '3:4', '9:16'] as AspectRatio[]).map(ratio => (<button type="button" key={ratio} onClick={() => setAspectRatio(ratio)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${aspectRatio === ratio ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{ratio}</button>))}
+
+            {/* Right: Style Selection */}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-brand-text mb-2">2. Select Mockup Style</label>
+                
+                {/* Category Tabs */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {(Object.keys(MOCKUP_STYLES) as Array<keyof typeof MOCKUP_STYLES>).map(category => (
+                        <button
+                            type="button"
+                            key={category}
+                            onClick={() => {
+                                setSelectedCategory(category);
+                                setSelectedStyle(null);
+                                setPrompt('');
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                selectedCategory === category
+                                    ? 'bg-accent-purple text-white shadow'
+                                    : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
+                            }`}
+                        >
+                            <span className="mr-1">{CATEGORY_LABELS[category].icon}</span>
+                            {CATEGORY_LABELS[category].label}
+                        </button>
+                    ))}
                 </div>
+                
+                {/* Style Options */}
+                <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+                    {MOCKUP_STYLES[selectedCategory].map(style => (
+                        <button 
+                            type="button" 
+                            key={style.name} 
+                            onClick={() => {
+                                setSelectedStyle(style);
+                                setPrompt(style.prompt);
+                            }} 
+                            className={`p-3 rounded-lg border-2 text-left transition-all ${
+                                selectedStyle?.name === style.name
+                                    ? 'bg-accent-purple/10 border-accent-purple' 
+                                    : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
+                            }`}
+                        >
+                            <p className="text-sm font-bold text-brand-text">{style.name}</p>
+                            <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.prompt.substring(0, 80)}...</p>
+                        </button>
+                    ))}
+                </div>
+              </div>
+              
+              {/* Text Overlays */}
+              <div>
+                <label className="block text-sm font-medium text-brand-text mb-3">
+                  3. Text Overlays (Optional)
+                </label>
+                
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder="Product Name"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    placeholder="Headline/Offer"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Price (e.g., $99.99)"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <span className="block text-sm font-medium text-brand-text mb-2">Image Size</span>
+                    <div className="flex space-x-2">
+                        {(['1K', '2K', '4K'] as ImageSize[]).map(size => (<button type="button" key={size} onClick={() => setImageSize(size)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${imageSize === size ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{size}</button>))}
+                    </div>
+                </div>
+                <div>
+                    <span className="block text-sm font-medium text-brand-text mb-2">Aspect Ratio</span>
+                    <div className="flex space-x-2">
+                        {(['1:1', '4:3', '16:9'] as AspectRatio[]).map(ratio => (<button type="button" key={ratio} onClick={() => setAspectRatio(ratio)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${aspectRatio === ratio ? 'bg-accent-purple text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}>{ratio}</button>))}
+                    </div>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -357,9 +581,7 @@ Focus on photorealism and commercial quality.`;
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <span className="text-sm font-semibold text-brand-text">Monthly Generations</span>
-                  <p className="text-xs text-brand-text-muted mt-0.5">
-                    Resets {nextResetDate}
-                  </p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">Resets {nextResetDate}</p>
                 </div>
                 <div className="text-right">
                   <span className={`text-2xl font-bold ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`}>
@@ -429,33 +651,18 @@ Focus on photorealism and commercial quality.`;
           )}
         </form>
       </div>
+      
       {loading && <Loader />}
-      {watermarkedImageUrl && (
-        <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
+      
+      {generatedImageUrl && (
+        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
           <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Mockup</h3>
-          <img src={watermarkedImageUrl} alt={prompt} className="rounded-lg w-full h-auto shadow-lg" />
+          <img src={generatedImageUrl} alt="Generated Product Mockup" className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
-          <div className="mt-6 bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
-            <h4 className="font-bold text-brand-text mb-2 flex items-center gap-2">
-              <ArrowDownTrayIcon className="w-5 h-5 text-accent-purple" />
-              Download Your Mockup
-            </h4>
-            <p className="text-sm text-brand-text-muted mb-4">Clean version without watermark</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <button 
-                onClick={() => handleDownload('png')} 
-                className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-4 rounded-lg transition shadow hover:shadow-lg"
-              >
-                <ArrowDownTrayIcon className="w-5 h-5" /> Download PNG
-              </button>
-              <button 
-                onClick={() => handleDownload('jpeg')} 
-                className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition shadow hover:shadow-lg"
-              >
-                <ArrowDownTrayIcon className="w-5 h-5" /> Download JPEG
-              </button>
-            </div>
+          <div className="mt-6 flex justify-center">
+            <button onClick={handleDownload} className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg">
+              <ArrowDownTrayIcon className="w-5 h-5" /> Download PNG
+            </button>
           </div>
         </div>
       )}
