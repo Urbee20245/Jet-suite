@@ -1,4 +1,3 @@
-setCurrentUserProfile).">
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Sidebar } from './components/Sidebar';
