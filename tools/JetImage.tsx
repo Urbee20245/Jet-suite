@@ -21,7 +21,7 @@ interface Style {
 }
 
 export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
-  const [prompt, setPrompt] = useState('google nano banana'); // Set initial prompt for testing
+  const [prompt, setPrompt] = useState('');
   const [imageSize, setImageSize] = useState<ImageSize>('1K');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
@@ -30,9 +30,13 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   const [showHowTo, setShowHowTo] = useState(true);
   const [activeTab, setActiveTab] = useState<'standard' | 'youtube'>('standard');
 
-  // Input image for image-to-image
+  // Input image for standard generator (image-to-image)
   const [inputImage, setInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Input image for YouTube thumbnail (face/product shot)
+  const [youtubeInputImage, setYoutubeInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
+  const youtubeFileInputRef = useRef<HTMLInputElement>(null);
 
   // Trending styles
   const [trendingStyles, setTrendingStyles] = useState<Style[]>([]);
@@ -67,7 +71,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
           return;
         }
 
-        const currentMonthYear = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+        const currentMonthYear = new Date().toISOString().slice(0, 7);
 
         const { data: creditRecord } = await supabase
           .from('user_credits')
@@ -140,18 +144,18 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     fetchStyles();
   }, []);
 
+  // Handle standard image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUrl = reader.result as string;
-        const imageObject = {
+        setInputImage({
           dataUrl: dataUrl,
           base64: dataUrl.split(',')[1],
           mimeType: file.type,
-        };
-        setInputImage(imageObject);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -161,6 +165,30 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     setInputImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+  
+  // Handle YouTube thumbnail image upload
+  const handleYoutubeImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setYoutubeInputImage({
+          dataUrl: dataUrl,
+          base64: dataUrl.split(',')[1],
+          mimeType: file.type,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearYoutubeInputImage = () => {
+    setYoutubeInputImage(null);
+    if (youtubeFileInputRef.current) {
+      youtubeFileInputRef.current.value = '';
     }
   };
 
@@ -229,30 +257,32 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     setGeneratedImageUrl(null);
     
     try {
-      // Generate optimized prompt
-      const thumbnailRequest = {
-        videoTitle: youtubeTitle,
-        videoTopic: youtubeNiche,
-        businessName: profileData.business.business_name,
-        brandTone: profileData.brandDnaProfile?.brand_tone.primary_tone || 'professional',
-        brandColors: profileData.brandDnaProfile?.visual_identity.primary_colors || ['#3B82F6', '#8B5CF6'],
-      };
-      
-      const thumbnailPrompt = await generateYoutubeThumbnailPrompt(thumbnailRequest);
-      
-      // Generate image with YouTube thumbnail optimization
-      const enhancedPrompt = `YOUTUBE THUMBNAIL (16:9 FORMAT):
-${thumbnailPrompt}
+      // Build the YouTube thumbnail prompt
+      let thumbnailPrompt = `HIGH-CTR YOUTUBE THUMBNAIL (16:9 FORMAT):
 
-CRITICAL REQUIREMENTS:
-- Bold, eye-catching text overlay with the title
-- High contrast colors for visibility
-- Emotion-triggering facial expressions or dramatic visuals
-- Professional thumbnail quality that stops scrolling
-- Clear focal point
-- Vibrant, saturated colors`;
+Title text to display: "${youtubeTitle}"
 
-      const base64Data = await generateImage(enhancedPrompt, '4K', '16:9');
+VISUAL REQUIREMENTS:
+- Bold, eye-catching text overlay with the video title
+- High contrast colors for maximum visibility
+- Emotion-triggering composition that stops scrolling
+- Professional YouTube thumbnail quality
+- Clear focal point (${youtubeInputImage ? 'person/product from uploaded image' : 'dramatic visual'})
+- Vibrant, saturated colors
+- Text should be LARGE and READABLE on mobile devices`;
+
+      if (youtubeNiche) {
+        thumbnailPrompt += `\n- Style: ${youtubeNiche} niche aesthetic`;
+      }
+      
+      if (youtubeEmotion) {
+        thumbnailPrompt += `\n- Emotion to trigger: ${youtubeEmotion}`;
+      }
+      
+      thumbnailPrompt += `\n\nCRITICAL: Make this thumbnail irresistible to click. Use dramatic lighting, bold typography, and high-energy composition.`;
+
+      // Generate image with YouTube thumbnail optimization (with or without input image)
+      const base64Data = await generateImage(thumbnailPrompt, '4K', '16:9', youtubeInputImage || undefined);
       setGeneratedImageUrl(`data:image/png;base64,${base64Data}`);
       
       // Increment credits
@@ -288,7 +318,7 @@ CRITICAL REQUIREMENTS:
     
     const a = document.createElement('a');
     a.href = generatedImageUrl;
-    a.download = `${prompt.substring(0, 30).replace(/\s/g, '_') || 'jetimage'}.png`;
+    a.download = `${(activeTab === 'youtube' ? youtubeTitle : prompt).substring(0, 30).replace(/\s/g, '_') || 'jetimage'}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -311,32 +341,11 @@ CRITICAL REQUIREMENTS:
         </HowToUse>
       )}
       
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg relative">
-        {/* NEW COMPACT CREDIT BADGE */}
-        {!loadingCredits && (
-            <div className={`absolute top-4 right-4 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-colors ${
-                creditsUsed >= creditsLimit 
-                    ? 'bg-red-100 text-red-800 border border-red-300' 
-                    : 'bg-accent-purple/10 text-accent-purple border border-accent-purple/30'
-            }`}>
-                <SparklesIcon className="w-4 h-4" />
-                <span>{creditsRemaining} Generations</span>
-            </div>
-        )}
-        {loadingCredits && (
-            <div className="absolute top-4 right-4 h-7 w-24 bg-gray-100 rounded-full animate-pulse"></div>
-        )}
-        {/* END NEW COMPACT CREDIT BADGE */}
-
-        <div className="flex items-center gap-4 mb-4">
-            <SparklesIcon className="w-8 h-8 text-accent-purple" />
-            <div>
-                <p className="text-brand-text-muted mb-1">{tool.description}</p>
-                <p className="text-sm text-brand-text-muted">
-                    Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
-                </p>
-            </div>
-        </div>
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
+        <p className="text-brand-text-muted mb-2">{tool.description}</p>
+        <p className="text-sm text-brand-text-muted mb-6">
+          Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+        </p>
         
         {/* Monthly Credit Counter */}
         {!loadingCredits && (
@@ -417,7 +426,7 @@ CRITICAL REQUIREMENTS:
                 <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
                   <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
                   <p className="mt-2 text-sm text-brand-text">Click to upload</p>
-                  <p className="text-xs text-brand-text-muted">PNG or JPG</p>
+                  <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 </div>
               )}
@@ -440,7 +449,7 @@ CRITICAL REQUIREMENTS:
               {isLoadingStyles ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                   {[...Array(8)].map((_, i) => (
-                    <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-24 animate-pulse">
+                    <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-20 animate-pulse">
                       <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
                       <div className="h-2 bg-gray-200 rounded w-full"></div>
                     </div>
@@ -562,7 +571,30 @@ CRITICAL REQUIREMENTS:
 
         {/* YOUTUBE THUMBNAIL GENERATOR */}
         {activeTab === 'youtube' && (
-          <form onSubmit={(e) => { e.preventDefault(); handleYoutubeGenerate(); }}>
+          <div>
+            {/* Upload Image for Thumbnail */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-brand-text mb-2">
+                Upload Your Photo/Product (Optional)
+              </label>
+              <p className="text-xs text-brand-text-muted mb-2">Upload a face shot, product image, or logo to include in your thumbnail</p>
+              {youtubeInputImage ? (
+                <div className="relative group w-32 h-32">
+                  <img src={youtubeInputImage.dataUrl} alt="YouTube thumbnail input" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
+                  <button type="button" onClick={clearYoutubeInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110">
+                    <XCircleIcon className="w-7 h-7" />
+                  </button>
+                </div>
+              ) : (
+                <div onClick={() => youtubeFileInputRef.current?.click()} className="border-2 border-dashed border-red-200 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 hover:bg-red-50 transition-colors">
+                  <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-red-500" />
+                  <p className="mt-2 text-sm text-brand-text">Click to upload your photo</p>
+                  <p className="text-xs text-brand-text-muted">PNG or JPG (face shot works best)</p>
+                  <input type="file" ref={youtubeFileInputRef} onChange={handleYoutubeImageUpload} accept="image/*" className="hidden" />
+                </div>
+              )}
+            </div>
+          
             <div className="mb-6">
               <label htmlFor="youtubeTitle" className="block text-sm font-medium text-brand-text mb-2">
                 Video Title <span className="text-red-500">*</span>
@@ -608,7 +640,7 @@ CRITICAL REQUIREMENTS:
             {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
             
             <button
-              type="submit"
+              onClick={handleYoutubeGenerate}
               disabled={loadingYoutube || creditsUsed >= creditsLimit || loadingCredits}
               className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
             >
@@ -632,14 +664,13 @@ CRITICAL REQUIREMENTS:
                   <div>
                     <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
                     <p className="text-xs text-red-700 mt-1">
-                      You've used all {creditsLimit} generations for {new Date().toLocaleDateString('en-US', { month: 'long' })}. 
                       Your limit will reset on {nextResetDate}.
                     </p>
                   </div>
                 </div>
               </div>
             )}
-          </form>
+          </div>
         )}
       </div>
       
@@ -647,8 +678,8 @@ CRITICAL REQUIREMENTS:
       
       {generatedImageUrl && (
         <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg border border-brand-border">
-          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Image</h3>
-          <img src={generatedImageUrl} alt={prompt || youtubeTitle} className="rounded-lg w-full h-auto max-w-2xl mx-auto border border-brand-border" />
+          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated {activeTab === 'youtube' ? 'YouTube Thumbnail' : 'Image'}</h3>
+          <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="rounded-lg w-full h-auto max-w-2xl mx-auto border border-brand-border" />
           
           <div className="mt-6 flex justify-center">
             <button
