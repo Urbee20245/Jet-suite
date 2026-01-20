@@ -158,6 +158,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const addTasksToGrowthPlan = async (newTasks: Omit<GrowthPlanTask, 'id' | 'status' | 'createdAt' | 'completionDate'>[]) => {
+    if (newTasks.length === 0) return tasks;
+
+    const sourceModule = newTasks[0].sourceModule;
+
     const tasksWithMetadata: GrowthPlanTask[] = newTasks.map(task => ({
       ...task,
       id: uuidv4(),
@@ -165,24 +169,30 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       status: 'to_do' as const,
       createdAt: new Date().toISOString(),
     }));
-    const updatedTasks = [...tasks, ...tasksWithMetadata];
-    setTasks(updatedTasks);
+
+    // Filter out old tasks from the same source module to prevent duplicates on re-run
+    const otherTasks = tasks.filter(t => t.sourceModule !== sourceModule);
+    
+    const updatedTasks = [...otherTasks, ...tasksWithMetadata];
+    setTasks(updatedTasks); // Optimistic update
     
     if (activeBusinessId) {
       try {
         console.log(`💾 [InternalApp] Saving ${updatedTasks.length} tasks to Supabase...`);
+        // The API will replace all tasks for the business with this new complete list
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
         console.log('✅ [InternalApp] Tasks successfully saved to database');
         
-        // CRITICAL FIX: Verify the save by reloading from database
+        // Verify by reloading from the database to ensure consistency
         const verifyTasks = await loadFromSupabase(userId, activeBusinessId, 'tasks');
         if (verifyTasks && Array.isArray(verifyTasks)) {
           console.log(`✅ [InternalApp] Verified ${verifyTasks.length} tasks in database`);
-          setTasks(verifyTasks); // Update with database version to ensure consistency
+          setTasks(verifyTasks);
           return verifyTasks;
         }
       } catch (error) {
         console.error('❌ [InternalApp] Failed to save tasks:', error);
+        // Revert optimistic update on failure? For now, just log it.
       }
     }
     return updatedTasks; 

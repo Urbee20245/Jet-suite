@@ -418,28 +418,9 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setLatestGeneratedTasks([]);
   }
 
-  const handleFinalNavigation = async () => {
-    console.log('💾 [JetBiz] Ensuring all tasks are saved before navigation...');
-    
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    if (userId && activeBusinessId) {
-      try {
-        const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
-        
-        if (tasksToSave.length > 0) {
-          console.log(`💾 [JetBiz] Saving ${tasksToSave.length} tasks to Supabase...`);
-          await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
-          console.log('✅ [JetBiz] Tasks saved to database');
-          
-          const verified = await loadFromSupabase(userId, activeBusinessId, 'tasks');
-          console.log(`✅ [JetBiz] Verified ${verified?.length || 0} tasks in database`);
-        }
-      } catch (error) {
-        console.error('❌ [JetBiz] Save failed:', error);
-      }
-    }
-    
+  const handleFinalNavigation = () => {
+    // The saving logic is now fully handled by addTasksToGrowthPlan.
+    // This function just needs to navigate the user.
     setActiveTool(ALL_TOOLS['growthplan']);
   };
 

@@ -266,24 +266,9 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setLatestGeneratedTasks([]);
   };
 
-  const handleFinalNavigation = async () => {
-    console.log('💾 [JetViz] Double-save: Ensuring all tasks are in Supabase before navigation...');
-    
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    if (userId && activeBusinessId) {
-        try {
-            const tasksToSave = latestGeneratedTasks.length > 0 ? latestGeneratedTasks : growthPlanTasks;
-            
-            if (tasksToSave.length > 0) {
-                await syncToSupabase(userId, activeBusinessId, 'tasks', tasksToSave);
-                console.log('✅ [JetViz] Double-save completed. Tasks secured in Supabase.');
-            }
-        } catch (error) {
-            console.error('❌ [JetViz] Double-save failed:', error);
-            console.log('⚠️ [JetViz] Proceeding to Growth Plan (initial save likely succeeded)');
-        }
-    }
+  const handleFinalNavigation = () => {
+    // The saving logic is now fully handled by addTasksToGrowthPlan.
+    // This function just needs to navigate the user.
     setActiveTool(ALL_TOOLS['growthplan']);
   };
 
