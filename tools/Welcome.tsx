@@ -65,7 +65,13 @@ const GrowthPhaseSection: React.FC<{
   const [isExpanded, setIsExpanded] = useState(false);
   
   const recommendedTool = ALL_TOOLS[recommendedToolId];
-  const otherTools = otherToolIds.map(id => ALL_TOOLS[id]).filter(Boolean);
+  const otherTools = otherToolIds.map(id => {
+    const tool = ALL_TOOLS[id];
+    if (!tool) {
+      console.warn(`[Welcome] Tool not found: ${id}`);
+    }
+    return tool;
+  }).filter(Boolean);
 
   return (
     <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg glow-card glow-card-rounded-xl">
