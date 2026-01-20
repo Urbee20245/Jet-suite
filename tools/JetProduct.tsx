@@ -188,6 +188,40 @@ const CATEGORY_LABELS: Record<keyof typeof MOCKUP_STYLES, { label: string; icon:
     retail: { label: "Retail Store", icon: "🏪" },
 };
 
+const FONT_OPTIONS = [
+  { id: 'elegant-serif', name: 'Elegant Serif', description: 'Classic, sophisticated, high-end' },
+  { id: 'bold-sans', name: 'Bold Sans-Serif', description: 'Modern, strong, impactful' },
+  { id: 'minimal-clean', name: 'Minimal Clean', description: 'Simple, contemporary, professional' },
+  { id: 'luxury-script', name: 'Luxury Script', description: 'Elegant, premium, refined' },
+  { id: 'geometric-modern', name: 'Geometric Modern', description: 'Sharp, technical, contemporary' },
+  { id: 'handwritten', name: 'Handwritten', description: 'Casual, authentic, friendly' },
+  { id: 'condensed-bold', name: 'Condensed Bold', description: 'Compact, powerful, attention-grabbing' },
+  { id: 'rounded-friendly', name: 'Rounded Friendly', description: 'Approachable, warm, inviting' },
+];
+
+const FONT_STYLE_PROMPTS: Record<string, string> = {
+  'elegant-serif': 'elegant serif typography with refined spacing and classic proportions',
+  'bold-sans': 'bold modern sans-serif with high impact and strong presence',
+  'minimal-clean': 'clean minimal typography with generous whitespace and contemporary feel',
+  'luxury-script': 'luxury script font with sophisticated styling and premium aesthetic',
+  'geometric-modern': 'geometric sans-serif with contemporary feel and technical precision',
+  'handwritten': 'handwritten style font with authentic touch and organic feel',
+  'condensed-bold': 'condensed bold typeface with strong presence and space efficiency',
+  'rounded-friendly': 'rounded friendly typography with approachable feel and warm character',
+};
+
+const TEXT_SIZE_PROMPTS: Record<string, string> = {
+  small: 'subtle, small text that complements without overpowering',
+  medium: 'medium-sized, balanced text with clear readability',
+  large: 'large, prominent text that dominates the composition',
+};
+
+const TEXT_POSITION_PROMPTS: Record<string, string> = {
+  top: 'positioned at the top third of the composition',
+  center: 'centered in the composition',
+  bottom: 'positioned at the bottom third of the composition',
+};
+
 const addWatermark = async (base64Data: string): Promise<string> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -242,9 +276,12 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [imageSize, setImageSize] = useState<ImageSize>('2K');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
+  
+  // CRITICAL FIX: Missing state variables
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof MOCKUP_STYLES>('product');
   const [selectedStyle, setSelectedStyle] = useState<Style | null>(null);
   
@@ -252,6 +289,13 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [productName, setProductName] = useState('');
   const [headline, setHeadline] = useState('');
   const [price, setPrice] = useState('');
+
+  // TEXT STYLING CONTROLS
+  const [textFont, setTextFont] = useState('elegant-serif');
+  const [textSize, setTextSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [textColor, setTextColor] = useState('');
+  const [textPosition, setTextPosition] = useState<'top' | 'center' | 'bottom'>('center');
+  const [textVariationSeed, setTextVariationSeed] = useState(0);
 
   // MONTHLY CREDIT SYSTEM
   const [creditsUsed, setCreditsUsed] = useState(0);
@@ -277,8 +321,9 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
           return;
         }
 
-        const currentMonthYear = new Date().toISOString().slice(0, 7);
+        const currentMonthYear = new Date().toISOString().slice(0, 7); // "YYYY-MM"
 
+        // Try to get existing record for this month
         const { data: creditRecord } = await supabase
           .from('user_credits')
           .select('*')
@@ -290,6 +335,7 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
           setCreditsUsed(creditRecord.credits_used);
           setCreditsLimit(creditRecord.credits_limit);
         } else {
+          // No record for this month - create new one
           const { data: newRecord } = await supabase
             .from('user_credits')
             .insert({
@@ -373,22 +419,48 @@ Product context: ${prompt}.
 Brand DNA: Use colors ${brandColors} and a ${tone} tone. 
 Focus on photorealism and commercial quality.`;
 
+      // Add text overlays if provided
       if (productName || headline || price) {
+        const fontStyle = FONT_STYLE_PROMPTS[textFont] || FONT_STYLE_PROMPTS['elegant-serif'];
+        const sizeStyle = TEXT_SIZE_PROMPTS[textSize];
+        const positionStyle = TEXT_POSITION_PROMPTS[textPosition];
+        
+        // Add variation to font style if user has regenerated
+        let finalFontStyle = fontStyle;
+        if (textVariationSeed > 0) {
+          const allFonts = Object.keys(FONT_STYLE_PROMPTS);
+          const variantFont = allFonts[(allFonts.indexOf(textFont) + textVariationSeed) % allFonts.length];
+          finalFontStyle = FONT_STYLE_PROMPTS[variantFont];
+        }
+        
         finalPrompt += '\n\nTEXT OVERLAYS TO INCLUDE:';
+        finalPrompt += `\n\nTypography Style: Use ${finalFontStyle}.`;
+        finalPrompt += `\nText Size: ${sizeStyle}.`;
+        finalPrompt += `\nText Placement: ${positionStyle}.`;
+        
+        if (textColor) {
+          finalPrompt += `\nText Color: ${textColor}.`;
+        } else {
+          finalPrompt += `\nText Color: Use brand colors (${brandColors}) or high-contrast colors for maximum readability.`;
+        }
+        
         if (productName) {
-          finalPrompt += `\n- Product Name: "${productName}" (display prominently in elegant typography)`;
+          finalPrompt += `\n\n- Product Name: "${productName}" (display prominently)`;
         }
         if (headline) {
-          finalPrompt += `\n- Headline: "${headline}" (bold, attention-grabbing text)`;
+          finalPrompt += `\n- Headline/Tagline: "${headline}" (bold and attention-grabbing)`;
         }
         if (price) {
-          finalPrompt += `\n- Price: "${price}" (clear, readable pricing display)`;
+          finalPrompt += `\n- Price: "${price}" (clear and readable)`;
         }
-        finalPrompt += '\n\nPlace text overlays naturally with proper contrast and readability. Use brand colors for text where appropriate.';
+        
+        finalPrompt += '\n\nEnsure text has proper contrast with background for maximum readability. Apply consistent typography across all text elements. Professional, commercial-quality text integration.';
       }
 
       const base64Data = await generateImage(finalPrompt, imageSize, aspectRatio, inputImage);
-      setGeneratedImageUrl(`data:image/png;base64,${base64Data}`);
+      setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
+      const watermarkedUrl = await addWatermark(base64Data);
+      setGeneratedImageUrl(watermarkedUrl);
       
       // Increment credits
       const supabase = getSupabaseClient();
@@ -412,16 +484,16 @@ Focus on photorealism and commercial quality.`;
       
     } catch (err: any) {
       console.error(err);
-      setError('Failed to generate mockup. Please try again.');
+      setError('Failed to generate mockup. Please try again or refine your prompt.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownload = () => {
-    if (!generatedImageUrl) return;
+    if (!originalImageUrl) return;
     const a = document.createElement('a');
-    a.href = generatedImageUrl;
+    a.href = originalImageUrl;
     a.download = `${profileData.business.business_name.replace(/\s/g, '_')}_mockup.png`;
     document.body.appendChild(a);
     a.click();
@@ -445,13 +517,13 @@ Focus on photorealism and commercial quality.`;
         </HowToUse>
       )}
       
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
         <div className="flex items-center gap-4 mb-4">
             <JetProductIcon className="w-8 h-8 text-accent-purple" />
             <div>
                 <p className="text-brand-text-muted mb-1">{tool.description}</p>
                 <p className="text-sm text-brand-text-muted">
-                    Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($500-2,000/mo)</span>
+                    Replaces: <span className="text-accent-purple font-semibold">Product Photography & Designer ($1,000-3,000/mo)</span>
                 </p>
             </div>
         </div>
@@ -575,13 +647,105 @@ Focus on photorealism and commercial quality.`;
             </div>
           </div>
           
+          {/* Text Styling Controls */}
+          {(productName || headline || price) && (
+            <div className="mt-4 space-y-3 p-4 bg-brand-light border border-brand-border rounded-lg">
+              <p className="text-xs font-semibold text-brand-text mb-2">Text Styling Options</p>
+              
+              {/* Font Selection */}
+              <div>
+                <label htmlFor="textFont" className="block text-xs font-medium text-brand-text-muted mb-1">
+                  Font Style
+                </label>
+                <select
+                  id="textFont"
+                  value={textFont}
+                  onChange={(e) => setTextFont(e.target.value)}
+                  className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                >
+                  {FONT_OPTIONS.map(font => (
+                    <option key={font.id} value={font.id}>
+                      {font.name} - {font.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Text Size */}
+              <div>
+                <label className="block text-xs font-medium text-brand-text-muted mb-2">Text Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['small', 'medium', 'large'] as const).map(size => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setTextSize(size)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${
+                        textSize === size
+                          ? 'bg-accent-purple text-white shadow'
+                          : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Text Color */}
+              <div>
+                <label htmlFor="textColor" className="block text-xs font-medium text-brand-text-muted mb-1">
+                  Text Color (Optional)
+                  <span className="ml-1 text-[10px]">Leave empty for brand colors</span>
+                </label>
+                <input
+                  id="textColor"
+                  type="text"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  placeholder="e.g., #FF5733, white, or black"
+                  className="w-full bg-white border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
+              
+              {/* Text Position */}
+              <div>
+                <label className="block text-xs font-medium text-brand-text-muted mb-2">Text Position</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['top', 'center', 'bottom'] as const).map(position => (
+                    <button
+                      key={position}
+                      type="button"
+                      onClick={() => setTextPosition(position)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all capitalize ${
+                        textPosition === position
+                          ? 'bg-accent-purple text-white shadow'
+                          : 'bg-white border border-brand-border text-brand-text hover:border-accent-purple/50'
+                      }`}
+                    >
+                      {position}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="pt-2 border-t border-brand-border">
+                <p className="text-[10px] text-brand-text-muted">
+                  💡 Don't like the result? Use "Try Different Style" after generating
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Monthly Credit Counter */}
           {!loadingCredits && (
             <div className="mt-4 p-4 bg-gradient-to-r from-brand-light to-white border border-brand-border rounded-xl shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <span className="text-sm font-semibold text-brand-text">Monthly Generations</span>
-                  <p className="text-xs text-brand-text-muted mt-0.5">Resets {nextResetDate}</p>
+                  <p className="text-xs text-brand-text-muted mt-0.5">
+                    Resets {nextResetDate}
+                  </p>
                 </div>
                 <div className="text-right">
                   <span className={`text-2xl font-bold ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`}>
@@ -659,11 +823,65 @@ Focus on photorealism and commercial quality.`;
           <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Mockup</h3>
           <img src={generatedImageUrl} alt="Generated Product Mockup" className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
-          <div className="mt-6 flex justify-center">
-            <button onClick={handleDownload} className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg">
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+            {/* Download Button */}
+            <button 
+              onClick={handleDownload} 
+              className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
+            >
               <ArrowDownTrayIcon className="w-5 h-5" /> Download PNG
             </button>
+            
+            {/* Try Different Style Button (only if text exists) */}
+            {(productName || headline || price) && (
+              <button 
+                onClick={async () => {
+                  setTextVariationSeed(prev => prev + 1);
+                  setGeneratedImageUrl(null);
+                  // Trigger form submit to regenerate with new variation
+                  const form = document.querySelector('form');
+                  if (form) {
+                    const event = new Event('submit', { cancelable: true, bubbles: true });
+                    form.dispatchEvent(event);
+                  }
+                }}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <SparklesIcon className="w-5 h-5" /> Try Different Text Style
+              </button>
+            )}
+            
+            {/* New Mockup Button */}
+            <button 
+              onClick={() => {
+                setGeneratedImageUrl(null);
+                setInputImage(null);
+                setProductName('');
+                setHeadline('');
+                setPrice('');
+                setTextVariationSeed(0);
+                setTextFont('elegant-serif');
+                setTextSize('medium');
+                setTextColor('');
+                setTextPosition('center');
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+              className="flex items-center justify-center gap-2 bg-brand-light hover:bg-brand-border text-brand-text font-semibold py-3 px-6 rounded-lg transition border border-brand-border"
+            >
+              Start New Mockup
+            </button>
           </div>
+          
+          {(productName || headline || price) && textVariationSeed > 0 && (
+            <div className="mt-4 text-center">
+              <p className="text-xs text-brand-text-muted">
+                🎨 Style Variation #{textVariationSeed + 1} - Keep clicking for more options
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
