@@ -63,9 +63,10 @@ const auditReportSchema = {
                     description: { type: Type.STRING },
                     whyItMatters: { type: Type.STRING },
                     effort: { type: Type.STRING },
-                    sourceModule: { type: Type.STRING }
+                    sourceModule: { type: Type.STRING },
+                    priority: { type: Type.STRING }
                 },
-                required: ["title", "description", "whyItMatters", "effort", "sourceModule"]
+                required: ["title", "description", "whyItMatters", "effort", "sourceModule", "priority"]
             }
         }
     },

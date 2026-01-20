@@ -164,7 +164,8 @@ const JetVizResultDisplay: React.FC<{ report: LiveWebsiteAnalysis; onRerun: (e: 
             description: issue.task.description,
             whyItMatters: issue.whyItMatters,
             effort: issue.task.effort,
-            sourceModule: issue.task.sourceModule
+            sourceModule: issue.task.sourceModule,
+            priority: issue.priority
         }]);
     };
 
@@ -240,7 +241,14 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       const analysis = await analyzeWebsiteWithLiveApis(url);
       setResult(analysis);
       
-      const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
+      const newTasks = [
+        ...analysis.weeklyActions, 
+        ...analysis.issues.map(i => ({ 
+            ...i.task, 
+            whyItMatters: i.whyItMatters,
+            priority: i.priority
+        }))
+      ];
       
       const updatedTasks = await addTasksToGrowthPlan(newTasks);
       setLatestGeneratedTasks(updatedTasks);

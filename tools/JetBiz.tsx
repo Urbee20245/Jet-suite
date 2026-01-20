@@ -251,7 +251,8 @@ const JetBizResultDisplay: React.FC<{
         description: issue.task.description,
         whyItMatters: issue.whyItMatters,
         effort: issue.task.effort,
-        sourceModule: issue.task.sourceModule
+        sourceModule: issue.task.sourceModule,
+        priority: issue.priority
     }]);
   };
 
@@ -372,7 +373,14 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
 
       setAuditReport(analysis);
       
-      const newTasks = [...analysis.weeklyActions, ...analysis.issues.map(i => ({ ...i.task, whyItMatters: i.whyItMatters }))];
+      const newTasks = [
+        ...analysis.weeklyActions, 
+        ...analysis.issues.map(i => ({ 
+            ...i.task, 
+            whyItMatters: i.whyItMatters,
+            priority: i.priority 
+        }))
+      ];
       
       // Add tasks to growth plan and get the updated list
       const updatedTasks = await addTasksToGrowthPlan(newTasks);
