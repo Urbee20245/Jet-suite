@@ -10,7 +10,6 @@ import { JetKeywords } from './tools/JetKeywords';
 import { JetCompete } from './tools/JetCompete';
 import { JetCreate } from './tools/JetCreate';
 import { JetSocial } from './tools/JetSocial';
-import { JetContent } from './tools/JetContent';
 import { JetImage } from './tools/JetImage';
 import { JetReply } from './tools/JetReply';
 import { JetTrust } from './tools/JetTrust';

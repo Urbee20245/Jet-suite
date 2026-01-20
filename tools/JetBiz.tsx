@@ -134,7 +134,7 @@ const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}>
 );
 
 // --- CONSTANTS ---
-const priorityStyles = {
+const priorityStyles: any = {
   High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200', iconColor: 'text-red-500' },
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200', iconColor: 'text-yellow-500' },
   Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200', iconColor: 'text-blue-500' },
@@ -169,7 +169,11 @@ const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task }) => {
 };
 
 const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue }) => {
-  const styles = priorityStyles[issue.priority];
+  // Defensive check for priority
+  const priorityKey = (issue.priority === 'High' || issue.priority === 'Medium' || issue.priority === 'Low') 
+    ? issue.priority 
+    : 'Medium';
+  const styles = priorityStyles[priorityKey];
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -323,11 +327,12 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setAuditReport(analysis);
       
       const newTasks = [
-        ...analysis.weeklyActions, 
+        ...analysis.weeklyActions.map(t => ({ ...t, sourceModule: 'JetBiz' })), 
         ...analysis.issues.map(i => ({ 
             ...i.task, 
             whyItMatters: i.whyItMatters,
-            priority: i.priority 
+            priority: (i.priority === 'High' || i.priority === 'Medium' || i.priority === 'Low') ? i.priority : 'Medium' as any,
+            sourceModule: 'JetBiz'
         }))
       ];
       

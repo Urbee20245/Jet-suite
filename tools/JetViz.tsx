@@ -52,7 +52,7 @@ const LoadingState: React.FC = () => {
     );
 };
 
-const priorityStyles = {
+const priorityStyles: any = {
   High: { icon: ExclamationTriangleIcon, badge: 'bg-red-100 text-red-800 border-red-200' },
   Medium: { icon: ExclamationTriangleIcon, badge: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
   Low: { icon: InformationCircleIcon, badge: 'bg-blue-100 text-blue-800 border-blue-200' },
@@ -87,7 +87,11 @@ const SimpleTaskCard: React.FC<SimpleTaskCardProps> = ({ task }) => {
 };
 
 const SimpleIssueCard: React.FC<SimpleIssueCardProps> = ({ issue }) => {
-  const styles = priorityStyles[issue.priority];
+  // Defensive check for priority
+  const priorityKey = (issue.priority === 'High' || issue.priority === 'Medium' || issue.priority === 'Low') 
+    ? issue.priority 
+    : 'Medium';
+  const styles = priorityStyles[priorityKey];
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
@@ -223,11 +227,12 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
       setResult(analysis);
       
       const newTasks = [
-        ...analysis.weeklyActions, 
+        ...analysis.weeklyActions.map(t => ({ ...t, sourceModule: 'JetViz' })), 
         ...analysis.issues.map(i => ({ 
             ...i.task, 
             whyItMatters: i.whyItMatters,
-            priority: i.priority
+            priority: (i.priority === 'High' || i.priority === 'Medium' || i.priority === 'Low') ? i.priority : 'Medium' as any,
+            sourceModule: 'JetViz'
         }))
       ];
       
