@@ -86,3 +86,28 @@ export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
 export const SIDEBAR_STATIC_BOTTOM_TOOLS = ['account', 'knowledgebase', 'support'];
 
 export const ADMIN_SIDEBAR_TOOLS = ['adminpanel'];
+
+/**
+ * Validates that all tools referenced in the sidebar configuration
+ * exist in the ALL_TOOLS object. Only runs in development mode.
+ */
+const validateSidebarTools = () => {
+  const allSidebarTools = [
+    ...SIDEBAR_STATIC_TOP_TOOLS,
+    ...SIDEBAR_COLLAPSIBLE_CATEGORIES.flatMap(cat => cat.tools),
+    ...SIDEBAR_STATIC_BOTTOM_TOOLS,
+    ...ADMIN_SIDEBAR_TOOLS
+  ];
+  
+  const missing = allSidebarTools.filter(id => !ALL_TOOLS[id]);
+  if (missing.length > 0) {
+    console.error('⚠️ Missing tools in constants:', missing);
+  } else {
+    console.log('✅ Sidebar tool configuration validated.');
+  }
+};
+
+// Call it in development
+if (import.meta.env.DEV) {
+  validateSidebarTools();
+}
