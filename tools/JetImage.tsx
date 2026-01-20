@@ -92,13 +92,6 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
   const [trendingStyles, setTrendingStyles] = useState<Style[]>([]);
   const [isLoadingStyles, setIsLoadingStyles] = useState(true);
   
-  // YouTube Thumbnail State
-  const [videoTitle, setVideoTitle] = useState('');
-  const [videoTopic, setVideoTopic] = useState('');
-  const [thumbnailInputImage, setThumbnailInputImage] = useState<{ base64: string; mimeType: string; dataUrl: string; } | null>(null);
-  const thumbnailFileInputRef = useRef<HTMLInputElement>(null);
-  const [showYoutubeGenerator, setShowYoutubeGenerator] = useState(false);
-
   // MONTHLY CREDIT SYSTEM
   const [creditsUsed, setCreditsUsed] = useState(0);
   const [creditsLimit, setCreditsLimit] = useState(60);
@@ -212,7 +205,7 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     }
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isThumbnail: boolean = false) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -223,27 +216,16 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
           base64: dataUrl.split(',')[1],
           mimeType: file.type,
         };
-        if (isThumbnail) {
-          setThumbnailInputImage(imageObject);
-        } else {
-          setInputImage(imageObject);
-        }
+        setInputImage(imageObject);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const clearInputImage = (isThumbnail: boolean = false) => {
-    if (isThumbnail) {
-      setThumbnailInputImage(null);
-      if (thumbnailFileInputRef.current) {
-        thumbnailFileInputRef.current.value = '';
-      }
-    } else {
-      setInputImage(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+  const clearInputImage = () => {
+    setInputImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -297,73 +279,6 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     }
   };
   
-  const handleGenerateThumbnail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (creditsUsed >= creditsLimit) {
-      setError(`Monthly limit reached! You've used all ${creditsLimit} generations this month. Your limit resets on the 1st of next month.`);
-      return;
-    }
-    
-    if (!videoTitle || !videoTopic) {
-      setError('Please enter both the video title and topic.');
-      return;
-    }
-    setError('');
-    setLoading(true);
-    setWatermarkedImageUrl(null);
-    setOriginalImageUrl(null);
-    setAspectRatio('16:9'); // Force 16:9 for thumbnails
-
-    try {
-        const brandDna = profileData.brandDnaProfile;
-        const brandTone = brandDna?.brand_tone.primary_tone || 'professional';
-        const brandColors = brandDna?.visual_identity.primary_colors || ['#3B82F6', '#8B5CF6'];
-
-        const thumbnailRequest = {
-            videoTitle,
-            videoTopic,
-            businessName: profileData.business.business_name,
-            brandTone,
-            brandColors,
-        };
-
-        const generatedPrompt = await generateYoutubeThumbnailPrompt(thumbnailRequest);
-        setPrompt(generatedPrompt); // Set the generated prompt for the user to see/edit
-
-        const base64Data = await generateImage(generatedPrompt, '2K', '16:9', thumbnailInputImage || undefined); // Use 2K for better thumbnail quality
-        setOriginalImageUrl(`data:image/png;base64,${base64Data}`);
-        const watermarkedUrl = await addWatermark(base64Data);
-        setWatermarkedImageUrl(watermarkedUrl);
-        
-        // Increment credit usage in Supabase
-        const supabase = getSupabaseClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-            const currentMonthYear = new Date().toISOString().slice(0, 7);
-            const newCreditsUsed = creditsUsed + 1;
-            
-            await supabase
-              .from('user_credits')
-              .update({ 
-                credits_used: newCreditsUsed,
-                updated_at: new Date().toISOString()
-              })
-              .eq('user_id', user.id)
-              .eq('month_year', currentMonthYear);
-            
-            setCreditsUsed(newCreditsUsed);
-        }
-
-    } catch (err: any) {
-        console.error(err);
-        setError('Failed to generate thumbnail. Please try again.');
-    } finally {
-        setLoading(false);
-    }
-  };
-
   const triggerDownload = (url: string, extension: string) => {
     const a = document.createElement('a');
     a.href = url;
@@ -426,58 +341,6 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
           Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
         </p>
         
-        {/* YouTube Thumbnail Generator Section */}
-        <div className="mb-8 border-b border-brand-border pb-6">
-            <button 
-                onClick={() => setShowYoutubeGenerator(!showYoutubeGenerator)}
-                className="w-full flex items-center justify-between p-3 bg-accent-cyan/10 rounded-lg hover:bg-accent-cyan/20 transition-colors"
-            >
-                <h3 className="font-bold text-lg text-accent-cyan flex items-center gap-2">
-                    <SparklesIcon className="w-5 h-5" />
-                    AI YouTube Thumbnail Generator (High CTR)
-                </h3>
-                <ChevronDownIcon className={`w-5 h-5 text-accent-cyan transition-transform ${showYoutubeGenerator ? 'rotate-180' : ''}`} />
-            </button>
-            
-            {showYoutubeGenerator && (
-                <form onSubmit={handleGenerateThumbnail} className="mt-4 space-y-4 p-4 bg-brand-light rounded-lg border border-brand-border">
-                    <p className="text-sm text-brand-text-muted">Generate a high-CTR thumbnail prompt based on current trends and your brand DNA.</p>
-                    
-                    {/* Image Upload for Enhancement */}
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-brand-text mb-2">Upload Base Image (Optional)</label>
-                        {thumbnailInputImage ? (
-                            <div className="relative group w-32 h-32">
-                                <img src={thumbnailInputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                                <button type="button" onClick={() => clearInputImage(true)} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
-                            </div>
-                        ) : (
-                            <div onClick={() => thumbnailFileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center cursor-pointer hover:border-accent-purple hover:bg-white transition-colors">
-                                <ArrowUpTrayIcon className="w-6 h-6 mx-auto text-brand-text-muted" />
-                                <p className="mt-1 text-xs text-brand-text">Upload photo to enhance (e.g., a face shot)</p>
-                                <input type="file" ref={thumbnailFileInputRef} onChange={(e) => handleImageUpload(e, true)} accept="image/*" className="hidden" />
-                            </div>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Video Title</label>
-                        <input type="text" value={videoTitle} onChange={e => setVideoTitle(e.target.value)} placeholder="e.g., 5 HVAC Mistakes That Cost You Thousands" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" required />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Video Topic/Summary</label>
-                        <textarea rows={2} value={videoTopic} onChange={e => setVideoTopic(e.target.value)} placeholder="e.g., Common errors homeowners make with their AC units" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm resize-none" required />
-                    </div>
-                    <button type="submit" disabled={loading || creditsUsed >= creditsLimit || loadingCredits} className="w-full bg-accent-cyan hover:bg-accent-cyan/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg">
-                        {loading ? 'Generating Thumbnail...' : 'Generate High-CTR Thumbnail'}
-                    </button>
-                    <p className="text-xs text-brand-text-muted mt-2">
-                        This will automatically set the aspect ratio to 16:9 and size to 2K.
-                    </p>
-                </form>
-            )}
-        </div>
-
         {/* Standard Image Generator Section */}
         <h3 className="text-xl font-bold text-brand-text mb-4">Standard Image Generator</h3>
         <form onSubmit={handleSubmit}>
@@ -486,14 +349,14 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
             {inputImage ? (
               <div className="relative group w-32 h-32">
                 <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                <button type="button" onClick={() => clearInputImage(false)} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
+                <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110"><XCircleIcon className="w-7 h-7" /></button>
               </div>
             ) : (
               <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
                 <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
                 <p className="mt-2 text-sm text-brand-text">Click to upload or drag & drop</p>
                 <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
-                <input type="file" ref={fileInputRef} onChange={(e) => handleImageUpload(e, false)} accept="image/*" className="hidden" />
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
               </div>
             )}
           </div>

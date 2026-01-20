@@ -86,9 +86,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const USAGE_LIMIT = 2;
   const [usage, setUsage] = useState({ count: 0, date: getCurrentDate() });
 
-  const [trendingStyles, setTrendingStyles] = useState<Style[]>([]);
-  const [isLoadingStyles, setIsLoadingStyles] = useState(true);
-  
   // Product Mockup Specific States
   const [productName, setProductName] = useState('');
   const [headline, setHeadline] = useState('');
@@ -158,36 +155,6 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   }, [profileData.user.id]);
 
   useEffect(() => {
-    const fetchStyles = async () => {
-      setIsLoadingStyles(true);
-      try {
-        const cached = localStorage.getItem('jetimage_trending_styles');
-        const now = new Date().getTime();
-
-        if (cached) {
-          const { timestamp, styles } = JSON.parse(cached);
-          if (now - timestamp < 24 * 60 * 60 * 1000) { // 24 hours
-            setTrendingStyles(styles);
-            setIsLoadingStyles(false);
-            return;
-          }
-        }
-
-        const styles = await getTrendingImageStyles();
-        setTrendingStyles(styles);
-        localStorage.setItem('jetimage_trending_styles', JSON.stringify({ timestamp: now, styles }));
-      } catch (e) {
-        console.error("Failed to fetch trending styles:", e);
-        setTrendingStyles([]);
-      } finally {
-        setIsLoadingStyles(false);
-      }
-    };
-
-    fetchStyles();
-  }, []);
-
-  useEffect(() => {
     const savedUsage = localStorage.getItem('jetsuite_jetimage_download_usage');
     const today = getCurrentDate();
     if (savedUsage) {
@@ -243,7 +210,7 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       return;
     }
     if (!prompt) {
-      setError('Please select a mockup style or enter a custom prompt.');
+      setError('Please enter a mockup style or context.');
       return;
     }
     
@@ -358,7 +325,7 @@ Focus on photorealism and commercial quality.`;
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li>Upload your product image to use as the base.</li>
-            <li>Select a mockup style (e.g., 'Studio Shot', 'Lifestyle Scene').</li>
+            <li>Describe the scene or style for the mockup (e.g., 'Studio Shot', 'Lifestyle Scene').</li>
             <li>Add optional text overlays like product name, headline, and price.</li>
             <li>Generate professional, on-brand mockups instantly.</li>
           </ul>
@@ -389,25 +356,12 @@ Focus on photorealism and commercial quality.`;
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-brand-text mb-2">2. Select Mockup Style <span className="text-red-500">*</span></label>
-            {isLoadingStyles ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                {[...Array(5)].map((_, i) => (<div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-24 animate-pulse"><div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div><div className="h-2 bg-gray-200 rounded w-full"></div><div className="h-2 bg-gray-200 rounded w-5/6 mt-1"></div></div>))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
-                {trendingStyles.map(style => (<button type="button" key={style.name} onClick={() => setPrompt(style.prompt)} className="p-3 bg-brand-light border border-brand-border rounded-lg text-left hover:border-accent-purple transition-colors h-full" title={style.description}><p className="text-xs font-bold text-brand-text">{style.name}</p><p className="text-[10px] text-brand-text-muted mt-1">{style.description}</p></button>))}
-              </div>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">3. Refine Prompt (Optional)</label>
-            <textarea id="prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'place the product on a wooden table with soft studio lighting'" className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" />
+            <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">2. Mockup Context / Style <span className="text-red-500">*</span></label>
+            <textarea id="prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="e.g., 'place the product on a wooden table with soft studio lighting' or 'lifestyle shot with a happy customer'" className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" required />
           </div>
           
           <div className="mb-6 p-4 bg-brand-light rounded-lg border border-brand-border">
-            <h4 className="text-sm font-bold text-brand-text mb-3 flex items-center gap-2"><SparklesIcon className="w-4 h-4 text-accent-purple"/> Text Overlays (Optional)</h4>
+            <h4 className="text-sm font-bold text-brand-text mb-3 flex items-center gap-2"><SparklesIcon className="w-4 h-4 text-accent-purple"/> 3. Text Overlays (Optional)</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <input type="text" value={productName} onChange={e => setProductName(e.target.value)} placeholder="Product Name" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
                 <input type="text" value={headline} onChange={e => setHeadline(e.target.value)} placeholder="Headline/Offer" className="w-full bg-white border border-brand-border rounded-lg p-2 text-sm" />
