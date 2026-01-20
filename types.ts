@@ -22,7 +22,7 @@ export interface GrowthPlanTask {
   description: string; // "How to do it"
   whyItMatters: string; // "Why this matters"
   effort: 'Low' | 'Medium' | 'High';
-  priority: 'High' | 'Medium' | 'Low'; // ADD THIS LINE
+  priority: 'High' | 'Medium' | 'Low';
   sourceModule: string;
   status: 'to_do' | 'in_progress' | 'completed';
   createdAt: string;
