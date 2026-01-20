@@ -73,7 +73,7 @@ const addWatermark = async (base64Data: string): Promise<string> => {
   });
 };
 
-export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
+export const JetProduct: React.FC<JetImageProps> = ({ tool, profileData }) => {
   const [prompt, setPrompt] = useState('');
   const [imageSize, setImageSize] = useState<ImageSize>('1K');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
@@ -279,7 +279,8 @@ export const JetImage: React.FC<JetImageProps> = ({ tool, profileData }) => {
     
     setError('');
     setLoading(true);
-    setGeneratedImageUrl(null);
+    setWatermarkedImageUrl(null); // FIX: Use correct setter
+    setOriginalImageUrl(null);    // FIX: Use correct setter
     
     try {
       const brandDna = profileData.brandDnaProfile;
@@ -313,7 +314,9 @@ Focus on photorealism and commercial quality.`;
 
       // Generate single high-quality mockup
       const base64Data = await generateImage(finalPrompt, imageSize, aspectRatio, inputImage);
-      setGeneratedImageUrl(`data:image/png;base64,${base64Data}`);
+      setOriginalImageUrl(`data:image/png;base64,${base64Data}`); // FIX: Use correct setter
+      const watermarkedUrl = await addWatermark(base64Data); // Re-add watermarking logic
+      setWatermarkedImageUrl(watermarkedUrl); // FIX: Use correct setter
       
       // Increment credit usage in Supabase
       const supabase = getSupabaseClient();
