@@ -82,30 +82,6 @@ const DnaExtractionLoading: React.FC = () => {
     );
 };
 
-const DnaSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="bg-brand-light p-4 rounded-lg border border-brand-border">
-    <h3 className="text-lg font-bold text-accent-purple mb-3">{title}</h3>
-    <div className="space-y-3 text-sm">{children}</div>
-  </div>
-);
-
-const DnaField: React.FC<{ label: string; value: string | string[] | boolean | undefined; isEditable: boolean }> = ({ label, value }) => {
-    let displayValue: React.ReactNode = '-';
-    if (Array.isArray(value)) {
-        displayValue = value.length > 0 ? value.join(', ') : '-';
-    } else if (typeof value === 'boolean') {
-        displayValue = value ? 'Yes' : 'No';
-    } else if (value) {
-        displayValue = value;
-    }
-    return (
-        <div>
-            <p className="font-semibold text-brand-text-muted">{label}</p>
-            <p className="text-brand-text whitespace-pre-wrap">{displayValue}</p>
-        </div>
-    );
-};
-
 const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (newProfile: BrandDnaProfile) => void, isEditable: boolean, openSections: string[], toggleSection: (key: string) => void }> = ({ dnaProfile, onUpdate, isEditable, openSections, toggleSection }) => {
     const handleFieldChange = (section: keyof BrandDnaProfile, field: any, value: any) => { onUpdate({ ...dnaProfile, [section]: { ...dnaProfile[section], [field]: value } }); };
     return (
@@ -129,11 +105,7 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
                                             className="mt-1 w-full bg-white border border-brand-border rounded-md p-2 text-sm disabled:bg-brand-light disabled:opacity-80 resize-none"
                                         />
                                     ) : (
-                                        <DnaField 
-                                            label={fieldKey.replace(/_/g, ' ')} 
-                                            value={fieldValue as string | string[] | boolean | undefined}
-                                            isEditable={false} 
-                                        /> 
+                                        <p className="mt-1 text-sm text-brand-text whitespace-pre-wrap">{Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)}</p>
                                     )}
                                 </div>
                             ))}
@@ -363,7 +335,7 @@ const GbpConnect: React.FC<{
     ); 
 };
 
-const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.MouseEvent) => void, isSaving: boolean }> = ({ onLock, isDirty, onSave, isSaving }) => (
+const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.MouseEvent) => void, isSaving: boolean, isProcessing: boolean }> = ({ onLock, isDirty, onSave, isSaving, isProcessing }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
@@ -377,7 +349,7 @@ const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: R
                     <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
                     <button 
                         onClick={onSave} 
-                        disabled={isSaving}
+                        disabled={isSaving || isProcessing}
                         className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isSaving ? <Loader /> : <CheckCircleIcon className="w-5 h-5" />}
@@ -388,21 +360,21 @@ const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: R
             
             <button 
                 onClick={onLock} 
-                disabled={isDirty || isSaving}
+                disabled={isDirty || isSaving || isProcessing}
                 className={`w-full max-w-xs font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
-                    isDirty || isSaving
+                    isDirty || isSaving || isProcessing
                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300' 
                     : 'bg-red-500 hover:bg-red-600 text-white'
                 }`}
             >
-                <LockClosedIcon className="w-5 h-5" />
-                Lock Profile
+                {isProcessing ? <Loader /> : <LockClosedIcon className="w-5 h-5" />}
+                {isProcessing ? 'Locking...' : 'Lock Profile'}
             </button>
         </div>
     </div>
 );
 
-const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ onUnlock, onNext }) => (
+const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void, isProcessing: boolean }> = ({ onUnlock, onNext, isProcessing }) => (
     <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl">
         <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
         <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
@@ -410,9 +382,13 @@ const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void }> = ({ on
             This profile is locked to maintain brand consistency across all tools.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={onUnlock} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                <LockOpenIcon className="w-5 h-5" />
-                Unlock to Edit
+            <button 
+                onClick={onUnlock} 
+                disabled={isProcessing}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+                {isProcessing ? <Loader /> : <LockOpenIcon className="w-5 h-5" />}
+                {isProcessing ? 'Unlocking...' : 'Unlock to Edit'}
             </button>
             <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
                 Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
@@ -493,6 +469,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
   const [isSearchingGbp, setIsSearchingGbp] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [isLocking, setIsLocking] = useState(false);
   
   useEffect(() => { 
     setBusiness(profileData.business); 
@@ -611,8 +588,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   };
 
   const updateProfileLockStatus = async (lockStatus: boolean) => {
+    setIsLocking(true);
     try {
-        if (lockStatus && isDirty) { alert('Please save all pending changes in Step 1 before locking the profile.'); return; }
+        if (lockStatus && isDirty) { alert('Please save all pending changes in Step 1 before locking the profile.'); setIsLocking(false); return; }
         const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
         const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
         const response = await fetch('/api/business/update-profile', {
@@ -646,6 +624,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         onBusinessUpdated();
     } catch (err: any) {
         alert(`Failed to update profile lock status. Details: ${err.message}`);
+    } finally {
+        setIsLocking(false);
     }
   };
 
@@ -747,9 +727,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
   
   const handleGbpConfirm = async () => {
     if (!selectedGbp) return;
-    setIsSavingInfo(true);
-    setSearchError('');
-
     const newGbp: ProfileData['googleBusiness'] = {
         profileName: selectedGbp.name,
         mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
@@ -759,44 +736,13 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         reviewCount: selectedGbp.reviewCount,
         address: selectedGbp.address,
     };
-
-    try {
-        const response = await fetch('/api/business/update-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: profileData.user.id,
-                businessId: business.id,
-                googleBusiness: newGbp,
-            }),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save Google Business Profile.');
-        }
-
-        // On success, trigger a full data reload from the parent component
-        onBusinessUpdated();
-
-        // Reset local search state
-        setSelectedGbp(null);
-        setSearchTerm('');
-        setSearchResults([]);
-        
-        setSaveSuccess('Google Business Profile connected and saved successfully!');
-        setTimeout(() => setSaveSuccess(''), 3000);
-
-    } catch (err: any) {
-        setSearchError(err.message || 'An unexpected error occurred.');
-        console.error('Error confirming GBP:', err);
-    } finally {
-        setIsSavingInfo(false);
-    }
+    setGoogleBusiness(newGbp);
+    await handleSaveInfo(undefined, newGbp);
+    setSelectedGbp(null);
+    setSearchTerm('');
+    setSearchResults([]);
   };
 
-  const handleGbpCancel = () => { setSelectedGbp(null); setSearchResults([]); };
-  
   const handleGbpDisconnect = async () => { 
     const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
     setGoogleBusiness(newGbp); 
@@ -896,7 +842,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         )}
         <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
         <ProgressBar currentStep={currentStep} totalSteps={4} />
-        {isLocked && <LockedView onUnlock={handleUnlockProfile} onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} />}
+        {isLocked ? (
+            <LockedView onUnlock={handleUnlockProfile} onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} isProcessing={isLocking} />
+        ) : null}
         <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked} hint={hints.step1}>
             <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
             {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
@@ -970,11 +918,23 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             {locationType !== 'physical' && <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p className="text-sm text-yellow-800 font-semibold">ℹ️ Google Business Profile is primarily for businesses with physical locations.</p></div>}
             <div className="mt-4">
                 <label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label>
-                <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="w-full bg-brand-light border rounded-lg p-3 mb-4" disabled={step3Completed && !isGbpSkipped}>
-                    <option value="Not Created">I don't have a profile yet</option>
-                    <option value="Not Verified">I have a profile, but it's not verified</option>
-                    <option value="Verified">My profile is verified</option>
-                </select>
+                <div className="flex gap-2 mb-4">
+                    <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="flex-1 bg-brand-light border rounded-lg p-3" disabled={step3Completed && !isGbpSkipped}>
+                        <option value="Not Created">I don't have a profile yet</option>
+                        <option value="Not Verified">I have a profile, but it's not verified</option>
+                        <option value="Verified">My profile is verified</option>
+                    </select>
+                    {!isLocked && (
+                        <button 
+                            type="button"
+                            onClick={() => handleSaveInfo()}
+                            disabled={isSavingInfo}
+                            className="bg-accent-blue text-white px-4 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50"
+                        >
+                            {isSavingInfo ? '...' : 'Save'}
+                        </button>
+                    )}
+                </div>
                 {renderGbpContent()}
             </div>
         </StepCard>
@@ -982,7 +942,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             <SocialAccountsStep userId={profileData.user.id} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
         {allStepsComplete && !isLocked && (
-            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} />
+            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} isProcessing={isLocking} />
         )}
     </div>
   );
