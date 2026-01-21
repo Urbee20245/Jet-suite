@@ -22,23 +22,26 @@ const ToolButton: React.FC<{
   const isComingSoon = tool.isComingSoon;
   
   // --- UPDATED STYLES ---
-  const baseStyles = 'text-gray-400 hover:bg-slate-900 hover:text-white';
-  const activeStyles = 'bg-green-700 text-white'; // New active background
+  // 1. Active State: bg-accent-purple, text-white
+  // 2. Hover State: hover:bg-brand-dark/50
+  // 3. Inactive Text: text-gray-300
+  // 5. Admin Styles: bg-red-600 (active), bg-red-500/10 (inactive)
+
+  const inactiveUserStyles = 'text-gray-300 hover:bg-brand-dark/50 hover:text-white';
+  const activeUserStyles = 'bg-accent-purple text-white';
   
   const adminStyles = isAdmin
     ? 'bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200'
-    : baseStyles;
+    : inactiveUserStyles;
   
   const activeAdminStyles = isActive
     ? isAdmin
       ? 'bg-red-600 text-white'
-      : 'bg-accent-purple text-white' // Use accent-purple for active state
-    : activeStyles;
+      : activeUserStyles
+    : adminStyles;
   
   const iconActiveColor = isActive
-    ? isAdmin
-      ? 'text-white'
-      : 'text-white' // Active icon is white
+    ? 'text-white'
     : isAdmin
     ? 'text-red-400'
     : 'text-gray-400';
@@ -118,7 +121,8 @@ const CollapsibleCategory: React.FC<{
     <div>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full p-3 text-left text-xs font-semibold uppercase text-gray-500 tracking-wider hover:text-gray-300"
+        // 4. CATEGORY HEADER STYLING
+        className="flex items-center justify-between w-full p-3 text-left text-xs font-semibold uppercase text-gray-400 tracking-wider hover:text-gray-200"
       >
         <span>{category.name}</span>
         <ChevronDownIcon
@@ -259,7 +263,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           onClick={onLogout}
-          className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-slate-900 hover:text-white mt-2 justify-center md:justify-start`}
+          // 6. LOGOUT BUTTON STYLING
+          className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-left text-gray-400 hover:bg-brand-dark/50 hover:text-white mt-2 justify-center md:justify-start`}
           title="Log Out"
         >
           <ArrowRightStartOnRectangleIcon className="w-6 h-6 flex-shrink-0 text-gray-400" />
