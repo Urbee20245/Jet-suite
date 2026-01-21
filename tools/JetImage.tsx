@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool, ProfileData } from '../types';
-import { generateImage, getTrendingImageStyles, generateYoutubeThumbnailPrompt } from '../services/geminiService';
+import { generateImage, getTrendingImageStyles } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, ArrowPathIcon, TrashIcon } from '../components/icons/MiniIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetImageProps {
@@ -323,6 +323,26 @@ VISUAL REQUIREMENTS:
     a.click();
     document.body.removeChild(a);
   };
+  
+  const handleRejectAndRegenerate = async () => {
+    if (loading) return;
+    
+    // Clear the generated image
+    setGeneratedImageUrl(null);
+    
+    // Re-run the generation based on the active tab
+    if (activeTab === 'standard') {
+      // Re-submit the standard form
+      const form = document.querySelector('form');
+      if (form) {
+        const event = new Event('submit', { cancelable: true, bubbles: true });
+        form.dispatchEvent(event);
+      }
+    } else if (activeTab === 'youtube') {
+      // Re-run the YouTube generation
+      await handleYoutubeGenerate();
+    }
+  };
 
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const creditsRemaining = creditsLimit - creditsUsed;
@@ -342,7 +362,10 @@ VISUAL REQUIREMENTS:
       )}
       
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+        <p className="text-brand-text-muted mb-2"><span className="font-bold text-brand-text">{tool.description}</span></p>
+        <p className="text-sm text-brand-text-muted mb-6">
+            Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+        </p>
         
         {/* Monthly Credit Counter */}
         {!loadingCredits && (
@@ -675,16 +698,24 @@ VISUAL REQUIREMENTS:
       
       {generatedImageUrl && (
         <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg border border-brand-border">
-          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated {activeTab === 'youtube' ? 'YouTube Thumbnail' : 'Image'}</h3>
+          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Image</h3>
           <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="rounded-lg w-full h-auto max-w-2xl mx-auto border border-brand-border" />
           
-          <div className="mt-6 flex justify-center">
+          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
             <button
               onClick={handleDownload}
               className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
             >
               <ArrowDownTrayIcon className="w-5 h-5" />
               Download Image
+            </button>
+            <button
+              onClick={handleRejectAndRegenerate}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50"
+            >
+              <TrashIcon className="w-5 h-5" />
+              Reject & Regenerate
             </button>
           </div>
         </div>
