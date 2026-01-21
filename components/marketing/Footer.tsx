@@ -5,6 +5,11 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ navigate }) => {
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    navigate(path);
+  };
+
   return (
     <footer className="bg-brand-darker border-t border-slate-800">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
@@ -13,10 +18,34 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           <span className="text-xl font-bold text-white">JetSuite</span>
         </div>
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
-          <button onClick={() => navigate('/privacy')} className="hover:text-white">Privacy</button>
-          <button onClick={() => navigate('/terms')} className="hover:text-white">Terms</button>
-          <button onClick={() => navigate('/contact')} className="hover:text-white">Contact</button>
-          <button onClick={() => navigate('/login')} className="hover:text-white">Login</button>
+          <a 
+            href="/privacy" 
+            onClick={(e) => handleNavigation(e, '/privacy')} 
+            className="hover:text-white"
+          >
+            Privacy
+          </a>
+          <a 
+            href="/terms" 
+            onClick={(e) => handleNavigation(e, '/terms')} 
+            className="hover:text-white"
+          >
+            Terms
+          </a>
+          <a 
+            href="/contact" 
+            onClick={(e) => handleNavigation(e, '/contact')} 
+            className="hover:text-white"
+          >
+            Contact
+          </a>
+          <a 
+            href="/login" 
+            onClick={(e) => handleNavigation(e, '/login')} 
+            className="hover:text-white"
+          >
+            Login
+          </a>
         </div>
         <p className="mt-8 text-sm text-gray-500">
           © {new Date().getFullYear()} JetSuite by Jet Automations. All rights reserved.
