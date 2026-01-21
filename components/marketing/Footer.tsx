@@ -10,6 +10,8 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
     navigate(path);
   };
 
+  const baseUrl = "https://getjetsuite.com";
+
   return (
     <footer className="bg-brand-darker border-t border-slate-800">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
@@ -19,28 +21,28 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
         </div>
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
           <a 
-            href="/privacy" 
+            href={`${baseUrl}/privacy`} 
             onClick={(e) => handleNavigation(e, '/privacy')} 
             className="hover:text-white"
           >
             Privacy
           </a>
           <a 
-            href="/terms" 
+            href={`${baseUrl}/terms`} 
             onClick={(e) => handleNavigation(e, '/terms')} 
             className="hover:text-white"
           >
             Terms
           </a>
           <a 
-            href="/contact" 
+            href={`${baseUrl}/contact`} 
             onClick={(e) => handleNavigation(e, '/contact')} 
             className="hover:text-white"
           >
             Contact
           </a>
           <a 
-            href="/login" 
+            href={`${baseUrl}/login`} 
             onClick={(e) => handleNavigation(e, '/login')} 
             className="hover:text-white"
           >
