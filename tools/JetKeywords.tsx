@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, KeywordAnalysisResult, KeywordSearchResult } from '../types';
 import { findKeywords } from '../services/geminiService';
-import { Loader } from '../components/Loader';
-import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, MapPinIcon, PlusIcon } from '../components/icons/MiniIcons';
+import { JetKeywordsIcon } from '../components/icons/ToolIcons';
 import { TOOLS } from '../constants';
+
+// New Component Imports
+import { ToolPageLayout } from '../components/ToolPageLayout';
+import { ToolHeader } from '../components/ToolHeader';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { SectionTitle } from '../components/ui/SectionTitle';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { EmptyState } from '../components/ui/EmptyState';
 
 interface JetKeywordsProps {
   tool: Tool;
@@ -28,11 +36,11 @@ const difficultyColor = (difficulty: string) => {
 const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[] | undefined }> = ({ title, keywords }) => {
   if (!keywords || keywords.length === 0) return null;
   return (
-    <div className="bg-brand-light p-4 rounded-lg border border-brand-border">
+    <Card level={2} className="h-full">
       <h4 className="text-lg font-semibold text-accent-purple mb-3">{title}</h4>
       <ul className="space-y-2">
         {keywords.map((kw, index) => (
-          <li key={index} className="flex justify-between items-center bg-brand-card p-3 rounded-md shadow-sm">
+          <Card key={index} level={3} className="flex justify-between items-center shadow-none">
             <span className="text-brand-text text-sm md:text-base break-all pr-2">{kw.keyword}</span>
             <div className="flex items-center space-x-3 flex-shrink-0">
               <span className="text-xs text-brand-text-muted font-mono hidden sm:inline">{kw.monthly_volume}</span>
@@ -40,10 +48,10 @@ const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[]
                 {kw.difficulty}
               </span>
             </div>
-          </li>
+          </Card>
         ))}
       </ul>
-    </div>
+    </Card>
   );
 };
 
@@ -118,41 +126,59 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
   
   if (!service) {
     return (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-            <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-            <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-            <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                Please set your business category in your profile to find relevant keywords.
-            </p>
-            <button
-                onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-                className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-                Go to Business Details
-            </button>
-        </div>
+      <ToolPageLayout>
+        <EmptyState
+          icon={InformationCircleIcon}
+          title="Set Your Business Category"
+          description="Please set your business category in your profile to find relevant keywords."
+          action={{
+            label: 'Go to Business Details',
+            onClick: () => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!),
+          }}
+        />
+      </ToolPageLayout>
     );
   }
 
   return (
-    <div>
+    <ToolPageLayout>
+      <ToolHeader
+        icon={JetKeywordsIcon}
+        title={tool.name}
+        description={tool.description || 'Discover the best local keywords to attract more customers online.'}
+        badge="Analyze"
+      />
+      
       {showHowTo && (
-        <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
-            <ul className="list-disc pl-5 space-y-1 mt-2">
-                <li>Your primary service is pulled from your profile.</li>
-                <li>Set a **Target Location** for specific results.</li>
-                <li>Use the suggestions below to quickly build your search.</li>
-            </ul>
-        </HowToUse>
+        <Card level={2} className="bg-accent-purple/5 border-accent-purple/30">
+          <div className="flex items-start gap-4">
+            <InformationCircleIcon className="w-6 h-6 text-accent-purple flex-shrink-0" />
+            <div>
+              <h3 className="font-bold text-brand-text">How to Use {tool.name}</h3>
+              <ul className="list-disc pl-5 space-y-1 mt-2 text-sm text-brand-text-muted">
+                  <li>Your primary service is pulled from your profile.</li>
+                  <li>Set a **Target Location** for specific results.</li>
+                  <li>Use the suggestions below to quickly build your search.</li>
+              </ul>
+            </div>
+            <Button variant="tertiary" size="sm" onClick={() => setShowHowTo(false)}>
+                <XMarkIcon className="w-4 h-4" />
+            </Button>
+          </div>
+        </Card>
       )}
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+      
+      <Card level={1}>
+        <SectionTitle subtitle="Enter your target location and descriptive keywords">
+          Keyword Research Input
+        </SectionTitle>
+        
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
+            <Card level={3} className="flex items-center shadow-none">
                 <span className="text-sm font-medium text-brand-text mr-2">Primary Service:</span>
                 <span className="font-semibold text-brand-text">{service}</span>
-            </div>
+            </Card>
             <div className="relative">
                 <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Location (Required)</label>
                 <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
@@ -180,15 +206,16 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
             {/* Suggestion Tags */}
             <div className="flex flex-wrap gap-2 mb-4">
                 {getSuggestions().map(suggestion => (
-                    <button
+                    <Button
                         key={suggestion}
-                        type="button"
+                        variant="tertiary"
+                        size="sm"
                         onClick={() => handleAddSuggestion(suggestion)}
                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-accent-purple/10 hover:border-accent-purple hover:text-accent-purple transition-all"
                     >
                         <PlusIcon className="w-3 h-3" />
                         {suggestion}
-                    </button>
+                    </Button>
                 ))}
             </div>
 
@@ -203,33 +230,32 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
           </div>
           
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <button
+          <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            size="lg"
+            className="w-full"
           >
             {loading ? 'Finding Keywords...' : 'Find Keywords'}
-          </button>
+          </Button>
         </form>
-      </div>
-      {loading && <Loader />}
+      </Card>
+      
+      {loading && <LoadingSpinner text="Analyzing search data and competition..." size="lg" />}
+      
       {result && (
-        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-brand-text">Keyword Ideas for {targetLocation}</h3>
-              <div className="hidden sm:flex items-center space-x-2 text-xs text-brand-text-muted">
-                <span>Vol/Mo</span>
-                <span>Difficulty</span>
-              </div>
-            </div>
+        <Card level={1} className="animate-in fade-in slide-in-from-bottom-4">
+            <SectionTitle subtitle={`Keywords found for ${targetLocation}`}>
+                Keyword Analysis Results
+            </SectionTitle>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <KeywordCategory title="Primary Keywords" keywords={result.primary_keywords} />
                 <KeywordCategory title="Long-Tail Keywords" keywords={result.long_tail_keywords} />
                 <KeywordCategory title="Question-Based Keywords" keywords={result.question_keywords} />
                 <KeywordCategory title="Local Modifier Keywords" keywords={result.local_modifier_keywords} />
             </div>
-        </div>
+        </Card>
       )}
-    </div>
+    </ToolPageLayout>
   );
 };
