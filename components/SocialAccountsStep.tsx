@@ -134,7 +134,7 @@ export const SocialAccountsStep: React.FC<SocialAccountsStepProps> = ({
           <div className="flex items-start">
             <span className="text-green-500 mr-2 mt-0.5">✓</span>
             <span className="text-sm text-brand-text-muted">
-              Post to social media instantly from <strong className="text-brand-text">JetPost</strong>
+              Post to social media instantly from <strong className="text-brand-text">JetSocial</strong>
             </span>
           </div>
           <div className="flex items-start">

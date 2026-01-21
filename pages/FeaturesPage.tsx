@@ -25,7 +25,7 @@ import {
     GrowthScoreIcon,
     JetAdsIcon,
     JetCompeteIcon,
-    JetPostIcon,
+    JetSocialIcon,
     JetContentIcon,
     JetLeadsIcon,
     JetEventsIcon,
@@ -124,7 +124,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             tagline: "Social Media Content Generator", 
             brief: "Creates platform-specific posts (Facebook, Instagram, LinkedIn) tailored to your brand voice.", 
             replaces: "Social Media Manager",
-            icon: JetPostIcon,
+            icon: JetSocialIcon,
             iconBg: "bg-purple-600"
         },
         { 

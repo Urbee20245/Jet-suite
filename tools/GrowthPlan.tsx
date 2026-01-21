@@ -126,6 +126,25 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
+  // Auto-load tasks when component mounts
+  useEffect(() => {
+    const autoLoadTasks = async () => {
+      if (!userId || !activeBusinessId) return;
+      
+      try {
+        const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
+        if (data && Array.isArray(data) && data.length > 0) {
+          setTasks(data);
+          console.log('✅ [GrowthPlan] Auto-loaded', data.length, 'tasks on mount');
+        }
+      } catch (error) {
+        console.error('❌ [GrowthPlan] Auto-load failed:', error);
+      }
+    };
+
+    autoLoadTasks();
+  }, [userId, activeBusinessId]); // Only run when component mounts or business changes
+
   const { jetbizTasks, jetvizTasks, otherTasks, completedTasks } = useMemo(() => {
     const jetbizTasks = tasks.filter(t => t.sourceModule === 'JetBiz' && t.status !== 'completed');
     const jetvizTasks = tasks.filter(t => t.sourceModule === 'JetViz' && t.status !== 'completed');

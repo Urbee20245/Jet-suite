@@ -28,7 +28,7 @@ const KB_SECTIONS = [
     name: 'Create & Publish',
     articles: [
       { id: 'create-publish/jetcreate', title: 'JetCreate: Campaigns' },
-      { id: 'create-publish/jetpost', title: 'JetPost: Social Media' },
+      { id: 'create-publish/jetsocial', title: 'JetSocial: Social Media' },
       { id: 'create-publish/jetcontent', title: 'JetContent: Blog Posts' },
       { id: 'create-publish/jetimage', title: 'JetImage: Visuals' },
     ],
