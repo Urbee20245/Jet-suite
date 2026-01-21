@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import InternalApp from './InternalApp';
 import { MarketingWebsite } from './pages/MarketingWebsite';
 import { PrivacyPolicy } from './pages/PrivacyPolicy';
@@ -7,31 +7,14 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { SubscriptionGuard } from './components/SubscriptionGuard';
 import { checkSubscriptionAccess } from './services/subscriptionService';
 import { fetchRealDateTime } from './utils/realTime';
-import { getSupabaseClient } from './integrations/supabase/client'; // Import centralized client function
-import { NotFoundPage } from './pages/NotFoundPage'; // Import NotFoundPage
-import { ContactPage } from './pages/ContactPage'; // Import ContactPage
-import Admin from './pages/Admin'; // Import Admin page
+import { getSupabaseClient } from './integrations/supabase/client';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { ContactPage } from './pages/ContactPage';
+import Admin from './pages/Admin';
 
-// Fetch real current time on app load (with timeout to prevent hanging)
-if (typeof window !== 'undefined') {
-  const initRealTime = async () => {
-    try {
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('timeout')), 2000)
-      );
-      await Promise.race([fetchRealDateTime(), timeout]);
-      console.log('✅ Real date/time initialized');
-    } catch (error) {
-      console.warn('⚠️ Could not fetch real time, using system time');
-    }
-  };
-  initRealTime();
-}
-
-console.log('[App] Component module loaded');
-
-const App: React.FC = () => {
-  console.log('[App] Component rendering');
+// This component contains the original dynamic logic of the app.
+const CoreApp: React.FC = () => {
+  console.log('[App] CoreApp rendering');
   
   const supabase = getSupabaseClient();
   
@@ -45,7 +28,6 @@ const App: React.FC = () => {
   const [isAccessTierResolved, setIsAccessTierResolved] = useState(false);
   const [subscriptionRedirect, setSubscriptionRedirect] = useState<string | null>(null);
   const [isOnboardingResolved, setIsOnboardingResolved] = useState(false);
-  // CHANGED: Check for existence of ANY business profile, not just completion status
   const [hasAnyBusinessProfile, setHasAnyBusinessProfile] = useState(false);
 
   // 3. Navigation State
@@ -70,7 +52,6 @@ const App: React.FC = () => {
   // Helper to verify subscription and update resolution state
   const verifySubscription = async (uid: string) => {
     if (!supabase) {
-      // If Supabase is disabled, assume no subscription/onboarding is possible
       setSubscriptionRedirect('/billing/locked');
       setIsAccessTierResolved(true);
       setIsOnboardingResolved(true);
@@ -78,14 +59,10 @@ const App: React.FC = () => {
     }
     
     try {
-      // 1. Check Subscription
       const result = await checkSubscriptionAccess(uid);
-      // If access is denied, redirect them to the LOCKED page first, not pricing directly
       setSubscriptionRedirect(result.hasAccess ? null : '/billing/locked');
       setIsAccessTierResolved(true);
 
-      // 2. Check Onboarding (Existence of ANY business profile)
-      // We check if the user has ever created a business profile.
       const { count: profileCount } = await supabase
         .from('business_profiles')
         .select('id', { count: 'exact', head: true })
@@ -126,18 +103,16 @@ const App: React.FC = () => {
           setIsLoggedIn(false);
           setCurrentUserEmail(null);
           setCurrentUserId(null);
-          localStorage.removeItem('jetsuite_userId'); // Clear on no session
+          localStorage.removeItem('jetsuite_userId');
           setSessionChecked(true);
           return;
         }
         
-        console.log('[App] Valid session found:', session.user.email);
         setIsLoggedIn(true);
         setCurrentUserEmail(session.user.email || null);
         setCurrentUserId(session.user.id);
-        localStorage.setItem('jetsuite_userId', session.user.id); // Save on valid session
+        localStorage.setItem('jetsuite_userId', session.user.id);
         
-        // Block sessionChecked until subscription and onboarding are also verified
         await verifySubscription(session.user.id);
         setSessionChecked(true);
       } catch (error) {
@@ -155,19 +130,17 @@ const App: React.FC = () => {
     if (!supabase) return;
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[App] Auth state changed:', event);
-      
       if (event === 'SIGNED_IN' && session?.user) {
         setIsLoggedIn(true);
         setCurrentUserEmail(session.user.email || null);
         setCurrentUserId(session.user.id);
-        localStorage.setItem('jetsuite_userId', session.user.id); // Save on sign in
+        localStorage.setItem('jetsuite_userId', session.user.id);
         verifySubscription(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
         setCurrentUserEmail(null);
         setCurrentUserId(null);
-        localStorage.removeItem('jetsuite_userId'); // Clear on sign out
+        localStorage.removeItem('jetsuite_userId');
         setIsAccessTierResolved(false);
         setSubscriptionRedirect(null);
         setIsOnboardingResolved(false);
@@ -195,18 +168,16 @@ const App: React.FC = () => {
 
     if (isLoggedIn) {
       if (subscriptionRedirect) {
-        // WHITELIST: If they are on a billing/pricing page, don't force the locked redirect
         const isWhitelisted = 
           currentPath === '/pricing' || 
           currentPath === '/account' || 
           currentPath.startsWith('/billing/') ||
           currentPath === '/contact' ||
           currentPath === '/savings' ||
-          currentPath === '/admin'; // Allow admin access
+          currentPath === '/admin';
           
         if (isWhitelisted) return;
 
-        // Otherwise, kick them to the locked page
         if (currentPath !== subscriptionRedirect) {
           navigate(subscriptionRedirect);
         }
@@ -233,7 +204,7 @@ const App: React.FC = () => {
         currentPath.startsWith('/how-it-works') ||
         currentPath.startsWith('/faq') ||
         currentPath.startsWith('/contact') ||
-        currentPath === '/admin'; // Allow admin access
+        currentPath === '/admin';
 
       if (!currentPath.startsWith('/app') && !isWhitelistedMarketingPage && currentPath !== '/onboarding') {
         navigate('/app');
@@ -267,16 +238,11 @@ const App: React.FC = () => {
 
   const handleSubscriptionAccessDenied = (status: string, redirectTo: string) => {
     console.log('[App] Subscription access denied:', { status, redirectTo });
-    // When the guard triggers, we go to the dedicated locked page instead of pricing directly
     navigate('/billing/locked'); 
   };
 
   try {
     const normalizedPath = currentPath.replace(/\/$/, '') || '/';
-    
-    if (normalizedPath === '/privacy') return <PrivacyPolicy />;
-    if (normalizedPath === '/terms') return <TermsOfService />;
-    if (normalizedPath === '/contact') return <ContactPage />;
     
     // Admin route - must be logged in to access
     if (normalizedPath === '/admin') {
@@ -294,13 +260,10 @@ const App: React.FC = () => {
       );
     }
 
-    // RENDER ONBOARDING PAGE ONLY IF NO BUSINESS PROFILE EXISTS YET
     if (isLoggedIn && currentUserId && !hasAnyBusinessProfile && currentPath === '/onboarding') {
       return <OnboardingPage navigate={navigate} userId={currentUserId} />;
     }
 
-    // CHECK IF WE SHOULD APPLY THE GUARD
-    // We only apply the guard if the user is trying to access protected "/app" routes
     const isProtectedRoute = currentPath.startsWith('/app');
 
     if (isLoggedIn && currentUserId && currentUserEmail) {
@@ -318,7 +281,6 @@ const App: React.FC = () => {
           </SubscriptionGuard>
         );
       } else {
-        // If logged in but on a marketing page, render the marketing site/account pages normally
         return <MarketingWebsite 
           currentPath={currentPath} 
           navigate={navigate} 
@@ -328,7 +290,6 @@ const App: React.FC = () => {
       }
     }
 
-    // Valid marketing routes for non-logged in users
     const validMarketingRoutes = [
       '/',
       '/features',
@@ -361,5 +322,50 @@ const App: React.FC = () => {
     return <div className="p-10 text-white">Application crashed. Please check console.</div>;
   }
 };
+
+const App: React.FC = () => {
+  // This check runs immediately on the client, before any state is set.
+  const [staticPageComponent] = useMemo(() => {
+    const path = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const normalized = path.replace(/\/$/, '') || '/';
+    
+    if (normalized === '/privacy') {
+      return [<PrivacyPolicy />];
+    }
+    if (normalized === '/terms') {
+      return [<TermsOfService />];
+    }
+    if (normalized === '/contact') {
+      return [<ContactPage />];
+    }
+    return [null];
+  }, []);
+
+  // If it's a static page, render it directly and bypass the main app logic.
+  if (staticPageComponent) {
+    return staticPageComponent;
+  }
+
+  // Otherwise, render the main, dynamic application.
+  return <CoreApp />;
+};
+
+// Initial real-time fetch
+if (typeof window !== 'undefined') {
+  const initRealTime = async () => {
+    try {
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      await Promise.race([fetchRealDateTime(), timeout]);
+      console.log('✅ Real date/time initialized');
+    } catch (error) {
+      console.warn('⚠️ Could not fetch real time, using system time');
+    }
+  };
+  initRealTime();
+}
+
+console.log('[App] Component module loaded');
 
 export default App;
