@@ -21,8 +21,8 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
         </div>
         <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
           <a 
-            href={`${baseUrl}/privacy`} 
-            onClick={(e) => handleNavigation(e, '/privacy')} 
+            href={`${baseUrl}/privacy-policy`} 
+            onClick={(e) => handleNavigation(e, '/privacy-policy')} 
             className="hover:text-white"
             title="Privacy Policy"
           >
