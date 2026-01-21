@@ -24,20 +24,23 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             href={`${baseUrl}/privacy`} 
             onClick={(e) => handleNavigation(e, '/privacy')} 
             className="hover:text-white"
+            title="Privacy Policy"
           >
-            Privacy
+            Privacy Policy
           </a>
           <a 
             href={`${baseUrl}/terms`} 
             onClick={(e) => handleNavigation(e, '/terms')} 
             className="hover:text-white"
+            title="Terms of Service"
           >
-            Terms
+            Terms of Service
           </a>
           <a 
             href={`${baseUrl}/contact`} 
             onClick={(e) => handleNavigation(e, '/contact')} 
             className="hover:text-white"
+            title="Contact Us"
           >
             Contact
           </a>
@@ -45,6 +48,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             href={`${baseUrl}/login`} 
             onClick={(e) => handleNavigation(e, '/login')} 
             className="hover:text-white"
+            title="Login"
           >
             Login
           </a>
