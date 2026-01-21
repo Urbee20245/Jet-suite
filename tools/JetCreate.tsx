@@ -18,6 +18,7 @@ import {
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
+import { HowToUse } from '../components/HowToUse';
 
 interface JetCreateProps {
   tool: Tool;
@@ -25,6 +26,20 @@ interface JetCreateProps {
   setActiveTool: (tool: Tool | null, articleId?: string) => void;
   onUpdateProfile?: (newProfileData: ProfileData, persist?: boolean) => void;
 }
+
+const handleDownloadImage = (imageUrl: string, filename: string) => {
+    if (!imageUrl || !imageUrl.startsWith('data:image')) {
+        alert('Image not yet generated or invalid format.');
+        return;
+    }
+    const a = document.createElement('a');
+    a.href = imageUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href); // Clean up the object URL
+};
 
 const ScheduleModal: React.FC<{
     asset: SocialPostAsset | AdCopyAsset;
@@ -132,6 +147,8 @@ const ScheduleModal: React.FC<{
         </div>
     );
 };
+// --- End ScheduleModal Definition ---
+
 
 export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActiveTool }) => {
     const [campaignIdeas, setCampaignIdeas] = useState<CampaignIdea[]>([]);
@@ -148,6 +165,8 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     const [connections, setConnections] = useState<SocialConnection[]>([]);
     const [schedulingAsset, setSchedulingAsset] = useState<SocialPostAsset | AdCopyAsset | null>(null);
     const [scheduleSuccess, setScheduleSuccess] = useState('');
+    
+    const [showHowTo, setShowHowTo] = useState(true); // <-- ADDED STATE
 
     const isProfileLocked = profileData.business.is_complete;
 
@@ -494,6 +513,20 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     }}
                 />
             )}
+            
+            {/* How To Use Instructions */}
+            {showHowTo && (
+                <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
+                    <ul className="list-disc pl-5 space-y-1 mt-2">
+                        <li>Select a campaign idea from the left panel or create a custom prompt.</li>
+                        <li>The AI generates social posts and ad copy based on your Brand DNA.</li>
+                        <li>Use the <ArrowPathIcon className="w-4 h-4 inline-block" /> icon to regenerate text or the <PhotoIcon className="w-4 h-4 inline-block" /> icon to generate images for individual assets.</li>
+                        <li>Use the <CalendarDaysIcon className="w-4 h-4 inline-block" /> icon to schedule posts to your social media calendar.</li>
+                        <li>Download campaign images using the <ArrowDownTrayIcon className="w-4 h-4 inline-block" /> icon.</li>
+                    </ul>
+                </HowToUse>
+            )}
+
             {/* Header with Back Button */}
             <header className="bg-brand-card border-b border-brand-border px-6 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -509,6 +542,9 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                         <h1 className="text-xl font-bold text-brand-text">JetCreate</h1>
                         <p className="text-xs text-brand-text-muted">
                             AI-powered campaign creation
+                        </p>
+                        <p className="text-xs text-brand-text-muted">
+                            Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
                         </p>
                     </div>
                 </div>
@@ -536,19 +572,31 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                     <button 
                                         key={idea.id} 
                                         onClick={() => handleSelectCampaign(idea)} 
-                                        className={`w-full text-left rounded-lg border-2 transition-all overflow-hidden glow-card glow-card-rounded-lg ${
+                                        className={`w-full text-left rounded-lg border-2 transition-all overflow-hidden glow-card glow-card-rounded-lg group relative ${
                                             selectedCampaign?.id === idea.id 
                                                 ? 'bg-gradient-to-br from-accent-purple/10 to-accent-pink/10 border-accent-purple shadow-lg' 
                                                 : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
                                         }`}
                                     >
                                         {idea.imageUrl && (
-                                            <div className="w-full h-32 overflow-hidden bg-slate-100">
+                                            <div className="w-full h-32 overflow-hidden bg-slate-100 relative">
                                                 <img 
                                                     src={idea.imageUrl} 
                                                     alt={idea.name}
                                                     className="w-full h-full object-cover"
                                                 />
+                                                {/* Download Button Overlay */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent selecting campaign
+                                                        handleDownloadImage(idea.imageUrl!, `${idea.name.replace(/\s+/g, '_')}_preview.png`);
+                                                    }}
+                                                    className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70"
+                                                    title="Download Campaign Image"
+                                                >
+                                                    <ArrowDownTrayIcon className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         )}
                                         <div className="p-3">
