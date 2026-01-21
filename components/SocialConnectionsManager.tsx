@@ -78,8 +78,8 @@ const platformNames: { [key: string]: string } = {
   'google_business': 'Google Business',
 };
 
-// OAuth-enabled platforms
-const oauthPlatforms = ['facebook']; // Will add more as we implement them
+// OAuth-enabled platforms (all now have real OAuth!)
+const oauthPlatforms = ['facebook', 'google_business', 'tiktok'];
 
 // Platforms that support OAuth
 const availablePlatforms: SocialPlatform[] = [
