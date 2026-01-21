@@ -303,7 +303,9 @@ const CoreApp: React.FC = () => {
       '/login',
       '/billing/success',
       '/billing/locked',
-      '/contact'
+      '/contact',
+      '/privacy',
+      '/terms'
     ];
 
     if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
