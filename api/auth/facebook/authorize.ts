@@ -62,12 +62,18 @@ export default async function handler(
       return res.status(500).json({ error: 'Failed to initiate OAuth flow' });
     }
 
-    // Build Facebook OAuth URL with Instagram permissions
+    // Build Facebook OAuth URL with basic permissions (Development Mode)
+    // NOTE: For full posting functionality, these permissions require Facebook App Review:
+    // - pages_manage_posts (post to Facebook Pages)
+    // - pages_read_engagement (read metrics)
+    // - instagram_basic (Instagram access)
+    // - instagram_content_publish (post to Instagram)
+    // Once approved, add them back to the scope string below
     const params = new URLSearchParams({
       client_id: FACEBOOK_APP_ID,
       redirect_uri: FACEBOOK_REDIRECT_URI,
       state: state,
-      scope: 'public_profile,email,pages_show_list,pages_read_engagement,pages_manage_posts,instagram_basic,instagram_content_publish',
+      scope: 'public_profile,pages_show_list', // Basic permissions that work without review
       response_type: 'code',
     });
 
