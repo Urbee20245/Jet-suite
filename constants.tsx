@@ -2,7 +2,7 @@ import type { Tool } from './types';
 import { 
   JetBizIcon, 
   JetVizIcon, 
-  JetPostIcon, 
+  JetSocialIcon, 
   JetReplyIcon,
   JetLeadsIcon,
   JetContentIcon,
@@ -47,7 +47,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
 
   // Create & Publish Tools
   jetcreate: { id: 'jetcreate', name: 'JetCreate', description: 'Create stunning, on-brand marketing campaigns and assets.', icon: JetCreateIcon },
-  jetsocial: { id: 'jetsocial', name: 'JetSocial', description: 'Generate engaging social media posts for your business.', icon: JetPostIcon },
+  jetsocial: { id: 'jetsocial', name: 'JetSocial', description: 'Generate engaging social media posts for your business.', icon: JetSocialIcon },
   jetcontent: { id: 'jetcontent', name: 'JetContent', description: 'Create SEO-friendly blog posts and articles for your website.', icon: JetContentIcon },
   jetimage: { id: 'jetimage', name: 'JetImage', description: 'Generate high-quality images for your marketing materials.', icon: JetImageIcon },
   jetproduct: { id: 'jetproduct', name: 'JetProduct', description: 'Generate professional product mockups and lifestyle shots.', icon: JetProductIcon },
