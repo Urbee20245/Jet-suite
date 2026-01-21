@@ -342,7 +342,7 @@ export interface AnalysisResult {
   }>;
 }
 
-// Social Planner Types for JetPost
+// Social Planner Types for JetSocial
 export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'tiktok' | 'google_business';
 
 export type PostStatus = 'scheduled' | 'posting' | 'posted' | 'failed' | 'draft' | 'cancelled';
