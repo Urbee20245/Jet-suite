@@ -194,18 +194,30 @@ export const Boris: React.FC<BorisProps> = ({
                 <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
                 {borisState.todaysTasks.length > 0 && (
                     <div className="mt-4 space-y-2">
-                        {borisState.todaysTasks.map((task, i) => (
-                            <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                                <span className="text-gray-300 text-sm">{i + 1}. {task.title}</span>
-                                <button 
-                                    onClick={() => onTaskStatusChange(task.id, 'completed')}
-                                    className="p-1 bg-green-500/20 rounded-full hover:bg-green-500/40"
-                                    title="Mark as complete"
-                                >
-                                    <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                                </button>
-                            </div>
-                        ))}
+                        {borisState.todaysTasks.map((task, i) => {
+                            const toolId = task.sourceModule.toLowerCase();
+                            return (
+                                <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                                    <div className="flex items-center flex-1">
+                                        <span className="text-gray-300 text-sm mr-4">{i + 1}. {task.title}</span>
+                                        <button
+                                            onClick={() => onNavigate(toolId)}
+                                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1"
+                                            title={`Go to ${task.sourceModule} tool`}
+                                        >
+                                            Go to Tool <ArrowRightIcon className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                    <button 
+                                        onClick={() => onTaskStatusChange(task.id, 'completed')}
+                                        className="p-2 bg-green-500/20 rounded-full hover:bg-green-500/40 flex-shrink-0"
+                                        title="Mark as complete"
+                                    >
+                                        <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </>
