@@ -36,6 +36,10 @@ const shouldShowUpsell = (task: any): boolean => {
   return allKeywords.some(keyword => taskText.includes(keyword));
 };
 
+// Define tool categories for navigation logic
+const FOUNDATION_TOOLS = ['jetbiz', 'jetviz', 'jetcompete', 'jetkeywords'];
+const EXECUTION_TOOLS = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads', 'jetproduct'];
+
 export const Boris: React.FC<BorisProps> = ({
   userFirstName,
   profileData,
@@ -156,6 +160,25 @@ export const Boris: React.FC<BorisProps> = ({
     };
     return whyResponses[borisState!.stage];
   };
+  
+  const getTaskNavigationTarget = (task: any) => {
+    const source = task.sourceModule.toLowerCase();
+    
+    // Check if the task source is a Foundation tool
+    if (FOUNDATION_TOOLS.includes(source)) {
+      // Foundation tasks require reviewing instructions in the Growth Plan
+      return 'growthplan';
+    }
+    
+    // Check if the task source is an Execution/Engagement tool
+    if (EXECUTION_TOOLS.includes(source)) {
+      // Execution tasks link directly to the tool
+      return source;
+    }
+    
+    // Default to Growth Plan if source is unknown or generic
+    return 'growthplan';
+  };
 
   if (!borisState) return null;
 
@@ -195,7 +218,7 @@ export const Boris: React.FC<BorisProps> = ({
                 {borisState.todaysTasks.length > 0 && (
                     <div className="mt-4 space-y-2">
                         {borisState.todaysTasks.map((task, i) => {
-                            const toolId = task.sourceModule.toLowerCase();
+                            const toolId = getTaskNavigationTarget(task);
                             return (
                                 <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
                                     <div className="flex items-center flex-1">
@@ -203,14 +226,14 @@ export const Boris: React.FC<BorisProps> = ({
                                         <button
                                             onClick={() => onNavigate(toolId)}
                                             className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1"
-                                            title={`Go to ${task.sourceModule} tool`}
+                                            title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
                                         >
-                                            Go to Tool <ArrowRightIcon className="w-3 h-3" />
+                                            {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'} <ArrowRightIcon className="w-3 h-3" />
                                         </button>
                                     </div>
                                     <button 
                                         onClick={() => onTaskStatusChange(task.id, 'completed')}
-                                        className="p-2 bg-green-500/20 rounded-full hover:bg-green-500/40 flex-shrink-0"
+                                        className="p-3 bg-green-500/20 rounded-full hover:bg-green-500/40 flex-shrink-0"
                                         title="Mark as complete"
                                     >
                                         <CheckCircleIcon className="w-5 h-5 text-green-400" />
