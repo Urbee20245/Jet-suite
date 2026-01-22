@@ -259,13 +259,42 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   };
 
   const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis | null, toolId: 'jetbiz' | 'jetviz') => {
-    if (report && activeBusinessId) {
+    if (report && activeBusinessId && supabase) {
         try {
             await syncToSupabase(userId, activeBusinessId, toolId, report);
+            
+            // Set audit completion flag so Boris can detect it
+            const { data: currentProfile } = await supabase
+              .from('business_profiles')
+              .select('audits')
+              .eq('id', activeBusinessId)
+              .single();
+
+            const updatedAudits = {
+              ...(currentProfile?.audits || {}),
+              [toolId]: {
+                completed: true,
+                completedAt: new Date().toISOString(),
+                lastRun: new Date().toISOString()
+              }
+            };
+
+            await supabase
+              .from('business_profiles')
+              .update({ audits: updatedAudits })
+              .eq('id', activeBusinessId);
+
+            console.log(`[${toolId}] Audit completion flag set:`, updatedAudits);
+
             setCurrentProfileData(prev => {
                 if (!prev) return null;
+                const updatedBusiness = {
+                    ...prev.business,
+                    audits: updatedAudits
+                };
                 return {
                     ...prev,
+                    business: updatedBusiness,
                     [`${toolId}Analysis`]: report
                 };
             });
