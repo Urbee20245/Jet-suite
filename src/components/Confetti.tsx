@@ -25,11 +25,8 @@ export const Confetti: React.FC<ConfettiProps> = ({ onComplete }) => {
       recycle={false}
       numberOfPieces={500}
       gravity={0.15}
-      onConfettiComplete={(confetti) => {
+      onConfettiComplete={() => {
         onComplete();
-        if (confetti) {
-          confetti.clear();
-        }
       }}
       style={{ position: 'fixed', top: 0, left: 0, zIndex: 1000 }}
     />
