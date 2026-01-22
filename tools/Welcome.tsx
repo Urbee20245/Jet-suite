@@ -1,215 +1,285 @@
-"use client";
-
 import React from 'react';
-import { ALL_TOOLS } from '../constants';
-import type { Tool, ProfileData, ReadinessState } from '../types';
-import { ArrowRightIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
-import { QuickStatsCards } from '../components/QuickStatsCards';
+import type { Tool, ProfileData, ReadinessState, Plan } from '../types';
+import { 
+    ChartBarIcon, 
+    GlobeAltIcon, 
+    MagnifyingGlassIcon, 
+    UserGroupIcon,
+    SparklesIcon,
+    ShareIcon,
+    PhotoIcon,
+    DocumentTextIcon,
+    ChatBubbleLeftRightIcon,
+    UserPlusIcon,
+    ShieldCheckIcon,
+    CalendarIcon,
+    MegaphoneIcon
+} from '../components/icons/MiniIcons';
 
 interface WelcomeProps {
     setActiveTool: (tool: Tool | null, articleId?: string) => void;
-    profileData: ProfileData;
+    profileData: ProfileData | null;
     readinessState: ReadinessState;
-    plan: { name: string, profileLimit: number };
+    plan: Plan;
     growthScore: number;
     pendingTasksCount: number;
     reviewResponseRate: number;
 }
 
-// New compact tool card component
-const ToolCard: React.FC<{ 
-  tool: Tool; 
-  onClick: () => void;
-  accentColor?: string;
-}> = ({ tool, onClick, accentColor = 'bg-accent-purple' }) => {
-  const colorClasses = {
-    'bg-accent-purple': 'border-accent-purple/30 hover:border-accent-purple/60',
-    'bg-accent-blue': 'border-accent-blue/30 hover:border-accent-blue/60',
-    'bg-accent-pink': 'border-accent-pink/30 hover:border-accent-pink/60',
-  };
+interface QuickStat {
+    label: string;
+    value: string | number;
+    color: string;
+    icon: React.ReactNode;
+}
 
-  return (
-    <button 
-      onClick={onClick}
-      className={`bg-brand-card p-4 rounded-xl shadow-md border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-lg transition-all duration-200 flex flex-col items-start text-left w-full h-full group glow-card glow-card-rounded-xl`}
-    >
-      <div className={`w-12 h-12 ${accentColor} bg-opacity-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-        <tool.icon className={`w-6 h-6 ${accentColor.replace('bg-', 'text-')}`} />
-      </div>
-      <h3 className="font-bold text-base text-brand-text mb-1 group-hover:text-accent-purple transition-colors">
-        {tool.name}
-      </h3>
-      <p className="text-xs text-brand-text-muted line-clamp-2">
-        {tool.description}
-      </p>
-    </button>
-  );
-};
-
-// Section header component
-const SectionHeader: React.FC<{ 
-  title: string; 
-  description: string;
-  accentColor?: string;
-}> = ({ title, description, accentColor = 'text-accent-purple' }) => (
-  <div className="mb-4">
-    <h2 className={`text-xl font-bold ${accentColor} mb-1`}>{title}</h2>
-    <p className="text-sm text-brand-text-muted">{description}</p>
-  </div>
+const QuickStatsCards: React.FC<{ stats: QuickStat[] }> = ({ stats }) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat, index) => (
+            <div key={index} className="bg-brand-card rounded-xl p-6 border border-brand-border shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                    <div className={`${stat.color} p-2 rounded-lg`}>
+                        {stat.icon}
+                    </div>
+                </div>
+                <p className="text-2xl font-bold text-brand-text">{stat.value}</p>
+                <p className="text-sm text-brand-text-muted">{stat.label}</p>
+            </div>
+        ))}
+    </div>
 );
 
-const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) => void; }> = ({ setActiveTool }) => (
-    <footer className="mt-16 pt-8 border-t border-brand-border text-center text-sm text-brand-text-muted">
-        <p className="font-semibold">JetSuite Growth OS</p>
-        <div className="mt-4 flex justify-center items-center space-x-4 md:space-x-6">
-            <button className="hover:text-brand-text">Help</button>
-            <span className="text-gray-300">&middot;</span>
-            <button onClick={() => setActiveTool(ALL_TOOLS['knowledgebase'])} className="hover:text-brand-text">Knowledge Base</button>
-            <span className="text-gray-300">&middot;</span>
-            <button className="hover:text-brand-text">Privacy</button>
-             <span className="text-gray-300">&middot;</span>
-            <button className="hover:text-brand-text">Terms</button>
+interface ToolCardProps {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    onClick: () => void;
+    colorClass: string;
+}
+
+const ToolCard: React.FC<ToolCardProps> = ({ icon, title, description, onClick, colorClass }) => (
+    <button
+        onClick={onClick}
+        className="bg-brand-card rounded-xl p-6 border border-brand-border shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-200 text-left group"
+    >
+        <div className={`${colorClass} w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+            {icon}
         </div>
-    </footer>
+        <h3 className="font-bold text-brand-text mb-2">{title}</h3>
+        <p className="text-sm text-brand-text-muted line-clamp-2">{description}</p>
+    </button>
+);
+
+const SectionHeader: React.FC<{ number: number; title: string; subtitle: string; color: string }> = ({ number, title, subtitle, color }) => (
+    <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+            <div className={`${color} text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm`}>
+                {number}
+            </div>
+            <h2 className="text-2xl font-bold text-brand-text">{title}</h2>
+        </div>
+        <p className="text-brand-text-muted ml-11">{subtitle}</p>
+    </div>
 );
 
 export const Welcome: React.FC<WelcomeProps> = ({ 
-  setActiveTool, 
-  profileData, 
-  readinessState, 
-  plan, 
-  growthScore, 
-  pendingTasksCount, 
-  reviewResponseRate 
+    setActiveTool, 
+    profileData, 
+    readinessState, 
+    plan, 
+    growthScore, 
+    pendingTasksCount,
+    reviewResponseRate 
 }) => {
-    const getNextAction = () => {
-        switch(readinessState) {
-            case 'Setup Incomplete':
-                return {
-                    title: 'Welcome to JetSuite!',
-                    description: 'Your first step is to complete your Business Profile. This is the foundation that powers every tool on the platform.',
-                    ctaText: 'Go to Business Details',
-                    onCtaClick: () => setActiveTool(ALL_TOOLS['businessdetails']),
-                    onWhyClick: () => setActiveTool(ALL_TOOLS['knowledgebase'], 'getting-started/setup-profile'),
-                };
-            default:
-                 return {
-                    title: 'Your Command Center',
-                    description: 'This is your starting point for growth. Your Next Best Action is always highlighted below.',
-                    ctaText: 'Go to Growth Plan',
-                    onCtaClick: () => setActiveTool(ALL_TOOLS['growthplan']),
-                    onWhyClick: () => setActiveTool(ALL_TOOLS['knowledgebase'], 'getting-started/how-jetsuite-works'),
-                };
+    const stats: QuickStat[] = [
+        {
+            label: 'Growth Score',
+            value: growthScore,
+            color: 'bg-gradient-to-br from-yellow-400 to-orange-500',
+            icon: <SparklesIcon className="w-5 h-5 text-white" />
+        },
+        {
+            label: 'GBP Rating',
+            value: profileData?.googleBusiness?.rating ? `${profileData.googleBusiness.rating} ★` : 'N/A',
+            color: 'bg-gradient-to-br from-blue-400 to-blue-600',
+            icon: <GlobeAltIcon className="w-5 h-5 text-white" />
+        },
+        {
+            label: 'Review Health',
+            value: `${reviewResponseRate}%`,
+            color: 'bg-gradient-to-br from-green-400 to-emerald-600',
+            icon: <ChatBubbleLeftRightIcon className="w-5 h-5 text-white" />
+        },
+        {
+            label: 'Pending Items',
+            value: pendingTasksCount,
+            color: 'bg-gradient-to-br from-purple-400 to-pink-500',
+            icon: <ChartBarIcon className="w-5 h-5 text-white" />
         }
-    }
-    
-    const nextAction = getNextAction();
-
-    // Tool organization by phase
-    const businessFoundationTools = ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'];
-    const marketingTools = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent'];
-    const engagementTools = ['jetreply', 'jetleads', 'jettrust', 'jetevents', 'jetads'];
+    ];
 
     return (
-      <div className="h-full w-full space-y-8 pb-12">
-          
-          {/* Quick Stats Cards */}
-          <QuickStatsCards 
-              profileData={profileData} 
-              growthScore={growthScore}
-              pendingTasksCount={pendingTasksCount}
-              reviewResponseRate={reviewResponseRate}
-          />
-
-          {/* Next Action Card */}
-          <div className="bg-brand-card rounded-xl shadow-lg p-6 w-full border border-brand-border glow-card glow-card-rounded-xl">
-              <div className="flex items-center gap-4 mb-4">
-                  <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0" />
-                  <div>
-                      <h1 className="text-xl font-bold text-brand-text">Next Best Action</h1>
-                      <p className="text-sm text-brand-text-muted">{nextAction.description}</p>
-                  </div>
-              </div>
-              <div className="flex items-center gap-4">
-                  <button 
-                      onClick={nextAction.onCtaClick}
-                      className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm flex items-center gap-2"
-                  >
-                      {nextAction.ctaText} <ArrowRightIcon className="w-5 h-5" />
-                  </button>
-                   <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-xs font-semibold underline underline-offset-2">
-                      Why this matters
-                  </button>
-              </div>
-          </div>
-        
-          {/* 1. Business Foundation - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="1. Business Foundation"
-              description="Get found and build trust by optimizing your online presence."
-              accentColor="text-accent-purple"
-            />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {businessFoundationTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-purple"
-                  />
-                ) : null;
-              })}
+        <div className="space-y-8">
+            {/* Header */}
+            <div>
+                <h1 className="text-4xl font-extrabold text-brand-text mb-2">
+                    Welcome back, {profileData?.user.firstName || 'there'}!
+                </h1>
+                <p className="text-lg text-brand-text-muted">
+                    {profileData?.business.business_name || 'Your Business'} • Command Center
+                </p>
             </div>
-          </div>
 
-          {/* 2. Marketing and Brand Strategy - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="2. Marketing and Brand Strategy"
-              description="Turn strategy into on-brand content that attracts customers."
-              accentColor="text-accent-blue"
-            />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {marketingTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-blue"
-                  />
-                ) : null;
-              })}
-            </div>
-          </div>
+            {/* Quick Stats */}
+            <QuickStatsCards stats={stats} />
 
-          {/* 3. Customer Engagement - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="3. Customer Engagement"
-              description="Turn visibility into revenue by engaging leads and customers."
-              accentColor="text-accent-pink"
-            />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {engagementTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-pink"
-                  />
-                ) : null;
-              })}
+            {/* Next Best Action */}
+            {readinessState !== 'Foundation Ready' && (
+                <div className="bg-gradient-to-r from-accent-purple/10 to-accent-blue/10 border-2 border-accent-purple/30 rounded-xl p-6 mb-8">
+                    <div className="flex items-start gap-4">
+                        <div className="text-3xl">ℹ️</div>
+                        <div>
+                            <h3 className="font-bold text-lg text-brand-text mb-2">Next Best Action</h3>
+                            <p className="text-brand-text-muted mb-4">
+                                Your first step is to complete your Business Profile. This is the foundation that powers every tool on the platform.
+                            </p>
+                            <button
+                                onClick={() => setActiveTool({ id: 'businessdetails', name: 'Business Details', category: 'foundation' })}
+                                className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                            >
+                                Go to Business Details →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Section 1: Business Foundation */}
+            <div>
+                <SectionHeader 
+                    number={1} 
+                    title="Business Foundation" 
+                    subtitle="Get found and build trust by optimizing your online presence."
+                    color="bg-purple-500"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <ToolCard
+                        icon={<ChartBarIcon className="w-6 h-6 text-white" />}
+                        title="JetBiz"
+                        description="Analyze & optimize your Google Business Profile for higher ranking."
+                        onClick={() => setActiveTool({ id: 'jetbiz', name: 'JetBiz', category: 'analyze' })}
+                        colorClass="bg-purple-500"
+                    />
+                    <ToolCard
+                        icon={<GlobeAltIcon className="w-6 h-6 text-white" />}
+                        title="JetViz"
+                        description="Get an AI-powered audit of your website for design & SEO."
+                        onClick={() => setActiveTool({ id: 'jetviz', name: 'JetViz', category: 'analyze' })}
+                        colorClass="bg-purple-500"
+                    />
+                    <ToolCard
+                        icon={<MagnifyingGlassIcon className="w-6 h-6 text-white" />}
+                        title="JetKeywords"
+                        description="Discover the best local keywords to attract more customers online."
+                        onClick={() => setActiveTool({ id: 'jetkeywords', name: 'JetKeywords', category: 'analyze' })}
+                        colorClass="bg-purple-500"
+                    />
+                    <ToolCard
+                        icon={<UserGroupIcon className="w-6 h-6 text-white" />}
+                        title="JetCompete"
+                        description="Analyze your local competitors and find opportunities to stand out."
+                        onClick={() => setActiveTool({ id: 'jetcompete', name: 'JetCompete', category: 'analyze' })}
+                        colorClass="bg-purple-500"
+                    />
+                </div>
             </div>
-          </div>
-          
-          <Footer setActiveTool={setActiveTool} />
-      </div>
+
+            {/* Section 2: Marketing & Brand */}
+            <div>
+                <SectionHeader 
+                    number={2} 
+                    title="Marketing and Brand Strategy" 
+                    subtitle="Turn strategy into on-brand content that attracts customers."
+                    color="bg-blue-500"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <ToolCard
+                        icon={<SparklesIcon className="w-6 h-6 text-white" />}
+                        title="JetCreate"
+                        description="Create stunning, on-brand marketing campaigns and assets."
+                        onClick={() => setActiveTool({ id: 'jetcreate', name: 'JetCreate', category: 'create' })}
+                        colorClass="bg-blue-500"
+                    />
+                    <ToolCard
+                        icon={<ShareIcon className="w-6 h-6 text-white" />}
+                        title="JetSocial"
+                        description="Generate engaging social media posts for your business."
+                        onClick={() => setActiveTool({ id: 'jetsocial', name: 'JetSocial', category: 'create' })}
+                        colorClass="bg-blue-500"
+                    />
+                    <ToolCard
+                        icon={<PhotoIcon className="w-6 h-6 text-white" />}
+                        title="JetImage"
+                        description="Generate high-quality images for your marketing materials."
+                        onClick={() => setActiveTool({ id: 'jetimage', name: 'JetImage', category: 'create' })}
+                        colorClass="bg-blue-500"
+                    />
+                    <ToolCard
+                        icon={<DocumentTextIcon className="w-6 h-6 text-white" />}
+                        title="JetContent"
+                        description="Create SEO-friendly blog posts and articles for your website."
+                        onClick={() => setActiveTool({ id: 'jetcontent', name: 'JetContent', category: 'create' })}
+                        colorClass="bg-blue-500"
+                    />
+                </div>
+            </div>
+
+            {/* Section 3: Customer Engagement */}
+            <div>
+                <SectionHeader 
+                    number={3} 
+                    title="Customer Engagement" 
+                    subtitle="Build relationships and grow your customer base."
+                    color="bg-pink-500"
+                />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <ToolCard
+                        icon={<ChatBubbleLeftRightIcon className="w-6 h-6 text-white" />}
+                        title="JetReply"
+                        description="Auto-generate professional responses to customer reviews."
+                        onClick={() => setActiveTool({ id: 'jetreply', name: 'JetReply', category: 'engage' })}
+                        colorClass="bg-pink-500"
+                    />
+                    <ToolCard
+                        icon={<UserPlusIcon className="w-6 h-6 text-white" />}
+                        title="JetLeads"
+                        description="Capture and nurture leads with automated follow-ups."
+                        onClick={() => setActiveTool({ id: 'jetleads', name: 'JetLeads', category: 'engage' })}
+                        colorClass="bg-pink-500"
+                    />
+                    <ToolCard
+                        icon={<ShieldCheckIcon className="w-6 h-6 text-white" />}
+                        title="JetTrust"
+                        description="Manage your online reputation and collect more reviews."
+                        onClick={() => setActiveTool({ id: 'jettrust', name: 'JetTrust', category: 'engage' })}
+                        colorClass="bg-pink-500"
+                    />
+                    <ToolCard
+                        icon={<CalendarIcon className="w-6 h-6 text-white" />}
+                        title="JetEvents"
+                        description="Create and promote local events to attract customers."
+                        onClick={() => setActiveTool({ id: 'jetevents', name: 'JetEvents', category: 'engage' })}
+                        colorClass="bg-pink-500"
+                    />
+                    <ToolCard
+                        icon={<MegaphoneIcon className="w-6 h-6 text-white" />}
+                        title="JetAds"
+                        description="Launch targeted ad campaigns to reach your ideal customers."
+                        onClick={() => setActiveTool({ id: 'jetads', name: 'JetAds', category: 'engage' })}
+                        colorClass="bg-pink-500"
+                    />
+                </div>
+            </div>
+        </div>
     );
 };
