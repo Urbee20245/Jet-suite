@@ -11,6 +11,7 @@ interface AskBorisPageProps {
   newReviewsCount: number;
   onNavigate: (toolId: string) => void;
   onReplyToReviews: () => void;
+  onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
 }
 
 interface ChatMessage {

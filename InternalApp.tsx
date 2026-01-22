@@ -396,6 +396,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
             if (tool) handleSetActiveTool(tool);
           }}
           onReplyToReviews={handleReplyToReviews}
+          onTaskStatusChange={handleTaskStatusChange as any}
         />;
       default:
         return (
