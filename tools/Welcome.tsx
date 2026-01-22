@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState } from '../types';
 import { ArrowRightIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
@@ -13,95 +13,50 @@ interface WelcomeProps {
     plan: { name: string, profileLimit: number };
     growthScore: number;
     pendingTasksCount: number;
-    reviewResponseRate: number; // Added prop
+    reviewResponseRate: number;
 }
 
-const RecommendedAction: React.FC<{
-  tool: Tool;
-  onSelect: () => void;
-  onWhy: () => void;
-}> = ({ tool, onSelect, onWhy }) => (
-    <div className="bg-white p-6 rounded-xl border border-accent-purple/50 shadow-lg glow-card glow-card-rounded-xl">
-        <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-brand-light rounded-lg flex items-center justify-center flex-shrink-0">
-                <tool.icon className="w-7 h-7 text-accent-purple" />
-            </div>
-            <div>
-                <h3 className="font-bold text-lg text-brand-text">{tool.name}</h3>
-                <p className="text-sm text-brand-text-muted">{tool.description}</p>
-            </div>
-        </div>
-        <div className="mt-4 flex items-center gap-4">
-            <button onClick={onSelect} className="bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-2 px-5 rounded-lg transition-colors text-sm">
-                Start Now
-            </button>
-            <button onClick={onWhy} className="text-sm font-semibold text-accent-purple hover:underline">
-                Why this matters
-            </button>
-        </div>
-    </div>
-);
-
-const ToolShortcut: React.FC<{ tool: Tool, onClick: () => void }> = ({ tool, onClick }) => (
-    <button onClick={onClick} className="bg-brand-light p-3 rounded-lg hover:bg-brand-border transition-colors flex items-center gap-3 w-full text-left">
-        <div className="w-8 h-8 bg-white rounded-md flex items-center justify-center flex-shrink-0">
-            <tool.icon className="w-5 h-5 text-accent-purple" />
-        </div>
-        <div>
-            <h4 className="font-semibold text-brand-text text-sm">{tool.name}</h4>
-        </div>
-    </button>
-);
-
-
-const GrowthPhaseSection: React.FC<{
-  title: string;
-  description: string;
-  recommendedToolId: string;
-  otherToolIds: string[];
-  kbArticleId: string;
-  setActiveTool: (tool: Tool | null, articleId?: string) => void;
-}> = ({ title, description, recommendedToolId, otherToolIds, kbArticleId, setActiveTool }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const recommendedTool = ALL_TOOLS[recommendedToolId];
-  const otherTools = otherToolIds.map(id => {
-    const tool = ALL_TOOLS[id];
-    if (!tool) {
-      console.warn(`[Welcome] Tool not found: ${id}`);
-    }
-    return tool;
-  }).filter(Boolean);
+// New compact tool card component
+const ToolCard: React.FC<{ 
+  tool: Tool; 
+  onClick: () => void;
+  accentColor?: string;
+}> = ({ tool, onClick, accentColor = 'bg-accent-purple' }) => {
+  const colorClasses = {
+    'bg-accent-purple': 'border-accent-purple/30 hover:border-accent-purple/60',
+    'bg-accent-blue': 'border-accent-blue/30 hover:border-accent-blue/60',
+    'bg-accent-pink': 'border-accent-pink/30 hover:border-accent-pink/60',
+  };
 
   return (
-    <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg glow-card glow-card-rounded-xl">
-      <h2 className="text-2xl font-bold text-brand-text">{title}</h2>
-      <p className="text-brand-text-muted mt-1 mb-6">{description}</p>
-      
-      <RecommendedAction 
-        tool={recommendedTool}
-        onSelect={() => setActiveTool(recommendedTool)}
-        onWhy={() => setActiveTool(ALL_TOOLS['knowledgebase'], kbArticleId)}
-      />
-
-      {otherTools.length > 0 && (
-        <div className="mt-6">
-          <button onClick={() => setIsExpanded(!isExpanded)} className="text-sm font-bold text-accent-purple hover:underline">
-            {isExpanded ? 'Hide other tools' : `View all ${otherTools.length + 1} tools in this phase →`}
-          </button>
-        </div>
-      )}
-
-      {isExpanded && (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-brand-border">
-          {otherTools.map(tool => (
-            <ToolShortcut key={tool.id} tool={tool} onClick={() => setActiveTool(tool)} />
-          ))}
-        </div>
-      )}
-    </div>
+    <button 
+      onClick={onClick}
+      className={`bg-brand-card p-4 rounded-xl shadow-md border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-lg transition-all duration-200 flex flex-col items-start text-left w-full h-full group glow-card glow-card-rounded-xl`}
+    >
+      <div className={`w-12 h-12 ${accentColor} bg-opacity-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+        <tool.icon className={`w-6 h-6 ${accentColor.replace('bg-', 'text-')}`} />
+      </div>
+      <h3 className="font-bold text-base text-brand-text mb-1 group-hover:text-accent-purple transition-colors">
+        {tool.name}
+      </h3>
+      <p className="text-xs text-brand-text-muted line-clamp-2">
+        {tool.description}
+      </p>
+    </button>
   );
 };
+
+// Section header component
+const SectionHeader: React.FC<{ 
+  title: string; 
+  description: string;
+  accentColor?: string;
+}> = ({ title, description, accentColor = 'text-accent-purple' }) => (
+  <div className="mb-4">
+    <h2 className={`text-xl font-bold ${accentColor} mb-1`}>{title}</h2>
+    <p className="text-sm text-brand-text-muted">{description}</p>
+  </div>
+);
 
 const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) => void; }> = ({ setActiveTool }) => (
     <footer className="mt-16 pt-8 border-t border-brand-border text-center text-sm text-brand-text-muted">
@@ -118,7 +73,15 @@ const Footer: React.FC<{ setActiveTool: (tool: Tool | null, articleId?: string) 
     </footer>
 );
 
-export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, readinessState, plan, growthScore, pendingTasksCount, reviewResponseRate }) => {
+export const Welcome: React.FC<WelcomeProps> = ({ 
+  setActiveTool, 
+  profileData, 
+  readinessState, 
+  plan, 
+  growthScore, 
+  pendingTasksCount, 
+  reviewResponseRate 
+}) => {
     const getNextAction = () => {
         switch(readinessState) {
             case 'Setup Incomplete':
@@ -142,67 +105,111 @@ export const Welcome: React.FC<WelcomeProps> = ({ setActiveTool, profileData, re
     
     const nextAction = getNextAction();
 
-  return (
-    <div className="h-full w-full space-y-8 pb-12">
-        
-        {/* Quick Stats Cards */}
-        <QuickStatsCards 
-            profileData={profileData} 
-            growthScore={growthScore}
-            pendingTasksCount={pendingTasksCount}
-            reviewResponseRate={reviewResponseRate} // Passed rate
-        />
+    // Tool organization by phase
+    const businessFoundationTools = ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'];
+    const marketingTools = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent'];
+    const engagementTools = ['jetreply', 'jetleads', 'jettrust', 'jetevents', 'jetads'];
 
-        {/* Next Action Card */}
-        <div className="bg-brand-card rounded-xl shadow-lg p-6 w-full border border-brand-border">
-            <div className="flex items-center gap-4 mb-4">
-                <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0" />
-                <div>
-                    <h1 className="text-xl font-bold text-brand-text">Next Best Action</h1>
-                    <p className="text-sm text-brand-text-muted">{nextAction.description}</p>
-                </div>
-            </div>
-            <div className="flex items-center gap-4">
-                <button 
-                    onClick={nextAction.onCtaClick}
-                    className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm flex items-center gap-2"
-                >
-                    {nextAction.ctaText} <ArrowRightIcon className="w-5 h-5" />
-                </button>
-                 <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-xs font-semibold underline underline-offset-2">
-                    Why this matters
-                </button>
-            </div>
-        </div>
-      
-        <div className="space-y-8">
-            <GrowthPhaseSection 
-                title="1. Business Foundation"
-                description="Get found and build trust by optimizing your online presence."
-                recommendedToolId="jetbiz"
-                otherToolIds={['jetviz', 'jetkeywords', 'jetcompete']}
-                kbArticleId="foundation/jetbiz"
-                setActiveTool={setActiveTool}
-            />
-            <GrowthPhaseSection 
-                title="2. Marketing and Brand Strategy"
-                description="Turn strategy into on-brand content that attracts customers."
-                recommendedToolId="jetcreate"
-                otherToolIds={['jetsocial', 'jetimage', 'jetcontent']}
-                kbArticleId="create-publish/jetcreate"
-                setActiveTool={setActiveTool}
-            />
-             <GrowthPhaseSection 
-                title="3. Customer Engagement"
-                description="Turn visibility into revenue by engaging leads and customers."
-                recommendedToolId="jetreply"
-                otherToolIds={['jetleads', 'jettrust', 'jetevents', 'jetads']}
-                kbArticleId="engage-convert/jetreply"
-                setActiveTool={setActiveTool}
-            />
-        </div>
+    return (
+      <div className="h-full w-full space-y-8 pb-12">
+          
+          {/* Quick Stats Cards */}
+          <QuickStatsCards 
+              profileData={profileData} 
+              growthScore={growthScore}
+              pendingTasksCount={pendingTasksCount}
+              reviewResponseRate={reviewResponseRate}
+          />
+
+          {/* Next Action Card */}
+          <div className="bg-brand-card rounded-xl shadow-lg p-6 w-full border border-brand-border glow-card glow-card-rounded-xl">
+              <div className="flex items-center gap-4 mb-4">
+                  <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0" />
+                  <div>
+                      <h1 className="text-xl font-bold text-brand-text">Next Best Action</h1>
+                      <p className="text-sm text-brand-text-muted">{nextAction.description}</p>
+                  </div>
+              </div>
+              <div className="flex items-center gap-4">
+                  <button 
+                      onClick={nextAction.onCtaClick}
+                      className="bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl text-sm flex items-center gap-2"
+                  >
+                      {nextAction.ctaText} <ArrowRightIcon className="w-5 h-5" />
+                  </button>
+                   <button onClick={nextAction.onWhyClick} className="text-brand-text-muted hover:text-brand-text text-xs font-semibold underline underline-offset-2">
+                      Why this matters
+                  </button>
+              </div>
+          </div>
         
-        <Footer setActiveTool={setActiveTool} />
-    </div>
-  );
+          {/* 1. Business Foundation - Card Grid */}
+          <div className="space-y-6">
+            <SectionHeader 
+              title="1. Business Foundation"
+              description="Get found and build trust by optimizing your online presence."
+              accentColor="text-accent-purple"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {businessFoundationTools.map(toolId => {
+                const tool = ALL_TOOLS[toolId];
+                return tool ? (
+                  <ToolCard 
+                    key={tool.id}
+                    tool={tool}
+                    onClick={() => setActiveTool(tool)}
+                    accentColor="bg-accent-purple"
+                  />
+                ) : null;
+              })}
+            </div>
+          </div>
+
+          {/* 2. Marketing and Brand Strategy - Card Grid */}
+          <div className="space-y-6">
+            <SectionHeader 
+              title="2. Marketing and Brand Strategy"
+              description="Turn strategy into on-brand content that attracts customers."
+              accentColor="text-accent-blue"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {marketingTools.map(toolId => {
+                const tool = ALL_TOOLS[toolId];
+                return tool ? (
+                  <ToolCard 
+                    key={tool.id}
+                    tool={tool}
+                    onClick={() => setActiveTool(tool)}
+                    accentColor="bg-accent-blue"
+                  />
+                ) : null;
+              })}
+            </div>
+          </div>
+
+          {/* 3. Customer Engagement - Card Grid */}
+          <div className="space-y-6">
+            <SectionHeader 
+              title="3. Customer Engagement"
+              description="Turn visibility into revenue by engaging leads and customers."
+              accentColor="text-accent-pink"
+            />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {engagementTools.map(toolId => {
+                const tool = ALL_TOOLS[toolId];
+                return tool ? (
+                  <ToolCard 
+                    key={tool.id}
+                    tool={tool}
+                    onClick={() => setActiveTool(tool)}
+                    accentColor="bg-accent-pink"
+                  />
+                ) : null;
+              })}
+            </div>
+          </div>
+          
+          <Footer setActiveTool={setActiveTool} />
+      </div>
+    );
 };
