@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SparklesIcon as SparklesIconSolid, ChatBubbleLeftRightIcon, ArrowRightIcon } from './icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon } from './icons/MiniIcons';
 
 interface BorisProps {
   userFirstName: string;
@@ -40,8 +40,18 @@ export const Boris: React.FC<BorisProps> = ({
     const hasBusinessDetails = profileData?.business?.business_name && 
                                 profileData?.business?.business_website && 
                                 profileData?.business?.industry;
-    const hasJetBizAudit = profileData?.jetbizAnalysis;
-    const hasJetVizAudit = profileData?.jetvizAnalysis;
+    
+    // Check multiple possible audit storage locations
+    const hasJetBizAudit = 
+      profileData?.business?.audits?.jetbiz?.completed || 
+      profileData?.business?.audits?.jetBiz?.completed ||
+      (profileData?.jetbizAnalysis && Object.keys(profileData.jetbizAnalysis).length > 0);
+
+    const hasJetVizAudit = 
+      profileData?.business?.audits?.jetviz?.completed || 
+      profileData?.business?.audits?.jetViz?.completed ||
+      (profileData?.jetvizAnalysis && Object.keys(profileData.jetvizAnalysis).length > 0);
+
     const completedTasks = growthPlanTasks.filter(t => t.status === 'completed');
     const incompleteTasks = growthPlanTasks.filter(t => t.status !== 'completed');
     const allGrowthTasksComplete = growthPlanTasks.length > 0 && incompleteTasks.length === 0;
@@ -141,8 +151,8 @@ export const Boris: React.FC<BorisProps> = ({
   if (!borisState) return null;
 
   return (
-    <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-6 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+    <div className="bg-[#2D1B4E] border-2 border-purple-600 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl"></div>
       
       {/* Boris Header */}
       <div className="flex items-start gap-4 mb-4">
