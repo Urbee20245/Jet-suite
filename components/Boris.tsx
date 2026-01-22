@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon } from './icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon } from './icons/MiniIcons';
 
 interface BorisProps {
   userFirstName: string;
@@ -17,7 +17,22 @@ interface BorisState {
   actionButton: { text: string; onClick: () => void; } | null;
   completedItems: string[];
   todaysTasks: any[];
+  showUpsell: boolean;
 }
+
+const UPSELL_KEYWORDS = {
+  WEBSITE: ['website', 'speed', 'layout', 'responsive', 'redesign', 'landing page'],
+  SEO: ['ranking', 'keywords', 'meta', 'schema', 'seo'],
+  CITATIONS: ['citation', 'directory', 'listing', 'nap'],
+  AUTOMATION: ['automation', 'workflow', 'integration', 'api', 'automated'],
+};
+
+const shouldShowUpsell = (task: any): boolean => {
+  if (!task || !task.title) return false;
+  const taskText = `${task.title.toLowerCase()} ${task.description?.toLowerCase() || ''}`;
+  const allKeywords = Object.values(UPSELL_KEYWORDS).flat();
+  return allKeywords.some(keyword => taskText.includes(keyword));
+};
 
 export const Boris: React.FC<BorisProps> = ({
   userFirstName,
@@ -41,7 +56,6 @@ export const Boris: React.FC<BorisProps> = ({
                                 profileData?.business?.business_website && 
                                 profileData?.business?.industry;
     
-    // Check multiple possible audit storage locations
     const hasJetBizAudit = 
       profileData?.business?.audits?.jetbiz?.completed || 
       profileData?.business?.audits?.jetBiz?.completed ||
@@ -61,8 +75,8 @@ export const Boris: React.FC<BorisProps> = ({
     let actionButton: BorisState['actionButton'] = null;
     let completedItems: string[] = [];
     let todaysTasks: any[] = [];
+    let showUpsell = false;
 
-    // PRIORITY OVERRIDE: New Reviews
     if (hasNewReviews && newReviewsCount > 0) {
       const reviewText = newReviewsCount === 1 ? 'new review' : `${newReviewsCount} new reviews`;
       message = `${userFirstName}, you have ${reviewText} waiting! ⭐\n\nReviews are GOLD - responding quickly shows customers you care and boosts your reputation.\n\nWould you like me to draft responses for you? I'll handle the heavy lifting.`;
@@ -72,27 +86,23 @@ export const Boris: React.FC<BorisProps> = ({
       };
       stage = hasBusinessDetails ? (hasJetBizAudit ? (hasJetVizAudit ? 'growth_plan' : 'jetviz') : 'jetbiz') : 'business_details';
     }
-    // STAGE 1: Business Details
     else if (!hasBusinessDetails) {
       stage = 'business_details';
       message = `Hello, ${userFirstName}! 👋\n\nLet's get started on the right foot. Before we can analyze your business and create your growth strategy, I need you to complete your Business Details.\n\nThis is your foundation - everything else builds on this. Click below to set up your business profile now.`;
       actionButton = { text: 'Complete Business Details', onClick: () => onNavigate('businessdetails') };
     }
-    // STAGE 2: JetBiz Audit
     else if (!hasJetBizAudit) {
       stage = 'jetbiz';
       completedItems = ['✓ Business Details'];
       message = `Great work, ${userFirstName}! Your business details are set up.\n\nNow it's time for your Google Business Profile audit with JetBiz. This is crucial - your GBP is often the FIRST thing customers see when they search for you.\n\nToday's mission: Run your JetBiz audit so we can identify exactly what's holding you back from ranking higher.`;
       actionButton = { text: 'Run JetBiz Audit', onClick: () => onNavigate('jetbiz') };
     }
-    // STAGE 3: JetViz Audit
     else if (!hasJetVizAudit) {
       stage = 'jetviz';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit'];
       message = `Excellent progress, ${userFirstName}! You've completed your GBP audit.\n\nNext up: Your website analysis with JetViz. Your website is your digital storefront - it needs to convert visitors into customers.\n\nToday's mission: Run your JetViz audit to uncover conversion issues, SEO problems, and trust gaps.`;
       actionButton = { text: 'Run JetViz Audit', onClick: () => onNavigate('jetviz') };
     }
-    // STAGE 4: Growth Plan Tasks
     else if (!allGrowthTasksComplete && incompleteTasks.length > 0) {
       stage = 'growth_plan';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit', '✓ JetViz Audit'];
@@ -101,32 +111,27 @@ export const Boris: React.FC<BorisProps> = ({
       const completedCount = completedTasks.length;
       const totalTasks = taskCount + completedCount;
       
-      // AUTHENTIC MESSAGING based on actual progress
       let openingLine = '';
       let progressContext = '';
       
       if (completedCount === 0) {
-        // No tasks completed yet - acknowledge foundation work
         openingLine = `Excellent work, ${userFirstName}!`;
         progressContext = `You've completed your Business Details, JetBiz audit, AND JetViz audit. That's your foundation - most businesses never get this far.\n\nNow it's time to execute. You have ${taskCount} tasks in your Growth Plan.`;
       } else if (completedCount < totalTasks / 2) {
-        // Less than half done
         openingLine = `Good progress, ${userFirstName}!`;
         progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're building momentum. Keep going - you have ${taskCount} tasks remaining.`;
       } else if (completedCount < totalTasks) {
-        // More than half done
         openingLine = `You're crushing it, ${userFirstName}!`;
         progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're over halfway there! Stay focused - ${taskCount} tasks to go.`;
       } else {
-        // This case is handled by `allGrowthTasksComplete`, but as a fallback
         openingLine = `Outstanding, ${userFirstName}!`;
         progressContext = `You've completed all your tasks! Time to generate more with another audit.`;
       }
       
       message = `${openingLine} ${progressContext}\n\nHere's what you need to focus on TODAY:\n\n${todaysTasks.map((t, i) => `${i + 1}. ${t.title}`).join('\n')}`;
-      actionButton = { text: 'View Growth Plan', onClick: () => onNavigate('growth-plan') };
+      actionButton = { text: 'View Growth Plan', onClick: () => onNavigate('growthplan') };
+      showUpsell = todaysTasks.some(shouldShowUpsell);
     }
-    // STAGE 5: Daily Tools Usage
     else {
       stage = 'daily_tools';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit', '✓ JetViz Audit', '✓ All Growth Plan Tasks'];
@@ -134,7 +139,7 @@ export const Boris: React.FC<BorisProps> = ({
       actionButton = null;
     }
 
-    setBorisState({ stage, message, actionButton, completedItems, todaysTasks });
+    setBorisState({ stage, message, actionButton, completedItems, todaysTasks, showUpsell });
   };
 
   const handleWhyQuestion = () => {
@@ -221,17 +226,34 @@ export const Boris: React.FC<BorisProps> = ({
         </button>
       )}
 
-      {/* Ask Why Button */}
-      <button
-        onClick={() => {
-          setWhyResponseCount(prev => prev + 1);
-          setShowWhyDialog(true);
-        }}
-        className="mt-3 text-sm text-gray-400 hover:text-purple-400 transition-colors flex items-center gap-1 mx-auto"
-      >
-        <ChatBubbleLeftRightIcon className="w-4 h-4" />
-        Why this matters
-      </button>
+      {/* Ask Why Button & Upsell Link */}
+      <div className="mt-3 text-sm flex items-center justify-center gap-4">
+        <button
+          onClick={() => {
+            setWhyResponseCount(prev => prev + 1);
+            setShowWhyDialog(true);
+          }}
+          className="text-gray-400 hover:text-purple-400 transition-colors flex items-center gap-1"
+        >
+          <ChatBubbleLeftRightIcon className="w-4 h-4" />
+          Why this matters
+        </button>
+
+        {borisState.showUpsell && (
+          <>
+            <span className="text-gray-600">•</span>
+            <a
+              href="https://customwebsitesplus.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold"
+            >
+              <BoltIcon className="w-4 h-4" />
+              Need help? We can handle this ↗
+            </a>
+          </>
+        )}
+      </div>
 
       {/* Why Dialog */}
       {showWhyDialog && (
@@ -239,6 +261,17 @@ export const Boris: React.FC<BorisProps> = ({
           <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-purple-500/30">
             <h4 className="text-lg font-bold text-white mb-3">Why This Matters</h4>
             <p className="text-gray-300 mb-4 leading-relaxed">{handleWhyQuestion()}</p>
+            
+            {borisState.showUpsell && (
+              <div className="my-4 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+                <h5 className="font-bold text-blue-300 flex items-center gap-2">💡 Don't have time?</h5>
+                <p className="text-sm text-blue-200 mt-2">Custom Websites Plus can handle this for you.</p>
+                <a href="https://customwebsitesplus.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-white hover:underline mt-3 inline-block">
+                  Check out our services →
+                </a>
+              </div>
+            )}
+
             {whyResponseCount < 3 && (
               <p className="text-xs text-gray-500 mb-4">
                 {3 - whyResponseCount} more clarification{3 - whyResponseCount === 1 ? '' : 's'} available
