@@ -3,9 +3,9 @@
 import React from 'react';
 import { ALL_TOOLS } from '@/constants';
 import type { Tool, ProfileData, ReadinessState, GrowthPlanTask } from '@/types';
-import { ArrowRightIcon, InformationCircleIcon } from '@/src/components/icons/MiniIcons';
-import { QuickStatsCards } from '@/src/components/QuickStatsCards';
-import { Boris } from '@/src/components/Boris';
+import { ArrowRightIcon, InformationCircleIcon } from '@/components/icons/MiniIcons';
+import { QuickStatsCards } from '@/components/QuickStatsCards';
+import { Boris } from '@/components/Boris';
 
 interface WelcomeProps {
     setActiveTool: (tool: Tool | null, articleId?: string) => void;
