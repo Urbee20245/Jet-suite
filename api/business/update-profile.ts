@@ -54,6 +54,7 @@ export default async function handler(
 
     let result;
     if (businessId) {
+      // Update existing business profile by ID
       result = await supabase
         .from('business_profiles')
         .update(updatePayload)
@@ -61,21 +62,47 @@ export default async function handler(
         .select()
         .single();
     } else {
-      result = await supabase
+      // NEW LOGIC: Try to find existing profile first
+      const { data: existingProfile } = await supabase
         .from('business_profiles')
-        .update(updatePayload)
+        .select('id')
         .eq('user_id', userId)
         .eq('is_primary', true)
-        .select()
         .single();
+
+      if (existingProfile) {
+        // Profile exists - UPDATE it
+        result = await supabase
+          .from('business_profiles')
+          .update(updatePayload)
+          .eq('user_id', userId)
+          .eq('is_primary', true)
+          .select()
+          .single();
+      } else {
+        // Profile doesn't exist - INSERT new one
+        const insertPayload = {
+          user_id: userId,
+          ...updatePayload,
+          created_at: new Date().toISOString(),
+        };
+
+        result = await supabase
+          .from('business_profiles')
+          .insert(insertPayload)
+          .select()
+          .single();
+      }
     }
 
     if (result.error) {
+      console.error('[update-profile API] Database error:', result.error);
       throw result.error;
     }
 
     return res.status(200).json({ businessProfile: result.data });
   } catch (error: any) {
+    console.error('[update-profile API] Handler error:', error);
     return res.status(500).json({ error: error.message });
   }
 }
