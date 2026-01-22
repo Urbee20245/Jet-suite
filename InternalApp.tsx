@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { Toaster, toast } from 'react-hot-toast';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Welcome } from './tools/Welcome';
@@ -11,7 +12,7 @@ import { JetCompete } from './tools/JetCompete';
 import { JetCreate } from './tools/JetCreate';
 import { JetSocial } from './tools/JetSocial';
 import { JetImage } from './tools/JetImage';
-import { JetContent } from './tools/JetContent'; // ADDED MISSING IMPORT
+import { JetContent } from './tools/JetContent';
 import { JetReply } from './tools/JetReply';
 import { JetTrust } from './tools/JetTrust';
 import { JetLeads } from './tools/JetLeads';
@@ -25,9 +26,11 @@ import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
+import { AskBorisPage } from './tools/AskBoris';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
+import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from './services/borisService';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -49,6 +52,11 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
 
+  // Boris-related state
+  const [hasNewReviews, setHasNewReviews] = useState(false);
+  const [newReviewCount, setNewReviewCount] = useState(0);
+  const [pendingReviews, setPendingReviews] = useState<any[]>([]);
+
   const supabase = getSupabaseClient();
   const isAdmin = userEmail === ADMIN_EMAIL;
 
@@ -64,6 +72,43 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       }
     } catch (error) {
       console.error('Failed to fetch master profile list:', error);
+    }
+  };
+
+  const checkReviews = async () => {
+    if (!currentProfileData?.business?.id) return;
+    const result = await checkForNewReviews(userId, currentProfileData.business.id);
+    setHasNewReviews(result.hasNewReviews);
+    setNewReviewCount(result.count);
+    setPendingReviews(result.reviews);
+  };
+
+  useEffect(() => {
+    if (currentProfileData) {
+      checkReviews();
+      const interval = setInterval(checkReviews, 300000); // Every 5 min
+      return () => clearInterval(interval);
+    }
+  }, [currentProfileData]);
+
+  const handleReplyToReviews = async () => {
+    if (pendingReviews.length === 0 || !currentProfileData) return;
+    const loadingToast = toast.loading('Boris is crafting replies...');
+    try {
+      const replyResult = await generateBorisReplies(pendingReviews, currentProfileData.business.business_name);
+      if (!replyResult.success) throw new Error(replyResult.error);
+      const postResult = await postBorisReplies(replyResult.replies, currentProfileData.business.id);
+      toast.dismiss(loadingToast);
+      if (postResult.success) {
+        toast.success(getBorisReplyConfirmation(postResult.posted, currentProfileData.business.business_name));
+        await checkReviews();
+      } else {
+        toast.error(`Posted ${postResult.posted} replies, ${postResult.failed} failed`);
+      }
+    } catch (error: any) {
+      toast.dismiss(loadingToast);
+      toast.error(error.message || 'Failed to reply to reviews');
+      console.error('[Boris] Review reply error:', error);
     }
   };
 
@@ -304,6 +349,16 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         />;
       case 'support':
         return <UserSupportTickets />;
+      case 'ask-boris':
+        return <AskBorisPage
+          userFirstName={currentProfileData.user.firstName || 'there'}
+          profileData={currentProfileData}
+          growthPlanTasks={tasks}
+          hasNewReviews={hasNewReviews}
+          newReviewsCount={newReviewCount}
+          onNavigate={(toolId) => handleSetActiveTool(ALL_TOOLS[toolId])}
+          onReplyToReviews={handleReplyToReviews}
+        />;
       default:
         return <Welcome 
           setActiveTool={handleSetActiveTool} 
@@ -312,7 +367,11 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           plan={{ name: 'Pro', profileLimit: 1 }} 
           growthScore={calculateGrowthScore()} 
           pendingTasksCount={pendingTasksCount}
-          reviewResponseRate={reviewResponseRate} 
+          reviewResponseRate={reviewResponseRate}
+          tasks={tasks}
+          hasNewReviews={hasNewReviews}
+          newReviewsCount={newReviewCount}
+          onReplyToReviews={handleReplyToReviews}
         />;
     }
   };
@@ -327,6 +386,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   return (
     <div className="flex h-screen bg-brand-light overflow-hidden">
+      <Toaster position="top-center" />
       <Sidebar
         activeTool={activeTool}
         setActiveTool={handleSetActiveTool}

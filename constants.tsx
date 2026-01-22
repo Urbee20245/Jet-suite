@@ -25,13 +25,15 @@ import {
   AccountIcon,
   AdminPanelIcon,
   PlannerIcon,
-  JetProductIcon, // Import the new icon
+  JetProductIcon,
 } from './components/icons/ToolIcons';
 import { TicketIcon } from './components/SupportIcons';
+import { SparklesIcon as SparklesIconSolid } from './components/icons/MiniIcons';
 
 export const ALL_TOOLS: { [key: string]: Tool } = {
   // Special Home Tool
   home: { id: 'home', name: 'Home', description: 'Your command center for weekly growth.', icon: HomeIcon },
+  'ask-boris': { id: 'ask-boris', name: 'Ask Boris', description: 'Chat with your AI growth coach.', icon: SparklesIconSolid },
   
   // Profile Tools
   businessdetails: { id: 'businessdetails', name: 'Business Details', description: 'Manage your core business information.', icon: BusinessIcon },
@@ -56,8 +58,8 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
   jetreply: { id: 'jetreply', name: 'JetReply', description: 'Craft professional AI-assisted responses to customer reviews.', icon: JetReplyIcon },
   jettrust: { id: 'jettrust', name: 'JetTrust', description: 'Create embeddable review widgets for your website and social media.', icon: JetTrustIcon },
   jetleads: { id: 'jetleads', name: 'JetLeads', description: 'Find potential customers who are actively looking for your services.', icon: JetLeadsIcon },
-  jetads: { id: 'jetads', name: 'JetAds', description: 'Generate compelling ad copy for Google and Facebook campaigns.', icon: JetAdsIcon },
   jetevents: { id: 'jetevents', name: 'JetEvents', description: 'Brainstorm creative local events and promotions to drive traffic.', icon: JetEventsIcon },
+  jetads: { id: 'jetads', name: 'JetAds', description: 'Generate compelling ad copy for Google and Facebook campaigns.', icon: JetAdsIcon },
   
   // Growth Tools
   growthplan: { id: 'growthplan', name: 'Growth Plan', description: 'Manage your weekly action plan and track your progress.', icon: GrowthPlanIcon },
@@ -75,7 +77,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
 export const TOOLS: Tool[] = Object.values(ALL_TOOLS);
 
 // --- SIDEBAR NAVIGATION STRUCTURE ---
-export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', 'growthplan', 'growthscore'];
+export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'ask-boris', 'businessdetails', 'planner', 'growthplan', 'growthscore'];
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
