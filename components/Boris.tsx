@@ -45,7 +45,6 @@ export const Boris: React.FC<BorisProps> = ({
 }) => {
   const [borisState, setBorisState] = useState<BorisState | null>(null);
   const [showWhyDialog, setShowWhyDialog] = useState(false);
-  const [whyResponseCount, setWhyResponseCount] = useState(0);
 
   useEffect(() => {
     determineBorisState();
@@ -143,38 +142,14 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   const handleWhyQuestion = () => {
-    if (whyResponseCount >= 3) {
-      return "I've explained the reasoning. Now it's time for action, not more questions. Let's get moving!";
-    }
-    setWhyResponseCount(prev => prev + 1);
-    const whyResponses: Record<BorisState['stage'], string[]> = {
-      business_details: [
-        "Your business details are the foundation. Without them, I can't analyze your Google Business Profile or website accurately.",
-        "Think of it like building a house - you need a solid foundation before you can build the walls. Same here.",
-        "Every successful business starts with clarity. Complete this, and everything else flows naturally."
-      ],
-      jetbiz: [
-        "Your Google Business Profile is how customers find you locally. 63% of customers use Google to find local businesses.",
-        "Right now, you might be invisible to customers searching for exactly what you offer. Let's fix that.",
-        "Your competitors are optimizing their GBP. You need to as well, or you'll keep losing customers to them."
-      ],
-      jetviz: [
-        "Your website converts visitors to customers. If it's broken or unclear, you're bleeding money every single day.",
-        "Most businesses lose 70%+ of website visitors due to poor design or slow loading. We need to fix yours.",
-        "A website audit finds the hidden profit leaks. Every fix is money back in your pocket."
-      ],
-      growth_plan: [
-        "These tasks are prioritized based on maximum impact for minimum effort. They're your fastest path to growth.",
-        "Every task you complete moves the needle on your business. Skipping them means leaving money on the table.",
-        "The Growth Plan is built from your audit data - these aren't random suggestions, they're YOUR specific fixes."
-      ],
-      daily_tools: [
-        "Consistency beats intensity. Daily content keeps you top-of-mind with customers.",
-        "Your competitors are posting daily. If you're not, they're winning the attention game.",
-        "Social media algorithms reward consistent creators. Miss a day, lose visibility."
-      ]
+    const whyResponses: Record<BorisState['stage'], string> = {
+      business_details: "Completing your Business Details is the most critical first step. This information is the 'brain' for all of JetSuite's AI tools. Accurate details ensure every analysis, piece of content, and recommendation is perfectly tailored to your specific business, location, and industry, which is essential for effective local SEO.",
+      jetbiz: "Your Google Business Profile (GBP) is your digital storefront on Google Search and Maps. A well-optimized GBP is the #1 factor for ranking in local search results. The JetBiz audit finds gaps between your profile and your top competitors, giving you a clear path to outrank them and attract more local customers.",
+      jetviz: "Your website is where you convert visitors into customers. The JetViz audit analyzes your site for speed, mobile-friendliness, and trust signals that directly impact your Google ranking and a visitor's decision to contact you. A slow or confusing website will waste the traffic you get from other marketing efforts.",
+      growth_plan: "The Growth Plan is your strategic roadmap. It takes all the findings from our audits and prioritizes them into a simple, weekly checklist. Focusing on these high-impact tasks ensures you're always working on what matters most, saving you time and accelerating your growth.",
+      daily_tools: "Now that your foundation is strong, consistent action is key. Using the daily tools to create content and engage with customers signals to Google that your business is active and relevant. This regular activity builds momentum and defends your top rankings against competitors."
     };
-    return whyResponses[borisState!.stage][whyResponseCount];
+    return whyResponses[borisState!.stage];
   };
 
   if (!borisState) return null;
@@ -229,10 +204,7 @@ export const Boris: React.FC<BorisProps> = ({
       {/* Ask Why Button & Upsell Link */}
       <div className="mt-3 text-sm flex items-center justify-center gap-4">
         <button
-          onClick={() => {
-            setWhyResponseCount(prev => prev + 1);
-            setShowWhyDialog(true);
-          }}
+          onClick={() => setShowWhyDialog(true)}
           className="text-gray-400 hover:text-purple-400 transition-colors flex items-center gap-1"
         >
           <ChatBubbleLeftRightIcon className="w-4 h-4" />
@@ -272,11 +244,6 @@ export const Boris: React.FC<BorisProps> = ({
               </div>
             )}
 
-            {whyResponseCount < 3 && (
-              <p className="text-xs text-gray-500 mb-4">
-                {3 - whyResponseCount} more clarification{3 - whyResponseCount === 1 ? '' : 's'} available
-              </p>
-            )}
             <button
               onClick={() => setShowWhyDialog(false)}
               className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl"

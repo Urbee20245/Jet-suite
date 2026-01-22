@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SparklesIconSolid, PaperAirplaneIconSolid, StopIconSolid } from '../components/icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, PaperAirplaneIconSolid, StopIconSolid } from '../components/icons/MiniIcons';
 import { Boris } from '../components/Boris';
-import type { ProfileData, GrowthPlanTask } from '../types';
+import { askBoris } from '../services/borisService';
 
 interface AskBorisPageProps {
   userFirstName: string;
@@ -18,6 +18,8 @@ interface ChatMessage {
   text: string;
 }
 
+const MAX_QUESTIONS = 5;
+
 export const AskBorisPage: React.FC<AskBorisPageProps> = (props) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -25,7 +27,21 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const MAX_QUESTIONS = 3;
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const storedData = localStorage.getItem('borisQuestionCount');
+    if (storedData) {
+        const { date, count } = JSON.parse(storedData);
+        if (date === today) {
+            setQuestionCount(count);
+        } else {
+            localStorage.setItem('borisQuestionCount', JSON.stringify({ date: today, count: 0 }));
+            setQuestionCount(0);
+        }
+    } else {
+        localStorage.setItem('borisQuestionCount', JSON.stringify({ date: today, count: 0 }));
+    }
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,40 +52,26 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = (props) => {
 
     const userMessage: ChatMessage = { role: 'user', text: input };
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsLoading(true);
-    setQuestionCount(prev => prev + 1);
+    
+    const newCount = questionCount + 1;
+    setQuestionCount(newCount);
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('borisQuestionCount', JSON.stringify({ date: today, count: newCount }));
 
     try {
-      // This is where the API call would go.
-      // For now, I'll simulate a response based on keywords.
-      const responseText = getBorisResponse(input);
+      const responseText = await askBoris(currentInput, props.userFirstName, props.profileData.business.business_name);
       const borisMessage: ChatMessage = { role: 'boris', text: responseText };
       
-      // Simulate thinking
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
       setMessages(prev => [...prev, borisMessage]);
-    } catch (error) {
-      const errorMessage: ChatMessage = { role: 'boris', text: "I seem to be having trouble thinking right now. Let's focus on action. What's your next move?" };
+    } catch (error: any) {
+      const errorMessage: ChatMessage = { role: 'boris', text: error.message || "I seem to be having trouble thinking right now. Let's focus on action. What's your next move?" };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getBorisResponse = (userInput: string): string => {
-    const lowerInput = userInput.toLowerCase();
-    if (lowerInput.includes('why')) {
-      return "Because it's the highest-impact action you can take right now. Less questioning, more doing. What's stopping you?";
-    }
-    if (lowerInput.includes('help') || lowerInput.includes('stuck')) {
-      return "Stuck is a feeling, not a fact. Break the task down into the smallest possible step and do that. What's the absolute first step?";
-    }
-    if (lowerInput.includes('motivate')) {
-      return `Motivation follows action, ${props.userFirstName}, not the other way around. The biggest businesses are built one small, consistent step at a time. You've got this. Now, what's next?`;
-    }
-    return "That's a good thought, but let's stay focused on today's plan. The path to growth is through action. What's your next step on the Growth Plan?";
   };
 
   return (

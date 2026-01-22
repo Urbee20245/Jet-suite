@@ -82,3 +82,22 @@ export function getBorisReplyConfirmation(reviewCount: number, businessName: str
   }
   return `✅ Boom! I've replied to all ${reviewCount} reviews.\n\nYou just showed ${reviewCount} customers that ${businessName} values their feedback. That's how you build loyalty and reputation.\n\nThis is the kind of daily action that separates growing businesses from stagnant ones. Proud of you! 🎉`;
 }
+
+export async function askBoris(question: string, userFirstName: string, businessName: string): Promise<string> {
+  try {
+    const response = await fetch('/api/boris/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, userFirstName, businessName })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Boris is unavailable right now.');
+    }
+    const data = await response.json();
+    return data.reply;
+  } catch (error: any) {
+    console.error('[Boris] Error asking question:', error);
+    throw error;
+  }
+}
