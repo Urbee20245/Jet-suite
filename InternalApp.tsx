@@ -28,7 +28,6 @@ import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
-import JethelperApp from './jethelper/JethelperApp';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -358,7 +357,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
-      <JethelperApp />
     </div>
   );
 };
