@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SparklesIcon as SparklesIconSolid, PaperAirplaneIconSolid, StopIconSolid } from '../components/icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, PaperAirplaneIconSolid, StopIconSolid, TrashIcon } from '../components/icons/MiniIcons';
 import { Boris } from '../components/Boris';
 import { askBoris } from '../services/borisService';
 
@@ -73,21 +73,36 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = (props) => {
       setIsLoading(false);
     }
   };
+  
+  const handleReset = () => {
+    if (window.confirm("Are you sure you want to clear this conversation and start over?")) {
+        setMessages([]);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto">
       <Boris {...props} />
       <div className="mt-4 bg-brand-card rounded-xl shadow-lg border border-brand-border flex-1 flex flex-col">
-        <div className="p-4 border-b border-brand-border">
-          <h3 className="font-bold text-brand-text">Ask a Clarifying Question</h3>
-          <p className="text-xs text-brand-text-muted">You have {MAX_QUESTIONS - questionCount} questions remaining today.</p>
+        <div className="p-4 border-b border-brand-border flex justify-between items-center">
+          <div>
+            <h3 className="font-bold text-brand-text">Ask a Clarifying Question</h3>
+            <p className="text-xs text-brand-text-muted">You have {MAX_QUESTIONS - questionCount} questions remaining today.</p>
+          </div>
+          <button 
+            onClick={handleReset} 
+            className="p-2 rounded-full text-brand-text-muted hover:bg-brand-light transition-colors"
+            title="Start New Conversation"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
         </div>
         <div className="flex-1 p-4 overflow-y-auto space-y-4">
           {messages.map((msg, index) => (
             <div key={index} className={`flex items-end gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'boris' && <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0"><SparklesIconSolid className="w-5 h-5 text-white" /></div>}
               <div className={`max-w-md p-3 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-brand-light text-brand-text'}`}>
-                <p className="text-sm">{msg.text}</p>
+                <p className="text-sm whitespace-pre-line" style={{ overflowWrap: 'break-word' }}>{msg.text}</p>
               </div>
             </div>
           ))}
