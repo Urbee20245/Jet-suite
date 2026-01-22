@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult, GrowthPlanTask } from '../types';
+import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult } from '../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, StarIcon, SparklesIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
-import { HintTooltip } from '../components/HintTooltip';
 
-// --- Types ---
+// ============================================
+// TYPES
+// ============================================
 interface BusinessDetailsProps { 
     profileData: ProfileData; 
     onUpdate: (data: ProfileData) => void; 
@@ -18,14 +19,18 @@ interface BusinessDetailsProps {
 }
 type ExtractionStage = 'idle' | 'extracting' | 'reviewing' | 'saving';
 
-// --- Helper Functions ---
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 const toBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = error => reject(error);
 });
+
 const isBase64 = (str: string) => str.startsWith('data:image');
+
 const imageURLToBase64 = async (url: string): Promise<string> => {
     if (!url || isBase64(url)) return url;
     try {
@@ -44,10 +49,127 @@ const imageURLToBase64 = async (url: string): Promise<string> => {
     }
 };
 
-// --- Constants ---
-const BUSINESS_CATEGORIES = [ "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", "Tax Preparation", "Veterinarian", "Web Design", "Other" ];
+// ============================================
+// CONSTANTS
+// ============================================
+const BUSINESS_CATEGORIES = [
+    "Accounting", "Advertising Agency", "Attorney / Law Firm", "Auto Repair", "Bakery", "Bank", 
+    "Beauty Salon", "Car Dealer", "Chiropractor", "Church", "Cleaning Service", "Construction Company", 
+    "Consultant", "Contractor", "Dentist", "Doctor", "Electrician", "Event Planner", 
+    "Financial Services", "Fitness Center", "Florist", "HVAC Contractor", "Insurance Agency", 
+    "Insurance & Financial Services", "Interior Designer", "Landscaper", "Lawyer", "Marketing Agency", 
+    "Medical Practice", "Moving Company", "Painter", "Photographer", "Plumber", "Real Estate Agency", 
+    "Restaurant", "Retail Store", "Roofing Contractor", "Salon / Spa", "Software Company", 
+    "Tax Preparation", "Veterinarian", "Web Design", "Other"
+];
 
-// --- UI Components ---
+// ============================================
+// WIZARD UI COMPONENTS (NEW)
+// ============================================
+
+const AIGuidanceMessage: React.FC<{ message: string; emoji?: string }> = ({ message, emoji = "🤖" }) => (
+    <div className="bg-gradient-to-r from-accent-purple/10 to-accent-blue/10 border-2 border-accent-purple/30 rounded-xl p-6 mb-8">
+        <div className="flex items-start gap-4">
+            <div className="text-4xl flex-shrink-0">{emoji}</div>
+            <div>
+                <h3 className="font-bold text-lg text-brand-text mb-2">AI Assistant</h3>
+                <p className="text-brand-text-muted leading-relaxed">{message}</p>
+            </div>
+        </div>
+    </div>
+);
+
+const WizardProgress: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => {
+    const steps = [
+        { number: 1, label: "Business Info" },
+        { number: 2, label: "Business DNA" },
+        { number: 3, label: "Google Profile" },
+        { number: 4, label: "Social Accounts" }
+    ];
+    
+    return (
+        <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-brand-text-muted">
+                    Step {currentStep} of {totalSteps}
+                </p>
+                <p className="text-sm font-semibold text-accent-purple">
+                    {Math.round((currentStep / totalSteps) * 100)}% Complete
+                </p>
+            </div>
+            <div className="relative">
+                <div className="overflow-hidden h-3 flex rounded-full bg-brand-light border border-brand-border">
+                    <div 
+                        style={{ width: `${(currentStep / totalSteps) * 100}%` }} 
+                        className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-accent-purple to-accent-pink transition-all duration-700 ease-out"
+                    />
+                </div>
+            </div>
+            <div className="flex justify-between mt-3">
+                {steps.map((step) => (
+                    <div key={step.number} className="flex flex-col items-center flex-1">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                            currentStep > step.number 
+                                ? 'bg-green-500 text-white' 
+                                : currentStep === step.number 
+                                    ? 'bg-gradient-to-r from-accent-purple to-accent-pink text-white ring-4 ring-accent-purple/20' 
+                                    : 'bg-brand-light border-2 border-brand-border text-brand-text-muted'
+                        }`}>
+                            {currentStep > step.number ? '✓' : step.number}
+                        </div>
+                        <p className={`text-xs mt-1 font-medium ${
+                            currentStep >= step.number ? 'text-brand-text' : 'text-brand-text-muted'
+                        }`}>
+                            {step.label}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+const WizardStepContainer: React.FC<{ 
+    title: string; 
+    children: React.ReactNode;
+    icon?: string;
+}> = ({ title, children, icon }) => (
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="bg-brand-card rounded-xl shadow-xl border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-purple to-accent-pink p-6">
+                <div className="flex items-center gap-3">
+                    {icon && <div className="text-white text-3xl">{icon}</div>}
+                    <h2 className="text-2xl font-extrabold text-white">{title}</h2>
+                </div>
+            </div>
+            <div className="p-8">
+                {children}
+            </div>
+        </div>
+    </div>
+);
+
+const StepCompletionCelebration: React.FC<{ 
+    stepName: string; 
+    onNext: () => void;
+    nextStepName?: string;
+}> = ({ stepName, onNext, nextStepName }) => (
+    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-8 text-center border-2 border-green-200">
+        <div className="text-6xl mb-4 animate-bounce">🎉</div>
+        <h3 className="text-2xl font-bold text-green-800 mb-2">{stepName} Complete!</h3>
+        <p className="text-green-700 mb-6">Great job! You're one step closer to launching your business.</p>
+        <button 
+            onClick={onNext}
+            className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2 mx-auto"
+        >
+            {nextStepName ? `Continue to ${nextStepName}` : 'Continue'} <ArrowRightIcon className="w-5 h-5" />
+        </button>
+    </div>
+);
+
+// ============================================
+// EXISTING UI COMPONENTS
+// ============================================
 
 const DnaExtractionLoading: React.FC = () => {
     const steps = ["Connecting to website...", "Scanning for logo...", "Extracting brand colors...", "Detecting fonts...", "Analyzing brand style...", "Compiling results..."];
@@ -82,13 +204,26 @@ const DnaExtractionLoading: React.FC = () => {
     );
 };
 
-const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (newProfile: BrandDnaProfile) => void, isEditable: boolean, openSections: string[], toggleSection: (key: string) => void }> = ({ dnaProfile, onUpdate, isEditable, openSections, toggleSection }) => {
-    const handleFieldChange = (section: keyof BrandDnaProfile, field: any, value: any) => { onUpdate({ ...dnaProfile, [section]: { ...dnaProfile[section], [field]: value } }); };
+const DnaDetailedAnalysis: React.FC<{ 
+    dnaProfile: BrandDnaProfile;
+    onUpdate: (newProfile: BrandDnaProfile) => void;
+    isEditable: boolean;
+    openSections: string[];
+    toggleSection: (key: string) => void;
+}> = ({ dnaProfile, onUpdate, isEditable, openSections, toggleSection }) => {
+    const handleFieldChange = (section: keyof BrandDnaProfile, field: any, value: any) => {
+        onUpdate({ ...dnaProfile, [section]: { ...dnaProfile[section], [field]: value } });
+    };
+    
     return (
         <div className="space-y-3">
             {Object.entries(dnaProfile).map(([sectionKey, sectionValue]) => (
                 <div key={sectionKey} className="border border-brand-border rounded-lg overflow-hidden bg-white">
-                    <button type="button" onClick={() => toggleSection(sectionKey)} className="w-full flex justify-between items-center p-3 bg-brand-light hover:bg-brand-border transition-colors">
+                    <button 
+                        type="button" 
+                        onClick={() => toggleSection(sectionKey)} 
+                        className="w-full flex justify-between items-center p-3 bg-brand-light hover:bg-brand-border transition-colors"
+                    >
                         <h4 className="font-semibold text-brand-text capitalize">{sectionKey.replace(/_/g, ' ')}</h4>
                         <ChevronDownIcon className={`w-5 h-5 text-brand-text-muted transition-transform ${openSections.includes(sectionKey) ? 'rotate-180' : ''}`} />
                     </button>
@@ -96,16 +231,18 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
                         <div className="p-4 space-y-4">
                             {Object.entries(sectionValue).map(([fieldKey, fieldValue]) => (
                                 <div key={fieldKey}>
-                                    <label className="text-xs font-bold text-brand-text-muted uppercase tracking-wider">{fieldKey.replace(/_/g, ' ')}</label>
+                                    <label className="text-xs font-bold text-brand-text-muted uppercase tracking-wider">
+                                        {fieldKey.replace(/_/g, ' ')}
+                                    </label>
                                     {isEditable ? (
-                                        <textarea 
-                                            value={Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)} 
-                                            onChange={e => handleFieldChange(sectionKey as keyof BrandDnaProfile, fieldKey, Array.isArray(fieldValue) ? e.target.value.split(',').map(s => s.trim()) : e.target.value)} 
-                                            rows={Array.isArray(fieldValue) ? 1 : String(fieldValue).length > 80 ? 3 : 1} 
-                                            className="mt-1 w-full bg-white border border-brand-border rounded-md p-2 text-sm disabled:bg-brand-light disabled:opacity-80 resize-none"
+                                        <textarea
+                                            value={fieldValue as string}
+                                            onChange={(e) => handleFieldChange(sectionKey as keyof BrandDnaProfile, fieldKey, e.target.value)}
+                                            className="w-full mt-1 bg-brand-light border border-brand-border rounded-lg p-2 text-sm"
+                                            rows={2}
                                         />
                                     ) : (
-                                        <p className="mt-1 text-sm text-brand-text whitespace-pre-wrap">{Array.isArray(fieldValue) ? fieldValue.join(', ') : String(fieldValue)}</p>
+                                        <p className="text-sm text-brand-text mt-1">{fieldValue as string}</p>
                                     )}
                                 </div>
                             ))}
@@ -117,161 +254,96 @@ const DnaDetailedAnalysis: React.FC<{ dnaProfile: BrandDnaProfile, onUpdate: (ne
     );
 };
 
-const DnaReviewAndSaved: React.FC<{ 
-    visualDna: BusinessDna; 
-    detailedDna: BrandDnaProfile; 
-    isEditable: boolean; 
-    onVisualDnaChange: (newDna: BusinessDna) => void; 
-    onDetailedDnaChange: (newProfile: BrandDnaProfile) => void; 
-    onSave: () => void; 
-    onCancel: () => void; 
-    onRestart: () => void; 
-    onEdit: () => void; 
-    dnaLastUpdatedAt?: string; 
-    isDnaEditing: boolean; 
-    editableBrandProfile: BrandDnaProfile | null; 
-}> = ({ visualDna, detailedDna, isEditable, onVisualDnaChange, onDetailedDnaChange, onSave, onCancel, onRestart, onEdit, dnaLastUpdatedAt, isDnaEditing, editableBrandProfile }) => {
-    const logoInputRef = useRef<HTMLInputElement>(null);
-    const faviconInputRef = useRef<HTMLInputElement>(null);
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files?.[0]) { onVisualDnaChange({ ...visualDna, logo: await toBase64(e.target.files[0]) }); } };
-    const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => { if (e.target.files?.[0]) { onVisualDnaChange({ ...visualDna, faviconUrl: await toBase64(e.target.files[0]) }); } };
-    const handleColorChange = (index: number, newColor: string) => { const newColors = [...visualDna.colors]; newColors[index] = newColor; onVisualDnaChange({ ...visualDna, colors: newColors }); };
-    const removeColor = (index: number) => { onVisualDnaChange({ ...visualDna, colors: visualDna.colors.filter((_, i) => i !== index) }); }
-    const addColor = () => { onVisualDnaChange({ ...visualDna, colors: [...visualDna.colors, '#ffffff'] }); }
-    
-    const sectionKeys = detailedDna ? Object.keys(detailedDna) : [];
-    const [openSections, setOpenSections] = useState<string[]>(isEditable ? ['brand_tone', 'visual_identity'] : []);
-    const toggleSection = (key: string) => setOpenSections(prev => prev.includes(key) ? prev.filter(s => s !== key) : [...prev, key]);
-    const expandAll = () => setOpenSections(sectionKeys);
-    const collapseAll = () => setOpenSections([]);
-
-    return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-xl font-bold text-brand-text">{isEditable ? 'Your Business DNA - Review & Approve' : 'Your Approved Business DNA'}</h3>
-                <p className="text-brand-text-muted">{isEditable ? 'We extracted the following from your website. Review and make any changes before saving.' : 'This brand identity is active across all JetSuite tools.'}</p>
-                {!isEditable && dnaLastUpdatedAt && <p className="text-xs text-brand-text-muted mt-1">Last saved: {new Date(dnaLastUpdatedAt).toLocaleString()}</p>}
+const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness']; onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => (
+    <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4">
+        <div>
+            <p className="font-bold text-brand-text">{gbpData.profileName}</p>
+            <p className="text-sm text-brand-text-muted">{gbpData.address}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="bg-white p-3 rounded-lg border">
+                <p className="font-bold text-xl flex items-center justify-center gap-1">
+                    <StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}
+                </p>
+                <p className="text-xs text-brand-text-muted">Rating</p>
             </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                <div className="lg:col-span-2 bg-white p-4 rounded-lg border border-brand-border">
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">Logo {visualDna.logo && <CheckCircleIcon className="w-4 h-4 text-green-500" />}</h4>
-                    {!visualDna.logo ? (
-                        <div className="text-center p-4 border-2 border-dashed rounded-lg">
-                            <p className="text-sm text-brand-text-muted mb-2">No logo detected.</p>
-                            {isEditable && <button type="button" onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload manually</button>}
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            <p className="text-xs text-brand-text-muted">Preview:</p>
-                            <div className="flex gap-2">
-                                <div className="flex-1 bg-gray-100 p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div>
-                                <div className="flex-1 bg-brand-dark p-2 rounded"><img src={visualDna.logo} className="h-24 mx-auto object-contain"/></div>
-                            </div>
-                            {isEditable && <button type="button" onClick={() => logoInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline mt-2">Upload different logo</button>}
-                        </div>
-                    )}
-                    <input type="file" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
-                </div>
-                
-                <div className="lg:col-span-3 bg-white p-4 rounded-lg border border-brand-border">
-                    <div className="pb-4 border-b border-brand-border">
-                        <h4 className="font-semibold mb-2">Typography</h4>
-                        <div className="flex items-center justify-between">
-                            <div className="w-1/2">
-                                <div style={{fontFamily: visualDna.fonts}} className="text-4xl truncate">{visualDna.fonts ? 'Aa' : ''}</div>
-                                <p className="text-sm font-semibold mt-1 truncate">{visualDna.fonts || 'Default'}</p>
-                            </div>
-                            {isEditable && <input type="text" value={visualDna.fonts} onChange={e => onVisualDnaChange({...visualDna, fonts: e.target.value})} className="w-1/2 text-sm p-2 border rounded"/>}
-                        </div>
-                    </div>
-                    
-                    <div className="pt-4">
-                        <h4 className="font-semibold mb-2">Brand Colors</h4>
-                        <div className="flex flex-wrap gap-3 items-center">
-                            {visualDna.colors.map((color, i) => (
-                                <div key={i} className="relative group text-center">
-                                    {isEditable ? (
-                                        <input type="color" value={color} onChange={e => handleColorChange(i, e.target.value)} className="w-12 h-12 rounded-full border-2 border-white shadow-md cursor-pointer" />
-                                    ) : (
-                                        <div style={{backgroundColor: color}} className="w-12 h-12 rounded-full border-2 border-white shadow-md"></div>
-                                    )}
-                                    <p className="text-xs font-mono mt-1">{color}</p>
-                                    {isEditable && (
-                                        <button type="button" onClick={() => removeColor(i)} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100"><XMarkIcon className="w-3 h-3"/></button>
-                                    )}
-                                </div>
-                            ))}
-                            {isEditable && (
-                                <button type="button" onClick={addColor} className="w-12 h-12 rounded-full border-2 border-dashed flex items-center justify-center text-2xl text-brand-text-muted hover:bg-gray-200">+</button>
-                            )}
-                        </div>
-                    </div>
-                    
-                    <div className="pt-4 border-t border-brand-border mt-4">
-                        <h4 className="font-semibold mb-2">Favicon</h4>
-                        {visualDna.faviconUrl ? (
-                            <div className="flex items-center gap-3">
-                                <img src={visualDna.faviconUrl} alt="Favicon" className="w-8 h-8"/>
-                                <p className="text-sm text-brand-text-muted truncate">{visualDna.faviconUrl}</p>
-                                {isEditable && <button type="button" onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline ml-auto">Change</button>}
-                            </div>
-                        ) : (
-                            <div className="text-center p-2">
-                                <p className="text-sm text-brand-text-muted mb-2">No favicon detected.</p>
-                                {isEditable && <button type="button" onClick={() => faviconInputRef.current?.click()} className="text-sm font-semibold text-accent-blue hover:underline">Upload favicon</button>}
-                            </div>
-                        )}
-                        <input type="file" ref={faviconInputRef} onChange={handleFaviconUpload} accept="image/png, image/x-icon, image/svg+xml" className="hidden" />
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-bold text-brand-text">Extracted Brand DNA Profile</h3>
-                    {!isEditable && (
-                        <div className="flex gap-2 text-sm font-semibold">
-                            <button type="button" onClick={expandAll} className="hover:underline">Expand All</button>
-                            <button type="button" onClick={collapseAll} className="hover:underline">Collapse All</button>
-                        </div>
-                    )}
-                </div>
-                {detailedDna && <DnaDetailedAnalysis dnaProfile={isDnaEditing ? editableBrandProfile! : detailedDna} onUpdate={onDetailedDnaChange} isEditable={isDnaEditing} openSections={openSections} toggleSection={toggleSection} />}
-            </div>
-            
-            <div className="flex justify-between items-center pt-4">
-                {isEditable ? (
-                    <>
-                        <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">Cancel</button>
-                        <button type="button" onClick={onSave} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg">Save & Approve DNA</button>
-                    </>
-                ) : (
-                    <>
-                        <button type="button" onClick={onRestart} className="text-sm font-semibold text-brand-text-muted hover:underline">Re-extract from Website</button>
-                        <button type="button" onClick={onEdit} className="bg-accent-blue text-white font-bold py-3 px-6 rounded-lg shadow-lg">Edit Business DNA</button>
-                    </>
-                )}
+            <div className="bg-white p-3 rounded-lg border">
+                <p className="font-bold text-xl">{gbpData.reviewCount}</p>
+                <p className="text-xs text-brand-text-muted">Total Reviews</p>
             </div>
         </div>
-    );
-};
+        <div className="flex gap-4 pt-2">
+            <a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">
+                View on Maps
+            </a>
+            <button type="button" onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">
+                Disconnect
+            </button>
+        </div>
+    </div>
+);
 
-const GbpDashboard: React.FC<{ gbpData: ProfileData['googleBusiness'], onDisconnect: () => void }> = ({ gbpData, onDisconnect }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <div><p className="font-bold text-brand-text">{gbpData.profileName}</p><p className="text-sm text-brand-text-muted">{gbpData.address}</p></div> <div className="grid grid-cols-2 gap-4 text-center"><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl flex items-center justify-center gap-1"><StarIcon className="w-5 h-5 text-yellow-400"/> {gbpData.rating}</p><p className="text-xs text-brand-text-muted">Rating</p></div><div className="bg-white p-3 rounded-lg border"><p className="font-bold text-xl">{gbpData.reviewCount}</p><p className="text-xs text-brand-text-muted">Total Reviews</p></div></div> <div className="flex gap-4 pt-2"><a href={gbpData.mapsUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-accent-blue hover:underline">View on Maps</a><button type="button" onClick={onDisconnect} className="text-sm font-semibold text-red-500 hover:underline ml-auto">Disconnect</button></div> </div> );
-const GbpNotCreatedGuide: React.FC<{ business: ProfileData['business'], onUpdateStatus: (status: GbpStatus) => void, onSkip: () => void }> = ({ business, onUpdateStatus, onSkip }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/><a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open Google</a></li> <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li> <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li> </ol> <div className="flex justify-between items-center pt-2"> <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">Skip for now</button> <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've created my profile &rarr;</button> </div> </div> );
-const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => ( <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4"> <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4> <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p> <ol className="space-y-3 text-sm"> <li><span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/><a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">Open My Profile</a></li> <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li> <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li> </ol> <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">I've verified my profile! &rarr;</button> </div> );
+const GbpNotCreatedGuide: React.FC<{ 
+    business: ProfileData['business']; 
+    onUpdateStatus: (status: GbpStatus) => void; 
+    onSkip: () => void;
+}> = ({ business, onUpdateStatus, onSkip }) => (
+    <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4">
+        <h4 className="font-bold text-brand-text">Create Your Google Business Profile</h4>
+        <p className="text-sm text-brand-text-muted">A Google Business Profile is essential for local search. Follow these steps:</p>
+        <ol className="space-y-3 text-sm">
+            <li>
+                <span className="font-bold">1. Go to Google:</span> Click below to open Google Business Profile.<br/>
+                <a href="https://business.google.com/create" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">
+                    Open Google
+                </a>
+            </li>
+            <li><span className="font-bold">2. Enter Info:</span> Use your business name ({business.business_name}), category, etc.</li>
+            <li><span className="font-bold">3. Verify:</span> Google will send a postcard or call. This can take 5-14 days.</li>
+        </ol>
+        <div className="flex justify-between items-center pt-2">
+            <button type="button" onClick={onSkip} className="text-sm font-semibold text-brand-text-muted hover:underline">
+                Skip for now
+            </button>
+            <button type="button" onClick={() => onUpdateStatus('Not Verified')} className="text-sm font-semibold text-accent-blue hover:underline">
+                I've created my profile &rarr;
+            </button>
+        </div>
+    </div>
+);
+
+const GbpNotVerifiedGuide: React.FC<{ onUpdateStatus: (status: GbpStatus) => void }> = ({ onUpdateStatus }) => (
+    <div className="bg-brand-light p-6 rounded-lg border border-brand-border space-y-4">
+        <h4 className="font-bold text-brand-text">Verify Your Google Business Profile</h4>
+        <p className="text-sm text-brand-text-muted">Your profile won't appear in search results until verified.</p>
+        <ol className="space-y-3 text-sm">
+            <li>
+                <span className="font-bold">1. Go to your Dashboard:</span> Click to open your profile.<br/>
+                <a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="inline-block mt-1 bg-blue-500 text-white font-semibold py-1 px-3 rounded-md text-xs hover:bg-blue-600">
+                    Open My Profile
+                </a>
+            </li>
+            <li><span className="font-bold">2. Find Prompt:</span> Look for the 'Get verified' or 'Verify now' prompt.</li>
+            <li><span className="font-bold">3. Enter Code:</span> Enter the verification code when it arrives by mail.</li>
+        </ol>
+        <button type="button" onClick={() => onUpdateStatus('Verified')} className="text-sm font-semibold text-accent-blue hover:underline">
+            I've verified my profile! &rarr;
+        </button>
+    </div>
+);
+
 const GbpConnect: React.FC<{ 
-    profileData: ProfileData, 
-    onSearch: (e: React.FormEvent) => Promise<void>, 
-    searchResults: BusinessSearchResult[], 
-    loading: boolean, 
-    error: string, 
-    onSelect: (b: BusinessSearchResult) => void, 
-    selected: BusinessSearchResult | null, 
-    onConfirm: () => void, 
-    onCancel: () => void,
-    searchTerm: string,
-    setSearchTerm: (term: string) => void,
+    profileData: ProfileData; 
+    onSearch: (e: React.FormEvent) => Promise<void>; 
+    searchResults: BusinessSearchResult[]; 
+    loading: boolean; 
+    error: string; 
+    onSelect: (b: BusinessSearchResult) => void; 
+    selected: BusinessSearchResult | null; 
+    onConfirm: () => void; 
+    onCancel: () => void;
+    searchTerm: string;
+    setSearchTerm: (term: string) => void;
 }> = ({ profileData, onSearch, searchResults, loading, error, onSelect, selected, onConfirm, onCancel, searchTerm, setSearchTerm }) => { 
     if (loading) {
         return (
@@ -282,23 +354,31 @@ const GbpConnect: React.FC<{
             </div>
         );
     }
-    if (selected) return (
-        <div className="bg-brand-light p-6 rounded-lg border text-center">
-            <h4 className="font-bold text-brand-text">Confirm This Business</h4>
-            <p className="text-sm text-brand-text-muted mb-4">Is this the correct Google Business Profile?</p>
-            <div className="bg-white my-4 p-4 rounded-lg border">
-                <p className="font-bold text-brand-text">{selected.name}</p>
-                <p className="text-sm text-brand-text-muted">{selected.address}</p>
-                <p className="text-xs text-brand-text-muted flex items-center justify-center gap-1 mt-1">
-                    <StarIcon className="w-3 h-3 text-yellow-400" /> {selected.rating} ({selected.reviewCount} reviews)
-                </p>
+    
+    if (selected) {
+        return (
+            <div className="bg-brand-light p-6 rounded-lg border text-center">
+                <h4 className="font-bold text-brand-text">Confirm This Business</h4>
+                <p className="text-sm text-brand-text-muted mb-4">Is this the correct Google Business Profile?</p>
+                <div className="bg-white my-4 p-4 rounded-lg border">
+                    <p className="font-bold text-brand-text">{selected.name}</p>
+                    <p className="text-sm text-brand-text-muted">{selected.address}</p>
+                    <p className="text-xs text-brand-text-muted flex items-center justify-center gap-1 mt-1">
+                        <StarIcon className="w-3 h-3 text-yellow-400" /> {selected.rating} ({selected.reviewCount} reviews)
+                    </p>
+                </div>
+                <div className="flex gap-4 justify-center">
+                    <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">
+                        No, search again
+                    </button>
+                    <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">
+                        Save & Connect Profile
+                    </button>
+                </div>
             </div>
-            <div className="flex gap-4 justify-center">
-                <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">No, search again</button>
-                <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save & Connect Profile</button>
-            </div>
-        </div>
-    );
+        );
+    }
+    
     return ( 
         <div className="bg-brand-light p-6 rounded-lg border space-y-4"> 
             <h4 className="font-bold text-brand-text">Connect Your Verified Profile</h4> 
@@ -335,621 +415,872 @@ const GbpConnect: React.FC<{
     ); 
 };
 
-const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: React.MouseEvent) => void, isSaving: boolean, isProcessing: boolean }> = ({ onLock, isDirty, onSave, isSaving, isProcessing }) => (
-    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 mt-8 text-center glow-card glow-card-rounded-xl">
-        <CheckCircleIcon className="w-12 h-12 mx-auto text-green-500" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">🎉 Profile Ready to Lock!</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
-        </p>
+// ============================================
+// MAIN COMPONENT
+// ============================================
+
+export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated, isAdmin }) => {
+    const supabase = getSupabaseClient();
+    
+    // Wizard state
+    const [currentWizardStep, setCurrentWizardStep] = useState(1);
+    const [showCelebration, setShowCelebration] = useState(false);
+    
+    // Notification
+    const [notification, setNotification] = useState<{message: string; type: 'error' | 'info'} | null>(null);
+    
+    // Business Info State
+    const [business, setBusiness] = useState(profileData.business);
+    const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>(
+        profileData.business.location_type || 'physical'
+    );
+    const [isSavingInfo, setIsSavingInfo] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState('');
+    const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+    const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
+    
+    // DNA State
+    const [extractionStage, setExtractionStage] = useState<ExtractionStage>('idle');
+    const [extractedDna, setExtractedDna] = useState<BusinessDna | null>(null);
+    const [detailedDna, setDetailedDna] = useState<BrandDnaProfile | null>(profileData.business.brand_dna_profile || null);
+    const [isDnaEditing, setIsDnaEditing] = useState(false);
+    const [editableBrandProfile, setEditableBrandProfile] = useState<BrandDnaProfile | null>(null);
+    const [openSections, setOpenSections] = useState<string[]>([]);
+    const logoInputRef = useRef<HTMLInputElement>(null);
+    const faviconInputRef = useRef<HTMLInputElement>(null);
+    
+    // GBP State
+    const [googleBusiness, setGoogleBusiness] = useState(profileData.googleBusiness);
+    const [isGbpSkipped, setIsGbpSkipped] = useState(false);
+    const [isSearchingGbp, setIsSearchingGbp] = useState(false);
+    const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
+    const [searchError, setSearchError] = useState('');
+    const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    // Locking State
+    const [isLocking, setIsLocking] = useState(false);
+    const [isLocked, setIsLocked] = useState(profileData.business.is_locked || false);
+    const [isDirty, setIsDirty] = useState(false);
+    
+    // Step Completion
+    const step1Completed = Boolean(
+        business.business_name && 
+        business.business_website && 
+        business.industry && 
+        business.is_complete
+    );
+    const step2Completed = Boolean(profileData.business.isDnaApproved && detailedDna);
+    const step3Completed = Boolean(
+        googleBusiness.status === 'Verified' || isGbpSkipped
+    );
+    const step4Completed = true; // Social is always optional/complete
+    const allStepsComplete = step1Completed && step2Completed && step3Completed && step4Completed;
+    
+    // Determine wizard step based on completion
+    useEffect(() => {
+        if (!step1Completed) {
+            setCurrentWizardStep(1);
+        } else if (!step2Completed) {
+            setCurrentWizardStep(2);
+        } else if (!step3Completed) {
+            setCurrentWizardStep(3);
+        } else if (!step4Completed) {
+            setCurrentWizardStep(4);
+        } else if (!isLocked) {
+            setCurrentWizardStep(5); // Lock screen
+        } else {
+            setCurrentWizardStep(6); // Final redirect
+        }
+    }, [step1Completed, step2Completed, step3Completed, step4Completed, isLocked]);
+    
+    // Auto-redirect to homepage when locked
+    useEffect(() => {
+        if (allStepsComplete && isLocked) {
+            setTimeout(() => {
+                setActiveTool(null); // Navigate to Welcome/Home
+            }, 2000);
+        }
+    }, [allStepsComplete, isLocked, setActiveTool]);
+    
+    // Celebration handler
+    const handleStepComplete = () => {
+        setShowCelebration(true);
+        setTimeout(() => {
+            setShowCelebration(false);
+        }, 2500);
+    };
+    
+    // AI Guidance
+    const getAIGuidance = () => {
+        switch(currentWizardStep) {
+            case 1:
+                return {
+                    message: "Welcome! Let's start by setting up your business information. This will power all the AI tools in JetSuite, so accuracy is important. Take your time and fill in each field carefully.",
+                    emoji: "👋"
+                };
+            case 2:
+                return {
+                    message: "Excellent! Now I'll extract your Business DNA from your website. This captures your brand's unique voice, colors, and style to ensure all AI-generated content matches your brand perfectly.",
+                    emoji: "🧬"
+                };
+            case 3:
+                return {
+                    message: "Great progress! Let's connect your Google Business Profile. This unlocks powerful local SEO features and helps you manage your online reputation.",
+                    emoji: "🗺️"
+                };
+            case 4:
+                return {
+                    message: "Almost done! Connect your social media accounts to schedule posts, auto-reply to messages, and manage everything from one dashboard. This step is optional but highly recommended.",
+                    emoji: "📱"
+                };
+            case 5:
+                return {
+                    message: "Perfect! All steps complete. Now let's lock your profile to ensure consistency across all AI tools.",
+                    emoji: "🔒"
+                };
+            case 6:
+                return {
+                    message: "🎊 Congratulations! Your business profile is complete and locked. You're ready to start using JetSuite's AI-powered growth tools. Redirecting you to your Command Center...",
+                    emoji: "🚀"
+                };
+            default:
+                return { message: "", emoji: "🤖" };
+        }
+    };
+    
+    // ========================================
+    // HANDLERS - Business Info
+    // ========================================
+    
+    const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setBusiness(prev => ({ ...prev, [name]: value }));
+        setIsDirty(true);
+    };
+    
+    const handleGenerateDescription = async () => {
+        if (!business.business_name || !business.business_website) {
+            setNotification({ message: 'Please enter business name and website first.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            return;
+        }
         
-        <div className="flex flex-col items-center gap-4">
-            {isDirty && (
-                <div className="space-y-4 w-full max-w-xs">
-                    <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
+        setIsGeneratingDescription(true);
+        try {
+            const description = await generateBusinessDescription(business.business_name, business.business_website, business.industry);
+            setBusiness(prev => ({ ...prev, business_description: description }));
+            setIsDirty(true);
+        } catch (error) {
+            setNotification({ message: 'Failed to generate description. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setIsGeneratingDescription(false);
+        }
+    };
+    
+    const handleSaveInfo = async (e?: React.FormEvent | React.MouseEvent) => {
+        if (e) e.preventDefault();
+        
+        if (!business.business_name || !business.business_website || !business.industry) {
+            setNotification({ message: 'Please fill in all required fields.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            return;
+        }
+        
+        if (locationType === 'physical' && !business.location) {
+            setNotification({ message: 'Please enter your business location.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            return;
+        }
+        
+        setIsSavingInfo(true);
+        try {
+            const { error } = await supabase
+                .from('business_profiles')
+                .update({
+                    business_name: business.business_name,
+                    business_website: business.business_website,
+                    business_description: business.business_description,
+                    industry: business.industry,
+                    location_type: locationType,
+                    city: locationType === 'physical' ? business.location?.split(',')[0]?.trim() : null,
+                    state: locationType === 'physical' ? business.location?.split(',')[1]?.trim() : null,
+                    is_complete: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', profileData.business.id);
+            
+            if (error) throw error;
+            
+            setSaveSuccess('✓ Business information saved successfully!');
+            setIsDirty(false);
+            setTimeout(() => setSaveSuccess(''), 3000);
+            
+            onUpdate({
+                ...profileData,
+                business: {
+                    ...profileData.business,
+                    ...business,
+                    is_complete: true,
+                    location_type: locationType
+                }
+            });
+            
+            onBusinessUpdated();
+            
+            if (step1Completed && currentWizardStep === 1) {
+                handleStepComplete();
+            }
+        } catch (error) {
+            console.error('Error saving business info:', error);
+            setNotification({ message: 'Failed to save. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setIsSavingInfo(false);
+        }
+    };
+    
+    // ========================================
+    // HANDLERS - DNA
+    // ========================================
+    
+    const handleExtractDna = async () => {
+        if (!business.business_website) {
+            setNotification({ message: 'Please enter your website URL first.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            return;
+        }
+        
+        setExtractionStage('extracting');
+        try {
+            const dna = await extractWebsiteDna(business.business_website);
+            setExtractedDna(dna);
+            setExtractionStage('reviewing');
+            
+            const brandProfile = await extractBrandDnaProfile(business.business_website, dna);
+            setDetailedDna(brandProfile);
+        } catch (error) {
+            console.error('DNA extraction failed:', error);
+            setNotification({ message: 'Failed to extract DNA. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            setExtractionStage('idle');
+        }
+    };
+    
+    const handleSaveDna = async () => {
+        if (!detailedDna) return;
+        
+        setExtractionStage('saving');
+        try {
+            const { error } = await supabase
+                .from('business_profiles')
+                .update({
+                    brand_dna_profile: detailedDna,
+                    is_dna_approved: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', profileData.business.id);
+            
+            if (error) throw error;
+            
+            onUpdate({
+                ...profileData,
+                business: {
+                    ...profileData.business,
+                    brand_dna_profile: detailedDna,
+                    isDnaApproved: true
+                }
+            });
+            
+            setExtractionStage('idle');
+            setIsDnaEditing(false);
+            onBusinessUpdated();
+            
+            if (step2Completed && currentWizardStep === 2) {
+                handleStepComplete();
+            }
+        } catch (error) {
+            console.error('Error saving DNA:', error);
+            setNotification({ message: 'Failed to save DNA. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+            setExtractionStage('reviewing');
+        }
+    };
+    
+    const handleEditDna = () => {
+        setEditableBrandProfile(detailedDna);
+        setIsDnaEditing(true);
+    };
+    
+    const handleCancelDnaEdit = () => {
+        setEditableBrandProfile(null);
+        setIsDnaEditing(false);
+    };
+    
+    const handleRestartExtraction = () => {
+        setExtractedDna(null);
+        setDetailedDna(null);
+        setExtractionStage('idle');
+        setOpenSections([]);
+    };
+    
+    const toggleSection = (key: string) => {
+        setOpenSections(prev => 
+            prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+        );
+    };
+    
+    const expandAll = () => {
+        if (detailedDna) {
+            setOpenSections(Object.keys(detailedDna));
+        }
+    };
+    
+    const collapseAll = () => {
+        setOpenSections([]);
+    };
+    
+    // ========================================
+    // HANDLERS - GBP
+    // ========================================
+    
+    const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setGoogleBusiness(prev => ({ ...prev, status: e.target.value as GbpStatus }));
+        setIsDirty(true);
+    };
+    
+    const handleGbpSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchTerm) return;
+        
+        setIsSearchingGbp(true);
+        setSearchError('');
+        try {
+            const results = await searchGoogleBusiness(searchTerm);
+            setSearchResults(results);
+            if (results.length === 0) {
+                setSearchError('No verified profiles found. Try a different search.');
+            }
+        } catch (error) {
+            setSearchError('Search failed. Please try again.');
+        } finally {
+            setIsSearchingGbp(false);
+        }
+    };
+    
+    const handleGbpSelect = (result: BusinessSearchResult) => {
+        setSelectedGbp(result);
+    };
+    
+    const handleGbpCancel = () => {
+        setSelectedGbp(null);
+    };
+    
+    const handleGbpConfirm = async () => {
+        if (!selectedGbp) return;
+        
+        try {
+            const updatedGbp = {
+                profileName: selectedGbp.name,
+                address: selectedGbp.address,
+                rating: selectedGbp.rating,
+                reviewCount: selectedGbp.reviewCount,
+                mapsUrl: selectedGbp.mapsUrl,
+                status: 'Verified' as GbpStatus
+            };
+            
+            const { error } = await supabase
+                .from('business_profiles')
+                .update({
+                    google_business_profile: updatedGbp,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', profileData.business.id);
+            
+            if (error) throw error;
+            
+            setGoogleBusiness(updatedGbp);
+            onUpdate({
+                ...profileData,
+                googleBusiness: updatedGbp
+            });
+            
+            setSelectedGbp(null);
+            setSearchResults([]);
+            setSearchTerm('');
+            onBusinessUpdated();
+            
+            if (step3Completed && currentWizardStep === 3) {
+                handleStepComplete();
+            }
+        } catch (error) {
+            console.error('Error saving GBP:', error);
+            setNotification({ message: 'Failed to connect GBP. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+        }
+    };
+    
+    const handleGbpDisconnect = () => {
+        setGoogleBusiness({
+            profileName: '',
+            mapsUrl: '',
+            status: 'Not Created',
+            address: '',
+            rating: 0,
+            reviewCount: 0
+        });
+    };
+    
+    // ========================================
+    // HANDLERS - Locking
+    // ========================================
+    
+    const handleLockProfile = async () => {
+        setIsLocking(true);
+        try {
+            const { error } = await supabase
+                .from('business_profiles')
+                .update({
+                    is_locked: true,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', profileData.business.id);
+            
+            if (error) throw error;
+            
+            setIsLocked(true);
+            onUpdate({
+                ...profileData,
+                business: {
+                    ...profileData.business,
+                    is_locked: true
+                }
+            });
+            onBusinessUpdated();
+        } catch (error) {
+            console.error('Error locking profile:', error);
+            setNotification({ message: 'Failed to lock profile. Please try again.', type: 'error' });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setIsLocking(false);
+        }
+    };
+    
+    // ========================================
+    // RENDER - DNA Content
+    // ========================================
+    
+    const renderDnaContent = () => {
+        if (extractionStage === 'extracting') {
+            return <DnaExtractionLoading />;
+        }
+        
+        if (extractionStage === 'idle' && !detailedDna) {
+            return (
+                <div className="text-center py-8">
+                    <p className="text-brand-text-muted mb-6">
+                        Extract your brand's unique DNA from your website to ensure all AI-generated content matches your brand.
+                    </p>
                     <button 
-                        onClick={onSave} 
-                        disabled={isSaving || isProcessing}
-                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                        onClick={handleExtractDna}
+                        className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                     >
-                        {isSaving ? <Loader /> : <CheckCircleIcon className="w-5 h-5" />}
-                        {isSaving ? 'Saving Changes...' : 'Save All Changes'}
+                        Extract Business DNA
+                    </button>
+                </div>
+            );
+        }
+        
+        if (detailedDna) {
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold text-brand-text">Brand DNA Profile</h3>
+                        {!isDnaEditing && (
+                            <div className="flex gap-2 text-sm font-semibold">
+                                <button type="button" onClick={expandAll} className="hover:underline">Expand All</button>
+                                <button type="button" onClick={collapseAll} className="hover:underline">Collapse All</button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <DnaDetailedAnalysis 
+                        dnaProfile={isDnaEditing ? editableBrandProfile! : detailedDna}
+                        onUpdate={setEditableBrandProfile!}
+                        isEditable={isDnaEditing}
+                        openSections={openSections}
+                        toggleSection={toggleSection}
+                    />
+                    
+                    <div className="flex justify-between items-center pt-4">
+                        {isDnaEditing ? (
+                            <>
+                                <button type="button" onClick={handleCancelDnaEdit} className="text-sm font-semibold text-brand-text-muted hover:underline">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setDetailedDna(editableBrandProfile);
+                                        handleSaveDna();
+                                    }} 
+                                    className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg"
+                                >
+                                    Save & Approve DNA
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <button type="button" onClick={handleRestartExtraction} className="text-sm font-semibold text-brand-text-muted hover:underline">
+                                    Re-extract from Website
+                                </button>
+                                {!step2Completed ? (
+                                    <button type="button" onClick={handleSaveDna} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                                        Approve & Continue
+                                    </button>
+                                ) : (
+                                    <button type="button" onClick={handleEditDna} className="bg-accent-blue text-white font-bold py-3 px-6 rounded-lg shadow-lg">
+                                        Edit Business DNA
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+        
+        return null;
+    };
+    
+    // ========================================
+    // RENDER - GBP Content
+    // ========================================
+    
+    const renderGbpContent = () => {
+        if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') {
+            return (
+                <div>
+                    <p className="text-brand-text-muted mb-4">Your Google Business Profile is connected and verified.</p>
+                    <GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} />
+                </div>
+            );
+        }
+        
+        const onUpdateStatus = (s: GbpStatus) => {
+            setGoogleBusiness(prev => ({ ...prev, status: s }));
+        };
+        
+        switch (googleBusiness.status) {
+            case 'Not Created':
+                return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => {
+                    setIsGbpSkipped(true);
+                    if (currentWizardStep === 3) handleStepComplete();
+                }} />;
+            case 'Not Verified':
+                return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />;
+            case 'Verified':
+                return <GbpConnect 
+                    profileData={profileData}
+                    onSearch={handleGbpSearch}
+                    searchResults={searchResults}
+                    loading={isSearchingGbp}
+                    error={searchError}
+                    onSelect={handleGbpSelect}
+                    selected={selectedGbp}
+                    onConfirm={handleGbpConfirm}
+                    onCancel={handleGbpCancel}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                />;
+            default:
+                return <p className="text-brand-text-muted">Select a status to continue.</p>;
+        }
+    };
+    
+    // ========================================
+    // RENDER - Current Step
+    // ========================================
+    
+    const renderCurrentStep = () => {
+        const guidance = getAIGuidance();
+        
+        if (showCelebration) {
+            const stepNames = ["Business Information", "Business DNA", "Google Business Profile", "Social Accounts"];
+            const nextStepNames = ["Business DNA", "Google Business Profile", "Social Accounts", "Lock Profile"];
+            return (
+                <StepCompletionCelebration 
+                    stepName={stepNames[currentWizardStep - 1]}
+                    onNext={() => setShowCelebration(false)}
+                    nextStepName={currentWizardStep < 4 ? nextStepNames[currentWizardStep - 1] : undefined}
+                />
+            );
+        }
+        
+        return (
+            <>
+                <AIGuidanceMessage message={guidance.message} emoji={guidance.emoji} />
+                
+                {/* STEP 1: BUSINESS INFORMATION */}
+                {currentWizardStep === 1 && (
+                    <WizardStepContainer title="Business Information" icon="🏢">
+                        <p className="text-brand-text-muted mb-6">This information powers all JetSuite tools.</p>
+                        {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
+                        
+                        <form onSubmit={handleSaveInfo} className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-brand-text mb-1">
+                                        Business Name <span className="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        name="business_name" 
+                                        value={business.business_name} 
+                                        onChange={handleBusinessChange} 
+                                        className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-brand-text mb-1">
+                                        Website URL <span className="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        type="url" 
+                                        name="business_website" 
+                                        value={business.business_website} 
+                                        onChange={handleBusinessChange} 
+                                        placeholder="https://..." 
+                                        className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-brand-text mb-1">Business Description</label>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleGenerateDescription} 
+                                        disabled={isGeneratingDescription} 
+                                        className="flex items-center gap-1 text-xs font-semibold bg-accent-purple/10 text-accent-purple px-2 py-1 rounded-md hover:bg-accent-purple/20"
+                                    >
+                                        {isGeneratingDescription ? (
+                                            <><Loader /> Generating...</>
+                                        ) : (
+                                            <><SparklesIcon className="w-3 h-3"/> Generate with AI</>
+                                        )}
+                                    </button>
+                                </div>
+                                <textarea 
+                                    name="business_description" 
+                                    value={business.business_description} 
+                                    onChange={handleBusinessChange} 
+                                    rows={3} 
+                                    maxLength={500} 
+                                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2"
+                                />
+                                <p className="text-right text-xs text-brand-text-muted">{business.business_description?.length || 0} / 500</p>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-brand-text mb-1">Business Category</label>
+                                <input 
+                                    list="business-categories" 
+                                    name="industry" 
+                                    value={business.industry} 
+                                    onChange={handleBusinessChange} 
+                                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
+                                    required
+                                />
+                                <datalist id="business-categories">
+                                    {BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}
+                                </datalist>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-brand-text mb-2">Business Location Type</label>
+                                <div className="grid grid-cols-3 gap-2 mb-3">
+                                    {(['physical', 'online', 'home'] as const).map((type) => (
+                                        <button 
+                                            key={type} 
+                                            type="button" 
+                                            onClick={() => setLocationType(type)} 
+                                            className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                                                locationType === type 
+                                                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' 
+                                                    : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'
+                                            }`}
+                                        >
+                                            {type === 'physical' ? '🏢 Physical' : type === 'online' ? '🌐 Online' : '🏠 Home-Based'}
+                                        </button>
+                                    ))}
+                                </div>
+                                {locationType === 'physical' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-brand-text mb-1">
+                                            Primary Location (City, State) <span className="text-red-500">*</span>
+                                        </label>
+                                        <input 
+                                            type="text" 
+                                            name="location" 
+                                            value={business.location || ''} 
+                                            onChange={handleBusinessChange} 
+                                            placeholder="e.g., Loganville, Georgia" 
+                                            className="w-full bg-brand-light border border-brand-border rounded-lg p-2" 
+                                            required
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex justify-end pt-6">
+                                <button 
+                                    type="submit" 
+                                    disabled={isSavingInfo} 
+                                    className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
+                                >
+                                    {isSavingInfo ? 'Saving...' : 'Save & Continue'} <ArrowRightIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </form>
+                    </WizardStepContainer>
+                )}
+                
+                {/* STEP 2: BUSINESS DNA */}
+                {currentWizardStep === 2 && (
+                    <WizardStepContainer title="Business DNA" icon="🧬">
+                        {renderDnaContent()}
+                    </WizardStepContainer>
+                )}
+                
+                {/* STEP 3: GOOGLE BUSINESS PROFILE */}
+                {currentWizardStep === 3 && (
+                    <WizardStepContainer title="Google Business Profile" icon="🗺️">
+                        {locationType !== 'physical' && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                <p className="text-sm text-yellow-800 font-semibold">
+                                    ℹ️ Google Business Profile is primarily for businesses with physical locations.
+                                </p>
+                            </div>
+                        )}
+                        <div className="mt-4">
+                            <label className="block text-sm font-medium text-brand-text mb-2">
+                                What is the status of your Google Business Profile?
+                            </label>
+                            <div className="flex gap-2 mb-4">
+                                <select 
+                                    name="status" 
+                                    value={googleBusiness.status} 
+                                    onChange={handleGoogleBusinessChange} 
+                                    className="flex-1 bg-brand-light border rounded-lg p-3"
+                                >
+                                    <option value="Not Created">I don't have a profile yet</option>
+                                    <option value="Not Verified">I have a profile, but it's not verified</option>
+                                    <option value="Verified">My profile is verified</option>
+                                </select>
+                                <button 
+                                    type="button"
+                                    onClick={() => handleSaveInfo()}
+                                    disabled={isSavingInfo}
+                                    className="bg-accent-blue text-white px-4 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50"
+                                >
+                                    {isSavingInfo ? '...' : 'Save'}
+                                </button>
+                            </div>
+                            {renderGbpContent()}
+                        </div>
+                    </WizardStepContainer>
+                )}
+                
+                {/* STEP 4: SOCIAL ACCOUNTS */}
+                {currentWizardStep === 4 && (
+                    <WizardStepContainer title="Connect Social Accounts" icon="📱">
+                        <p className="text-brand-text-muted mb-6">
+                            Link your social accounts to schedule posts, auto-reply to messages, and manage your social presence from one place. This step is optional but highly recommended.
+                        </p>
+                        <SocialAccountsStep 
+                            userId={profileData.user.id} 
+                            onContinue={() => handleStepComplete()} 
+                            onSkip={() => handleStepComplete()} 
+                        />
+                    </WizardStepContainer>
+                )}
+                
+                {/* STEP 5: LOCK PROFILE */}
+                {currentWizardStep === 5 && (
+                    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-green-400 text-center">
+                        <CheckCircleIcon className="w-16 h-16 mx-auto text-green-500 mb-4" />
+                        <h2 className="text-3xl font-bold text-brand-text mb-2">🎉 Profile Ready to Lock!</h2>
+                        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+                            All foundational steps are complete. Locking this profile is crucial to ensure consistency across all AI tools.
+                        </p>
+                        
+                        {isDirty ? (
+                            <div className="space-y-4 max-w-xs mx-auto">
+                                <p className="text-sm text-red-500 font-semibold">You have unsaved changes. Please save before locking.</p>
+                                <button 
+                                    onClick={handleSaveInfo}
+                                    disabled={isSavingInfo}
+                                    className="w-full bg-accent-blue text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50"
+                                >
+                                    {isSavingInfo ? 'Saving...' : 'Save Changes'}
+                                </button>
+                            </div>
+                        ) : (
+                            <button 
+                                onClick={handleLockProfile}
+                                disabled={isLocking}
+                                className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-4 px-10 rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+                            >
+                                {isLocking ? 'Locking Profile...' : '🔒 Lock Profile & Continue'}
+                            </button>
+                        )}
+                    </div>
+                )}
+                
+                {/* STEP 6: FINAL REDIRECT */}
+                {currentWizardStep === 6 && (
+                    <div className="text-center py-16">
+                        <div className="text-8xl mb-6 animate-bounce">🎉</div>
+                        <h2 className="text-4xl font-extrabold text-brand-text mb-4">Setup Complete!</h2>
+                        <p className="text-xl text-brand-text-muted mb-8">Redirecting you to your Command Center...</p>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-purple mx-auto"></div>
+                    </div>
+                )}
+            </>
+        );
+    };
+    
+    // ========================================
+    // MAIN RENDER
+    // ========================================
+    
+    return (
+        <div className="max-w-4xl mx-auto space-y-6">
+            {notification && (
+                <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-xl flex items-center gap-3 transition-all duration-300 ${
+                    notification.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'
+                }`}>
+                    <InfoIcon className="w-6 h-6" />
+                    <p className="font-semibold">{notification.message}</p>
+                    <button type="button" onClick={() => setNotification(null)}>
+                        <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
             )}
             
-            <button 
-                onClick={onLock} 
-                disabled={isDirty || isSaving || isProcessing}
-                className={`w-full max-w-xs font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 transition-all ${
-                    isDirty || isSaving || isProcessing
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300' 
-                    : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
-            >
-                {isProcessing ? <Loader /> : <LockClosedIcon className="w-5 h-5" />}
-                {isProcessing ? 'Locking...' : 'Lock Profile'}
-            </button>
-        </div>
-    </div>
-);
-
-const LockedView: React.FC<{ onUnlock: () => void, onNext: () => void, isProcessing: boolean }> = ({ onUnlock, onNext, isProcessing }) => (
-    <div className="bg-brand-card p-8 rounded-xl shadow-lg border-2 border-dashed border-red-400 mt-8 text-center glow-card glow-card-rounded-xl">
-        <LockClosedIcon className="w-12 h-12 mx-auto text-red-500" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Profile Locked</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-            This profile is locked to maintain brand consistency across all tools.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button 
-                onClick={onUnlock} 
-                disabled={isProcessing}
-                className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-                {isProcessing ? <Loader /> : <LockOpenIcon className="w-5 h-5" />}
-                {isProcessing ? 'Unlocking...' : 'Unlock to Edit'}
-            </button>
-            <button onClick={onNext} className="bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2">
-                Continue to JetBiz <ArrowRightIcon className="w-5 h-5" />
-            </button>
-        </div>
-    </div>
-);
-
-const StepCard: React.FC<{ number: number; title: string; badge: string; badgeColor: string; isComplete: boolean; isLocked?: boolean; children: React.ReactNode; defaultOpen: boolean; onLockedClick: (step: number) => void; hint?: string; }> = ({ number, title, badge, badgeColor, isComplete, isLocked = false, children, defaultOpen, onLockedClick, hint }) => { 
-    const statusBorderColor = isLocked ? 'border-gray-300' : isComplete ? 'border-green-400' : 'border-blue-400'; 
-    const [isOpen, setIsOpen] = useState(defaultOpen);
-    const handleClick = () => {
-        if (isLocked) {
-            onLockedClick(number);
-        } else {
-            setIsOpen(!isOpen);
-        }
-    };
-    return (
-        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
-            {isLocked && (
-                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-xl"></div>
-            )}
-            <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left relative z-20">
-                <div className="flex items-center gap-4">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${isLocked ? 'bg-gray-400' : isComplete ? 'bg-green-500' : 'bg-blue-500'}`}>
-                        {isComplete ? <CheckCircleIcon className="w-5 h-5" /> : number}
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-2">
-                            <span>{number}. {title}</span>
-                            {hint && (
-                                <HintTooltip content={hint}>
-                                    <InfoIcon className="w-5 h-5" />
-                                </HintTooltip>
-                            )}
-                        </h2>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
-                    {isComplete && <CheckCircleIcon className="w-6 h-6 text-green-500"/>}
-                    {isOpen ? <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" /> : <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />}
-                </div>
-            </button>
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="p-6 sm:p-8 pt-0">
-                    <div className={isLocked ? 'pointer-events-none' : ''}>
-                        {children}
-                    </div>
-                </div>
+            <div className="text-center mb-8">
+                <h1 className="text-4xl font-extrabold text-brand-text mb-2">Welcome to JetSuite</h1>
+                <p className="text-lg text-brand-text-muted">Let's get your business profile set up in 4 easy steps</p>
             </div>
+            
+            {currentWizardStep <= 4 && <WizardProgress currentStep={currentWizardStep} totalSteps={4} />}
+            
+            {renderCurrentStep()}
         </div>
     );
-};
-
-const ProgressBar: React.FC<{ currentStep: number; totalSteps: number }> = ({ currentStep, totalSteps }) => (<div className="w-full mb-8"><div className="flex justify-between items-center text-sm font-semibold text-brand-text-muted mb-1"><span>Profile Setup {currentStep === totalSteps && 'Complete!'}</span><span>Step {currentStep} of {totalSteps}</span></div><div className="w-full bg-brand-light rounded-full h-2.5"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep / totalSteps) * 100}%` }}></div></div></div>);
-
-// --- Main Component ---
-export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, onUpdate, setActiveTool, onBusinessUpdated, isAdmin }) => {
-  const [business, setBusiness] = useState(profileData.business);
-  const [googleBusiness, setGoogleBusiness] = useState(profileData.googleBusiness);
-  const [saveSuccess, setSaveSuccess] = useState('');
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSavingInfo, setIsSavingInfo] = useState(false);
-  const [extractionStage, setExtractionStage] = useState<ExtractionStage>('idle');
-  const [editableDna, setEditableDna] = useState<BusinessDna | null>(null);
-  const [editableBrandProfile, setEditableBrandProfile] = useState<BrandDnaProfile | null>(null);
-  const [analysisError, setAnalysisError] = useState('');
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
-  const [suggestedCategory, setSuggestedCategory] = useState<string | null>(null);
-  const [isGbpSkipped, setIsGbpSkipped] = useState(false);
-  const [isDnaEditing, setIsDnaEditing] = useState(false);
-  const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>('physical');
-  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'info' } | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
-  const [selectedGbp, setSelectedGbp] = useState<BusinessSearchResult | null>(null);
-  const [isSearchingGbp, setIsSearchingGbp] = useState(false);
-  const [searchError, setSearchError] = useState('');
-  const [isLocking, setIsLocking] = useState(false);
-  
-  useEffect(() => { 
-    setBusiness(profileData.business); 
-    setGoogleBusiness(profileData.googleBusiness); 
-    if (profileData.business.dna) setEditableDna(profileData.business.dna);
-    if (profileData.brandDnaProfile) {
-        setEditableDna(profileData.business.dna);
-        setEditableBrandProfile(profileData.brandDnaProfile);
-    }
-    setIsDnaEditing(false);
-  }, [profileData]);
-
-  useEffect(() => {
-    if (profileData.business.location) setLocationType('physical');
-    else if (profileData.business.business_name) setLocationType('online'); 
-    if (!business.location) setBusiness(prev => ({ ...prev, location: '' }));
-  }, [profileData.business]);
-
-  useEffect(() => {
-    // Robust comparison for "dirty" state detection
-    const essentialBusiness = {
-        name: (business.business_name || '').trim(),
-        website: (business.business_website || '').trim(),
-        industry: (business.industry || '').trim(),
-        description: (business.business_description || '').trim(),
-        city: business.city || null,
-        state: business.state || null,
-        location: (business.location || '').trim()
-    };
-    
-    const essentialProfile = {
-        name: (profileData.business.business_name || '').trim(),
-        website: (profileData.business.business_website || '').trim(),
-        industry: (profileData.business.industry || '').trim(),
-        description: (profileData.business.business_description || '').trim(),
-        city: profileData.business.city || null,
-        state: profileData.business.state || null,
-        location: (profileData.business.location || '').trim()
-    };
-
-    const isBusinessDirty = JSON.stringify(essentialBusiness) !== JSON.stringify(essentialProfile);
-    const isGbpDirty = JSON.stringify(profileData.googleBusiness) !== JSON.stringify(googleBusiness);
-    setIsDirty(isBusinessDirty || isGbpDirty); 
-  }, [business, googleBusiness, profileData]);
-
-  const step1Completed = !!business.business_name && !!business.business_website && !!business.industry && (locationType === 'online' || locationType === 'home' || (!!business.location && business.location.includes(',')));
-  const step2Completed = profileData.business.isDnaApproved || profileData.business.is_dna_approved || false;
-  const step3Completed = (googleBusiness.status === 'Verified' && !!googleBusiness.profileName) || isGbpSkipped;
-  const step4Completed = true;
-  const allStepsComplete = step1Completed && step2Completed && step3Completed;
-  const currentStep = (step1Completed ? 1 : 0) + (step2Completed ? 1 : 0) + (step3Completed ? 1 : 0) + (step4Completed ? 1 : 0);
-  const isLocked = profileData.business.is_complete;
-
-  const handleBusinessChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setBusiness(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  const handleGoogleBusinessChange = (e: React.ChangeEvent<HTMLSelectElement>) => { const newStatus = e.target.value as GbpStatus; setIsGbpSkipped(false); setGoogleBusiness(prev => ({...prev, status: newStatus}));};
-  
-  const handleAnalyzeDna = async () => { 
-    if (!step1Completed) return; 
-    setAnalysisError(''); 
-    setExtractionStage('extracting'); 
-    try { 
-      const [websiteDnaResult, brandDnaProfileResult] = await Promise.all([
-        extractWebsiteDna(business.business_website), 
-        extractBrandDnaProfile(business)
-      ]); 
-      const { logoUrl, faviconUrl, ...extracted } = websiteDnaResult; 
-      const logoBase64 = logoUrl ? await imageURLToBase64(logoUrl) : ''; 
-      setEditableDna({ ...extracted, logo: logoBase64, faviconUrl }); 
-      setEditableBrandProfile(brandDnaProfileResult); 
-      setSuggestedCategory(brandDnaProfileResult.industry_context.category_confirmation); 
-      setExtractionStage('reviewing'); 
-    } catch (e) { 
-      console.error("Analysis failed:", e); 
-      setAnalysisError('Extraction failed. One or more analyses could not be completed. Check your API key or try again.'); 
-      setExtractionStage('idle'); 
-    } 
-  };
-  
-  const handleInitialSaveDna = async () => { 
-    if (!editableDna || !editableBrandProfile) return; 
-    setExtractionStage('saving'); 
-    try {
-      const response = await fetch('/api/business/save-dna', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: business.id, dna: editableDna, brandDnaProfile: editableBrandProfile }),
-      });
-      if (!response.ok) throw new Error('Failed to save DNA to database');
-      onBusinessUpdated();
-      setExtractionStage('idle'); 
-      alert('✅ Business DNA saved successfully!');
-    } catch (error) {
-      console.error('Error saving DNA:', error);
-      alert('Failed to save DNA. Please try again.');
-      setExtractionStage('reviewing');
-    }
-  };
-
-  const handleUpdateDna = async () => { 
-    if (!editableDna || !editableBrandProfile) return; 
-    try {
-      const response = await fetch('/api/business/save-dna', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId: business.id, dna: editableDna, brandDnaProfile: editableBrandProfile }),
-      });
-      if (!response.ok) throw new Error('Failed to save DNA to database');
-      const updatedBusiness = { ...business, dna: editableDna, isDnaApproved: true, dnaLastUpdatedAt: new Date().toISOString(), brand_dna_profile: editableBrandProfile }; 
-      onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: editableBrandProfile }); 
-      setIsDnaEditing(false);
-      alert('✅ Business DNA updated successfully!');
-    } catch (error) {
-      console.error('Error updating DNA:', error);
-      alert('Failed to update DNA. Please try again.');
-    }
-  };
-
-  const updateProfileLockStatus = async (lockStatus: boolean) => {
-    setIsLocking(true);
-    try {
-        if (lockStatus && isDirty) { alert('Please save all pending changes in Step 1 before locking the profile.'); setIsLocking(false); return; }
-        const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
-        const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
-        const response = await fetch('/api/business/update-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: profileData.user.id,
-                businessId: business.id,
-                isComplete: lockStatus,
-                businessName: business.business_name,
-                websiteUrl: business.business_website,
-                industry: business.industry,
-                city: business.city,
-                state: business.state,
-                isPrimary: business.is_primary,
-                businessDescription: business.business_description,
-                googleBusiness: googleBusiness,
-                dna: dnaToPreserve,
-                brandDnaProfile: brandProfileToPreserve,
-                isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
-                dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
-            }),
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update profile lock status.');
-        }
-        const updatedBusiness = { ...business, is_complete: lockStatus, dna: dnaToPreserve, brand_dna_profile: brandProfileToPreserve, isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved, dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt };
-        setBusiness(updatedBusiness);
-        onUpdate({ ...profileData, business: updatedBusiness, brandDnaProfile: brandProfileToPreserve });
-        onBusinessUpdated();
-    } catch (err: any) {
-        alert(`Failed to update profile lock status. Details: ${err.message}`);
-    } finally {
-        setIsLocking(false);
-    }
-  };
-
-  const handleLockProfile = async () => {
-    if (!window.confirm('Are you sure you want to lock this profile? Once locked, all tools will use this data as the source of truth.')) return;
-    if (isDirty) {
-        setNotification({ message: 'Please save all pending changes in Step 1 before locking.', type: 'error' });
-        setTimeout(() => setNotification(null), 3000);
-        return;
-    }
-    await updateProfileLockStatus(true);
-  };
-
-  const handleUnlockProfile = async () => {
-    if (!window.confirm('Are you sure you want to unlock this profile? This will allow editing but may affect consistency in tools until changes are saved.')) return;
-    await updateProfileLockStatus(false);
-  };
-
-  const handleSaveInfo = async (e?: React.FormEvent | React.MouseEvent, gbpOverride?: ProfileData['googleBusiness']) => { 
-    if (e && 'preventDefault' in e) e.preventDefault(); 
-    setIsSavingInfo(true);
-    try {
-        let city = '';
-        let state = '';
-        if (locationType === 'physical' && business.location) {
-            const locationParts = (business.location || '').split(',').map(s => s.trim());
-            city = locationParts[0] || '';
-            state = locationParts[1] || '';
-            if (!city || !state) { alert('For physical locations, please enter: City, State (e.g., Loganville, Georgia)'); setIsSavingInfo(false); return; }
-        }
-        if (!business.business_name?.trim() || !business.business_website?.trim() || !business.industry?.trim()) {
-            alert('Business Name, Website, and Category are required.');
-            setIsSavingInfo(false);
-            return;
-        }
-        const dnaToPreserve = editableDna || business.dna || profileData.business.dna;
-        const brandProfileToPreserve = editableBrandProfile || profileData.brandDnaProfile;
-        
-        const gbpToSave = gbpOverride || googleBusiness;
-
-        const payload = {
-            userId: profileData.user.id,
-            businessId: business.id,
-            businessName: business.business_name,
-            websiteUrl: business.business_website,
-            industry: business.industry,
-            city: city || null,
-            state: state || null,
-            isPrimary: business.is_primary,
-            isComplete: isLocked,
-            businessDescription: business.business_description,
-            googleBusiness: gbpToSave,
-            dna: dnaToPreserve,
-            brandDnaProfile: brandProfileToPreserve,
-            isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved,
-            dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt,
-        };
-        const response = await fetch('/api/business/update-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'API route failed to save business profile.');
-        }
-        const updatedBusiness = { ...business, city: city || null, state: state || null, dna: dnaToPreserve, brand_dna_profile: brandProfileToPreserve, isDnaApproved: business.isDnaApproved || profileData.business.isDnaApproved, dnaLastUpdatedAt: business.dnaLastUpdatedAt || profileData.business.dnaLastUpdatedAt };
-        setBusiness(updatedBusiness);
-        
-        onUpdate({ ...profileData, business: updatedBusiness, googleBusiness: gbpToSave }); 
-        
-        setIsDirty(false);
-        setSaveSuccess('Business Information saved!'); 
-        setTimeout(() => setSaveSuccess(''), 3000); 
-        onBusinessUpdated();
-    } catch (err: any) {
-        alert(`Failed to save business details. Details: ${err.message}`);
-    } finally {
-        setIsSavingInfo(false);
-    }
-  };
-
-  const handleGbpSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearchError('');
-    setIsSearchingGbp(true);
-    setSearchResults([]);
-    setSelectedGbp(null);
-    const query = searchTerm.trim() || `${business.business_name}, ${business.location}`;
-    try {
-        const results = await searchGoogleBusiness(query);
-        if (results.length === 0) setSearchError('No businesses found matching your query. Try updating your profile.');
-        else setSearchResults(results);
-    } catch (err) { setSearchError('Failed to search Google Business Profiles. Please try again.'); } 
-    finally { setIsSearchingGbp(false); }
-  };
-
-  const handleGbpSelect = (gbp: BusinessSearchResult) => { setSelectedGbp(gbp); setSearchResults([]); };
-  
-  const handleGbpConfirm = async () => {
-    if (!selectedGbp) return;
-    const newGbp: ProfileData['googleBusiness'] = {
-        profileName: selectedGbp.name,
-        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedGbp.address)}`,
-        status: 'Verified' as GbpStatus,
-        placeId: `manual_${Date.now()}`,
-        rating: selectedGbp.rating,
-        reviewCount: selectedGbp.reviewCount,
-        address: selectedGbp.address,
-    };
-    setGoogleBusiness(newGbp);
-    await handleSaveInfo(undefined, newGbp);
-    setSelectedGbp(null);
-    setSearchTerm('');
-    setSearchResults([]);
-  };
-
-  const handleGbpCancel = () => {
-    setSelectedGbp(null);
-    setSearchResults([]);
-    setSearchTerm('');
-  };
-
-  const handleGbpDisconnect = async () => { 
-    const newGbp = { profileName: '', mapsUrl: '', status: 'Not Created' as GbpStatus, placeId: undefined, rating: undefined, reviewCount: undefined, address: undefined }; 
-    setGoogleBusiness(newGbp); 
-    await handleSaveInfo(undefined, newGbp);
-  };
-  
-  const handleGenerateDescription = async () => { 
-    if (!business.business_website) { alert("Please enter your Website URL first."); return; } 
-    setIsGeneratingDescription(true); 
-    setSuggestedCategory(null);
-    try { 
-        const { description, suggestedCategory } = await generateBusinessDescription(business.business_website); 
-        setBusiness(b => ({ ...b, business_description: description })); 
-        setSuggestedCategory(suggestedCategory);
-    } catch (e) { alert("Failed to generate description. Check your API key."); } 
-    finally { setIsGeneratingDescription(false); }
-  };
-  
-  const renderDnaContent = () => {
-    if (profileData.business.isDnaApproved && profileData.brandDnaProfile) {
-        return <DnaReviewAndSaved 
-            visualDna={isDnaEditing ? editableDna! : business.dna} 
-            detailedDna={isDnaEditing ? editableBrandProfile! : profileData.brandDnaProfile} 
-            isEditable={isDnaEditing} 
-            onVisualDnaChange={setEditableDna} 
-            onDetailedDnaChange={setEditableBrandProfile} 
-            onSave={handleUpdateDna} 
-            onCancel={() => setIsDnaEditing(false)} 
-            onRestart={handleAnalyzeDna} 
-            onEdit={() => { 
-                setEditableDna(JSON.parse(JSON.stringify(business.dna))); 
-                setEditableBrandProfile(JSON.parse(JSON.stringify(profileData.brandDnaProfile!))); 
-                setIsDnaEditing(true); 
-            }} 
-            dnaLastUpdatedAt={business.dnaLastUpdatedAt} 
-            isDnaEditing={isDnaEditing} 
-            editableBrandProfile={editableBrandProfile}
-        />;
-    }
-    switch (extractionStage) {
-      case 'idle': return (<><p className="text-brand-text-muted mb-4">Analyze your website to automatically pull your logo, colors, fonts, and full brand profile.</p>{analysisError && <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-semibold">{analysisError}<div className="mt-2"><button type="button" onClick={handleAnalyzeDna} className="font-bold underline">Try again</button></div></div>}<div className="text-center p-4 rounded-xl"><p className="text-brand-text-muted mb-4">We'll analyze: <a href={business.business_website} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent-blue">{business.business_website}</a></p><button type="button" onClick={handleAnalyzeDna} className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity duration-300 text-lg shadow-lg">Extract Business DNA</button></div></>);
-      case 'extracting': return <DnaExtractionLoading />;
-      case 'reviewing': return (editableDna && editableBrandProfile) ? <DnaReviewAndSaved visualDna={editableDna} detailedDna={editableBrandProfile} isEditable={true} onSave={handleInitialSaveDna} onRestart={handleAnalyzeDna} onVisualDnaChange={setEditableDna} onDetailedDnaChange={setEditableBrandProfile} onEdit={() => {}} onCancel={() => setExtractionStage('idle')} isDnaEditing={isDnaEditing} editableBrandProfile={editableBrandProfile}/> : <Loader />;
-      case 'saving': return <div className="text-center p-8"><Loader /><p className="mt-2 font-semibold">Saving your Business DNA...</p></div>;
-      default: return null;
-    }
-  };
-
-  const renderGbpContent = () => { 
-    if (step3Completed && !isGbpSkipped && googleBusiness.status === 'Verified') { 
-        return (
-            <div>
-                <p className="text-brand-text-muted mb-4">Your Google Business Profile is connected and verified.</p>
-                <GbpDashboard gbpData={googleBusiness} onDisconnect={handleGbpDisconnect} />
-            </div>
-        ); 
-    } 
-    const onUpdateStatus = (s: GbpStatus) => { 
-        const newGbp = {...googleBusiness, status: s}; 
-        setGoogleBusiness(newGbp); 
-    }; 
-    switch (googleBusiness.status) { 
-        case 'Not Created': return <GbpNotCreatedGuide business={business} onUpdateStatus={onUpdateStatus} onSkip={() => setIsGbpSkipped(true)} />; 
-        case 'Not Verified': return <GbpNotVerifiedGuide onUpdateStatus={onUpdateStatus} />; 
-        case 'Verified': return <GbpConnect profileData={profileData} onSearch={handleGbpSearch} searchResults={searchResults} loading={isSearchingGbp} error={searchError} onSelect={handleGbpSelect} selected={selectedGbp} onConfirm={handleGbpConfirm} onCancel={handleGbpCancel} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />; 
-        default: return <p className="text-brand-text-muted">Select a status to continue.</p>; 
-    } 
-  };
-
-  const handleLockedClick = (stepNumber: number) => {
-    let message = '';
-    switch (stepNumber) {
-        case 2: message = 'Please complete Step 1 (Business Information) first.'; break;
-        case 3: message = 'Please complete Step 2 (Business DNA) first.'; break;
-        case 4: message = 'Please complete Step 3 (Google Business Profile) first.'; break;
-        default: message = 'This step is locked until the previous step is complete.';
-    }
-    setNotification({ message, type: 'info' });
-    setTimeout(() => setNotification(null), 3000);
-  };
-
-  const hints = {
-    step1: "This information powers all JetSuite AI tools. Your business name, website, and category help us provide accurate, personalized recommendations across every module.",
-    step2: "Your Business DNA is the source of truth for all AI-generated content. It ensures brand consistency in posts, images, ads, and replies by capturing your unique tone, colors, and style.",
-    step3: "Connecting your GBP unlocks local SEO audits in JetBiz, auto-fetches reviews for JetReply, and improves your Growth Score accuracy. Essential for local visibility.",
-    step4: "Link your social accounts to schedule posts, auto-reply to messages, and manage all your social presence from one place. Optional but highly recommended."
-  };
-
-  return (
-    <div className="space-y-6">
-        {notification && (
-            <div className={`fixed top-20 right-4 z-50 p-4 rounded-lg shadow-xl flex items-center gap-3 transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${notification.type === 'error' ? 'bg-red-500 text-white' : 'bg-blue-500 text-white'}`}>
-                <InfoIcon className="w-6 h-6" />
-                <p className="font-semibold">{notification.message}</p>
-                <button type="button" onClick={() => setNotification(null)}><XMarkIcon className="w-5 h-5" /></button>
-            </div>
-        )}
-        <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
-        <ProgressBar currentStep={currentStep} totalSteps={4} />
-        {isLocked ? (
-            <LockedView onUnlock={handleUnlockProfile} onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} isProcessing={isLocking} />
-        ) : null}
-        <StepCard number={1} title="Business Information" badge={step1Completed ? "✓ Complete" : "Required"} badgeColor={step1Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} isComplete={step1Completed} defaultOpen={!step1Completed} onLockedClick={handleLockedClick} isLocked={isLocked} hint={hints.step1}>
-            <p className="text-brand-text-muted mb-6">This info powers all JetSuite tools.</p>
-            {saveSuccess && <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">{saveSuccess}</div>}
-            <form onSubmit={handleSaveInfo} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-medium text-brand-text mb-1">Business Name <span className="text-red-500">*</span></label><input type="text" name="business_name" value={business.business_name} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/></div>
-                    <div><label className="block text-sm font-medium text-brand-text mb-1">Website URL <span className="text-red-500">*</span></label><input type="url" name="business_website" value={business.business_website} onChange={handleBusinessChange} placeholder="https://..." className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/></div>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-brand-text mb-1">Business Description</label>
-                    <div className="flex items-center gap-2 mb-2">
-                        <button type="button" onClick={handleGenerateDescription} disabled={isGeneratingDescription} className="flex items-center gap-1 text-xs font-semibold bg-accent-purple/10 text-accent-purple px-2 py-1 rounded-md hover:bg-accent-purple/20">
-                            {isGeneratingDescription ? <><Loader /> Generating...</> : <><SparklesIcon className="w-3 h-3"/> Generate with AI</>}
-                        </button>
-                    </div>
-                    <textarea name="business_description" value={business.business_description} onChange={handleBusinessChange} rows={3} maxLength={500} className="w-full bg-brand-light border border-brand-border rounded-lg p-2"/>
-                    <p className="text-right text-xs text-brand-text-muted">{business.business_description?.length || 0} / 500</p>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-brand-text mb-1">Business Category</label>
-                    {suggestedCategory && <div className="bg-blue-50 border border-blue-200 p-2 rounded-lg mb-2 flex justify-between items-center text-sm"><p>💡 Suggested: <span className="font-bold">{suggestedCategory}</span></p><div><button type="button" onClick={() => { setBusiness(b => ({ ...b, industry: suggestedCategory })); setSuggestedCategory(null); }} className="font-semibold text-blue-600 px-2">Accept</button><button type="button" onClick={() => setSuggestedCategory(null)} className="text-gray-500">x</button></div></div>}
-                    <input list="business-categories" name="industry" value={business.industry} onChange={handleBusinessChange} className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/>
-                    <datalist id="business-categories">{BUSINESS_CATEGORIES.map(cat => <option key={cat} value={cat} />)}</datalist>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-brand-text mb-2">Business Location Type</label>
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                        {['physical', 'online', 'home'].map((type) => (
-                            <button key={type} type="button" onClick={() => setLocationType(type as any)} className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${locationType === type ? 'border-accent-blue bg-accent-blue/10 text-accent-blue' : 'border-brand-border text-brand-text-muted hover:border-accent-blue/50'}`}>
-                                {type === 'physical' ? '🏢 Physical' : type === 'online' ? '🌐 Online' : '🏠 Home-Based'}
-                            </button>
-                        ))}
-                    </div>
-                    {locationType === 'physical' && (
-                        <div>
-                            <label className="block text-sm font-medium text-brand-text mb-1">Primary Location (City, State) <span className="text-red-500">*</span></label>
-                            <input type="text" name="location" value={business.location || ''} onChange={handleBusinessChange} placeholder="e.g., Loganville, Georgia" className="w-full bg-brand-light border border-brand-border rounded-lg p-2" required/>
-                        </div>
-                    )}
-                </div>
-                {/* ALWAYS show save button if unlocked to allow the user to clear dirty state and lock */}
-                {!isLocked && (
-                    <div className="flex justify-end pt-2">
-                        <button type="submit" disabled={isSavingInfo} className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all disabled:opacity-50">
-                            {isSavingInfo ? 'Saving Changes...' : 'Save Changes'}
-                        </button>
-                    </div>
-                )}
-                {isAdmin && !isLocked && (
-                    <div className="mt-6 pt-4 border-t border-dashed border-red-300">
-                        <h4 className="text-sm font-bold text-red-600">Admin Action</h4>
-                        <p className="text-xs text-gray-500 mb-2">Bypass checks and lock this profile. This will save any unsaved changes first.</p>
-                        <button
-                            type="button"
-                            onClick={async () => {
-                                await handleSaveInfo();
-                                await updateProfileLockStatus(true);
-                            }}
-                            className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg"
-                        >
-                            Force Save & Lock Profile
-                        </button>
-                    </div>
-                )}
-            </form>
-        </StepCard>
-        <StepCard number={2} title="Business DNA" badge={step1Completed ? (step2Completed ? "✓ Complete" : "Ready") : "Requires Step 1"} badgeColor={step1Completed ? (step2Completed ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800") : "bg-gray-200 text-gray-700"} isComplete={step2Completed} isLocked={!step1Completed || isLocked} defaultOpen={step1Completed && !step2Completed} onLockedClick={handleLockedClick} hint={hints.step2}>
-            {!step1Completed ? <p className="text-center font-semibold">Complete Step 1 first.</p> : renderDnaContent()}
-        </StepCard>
-        <StepCard number={3} title="Google Business Profile" badge={step3Completed ? (isGbpSkipped ? "Skipped" : "✓ Connected") : "Recommended"} badgeColor={step3Completed ? (isGbpSkipped ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800") : "bg-blue-100 text-blue-800"} isComplete={step3Completed} isLocked={!step2Completed || isLocked} defaultOpen={step2Completed && !step3Completed} onLockedClick={handleLockedClick} hint={hints.step3}>
-            {locationType !== 'physical' && <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4"><p className="text-sm text-yellow-800 font-semibold">ℹ️ Google Business Profile is primarily for businesses with physical locations.</p></div>}
-            <div className="mt-4">
-                <label className="block text-sm font-medium text-brand-text mb-2">What is the status of your Google Business Profile?</label>
-                <div className="flex gap-2 mb-4">
-                    <select name="status" value={googleBusiness.status} onChange={handleGoogleBusinessChange} className="flex-1 bg-brand-light border rounded-lg p-3" disabled={step3Completed && !isGbpSkipped}>
-                        <option value="Not Created">I don't have a profile yet</option>
-                        <option value="Not Verified">I have a profile, but it's not verified</option>
-                        <option value="Verified">My profile is verified</option>
-                    </select>
-                    {!isLocked && (
-                        <button 
-                            type="button"
-                            onClick={() => handleSaveInfo()}
-                            disabled={isSavingInfo}
-                            className="bg-accent-blue text-white px-4 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50"
-                        >
-                            {isSavingInfo ? '...' : 'Save'}
-                        </button>
-                    )}
-                </div>
-                {renderGbpContent()}
-            </div>
-        </StepCard>
-        <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
-            <SocialAccountsStep userId={profileData.user.id} onContinue={() => {}} onSkip={() => {}} />
-        </StepCard>
-        {allStepsComplete && !isLocked && (
-            <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} isProcessing={isLocking} />
-        )}
-    </div>
-  );
 };
