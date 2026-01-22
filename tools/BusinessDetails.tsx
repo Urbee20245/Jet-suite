@@ -432,7 +432,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     // Business Info State
     const [business, setBusiness] = useState(profileData.business);
     const [locationType, setLocationType] = useState<'physical' | 'online' | 'home'>(
-        profileData.business.location_type || 'physical'
+        profileData.business.location ? 'physical' : 'online'
     );
     const [isSavingInfo, setIsSavingInfo] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState('');
@@ -460,7 +460,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     
     // Locking State
     const [isLocking, setIsLocking] = useState(false);
-    const [isLocked, setIsLocked] = useState(profileData.business.is_locked || false);
+    const [isLocked, setIsLocked] = useState(profileData.business.is_complete || false);
     const [isDirty, setIsDirty] = useState(false);
     
     // Step Completion
@@ -568,8 +568,9 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         
         setIsGeneratingDescription(true);
         try {
-            const description = await generateBusinessDescription(business.business_name, business.business_website, business.industry);
-            setBusiness(prev => ({ ...prev, business_description: description }));
+            const description = await generateBusinessDescription(business.business_website);
+            setBusiness(prev => ({ ...prev, business_description: description.description }));
+            setSuggestedCategory(description.suggestedCategory);
             setIsDirty(true);
         } catch (error) {
             setNotification({ message: 'Failed to generate description. Please try again.', type: 'error' });
@@ -622,7 +623,6 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 business: {
                     ...profileData.business,
                     ...business,
-                    is_complete: true,
                     location_type: locationType
                 }
             });
@@ -655,10 +655,18 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         setExtractionStage('extracting');
         try {
             const dna = await extractWebsiteDna(business.business_website);
-            setExtractedDna(dna);
+            // Convert logoUrl to base64 for BusinessDna type
+            const logoBase64 = dna.logoUrl ? await imageURLToBase64(dna.logoUrl) : '';
+            setExtractedDna({
+                logo: logoBase64,
+                colors: dna.colors,
+                fonts: dna.fonts,
+                style: dna.style,
+                faviconUrl: dna.faviconUrl
+            });
             setExtractionStage('reviewing');
             
-            const brandProfile = await extractBrandDnaProfile(business.business_website, dna);
+            const brandProfile = await extractBrandDnaProfile(business);
             setDetailedDna(brandProfile);
         } catch (error) {
             console.error('DNA extraction failed:', error);
@@ -854,7 +862,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 ...profileData,
                 business: {
                     ...profileData.business,
-                    is_locked: true
+                    is_complete: true
                 }
             });
             onBusinessUpdated();
