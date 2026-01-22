@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Tool, ProfileData } from '../types';
-import { generateImage } from '../services/geminiService';
+import { generateImage, getTrendingImageStyles } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, ArrowDownTrayIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon, TrashIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, ArrowDownTrayIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon, TrashIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
 import { JetProductIcon } from '../components/icons/ToolIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
@@ -19,6 +19,7 @@ type AspectRatio = "1:1" | "3:4" | "4:3" | "9:16" | "16:9";
 interface Style {
   name: string;
   prompt: string;
+  description?: string;
 }
 
 const MOCKUP_STYLES = {
@@ -405,7 +406,8 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   };
 
   useEffect(() => {
-    fetchStyles();
+    // FIX 1: Remove call to non-existent function here.
+    // fetchStyles(); 
   }, []);
 
   // Handle standard image upload
