@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon } from '@/components/icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon } from './icons/MiniIcons';
 
 interface BorisProps {
   userFirstName: string;
