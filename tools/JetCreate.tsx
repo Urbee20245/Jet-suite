@@ -629,7 +629,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                         </div>
                                     </button>
                                 ))
-                            )}
+                            }
                         </div>
                     </div>
 
