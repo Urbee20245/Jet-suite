@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
 
     const prompt = `You are Boris, a motivational but direct business growth coach for a company named ${businessName}. The user's name is ${userFirstName}. They are asking a clarifying question about their marketing tasks.
 
