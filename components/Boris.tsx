@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon } from './icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon } from './icons/MiniIcons';
 
 interface BorisProps {
   userFirstName: string;
@@ -9,11 +9,13 @@ interface BorisProps {
   newReviewsCount: number;
   onNavigate: (toolId: string) => void;
   onReplyToReviews: () => void;
+  onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
 }
 
 interface BorisState {
   stage: 'business_details' | 'jetbiz' | 'jetviz' | 'growth_plan' | 'daily_tools';
   message: string;
+  messageIntro?: string;
   actionButton: { text: string; onClick: () => void; } | null;
   completedItems: string[];
   todaysTasks: any[];
@@ -41,7 +43,8 @@ export const Boris: React.FC<BorisProps> = ({
   hasNewReviews,
   newReviewsCount,
   onNavigate,
-  onReplyToReviews
+  onReplyToReviews,
+  onTaskStatusChange
 }) => {
   const [borisState, setBorisState] = useState<BorisState | null>(null);
   const [showWhyDialog, setShowWhyDialog] = useState(false);
@@ -71,6 +74,7 @@ export const Boris: React.FC<BorisProps> = ({
 
     let stage: BorisState['stage'];
     let message: string;
+    let messageIntro: string | undefined = undefined;
     let actionButton: BorisState['actionButton'] = null;
     let completedItems: string[] = [];
     let todaysTasks: any[] = [];
@@ -127,8 +131,9 @@ export const Boris: React.FC<BorisProps> = ({
         progressContext = `You've completed all your tasks! Time to generate more with another audit.`;
       }
       
-      message = `${openingLine} ${progressContext}\n\nHere's what you need to focus on TODAY:\n\n${todaysTasks.map((t, i) => `${i + 1}. ${t.title}`).join('\n')}`;
-      actionButton = { text: 'View Growth Plan', onClick: () => onNavigate('growthplan') };
+      messageIntro = `${openingLine} ${progressContext}\n\nHere's what you need to focus on TODAY:`;
+      message = ''; // Not used for this stage
+      actionButton = { text: 'View Full Growth Plan', onClick: () => onNavigate('growthplan') };
       showUpsell = todaysTasks.some(shouldShowUpsell);
     }
     else {
@@ -138,7 +143,7 @@ export const Boris: React.FC<BorisProps> = ({
       actionButton = null;
     }
 
-    setBorisState({ stage, message, actionButton, completedItems, todaysTasks, showUpsell });
+    setBorisState({ stage, message, messageIntro, actionButton, completedItems, todaysTasks, showUpsell });
   };
 
   const handleWhyQuestion = () => {
@@ -158,7 +163,6 @@ export const Boris: React.FC<BorisProps> = ({
     <div className="bg-[#2D1B4E] border-2 border-purple-600 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
       <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl"></div>
       
-      {/* Boris Header */}
       <div className="flex items-start gap-4 mb-4">
         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 ring-4 ring-purple-500/20">
           <SparklesIconSolid className="w-7 h-7 text-white" />
@@ -174,7 +178,6 @@ export const Boris: React.FC<BorisProps> = ({
         </div>
       </div>
 
-      {/* Completed Items */}
       {borisState.completedItems.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {borisState.completedItems.map((item, idx) => (
@@ -185,12 +188,32 @@ export const Boris: React.FC<BorisProps> = ({
         </div>
       )}
 
-      {/* Boris Message */}
       <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
-        <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.message}</p>
+        {borisState.messageIntro ? (
+            <>
+                <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+                {borisState.todaysTasks.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                        {borisState.todaysTasks.map((task, i) => (
+                            <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                                <span className="text-gray-300 text-sm">{i + 1}. {task.title}</span>
+                                <button 
+                                    onClick={() => onTaskStatusChange(task.id, 'completed')}
+                                    className="p-1 bg-green-500/20 rounded-full hover:bg-green-500/40"
+                                    title="Mark as complete"
+                                >
+                                    <CheckCircleIcon className="w-5 h-5 text-green-400" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </>
+        ) : (
+            <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.message}</p>
+        )}
       </div>
 
-      {/* Action Button */}
       {borisState.actionButton && (
         <button
           onClick={borisState.actionButton.onClick}
@@ -201,7 +224,6 @@ export const Boris: React.FC<BorisProps> = ({
         </button>
       )}
 
-      {/* Ask Why Button & Upsell Link */}
       <div className="mt-3 text-sm flex items-center justify-center gap-4">
         <button
           onClick={() => setShowWhyDialog(true)}
@@ -227,7 +249,6 @@ export const Boris: React.FC<BorisProps> = ({
         )}
       </div>
 
-      {/* Why Dialog */}
       {showWhyDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-purple-500/30">

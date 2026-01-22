@@ -32,6 +32,7 @@ import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
 import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from './services/borisService';
 import { ALL_TOOLS } from './constants';
+import { Confetti } from './components/Confetti';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -52,6 +53,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [isBackgroundLoading, setIsBackgroundLoading] = useState(false);
   const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
   const [reviewResponseRate, setReviewResponseRate] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Boris-related state
   const [hasNewReviews, setHasNewReviews] = useState(false);
@@ -249,6 +251,10 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     );
     setTasks(updatedTasks);
     
+    if (newStatus === 'completed') {
+        setShowConfetti(true);
+    }
+    
     if (activeBusinessId) {
       try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
@@ -263,7 +269,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         try {
             await syncToSupabase(userId, activeBusinessId, toolId, report);
             
-            // Set audit completion flag so Boris can detect it
             const { data: currentProfile } = await supabase
               .from('business_profiles')
               .select('audits')
@@ -393,19 +398,25 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           onReplyToReviews={handleReplyToReviews}
         />;
       default:
-        return <Welcome 
-          setActiveTool={handleSetActiveTool} 
-          profileData={currentProfileData} 
-          readinessState={getReadiness()} 
-          plan={{ name: 'Pro', profileLimit: 1 }} 
-          growthScore={calculateGrowthScore()} 
-          pendingTasksCount={pendingTasksCount}
-          reviewResponseRate={reviewResponseRate}
-          tasks={tasks}
-          hasNewReviews={hasNewReviews}
-          newReviewsCount={newReviewsCount}
-          onReplyToReviews={handleReplyToReviews}
-        />;
+        return (
+            <>
+                {showConfetti && <Confetti onComplete={() => setShowConfetti(false)} />}
+                <Welcome 
+                  setActiveTool={handleSetActiveTool} 
+                  profileData={currentProfileData} 
+                  readinessState={getReadiness()} 
+                  plan={{ name: 'Pro', profileLimit: 1 }} 
+                  growthScore={calculateGrowthScore()} 
+                  pendingTasksCount={pendingTasksCount}
+                  reviewResponseRate={reviewResponseRate}
+                  tasks={tasks}
+                  hasNewReviews={hasNewReviews}
+                  newReviewsCount={newReviewsCount}
+                  onReplyToReviews={handleReplyToReviews}
+                  onTaskStatusChange={handleTaskStatusChange as any}
+                />
+            </>
+        );
     }
   };
 

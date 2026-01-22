@@ -19,6 +19,7 @@ interface WelcomeProps {
     hasNewReviews: boolean;
     newReviewsCount: number;
     onReplyToReviews: () => void;
+    onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
 }
 
 // Section header component
@@ -88,7 +89,8 @@ export const Welcome: React.FC<WelcomeProps> = ({
   tasks,
   hasNewReviews,
   newReviewsCount,
-  onReplyToReviews
+  onReplyToReviews,
+  onTaskStatusChange
 }) => {
     // Tool organization by phase
     const businessFoundationTools = ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'];
@@ -118,6 +120,7 @@ export const Welcome: React.FC<WelcomeProps> = ({
               if (tool) setActiveTool(tool);
             }}
             onReplyToReviews={onReplyToReviews}
+            onTaskStatusChange={onTaskStatusChange}
           />
         
           {/* 1. Business Foundation - Card Grid */}
