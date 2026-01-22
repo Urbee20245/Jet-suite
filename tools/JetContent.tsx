@@ -6,6 +6,7 @@ import { ResultDisplay } from '../components/ResultDisplay';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, SparklesIcon, CheckCircleIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetContentProps {
   tool: Tool;
@@ -186,10 +187,11 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       </div>
       
       {loading && (
-          <div className="mt-8">
-              <Loader />
-              <p className="text-center text-brand-text-muted animate-pulse">Our AI is researching and drafting your local SEO article...</p>
-          </div>
+          <AnalysisLoadingState 
+            title="Generating SEO-Optimized Article"
+            message="Our AI is researching local keywords and drafting your long-form content. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
       )}
       
       {result && (

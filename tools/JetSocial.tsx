@@ -9,6 +9,7 @@ import { SocialConnectionsManager } from '../components/SocialConnectionsManager
 import { SevenDayPlanner } from '../components/SevenDayPlanner';
 import { TOOLS } from '../constants';
 import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetSocialProps {
   tool: Tool;
@@ -382,7 +383,13 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
             </form>
           </div>
           
-          {loading && <Loader />}
+          {loading && (
+            <AnalysisLoadingState 
+                title="Generating Social Media Posts"
+                message="Our AI is drafting platform-optimized posts and visual suggestions based on your brand DNA. This can take up to 5 minutes."
+                durationEstimateSeconds={300}
+            />
+          )}
           
           {posts.length > 0 && (
             <div className="mt-6 space-y-6">

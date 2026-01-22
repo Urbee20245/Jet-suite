@@ -6,6 +6,7 @@ import { ResultDisplay } from '../components/ResultDisplay';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, SparklesIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetEventsProps {
   tool: Tool;
@@ -97,10 +98,11 @@ export const JetEvents: React.FC<JetEventsProps> = ({ tool, profileData, setActi
         </form>
       </div>
       {loading && (
-          <div className="mt-12">
-              <Loader />
-              <p className="text-center text-brand-text-muted animate-pulse">Our AI is brainstorming creative local events for your business...</p>
-          </div>
+          <AnalysisLoadingState 
+            title="Brainstorming Local Event Ideas"
+            message="Our AI is generating creative, local event and promotion ideas tailored to your business and goals. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
       )}
       {result && (
           <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

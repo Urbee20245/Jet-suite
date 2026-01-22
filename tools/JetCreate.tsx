@@ -19,6 +19,7 @@ import {
 import { ALL_TOOLS } from '../constants';
 import { getTomorrowDate, getMinDate, getMaxDate } from '../utils/dateTimeUtils';
 import { HowToUse } from '../components/HowToUse';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetCreateProps {
   tool: Tool;
@@ -89,7 +90,7 @@ const ScheduleModal: React.FC<{
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 overflow-y-auto">
             <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-lg w-full my-8">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-xl font-bold text-brand-text">Schedule Post</h3>
@@ -493,6 +494,27 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
             </div>
         );
     }
+    
+    // 3. LOADING STATE
+    if (isLoadingCampaigns) {
+        return (
+            <AnalysisLoadingState 
+                title="Generating Campaign Ideas"
+                message="Our AI is brainstorming on-brand campaign ideas based on your Business DNA. This can take up to 5 minutes."
+                durationEstimateSeconds={300}
+            />
+        );
+    }
+    
+    if (isLoadingAssets) {
+        return (
+            <AnalysisLoadingState 
+                title="Generating Creative Assets"
+                message="Drafting social posts, ad copy, and visual suggestions for your selected campaign. This can take up to 5 minutes."
+                durationEstimateSeconds={300}
+            />
+        );
+    }
 
     return (
         <div className="h-full w-full bg-brand-darker flex flex-col">
@@ -563,12 +585,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                         <p className="text-xs text-brand-text-muted mb-4">Generated for your business</p>
                         
                         <div className="space-y-3 pr-1">
-                            {isLoadingCampaigns ? (
-                                <div className="flex items-center justify-center py-8">
-                                    <Loader />
-                                </div>
-                            ) : (
-                                campaignIdeas.map(idea => (
+                            {campaignIdeas.map(idea => (
                                     <button 
                                         key={idea.id} 
                                         onClick={() => handleSelectCampaign(idea)} 
@@ -644,13 +661,6 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                             <SparklesIcon className="w-16 h-16 mb-4 opacity-20" />
                             <p className="text-lg font-medium">Select a campaign to get started</p>
                             <p className="text-sm mt-2">Choose from the ideas on the left, or create your own</p>
-                        </div>
-                    ) : isLoadingAssets ? (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center">
-                                <Loader />
-                                <p className="text-sm text-brand-text-muted mt-4">Generating campaign assets...</p>
-                            </div>
                         </div>
                     ) : error ? (
                         <div className="flex-1 flex items-center justify-center text-center p-8">

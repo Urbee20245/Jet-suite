@@ -6,6 +6,7 @@ import { ResultDisplay } from '../components/ResultDisplay';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, MapPinIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetLeadsProps {
   tool: Tool;
@@ -128,10 +129,11 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
         </form>
       </div>
       {loading && (
-          <div className="mt-12">
-              <Loader />
-              <p className="text-center text-brand-text-muted animate-pulse">Our AI is scanning local data for new customer opportunities...</p>
-          </div>
+          <AnalysisLoadingState 
+            title="Searching for High-Intent Leads"
+            message="Our AI is scanning public forums and social media for people actively looking for your services. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
       )}
       {result && (
           <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">

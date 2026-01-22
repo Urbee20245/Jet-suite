@@ -5,6 +5,7 @@ import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, MapPinIcon, PlusIcon, XMarkIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetKeywordsProps {
   tool: Tool;
@@ -212,7 +213,13 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
           </button>
         </form>
       </div>
-      {loading && <Loader />}
+      {loading && (
+          <AnalysisLoadingState 
+            title="Performing Local Keyword Research"
+            message="Our AI is analyzing search trends and competition to find the best keywords for your business. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
+      )}
       {result && (
         <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center mb-4">

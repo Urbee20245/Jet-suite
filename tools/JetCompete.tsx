@@ -6,6 +6,7 @@ import { AuditResultDisplay } from '../components/AuditResultDisplay';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetCompeteProps {
   tool: Tool;
@@ -98,7 +99,13 @@ export const JetCompete: React.FC<JetCompeteProps> = ({ tool, addTasksToGrowthPl
           </button>
         </form>
       </div>
-      {loading && <Loader />}
+      {loading && (
+          <AnalysisLoadingState 
+            title="Analyzing Competitor Strategy"
+            message="Our AI is performing a deep dive into your competitor's online presence and identifying strategic gaps. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
+      )}
       {result && <AuditResultDisplay report={result} onRerun={handleSubmit} isRunning={loading} />}
     </div>
   );

@@ -5,6 +5,7 @@ import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, ArrowPathIcon, TrashIcon } from '../components/icons/MiniIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetImageProps {
   tool: Tool;
@@ -317,15 +318,20 @@ VISUAL REQUIREMENTS:
     if (!generatedImageUrl) return;
     
     const a = document.createElement('a');
-    a.href = generatedImageUrl;
-    a.download = `${(activeTab === 'youtube' ? youtubeTitle : prompt).substring(0, 30).replace(/\s/g, '_') || 'jetimage'}.png`;
+    const filename = `${(activeTab === 'youtube' ? youtubeTitle : prompt).substring(0, 30).replace(/\s/g, '_') || 'jetimage'}.png`;
+    
+    // Use the original image URL if available, otherwise use the watermarked one
+    const urlToDownload = generatedImageUrl; 
+    
+    a.href = urlToDownload;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
   };
   
   const handleRejectAndRegenerate = async () => {
-    if (loading) return;
+    if (loading || loadingYoutube) return;
     
     // Clear the generated image
     setGeneratedImageUrl(null);
@@ -346,6 +352,15 @@ VISUAL REQUIREMENTS:
 
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const creditsRemaining = creditsLimit - creditsUsed;
+
+  if (loading || loadingYoutube) {
+    const title = activeTab === 'standard' ? 'Generating Custom Image' : 'Generating YouTube Thumbnail';
+    const message = activeTab === 'standard' 
+        ? 'Our AI is creating your image based on your prompt and brand DNA. This can take up to 5 minutes.'
+        : 'Our AI is designing a high-CTR thumbnail based on your video title and style preferences. This can take up to 5 minutes.';
+    
+    return <AnalysisLoadingState title={title} message={message} durationEstimateSeconds={300} />;
+  }
 
   return (
     <div>
@@ -694,12 +709,10 @@ VISUAL REQUIREMENTS:
         )}
       </div>
       
-      {loading && <Loader />}
-      
       {generatedImageUrl && (
-        <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg border border-brand-border">
+        <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
           <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Image</h3>
-          <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="rounded-lg w-full h-auto max-w-2xl mx-auto border border-brand-border" />
+          <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
           <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
             <button

@@ -6,6 +6,7 @@ import { HowToUse } from '../components/HowToUse';
 import { ReadinessBanner } from '../components/ReadinessBanner';
 import { StarIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetReplyProps {
   tool: Tool;
@@ -207,6 +208,16 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
       </div>
     );
   }
+  
+  if (loading) {
+    return (
+        <AnalysisLoadingState 
+            title="Drafting Review Response"
+            message="Our AI is analyzing the review sentiment and crafting a professional, on-brand reply. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+        />
+    );
+  }
 
   return (
     <div>
@@ -360,13 +371,6 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
           >
             {loading ? 'Drafting Reply...' : 'Draft Reply for Selected Review'}
           </button>
-        </div>
-      )}
-
-      {loading && (
-        <div className="mt-6 bg-brand-card p-8 rounded-xl shadow-lg text-center">
-          <Loader />
-          <p className="text-brand-text-muted mt-4">Crafting your professional reply...</p>
         </div>
       )}
       

@@ -5,6 +5,7 @@ import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetAdsProps {
   tool: Tool;
@@ -138,7 +139,13 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
           </button>
         </form>
       </div>
-      {loading && <Loader />}
+      {loading && (
+          <AnalysisLoadingState 
+            title="Generating High-Converting Ad Copy"
+            message="Our AI is drafting multiple ad variations optimized for your selected platform. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+          />
+      )}
       {ads.length > 0 && (
         <div className="mt-6 space-y-6">
             {copySuccess && <div className="bg-green-100 text-green-800 text-sm font-semibold p-3 rounded-lg text-center shadow">{copySuccess}</div>}

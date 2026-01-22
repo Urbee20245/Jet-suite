@@ -6,6 +6,7 @@ import { HowToUse } from '../components/HowToUse';
 import { ArrowUpTrayIcon, XCircleIcon, ArrowDownTrayIcon, SparklesIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { JetProductIcon } from '../components/icons/ToolIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
+import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
 interface JetProductProps {
   tool: Tool;
@@ -49,7 +50,7 @@ const MOCKUP_STYLES = {
         },
         { 
             name: "Outdoor Natural", 
-            prompt: "Lifestyle product photography in natural outdoor setting. Wooden surface or stone. Greenery in soft background blur. Natural daylight. Fresh, organic feel. Beautiful bokeh. Environmental portrait style. 8K." 
+            prompt: "Lifestyle product photography in natural outdoor setting. Wooden surface or stone. Greenery in soft background blur. Natural daylight. Fresh, organic feel. Environmental portrait style. 8K." 
         },
     ],
     
@@ -443,7 +444,7 @@ Focus on photorealism and commercial quality.`;
         }
         
         if (productName) {
-          finalPrompt += `\n\n- Product Name: "${productName}" (display prominently)`;
+          finalPrompt += `\n- Product Name: "${productName}" (display prominently)`;
         }
         if (headline) {
           finalPrompt += `\n- Headline/Tagline: "${headline}" (bold and attention-grabbing)`;
@@ -500,6 +501,16 @@ Focus on photorealism and commercial quality.`;
 
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   const creditsRemaining = creditsLimit - creditsUsed;
+
+  if (loading) {
+    return (
+        <AnalysisLoadingState 
+            title="Generating Product Mockup"
+            message="Our AI is transforming your image into a professional, branded mockup. This can take up to 5 minutes."
+            durationEstimateSeconds={300}
+        />
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -706,19 +717,27 @@ Focus on photorealism and commercial quality.`;
         </form>
       </div>
       
-      {loading && <Loader />}
-      
       {generatedImageUrl && (
         <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
           <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Mockup</h3>
           <img src={generatedImageUrl} alt="Generated Product Mockup" className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
           
           <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
-            <button onClick={handleDownload} className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"><ArrowDownTrayIcon className="w-5 h-5" /> Download PNG</button>
-            {(productName || headline || price) && (
-              <button onClick={async () => { const form = document.querySelector('form'); if (form) { const event = new Event('submit', { cancelable: true, bubbles: true }); form.dispatchEvent(event); } }} disabled={loading} className="flex items-center justify-center gap-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"><SparklesIcon className="w-5 h-5" /> Try Different Text Style</button>
-            )}
-            <button onClick={() => { setGeneratedImageUrl(null); setInputImage(null); setProductName(''); setHeadline(''); setPrice(''); setTextFont('elegant-serif'); setTextSize('medium'); setTextColor(''); setTextPosition('center'); if (fileInputRef.current) { fileInputRef.current.value = ''; } }} className="flex items-center justify-center gap-2 bg-brand-light hover:bg-brand-border text-brand-text font-semibold py-3 px-6 rounded-lg transition border border-brand-border">Start New Mockup</button>
+            <button
+              onClick={handleDownload}
+              className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
+            >
+              <ArrowDownTrayIcon className="w-5 h-5" />
+              Download Image
+            </button>
+            <button
+              onClick={handleRejectAndRegenerate}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50"
+            >
+              <TrashIcon className="w-5 h-5" />
+              Reject & Regenerate
+            </button>
           </div>
         </div>
       )}
