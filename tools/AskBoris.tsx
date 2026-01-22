@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { SparklesIcon as SparklesIconSolid, PaperAirplaneIcon as PaperAirplaneIconSolid, StopIcon as StopIconSolid } from '../components/icons/MiniIcons';
+import { SparklesIconSolid, PaperAirplaneIconSolid, StopIconSolid } from '../components/icons/MiniIcons';
 import { Boris } from '../components/Boris';
 import type { ProfileData, GrowthPlanTask } from '../types';
 

@@ -31,6 +31,7 @@ import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, Li
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
 import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from './services/borisService';
+import { ALL_TOOLS } from './constants';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -54,7 +55,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
   // Boris-related state
   const [hasNewReviews, setHasNewReviews] = useState(false);
-  const [newReviewCount, setNewReviewCount] = useState(0);
+  const [newReviewsCount, setNewReviewCount] = useState(0);
   const [pendingReviews, setPendingReviews] = useState<any[]>([]);
 
   const supabase = getSupabaseClient();
@@ -355,8 +356,11 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           profileData={currentProfileData}
           growthPlanTasks={tasks}
           hasNewReviews={hasNewReviews}
-          newReviewsCount={newReviewCount}
-          onNavigate={(toolId) => handleSetActiveTool(ALL_TOOLS[toolId])}
+          newReviewsCount={newReviewsCount}
+          onNavigate={(toolId) => {
+            const tool = ALL_TOOLS[toolId];
+            if (tool) handleSetActiveTool(tool);
+          }}
           onReplyToReviews={handleReplyToReviews}
         />;
       default:
@@ -370,7 +374,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           reviewResponseRate={reviewResponseRate}
           tasks={tasks}
           hasNewReviews={hasNewReviews}
-          newReviewsCount={newReviewCount}
+          newReviewsCount={newReviewsCount}
           onReplyToReviews={handleReplyToReviews}
         />;
     }

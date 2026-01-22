@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SparklesIcon as SparklesIconSolid, ChevronRightIcon as ChevronRightIconSolid } from './icons/MiniIcons';
-import { ChatBubbleLeftRightIcon } from './icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ChatBubbleLeftRightIcon, ArrowRightIcon } from './icons/MiniIcons';
 
 interface BorisProps {
   userFirstName: string;
@@ -184,7 +183,7 @@ export const Boris: React.FC<BorisProps> = ({
           className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group"
         >
           {borisState.actionButton.text}
-          <ChevronRightIconSolid className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </button>
       )}
 

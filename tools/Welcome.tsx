@@ -112,8 +112,11 @@ export const Welcome: React.FC<WelcomeProps> = ({
             profileData={profileData}
             growthPlanTasks={tasks}
             hasNewReviews={hasNewReviews}
-            newReviewsCount={newReviewCount}
-            onNavigate={(toolId) => setActiveTool(ALL_TOOLS[toolId])}
+            newReviewsCount={newReviewsCount}
+            onNavigate={(toolId) => {
+              const tool = ALL_TOOLS[toolId];
+              if (tool) setActiveTool(tool);
+            }}
             onReplyToReviews={onReplyToReviews}
           />
         
