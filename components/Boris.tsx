@@ -99,8 +99,32 @@ export const Boris: React.FC<BorisProps> = ({
       todaysTasks = incompleteTasks.slice(0, 3);
       const taskCount = incompleteTasks.length;
       const completedCount = completedTasks.length;
-      message = `You're crushing it, ${userFirstName}! You've completed ${completedCount} tasks from your Growth Plan.\n\nYou have ${taskCount} tasks remaining. Here's what you need to focus on TODAY:\n\n${todaysTasks.map((t, i) => `${i + 1}. ${t.title}`).join('\n')}`;
-      actionButton = { text: 'View Growth Plan', onClick: () => onNavigate('growthplan') };
+      const totalTasks = taskCount + completedCount;
+      
+      // AUTHENTIC MESSAGING based on actual progress
+      let openingLine = '';
+      let progressContext = '';
+      
+      if (completedCount === 0) {
+        // No tasks completed yet - acknowledge foundation work
+        openingLine = `Excellent work, ${userFirstName}!`;
+        progressContext = `You've completed your Business Details, JetBiz audit, AND JetViz audit. That's your foundation - most businesses never get this far.\n\nNow it's time to execute. You have ${taskCount} tasks in your Growth Plan.`;
+      } else if (completedCount < totalTasks / 2) {
+        // Less than half done
+        openingLine = `Good progress, ${userFirstName}!`;
+        progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're building momentum. Keep going - you have ${taskCount} tasks remaining.`;
+      } else if (completedCount < totalTasks) {
+        // More than half done
+        openingLine = `You're crushing it, ${userFirstName}!`;
+        progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're over halfway there! Stay focused - ${taskCount} tasks to go.`;
+      } else {
+        // This case is handled by `allGrowthTasksComplete`, but as a fallback
+        openingLine = `Outstanding, ${userFirstName}!`;
+        progressContext = `You've completed all your tasks! Time to generate more with another audit.`;
+      }
+      
+      message = `${openingLine} ${progressContext}\n\nHere's what you need to focus on TODAY:\n\n${todaysTasks.map((t, i) => `${i + 1}. ${t.title}`).join('\n')}`;
+      actionButton = { text: 'View Growth Plan', onClick: () => onNavigate('growth-plan') };
     }
     // STAGE 5: Daily Tools Usage
     else {
