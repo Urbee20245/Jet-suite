@@ -71,6 +71,7 @@ export interface BusinessSearchResult {
   rating: number;
   reviewCount: number;
   category: string;
+  mapsUrl?: string;
 }
 
 export type ConfirmedBusiness = BusinessSearchResult;
