@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, BusinessDna } from '../types';
 import type { SupportTicket, SupportMessage, TicketStatus, TicketPriority } from '../Types/supportTypes';
-import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon, PlusIcon } from '../components/icons/MiniIcons';
+import type { EmailSettings, SMSSettings, EmailTemplate, BroadcastAudience } from '../Types/emailTypes';
+import { TrashIcon, PencilIcon, EyeIcon, ArrowPathIcon, CreditCardIcon, PlusIcon, MailIcon, PhoneIcon } from '../components/icons/MiniIcons';
 import { MessageSquare, Send, X, Clock, CheckCircle2, AlertCircle, Filter, Search, Loader2, Plus, Download, ChevronLeft, ChevronRight } from '../components/SupportIcons';
 import { Loader } from '../components/Loader';
 import supportService from '../services/supportService';
+import emailService from '../services/emailService';
+import smsService from '../services/smsService';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 const ITEMS_PER_PAGE = 20;
@@ -175,7 +178,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     onImpersonate,
     onDataChange
 }) => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms'>('overview');
     
     // Support Ticket State
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -256,6 +259,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         isDestructive: false
     });
 
+    // Email/SMS State
+    const [emailSettings, setEmailSettings] = useState<EmailSettings | null>(null);
+    const [smsSettings, setSmsSettings] = useState<SMSSettings | null>(null);
+    const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
+    const [emailStats, setEmailStats] = useState<any>(null);
+    const [smsStats, setSmsStats] = useState<any>(null);
+    const [isLoadingEmailSettings, setIsLoadingEmailSettings] = useState(false);
+    const [isSavingEmailSettings, setIsSavingEmailSettings] = useState(false);
+    const [showSendEmailModal, setShowSendEmailModal] = useState(false);
+    const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+    const [emailForm, setEmailForm] = useState({
+      to_email: '',
+      subject: '',
+      body_html: '',
+      template_id: ''
+    });
+    const [broadcastForm, setBroadcastForm] = useState({
+      subject: '',
+      body_html: '',
+      body_text: '',
+      target_audience: 'all' as BroadcastAudience
+    });
+
+
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });
     };
@@ -289,60 +316,169 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     }, [activeTab]);
 
-    useEffect(() => {
-        onDataChange();
-    }, []);
-
-    useEffect(() => {
-        let filtered = [...tickets];
-
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(t => t.status === statusFilter);
+    // Load Email Settings
+    const loadEmailSettings = async () => {
+      setIsLoadingEmailSettings(true);
+      try {
+        const response = await fetch('/api/email/get-settings');
+        const result = await response.json();
+        if (result.success) {
+          setEmailSettings(result.data);
         }
 
-        if (ticketSearchTerm) {
-            const term = ticketSearchTerm.toLowerCase();
-            filtered = filtered.filter(t =>
-                t.subject.toLowerCase().includes(term) ||
-                t.user_email.toLowerCase().includes(term) ||
-                t.description.toLowerCase().includes(term)
-            );
+        // Load templates
+        const templatesResponse = await fetch('/api/email/get-templates');
+        const templatesResult = await templatesResponse.json();
+        if (templatesResult.success) {
+          setEmailTemplates(templatesResult.data);
         }
 
-        setFilteredTickets(filtered);
-    }, [tickets, statusFilter, ticketSearchTerm]);
+        // Load stats
+        const statsResponse = await fetch('/api/email/get-stats');
+        const statsResult = await statsResponse.json();
+        if (statsResult.success) {
+          setEmailStats(statsResult.data);
+        }
+      } catch (error) {
+        console.error('Error loading email settings:', error);
+        showToast('Failed to load email settings', 'error');
+      } finally {
+        setIsLoadingEmailSettings(false);
+      }
+    };
 
-    const filteredProfiles = allProfiles.filter(profile => {
-        if (!userSearchTerm) return true;
-        const term = userSearchTerm.toLowerCase();
-        const fullName = `${profile.user.firstName} ${profile.user.lastName}`.toLowerCase();
-        const businessName = profile.business.business_name?.toLowerCase() || '';
-        
-        return profile.user.email.toLowerCase().includes(term) ||
-               fullName.includes(term) ||
-               businessName.includes(term);
-    });
+    // Load SMS Settings
+    const loadSMSSettings = async () => {
+      try {
+        const response = await fetch('/api/sms/get-settings');
+        const result = await response.json();
+        if (result.success) {
+          setSmsSettings(result.data);
+        }
 
-    // Paginated data
-    const paginatedUsers = filteredProfiles.slice(
-        (usersPage - 1) * ITEMS_PER_PAGE,
-        usersPage * ITEMS_PER_PAGE
-    );
+        // Load stats
+        const statsResponse = await fetch('/api/sms/get-stats');
+        const statsResult = await statsResponse.json();
+        if (statsResult.success) {
+          setSmsStats(statsResult.data);
+        }
+      } catch (error) {
+        console.error('Error loading SMS settings:', error);
+        showToast('Failed to load SMS settings', 'error');
+      }
+    };
 
-    const paginatedBusinesses = filteredProfiles.slice(
-        (businessesPage - 1) * ITEMS_PER_PAGE,
-        businessesPage * ITEMS_PER_PAGE
-    );
+    // useEffect to load when tab changes
+    useEffect(() => {
+      if (activeTab === 'email') {
+        loadEmailSettings();
+      } else if (activeTab === 'sms') {
+        loadSMSSettings();
+      }
+    }, [activeTab]);
 
-    const paginatedTickets = filteredTickets.slice(
-        (ticketsPage - 1) * ITEMS_PER_PAGE,
-        ticketsPage * ITEMS_PER_PAGE
-    );
+    // Save Email Settings
+    const handleSaveEmailSettings = async () => {
+      setIsSavingEmailSettings(true);
+      try {
+        const response = await fetch('/api/email/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailSettings)
+        });
 
-    const paginatedRevenue = revenueData?.subscriptions.slice(
-        (revenuePage - 1) * ITEMS_PER_PAGE,
-        revenuePage * ITEMS_PER_PAGE
-    ) || [];
+        const result = await response.json();
+        if (result.success) {
+          showToast('Email settings saved successfully', 'success');
+          setEmailSettings(result.data);
+        } else {
+          showToast(result.error || 'Failed to save settings', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving email settings:', error);
+        showToast('Failed to save email settings', 'error');
+      } finally {
+        setIsSavingEmailSettings(false);
+      }
+    };
+
+    // Save SMS Settings
+    const handleSaveSMSSettings = async () => {
+      try {
+        const response = await fetch('/api/sms/update-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(smsSettings)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showToast('SMS settings saved successfully', 'success');
+          setSmsSettings(result.data);
+        } else {
+          showToast(result.error || 'Failed to save settings', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving SMS settings:', error);
+        showToast('Failed to save SMS settings', 'error');
+      }
+    };
+
+    // Send Individual Email
+    const handleSendEmail = async () => {
+      try {
+        const response = await fetch('/api/email/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emailForm)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          showToast('Email sent successfully', 'success');
+          setShowSendEmailModal(false);
+          setEmailForm({ to_email: '', subject: '', body_html: '', template_id: '' });
+          loadEmailSettings(); // Reload stats
+        } else {
+          showToast(result.error || 'Failed to send email', 'error');
+        }
+      } catch (error) {
+        console.error('Error sending email:', error);
+        showToast('Failed to send email', 'error');
+      }
+    };
+
+    // Send Broadcast Email
+    const handleSendBroadcast = async () => {
+      showConfirm(
+        'Send Broadcast Email',
+        `Are you sure you want to send this broadcast email to all ${broadcastForm.target_audience} users?`,
+        'Send Broadcast',
+        async () => {
+          try {
+            const response = await fetch('/api/email/send-broadcast', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(broadcastForm)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+              showToast(`Broadcast sent: ${result.data.sent} succeeded, ${result.data.failed} failed`, 'success');
+              setShowBroadcastModal(false);
+              setBroadcastForm({ subject: '', body_html: '', body_text: '', target_audience: 'all' });
+              loadEmailSettings(); // Reload stats
+            } else {
+              showToast(result.error || 'Failed to send broadcast', 'error');
+            }
+          } catch (error) {
+            console.error('Error sending broadcast:', error);
+            showToast('Failed to send broadcast', 'error');
+          }
+        },
+        true
+      );
+    };
 
     const loadTickets = async () => {
         setIsLoadingTickets(true);
@@ -513,12 +649,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         setIsSendingMessage(true);
         try {
-            const result = await supportService.sendMessage({
-                ticket_id: selectedTicket.id,
-                message: newMessage,
-                sender_type: 'agent',
-                message_type: 'text'
-            });
+            const result = await supportService.addMessageWithEmail(
+                selectedTicket.id,
+                newMessage,
+                'agent'
+            );
 
             if (result.success && result.data) {
                 setMessages(prev => [...prev, result.data!]);
@@ -922,6 +1057,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         resolved: tickets.filter(t => t.status === 'resolved').length,
     };
 
+    const filteredProfiles = allProfiles.filter(profile => {
+        if (!userSearchTerm) return true;
+        const term = userSearchTerm.toLowerCase();
+        const fullName = `${profile.user.firstName} ${profile.user.lastName}`.toLowerCase();
+        const businessName = profile.business.business_name?.toLowerCase() || '';
+        
+        return profile.user.email.toLowerCase().includes(term) ||
+               fullName.includes(term) ||
+               businessName.includes(term);
+    });
+
+    // Paginated data
+    const paginatedUsers = filteredProfiles.slice(
+        (usersPage - 1) * ITEMS_PER_PAGE,
+        usersPage * ITEMS_PER_PAGE
+    );
+
+    const paginatedBusinesses = filteredProfiles.slice(
+        (businessesPage - 1) * ITEMS_PER_PAGE,
+        businessesPage * ITEMS_PER_PAGE
+    );
+
+    const paginatedTickets = filteredTickets.slice(
+        (ticketsPage - 1) * ITEMS_PER_PAGE,
+        ticketsPage * ITEMS_PER_PAGE
+    );
+
+    const paginatedRevenue = revenueData?.subscriptions.slice(
+        (revenuePage - 1) * ITEMS_PER_PAGE,
+        revenuePage * ITEMS_PER_PAGE
+    ) || [];
+
     return (
         <div className="space-y-8">
             {/* Toast Notification */}
@@ -1016,6 +1183,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         }`}
                     >
                         📢 Announcements ({announcements.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('email')}
+                        className={`flex-1 px-6 py-3 text-sm font-semibold transition-colors ${
+                            activeTab === 'email'
+                                ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                                : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                        📧 Email Settings
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('sms')}
+                        className={`flex-1 px-6 py-3 text-sm font-semibold transition-colors ${
+                            activeTab === 'sms'
+                                ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
+                                : 'text-gray-600 hover:bg-gray-50'
+                        }`}
+                    >
+                        💬 SMS Settings
                     </button>
                 </div>
             </div>
@@ -1574,6 +1761,292 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </AdminSection>
             )}
 
+            {/* EMAIL SETTINGS TAB */}
+            {activeTab === 'email' && (
+              <div className="space-y-6">
+                {/* Email Statistics */}
+                <AdminSection title="Email Statistics">
+                  {emailStats ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{emailStats.total_sent}</div>
+                        <div className="text-sm text-gray-600">Total Sent</div>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{emailStats.today_sent}</div>
+                        <div className="text-sm text-gray-600">Sent Today</div>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{emailStats.open_rate.toFixed(1)}%</div>
+                        <div className="text-sm text-gray-600">Open Rate</div>
+                      </div>
+                      <div className="bg-orange-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">{emailStats.click_rate.toFixed(1)}%</div>
+                        <div className="text-sm text-gray-600">Click Rate</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Loader />
+                  )}
+                </AdminSection>
+
+                {/* Quick Actions */}
+                <AdminSection title="Quick Actions">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setShowSendEmailModal(true)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <MailIcon className="w-5 h-5" />
+                      Send Individual Email
+                    </button>
+                    <button
+                      onClick={() => setShowBroadcastModal(true)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                    >
+                      <MailIcon className="w-5 h-5" />
+                      Send Broadcast Email
+                    </button>
+                  </div>
+                </AdminSection>
+
+                {/* Email Configuration */}
+                <AdminSection title="Email Configuration (Resend)">
+                  {isLoadingEmailSettings ? (
+                    <Loader />
+                  ) : emailSettings ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Resend API Key
+                        </label>
+                        <input
+                          type="password"
+                          value={emailSettings.resend_api_key || ''}
+                          onChange={(e) => setEmailSettings({...emailSettings, resend_api_key: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="re_..."
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            From Email
+                          </label>
+                          <input
+                            type="email"
+                            value={emailSettings.from_email || ''}
+                            onChange={(e) => setEmailSettings({...emailSettings, from_email: e.target.value})}
+                            className="w-full px-4 py-2 border rounded-lg"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            From Name
+                          </label>
+                          <input
+                            type="text"
+                            value={emailSettings.from_name || ''}
+                            onChange={(e) => setEmailSettings({...emailSettings, from_name: e.target.value})}
+                            className="w-full px-4 py-2 border rounded-lg"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Reply To Email
+                        </label>
+                        <input
+                          type="email"
+                          value={emailSettings.reply_to_email || ''}
+                          onChange={(e) => setEmailSettings({...emailSettings, reply_to_email: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Forward Incoming Emails To
+                        </label>
+                        <input
+                          type="email"
+                          value={emailSettings.forward_to_email || ''}
+                          onChange={(e) => setEmailSettings({...emailSettings, forward_to_email: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="your@email.com"
+                        />
+                        <label className="flex items-center mt-2">
+                          <input
+                            type="checkbox"
+                            checked={emailSettings.forward_enabled || false}
+                            onChange={(e) => setEmailSettings({...emailSettings, forward_enabled: e.target.checked})}
+                            className="mr-2"
+                          />
+                          Enable email forwarding
+                        </label>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Default Signature
+                        </label>
+                        <textarea
+                          value={emailSettings.default_signature || ''}
+                          onChange={(e) => setEmailSettings({...emailSettings, default_signature: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          rows={3}
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleSaveEmailSettings}
+                        disabled={isSavingEmailSettings}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                      >
+                        {isSavingEmailSettings ? 'Saving...' : 'Save Settings'}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No email settings configured yet.</p>
+                  )}
+                </AdminSection>
+
+                {/* Email Templates */}
+                <AdminSection title="Email Templates">
+                  <div className="space-y-2">
+                    {emailTemplates.map((template) => (
+                      <div key={template.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div>
+                          <div className="font-medium">{template.name}</div>
+                          <div className="text-sm text-gray-600">{template.description}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            Used {template.use_count} times
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 text-xs rounded ${
+                            template.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {template.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AdminSection>
+              </div>
+            )}
+
+            {/* SMS Settings Tab */}
+            {activeTab === 'sms' && (
+              <div className="space-y-6">
+                {/* SMS Statistics */}
+                <AdminSection title="SMS Statistics">
+                  {smsStats ? (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{smsStats.total_sent}</div>
+                        <div className="text-sm text-gray-600">Total Sent</div>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{smsStats.today_sent}</div>
+                        <div className="text-sm text-gray-600">Sent Today</div>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{smsStats.delivery_rate.toFixed(1)}%</div>
+                        <div className="text-sm text-gray-600">Delivery Rate</div>
+                      </div>
+                      <div className="bg-red-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">{smsStats.total_failed}</div>
+                        <div className="text-sm text-gray-600">Failed</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Loader />
+                  )}
+                </AdminSection>
+
+                {/* SMS Configuration */}
+                <AdminSection title="SMS Configuration (Twilio)">
+                  {smsSettings ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Twilio Account SID
+                        </label>
+                        <input
+                          type="text"
+                          value={smsSettings.twilio_account_sid || ''}
+                          onChange={(e) => setSmsSettings({...smsSettings, twilio_account_sid: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="AC..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Twilio Auth Token
+                        </label>
+                        <input
+                          type="password"
+                          value={smsSettings.twilio_auth_token || ''}
+                          onChange={(e) => setSmsSettings({...smsSettings, twilio_auth_token: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Twilio Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={smsSettings.twilio_phone_number || ''}
+                          onChange={(e) => setSmsSettings({...smsSettings, twilio_phone_number: e.target.value})}
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="+1234567890"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={smsSettings.sms_enabled || false}
+                            onChange={(e) => setSmsSettings({...smsSettings, sms_enabled: e.target.checked})}
+                            className="mr-2"
+                          />
+                          Enable SMS notifications
+                        </label>
+
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={smsSettings.urgent_tickets_sms || false}
+                            onChange={(e) => setSmsSettings({...smsSettings, urgent_tickets_sms: e.target.checked})}
+                            className="mr-2"
+                          />
+                          Send SMS for urgent support tickets
+                        </label>
+                      </div>
+
+                      <button
+                        onClick={handleSaveSMSSettings}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Save SMS Settings
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No SMS settings configured yet.</p>
+                  )}
+                </AdminSection>
+              </div>
+            )}
+
             {/* TICKET DETAIL MODAL */}
             {selectedTicket && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
@@ -1658,6 +2131,466 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                         {/* Reply Box */}
                         <div className="p-4 border-t bg-white">
+                            <div className="flex gap-2">
+                                <textarea
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    placeholder="Type your response..."
+                                    className="flex-1 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    rows={3}
+                                />
+                                <button
+                                    onClick={handleSendMessage}
+                                    disabled={isSendingMessage || !newMessage.trim()}
+                                    className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {isSendingMessage ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Send className="w-5 h-5" />
+                                    )}
+                                    Send
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT USER MODAL */}
+            {showEditUserModal && editingUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-brand-text">Edit User</h3>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="First Name"
+                                value={editingUser.user.firstName}
+                                onChange={e => setEditingUser({
+                                    ...editingUser,
+                                    user: { ...editingUser.user, firstName: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Last Name"
+                                value={editingUser.user.lastName}
+                                onChange={e => setEditingUser({
+                                    ...editingUser,
+                                    user: { ...editingUser.user, lastName: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={editingUser.user.email}
+                                onChange={e => setEditingUser({
+                                    ...editingUser,
+                                    user: { ...editingUser.user, email: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <div className="flex justify-end gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowEditUserModal(false);
+                                        setEditingUser(null);
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveUserEdit}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT BUSINESS MODAL */}
+            {showEditBusinessModal && editingBusiness && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-brand-text">Edit Business</h3>
+                        <div className="space-y-4">
+                            <input
+                                type="text"
+                                placeholder="Business Name"
+                                value={editingBusiness.business.business_name}
+                                onChange={e => setEditingBusiness({
+                                    ...editingBusiness,
+                                    business: { ...editingBusiness.business, business_name: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Industry"
+                                value={editingBusiness.business.industry}
+                                onChange={e => setEditingBusiness({
+                                    ...editingBusiness,
+                                    business: { ...editingBusiness.business, industry: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <input
+                                type="text"
+                                placeholder="City"
+                                value={editingBusiness.business.city}
+                                onChange={e => setEditingBusiness({
+                                    ...editingBusiness,
+                                    business: { ...editingBusiness.business, city: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <input
+                                type="text"
+                                placeholder="State"
+                                value={editingBusiness.business.state}
+                                onChange={e => setEditingBusiness({
+                                    ...editingBusiness,
+                                    business: { ...editingBusiness.business, state: e.target.value }
+                                })}
+                                className="w-full p-2 border rounded"
+                            />
+                            <div className="flex justify-end gap-4 pt-4">
+                                <button
+                                    onClick={() => {
+                                        setShowEditBusinessModal(false);
+                                        setEditingBusiness(null);
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveBusinessEdit}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ADD FREE USER MODAL */}
+            {showAddUserModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-brand-text">Create Free User</h3>
+                        <p className="text-sm text-brand-text-muted mb-4">This will create a new user account with 1 business and 1 seat, and immediate active access.</p>
+                        
+                        <form onSubmit={handleCreateFreeUser} className="space-y-4">
+                            <input 
+                                type="text" 
+                                placeholder="First Name" 
+                                value={newUser.firstName} 
+                                onChange={e => setNewUser({...newUser, firstName: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Last Name" 
+                                value={newUser.lastName} 
+                                onChange={e => setNewUser({...newUser, lastName: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="email" 
+                                placeholder="Email" 
+                                value={newUser.email} 
+                                onChange={e => setNewUser({...newUser, email: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder="Temporary Password" 
+                                value={newUser.password} 
+                                onChange={e => setNewUser({...newUser, password: e.target.value})} 
+                                className="w-full p-2 border rounded" 
+                                required 
+                                disabled={isCreatingUser}
+                            />
+                            
+                            {creationResult && (
+                                <div className={`text-sm p-4 rounded font-semibold whitespace-pre-line ${
+                                    creationResult.success 
+                                        ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+                                        : 'bg-red-100 text-red-800 border-2 border-red-300'
+                                }`}>
+                                    {creationResult.message}
+                                </div>
+                            )}
+
+                            <div className="flex justify-end gap-4 pt-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => { 
+                                        setShowAddUserModal(false); 
+                                        setCreationResult(null); 
+                                        setNewUser({ email: '', password: '', firstName: '', lastName: '' });
+                                    }} 
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+                                    disabled={isCreatingUser}
+                                >
+                                    {creationResult?.success ? 'Close' : 'Cancel'}
+                                </button>
+                                {!creationResult?.success && (
+                                    <button 
+                                        type="submit" 
+                                        disabled={isCreatingUser} 
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isCreatingUser ? 'Creating...' : 'Create User'}
+                                    </button>
+                                )}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Email Modal */}
+            {showSendEmailModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Send Individual Email</h3>
+                    <button onClick={() => setShowSendEmailModal(false)} className="text-gray-500 hover:text-gray-700">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">To Email</label>
+                      <input
+                        type="email"
+                        value={emailForm.to_email}
+                        onChange={(e) => setEmailForm({...emailForm, to_email: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="user@example.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Template (Optional)</label>
+                      <select
+                        value={emailForm.template_id}
+                        onChange={(e) => setEmailForm({...emailForm, template_id: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                      >
+                        <option value="">None (Custom Email)</option>
+                        {emailTemplates.map((template) => (
+                          <option key={template.id} value={template.id}>{template.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                      <input
+                        type="text"
+                        value={emailForm.subject}
+                        onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Body (HTML)</label>
+                      <textarea
+                        value={emailForm.body_html}
+                        onChange={(e) => setEmailForm({...emailForm, body_html: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                        rows={10}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={() => setShowSendEmailModal(false)}
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendEmail}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Send Email
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Broadcast Email Modal */}
+            {showBroadcastModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Send Broadcast Email</h3>
+                    <button onClick={() => setShowBroadcastModal(false)} className="text-gray-500 hover:text-gray-700">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Target Audience</label>
+                      <select
+                        value={broadcastForm.target_audience}
+                        onChange={(e) => setBroadcastForm({...broadcastForm, target_audience: e.target.value as BroadcastAudience})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                      >
+                        <option value="all">All Users</option>
+                        <option value="founder">Founder Pricing Users</option>
+                        <option value="standard">Standard Pricing Users</option>
+                        <option value="trial">Trial Users</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                      <input
+                        type="text"
+                        value={broadcastForm.subject}
+                        onChange={(e) => setBroadcastForm({...broadcastForm, subject: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Body (HTML)</label>
+                      <textarea
+                        value={broadcastForm.body_html}
+                        onChange={(e) => setBroadcastForm({...broadcastForm, body_html: e.target.value})}
+                        className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                        rows={10}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      <button
+                        onClick={() => setShowBroadcastModal(false)}
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSendBroadcast}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                      >
+                        Send Broadcast
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TICKET DETAIL MODAL */}
+            {selectedTicket && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                        {/* Header */}
+                        <div className="p-6 border-b flex justify-between items-start">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h2 className="text-2xl font-bold text-brand-text">{selectedTicket.subject}</h2>
+                                    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedTicket.status)}`}>
+                                        {selectedTicket.status.replace('_', ' ')}
+                                    </span>
+                                    <span className={`font-semibold text-sm ${getPriorityColor(selectedTicket.priority)}`}>
+                                        {selectedTicket.priority.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div className="flex gap-4 text-sm text-gray-600">
+                                    <span>From: {selectedTicket.user_email}</span>
+                                    <span>Created: {new Date(selectedTicket.created_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedTicket(null)} className="p-2 hover:bg-gray-100 rounded-md">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        {/* Actions Bar */}
+                        <div className="p-4 bg-gray-50 border-b flex gap-2">
+                            <select
+                                value={selectedTicket.status}
+                                onChange={(e) => handleUpdateTicketStatus(selectedTicket.id, e.target.value as TicketStatus)}
+                                className="px-3 py-2 border rounded-lg text-sm"
+                            >
+                                <option value="open">Open</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="waiting_customer">Waiting Customer</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                            <select
+                                value={selectedTicket.priority}
+                                onChange={(e) => handleUpdatePriority(selectedTicket.id, e.target.value as TicketPriority)}
+                                className="px-3 py-2 border rounded-lg text-sm"
+                            >
+                                <option value="low">Low Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="high">High Priority</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                            {/* Initial Description */}
+                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare className="w-4 h-4 text-blue-600" />
+                                    <span className="text-sm font-semibold text-blue-900">Original Message</span>
+                                </div>
+                                <p className="text-sm text-gray-800">{selectedTicket.description}</p>
+                            </div>
+
+                            {/* Messages Thread */}
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={`p-4 rounded-lg ${
+                                    msg.sender_type === 'agent' 
+                                        ? 'bg-green-50 border border-green-200 ml-8' 
+                                        : 'bg-gray-50 border border-gray-200 mr-8'
+                                }`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className="text-sm font-semibold">
+                                            {msg.sender_type === 'agent' ? 'Support Team' : selectedTicket.user_email}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {new Date(msg.created_at).toLocaleTimeString()}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-gray-800">{msg.message}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Reply Box */}
+                        <div className="p-6 border-t border-gray-200 bg-gray-50">
                             <div className="flex gap-2">
                                 <textarea
                                     value={newMessage}

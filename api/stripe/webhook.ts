@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import { sendWelcomeEmail } from '../utils/emailService'; // Import email service
+import emailService from '../../services/emailService'; // Import the new email service
 
 // Check for required environment variables
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
@@ -204,7 +204,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           business_phone: phone,
           is_primary: true, // Set as primary business
           is_complete: false, // User still needs to complete onboarding steps
-          updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
       
       console.log(`[Webhook] Initial business profile upserted for user: ${userId}`);
@@ -212,14 +211,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // 3. Send welcome email if a temporary password was generated
       if (tempPassword) {
           try {
-              await sendWelcomeEmail({
-                  email: email,
-                  firstName: metadata.first_name || '',
-                  lastName: metadata.last_name || '',
-                  businessName: businessName,
-                  tempPassword: tempPassword,
-              });
-              console.log(`[Webhook] Successfully logged welcome email content for ${email}`);
+              const emailResult = await emailService.sendWelcomeEmail(
+                  email,
+                  metadata.first_name || '',
+                  businessName,
+                  tempPassword,
+              );
+              if (emailResult.success) {
+                  console.log(`[Webhook] Successfully sent welcome email to ${email}`);
+              } else {
+                  console.error(`[Webhook] FAILED to send welcome email to ${email}:`, emailResult.error);
+              }
           } catch (e) {
               console.error(`[Webhook] FAILED to send welcome email to ${email}:`, e);
           }
@@ -231,7 +233,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Sync other status changes
-  if (['customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
+  if (['customer.subscription.updated', 'customer.subscription.deleted', 'invoice.payment_failed'].includes(event.type)) {
     const subscription = event.data.object as Stripe.Subscription;
     try {
       await supabase

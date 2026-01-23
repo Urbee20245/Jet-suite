@@ -15,8 +15,11 @@ import type {
   TicketFilters,
   ApiResponse,
   PaginatedResponse,
+  MessageSenderType
 } from '../Types/supportTypes';
 import { getSupabaseClient } from '../integrations/supabase/client'; // Import centralized client function
+import emailService from './emailService';
+import smsService from './smsService';
 
 // =====================================================
 // TICKET MANAGEMENT
@@ -79,6 +82,60 @@ export const supportService = {
         error: 'Failed to create support ticket'
       };
     }
+  },
+
+  /**
+   * Create ticket and send email/SMS notification
+   */
+  async createTicketWithEmail(request: CreateTicketRequest): Promise<ApiResponse<SupportTicket>> {
+    const supabase = getSupabaseClient();
+    
+    // Create the ticket first
+    const result = await this.createTicket(request);
+    
+    if (result.success && result.data) {
+      // Get user profile for name and phone
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, phone')
+        .eq('id', result.data.user_id)
+        .single();
+
+      const userName = profile 
+        ? `${profile.first_name} ${profile.last_name}` 
+        : 'User';
+
+      // Send email notification
+      const emailResult = await emailService.sendTicketCreatedEmail(
+        result.data.id,
+        result.data.user_email,
+        userName,
+        result.data.subject,
+        result.data.status
+      );
+
+      // Update ticket with email status
+      if (emailResult.success) {
+        await supabase
+          .from('support_tickets')
+          .update({
+            email_sent: true,
+            email_sent_at: new Date().toISOString()
+          })
+          .eq('id', result.data.id);
+      }
+
+      // If urgent priority, send SMS
+      if (result.data.priority === 'urgent' && profile?.phone) {
+        await smsService.sendUrgentTicketSMS(
+          result.data.id,
+          profile.phone,
+          result.data.subject
+        );
+      }
+    }
+
+    return result;
   },
 
   // Get all tickets for current user
@@ -401,6 +458,67 @@ export const supportService = {
     }
   },
 
+  /**
+   * Add message to ticket and send email notification
+   */
+  async addMessageWithEmail(
+    ticketId: string,
+    message: string,
+    senderType: MessageSenderType = 'agent'
+  ): Promise<ApiResponse<SupportMessage>> {
+    const supabase = getSupabaseClient();
+    
+    // Add the message first
+    const result = await this.sendMessage({
+      ticket_id: ticketId,
+      message,
+      sender_type: senderType,
+      message_type: 'text'
+    });
+
+    if (result.success && result.data && senderType === 'agent') {
+      // Get ticket details
+      const { data: ticket } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
+
+      if (ticket) {
+        // Get user profile
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', ticket.user_id)
+          .single();
+
+        const userName = profile 
+          ? `${profile.first_name} ${profile.last_name}` 
+          : 'User';
+
+        // Send email notification
+        await emailService.sendTicketUpdatedEmail(
+          ticket.id,
+          ticket.user_email,
+          userName,
+          ticket.subject,
+          ticket.status,
+          message
+        );
+
+        // Update last email sent timestamp
+        await supabase
+          .from('support_tickets')
+          .update({
+            last_email_sent_at: new Date().toISOString()
+          })
+          .eq('id', ticketId);
+      }
+    }
+
+    return result;
+  },
+
   // Mark messages as read
   async markMessagesAsRead(ticketId: string, isAgent: boolean = false): Promise<ApiResponse<void>> {
     const supabase = getSupabaseClient();
@@ -421,11 +539,19 @@ export const supportService = {
         .eq(updateField, false);
 
       if (error) {
-        console.error('Error marking messages as read:', error);
-        return {
-          success: false,
-          error: error.message
-        };
+        // Fallback if RPC doesn't exist
+        const { data: article } = await supabase
+          .from('support_knowledge_base')
+          .select(updateField)
+          .eq('id', ticketId)
+          .single();
+
+        if (article) {
+          await supabase
+            .from('support_knowledge_base')
+            .update({ [updateField]: (article[updateField] || 0) + 1 })
+            .eq('id', ticketId);
+        }
       }
 
       return {
