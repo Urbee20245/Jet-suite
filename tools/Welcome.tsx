@@ -94,7 +94,7 @@ export const Welcome: React.FC<WelcomeProps> = ({
 }) => {
     // Tool organization by phase
     const businessFoundationTools = ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'];
-    const marketingTools = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent'];
+    const marketingTools = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetproduct'];
     const engagementTools = ['jetreply', 'jetleads', 'jettrust', 'jetevents', 'jetads'];
 
     return (
