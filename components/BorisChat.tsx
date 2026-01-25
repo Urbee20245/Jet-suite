@@ -26,6 +26,8 @@ export const BorisChat: React.FC<BorisChatProps> = ({
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [remainingQuestions, setRemainingQuestions] = useState<number | null>(null);
+  const [dailyLimit, setDailyLimit] = useState<number>(5);
 
   // Load daily greeting on mount
   useEffect(() => {
@@ -137,13 +139,16 @@ export const BorisChat: React.FC<BorisChatProps> = ({
         throw new Error('User not authenticated');
       }
   
-      const { response, remainingQuestions } = await generateBorisResponse(
+      const { response, remainingQuestions, dailyLimit: limit } = await generateBorisResponse(
         message, 
         context, 
         messages, 
         user.id
       );
       
+      setRemainingQuestions(remainingQuestions);
+      if (limit) setDailyLimit(limit);
+
       const borisMessage: BorisMessage = {
         id: (Date.now() + 1).toString(),
         role: 'boris',
@@ -349,9 +354,16 @@ export const BorisChat: React.FC<BorisChatProps> = ({
               <PaperAirplaneIcon className="w-4 h-4 text-white" />
             </button>
           </div>
-          <p className="text-xs text-purple-400 text-center mt-2">
-            Boris can make mistakes. Check important info.
-          </p>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-purple-400">
+              Boris can make mistakes. Check important info.
+            </p>
+            {remainingQuestions !== null && (
+              <p className="text-xs text-purple-300 font-semibold">
+                Questions today: {dailyLimit - remainingQuestions} / {dailyLimit}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

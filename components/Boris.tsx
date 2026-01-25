@@ -271,15 +271,18 @@ export const Boris: React.FC<BorisProps> = ({
                       <div className="mt-4 space-y-2">
                           {borisState.todaysTasks.map((task, i) => {
                               const toolId = getTaskNavigationTarget(task);
-                              const isCompleted = growthPlanTasks.find(t => t.id === task.id)?.status === 'completed';
+                              const isCompleted = completedTaskIds.has(task.id);
                               return (
-                                  <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                                  <div key={task.id || i} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
                                       <div className="flex items-center flex-1">
-                                          <span className={`text-base text-gray-300 mr-4 ${isCompleted ? 'line-through text-green-400' : ''}`}>{i + 1}. {task.title}</span>
+                                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">
+                                              <span className="text-purple-600 font-bold text-sm">{i + 1}</span>
+                                          </div>
+                                          <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>{task.title}</span>
                                           {!isCompleted && (
                                             <button
                                                 onClick={() => onNavigate(toolId)}
-                                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1"
+                                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1 ml-3"
                                                 title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
                                             >
                                                 {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'} <ArrowRightIcon className="w-3 h-3" />
