@@ -7,19 +7,19 @@ import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, 
 import { QuickStatsCards } from '../components/QuickStatsCards';
 import { Boris } from '../components/Boris';
 
-interface WelcomeProps {
-    setActiveTool: (tool: Tool | null, articleId?: string) => void;
-    profileData: ProfileData;
-    readinessState: ReadinessState;
-    plan: { name: string, profileLimit: number };
-    growthScore: number;
-    pendingTasksCount: number;
-    reviewResponseRate: number;
-    tasks: GrowthPlanTask[];
-    hasNewReviews: boolean;
-    newReviewsCount: number;
-    onReplyToReviews: () => void;
-    onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
+interface WelcomeProps { 
+  setActiveTool: (tool: Tool | null, articleId?: string) => void;
+  profileData: ProfileData;
+  readinessState: ReadinessState;
+  plan: { name: string, profileLimit: number };
+  growthScore: number;
+  pendingTasksCount: number;
+  reviewResponseRate: number;
+  tasks: GrowthPlanTask[];
+  hasNewReviews: boolean;
+  newReviewsCount: number;
+  onReplyToReviews: () => void;
+  onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
 }
 
 const ToolCard: React.FC<{ 
@@ -154,37 +154,74 @@ export const Welcome: React.FC<WelcomeProps> = ({
     return (
       <div className="h-full w-full space-y-6 pb-12">
           
-          {/* Quick Stats Cards */}
-          <QuickStatsCards 
-              profileData={profileData} 
-              growthScore={growthScore}
-              pendingTasksCount={pendingTasksCount}
-              reviewResponseRate={reviewResponseRate}
-          />
+          {/* Simplified Stats - Just 3 horizontal */}
+          <div className="flex justify-center gap-6 mb-6">
+            {/* Growth Score */}
+            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-accent-purple/10 rounded-lg flex items-center justify-center">
+                  <SparklesIcon className="w-4 h-4 text-accent-purple" />
+                </div>
+                <span className="text-xs text-brand-text-muted">Growth Score</span>
+              </div>
+              <div className="text-3xl font-bold text-brand-text">{growthScore}</div>
+              <div className="text-xs text-accent-purple mt-1">Building Momentum</div>
+            </div>
 
-          {/* Boris Chat Preview - NEW INTEGRATION */}
+            {/* Pending Tasks */}
+            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-accent-pink/10 rounded-lg flex items-center justify-center">
+                  <CheckCircleIcon className="w-4 h-4 text-accent-pink" />
+                </div>
+                <span className="text-xs text-brand-text-muted">Pending Tasks</span>
+              </div>
+              <div className="text-3xl font-bold text-brand-text">{pendingTasksCount}</div>
+              <div className="text-xs text-brand-text-muted mt-1">Tasks to complete</div>
+            </div>
+
+            {/* GBP Reviews */}
+            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-accent-blue/10 rounded-lg flex items-center justify-center">
+                  <StarIcon className="w-4 h-4 text-accent-blue" />
+                </div>
+                <span className="text-xs text-brand-text-muted">GBP Rating</span>
+              </div>
+              <div className="text-3xl font-bold text-brand-text">
+                {profileData.googleBusiness?.rating || '0.0'} ★
+              </div>
+              <div className="text-xs text-brand-text-muted mt-1">
+                {profileData.googleBusiness?.reviewCount || 0} Reviews
+              </div>
+            </div>
+          </div>
+
+          {/* Boris Component - MAIN FOCUS */}
           <div className="max-w-4xl mx-auto">
-            <button
-              onClick={() => setActiveTool(ALL_TOOLS['ask-boris'])}
-              className="w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 hover:shadow-xl transition-all group"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <SparklesIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="text-left flex-1">
-                  <h3 className="text-white font-bold text-lg">Ask Boris</h3>
-                  <p className="text-slate-400 text-sm">Your AI Growth Coach is ready to help</p>
-                </div>
-                <ArrowRightIcon className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
-              </div>
-              
-              <div className="bg-slate-800/50 rounded-lg p-4 text-left border border-slate-700/50">
-                <p className="text-slate-200 text-sm">
-                  "Hi {profileData.user.firstName}! I can help you with your growth strategy, answer questions about JetSuite tools, and guide you on what to focus on today. Click to chat with me!"
-                </p>
-              </div>
-            </button>
+            <Boris
+              userFirstName={profileData.user.firstName || 'there'}
+              profileData={profileData}
+              growthPlanTasks={tasks}
+              hasNewReviews={hasNewReviews}
+              newReviewsCount={newReviewsCount}
+              onNavigate={(toolId) => {
+                const tool = ALL_TOOLS[toolId];
+                if (tool) setActiveTool(tool);
+              }}
+              onReplyToReviews={onReplyToReviews}
+              onTaskStatusChange={onTaskStatusChange}
+            />
+          </div>
+          
+          {/* Access All Tools Card */}
+          <div className="max-w-4xl mx-auto mt-6">
+            <div className="bg-brand-card rounded-xl p-6 border border-brand-border shadow-lg">
+              <h3 className="text-lg font-bold text-brand-text mb-2">Access All Tools</h3>
+              <p className="text-sm text-brand-text-muted mb-4">
+                Need a specific tool? Browse all available tools organized by category below.
+              </p>
+            </div>
           </div>
 
           {/* Collapsible Category Cards - Horizontal Layout */}
