@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState, GrowthPlanTask } from '../types';
-import { ArrowRightIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
 import { QuickStatsCards } from '../components/QuickStatsCards';
 import { Boris } from '../components/Boris';
 
@@ -22,18 +22,6 @@ interface WelcomeProps {
     onTaskStatusChange: (taskId: string, newStatus: 'completed') => void;
 }
 
-// Section header component
-const SectionHeader: React.FC<{ 
-  title: string; 
-  description: string;
-  accentColor?: string;
-}> = ({ title, description, accentColor = 'text-accent-purple' }) => (
-  <div className="mb-4">
-    <h2 className={`text-xl font-bold ${accentColor} mb-1`}>{title}</h2>
-    <p className="text-sm text-brand-text-muted">{description}</p>
-  </div>
-);
-
 const ToolCard: React.FC<{ 
   tool: Tool; 
   onClick: () => void;
@@ -48,18 +36,84 @@ const ToolCard: React.FC<{
   return (
     <button 
       onClick={onClick}
-      className={`bg-brand-card p-4 rounded-xl shadow-md border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-lg transition-all duration-200 flex flex-col items-start text-left w-full h-full group glow-card glow-card-rounded-xl`}
+      className={`bg-brand-card p-3 rounded-lg shadow-sm border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-md transition-all duration-200 flex flex-col items-start text-left w-full group`}
     >
-      <div className={`w-12 h-12 ${accentColor} bg-opacity-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-        {tool.icon && <tool.icon className={`w-6 h-6 ${accentColor.replace('bg-', 'text-')}`} />}
+      <div className={`w-10 h-10 ${accentColor} bg-opacity-10 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+        {tool.icon && <tool.icon className={`w-5 h-5 ${accentColor.replace('bg-', 'text-')}`} />}
       </div>
-      <h3 className="font-bold text-base text-brand-text mb-1 group-hover:text-accent-purple transition-colors">
+      <h3 className="font-bold text-sm text-brand-text mb-1 group-hover:text-accent-purple transition-colors">
         {tool.name}
       </h3>
       <p className="text-xs text-brand-text-muted line-clamp-2">
         {tool.description}
       </p>
     </button>
+  );
+};
+
+// Collapsible Category Card Component
+const CategoryCard: React.FC<{
+  title: string;
+  number: string;
+  description: string;
+  tools: string[];
+  accentColor: string;
+  textColor: string;
+  setActiveTool: (tool: Tool | null) => void;
+}> = ({ title, number, description, tools, accentColor, textColor, setActiveTool }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const colorClasses = {
+    'bg-accent-purple': 'border-accent-purple/30 hover:border-accent-purple/50',
+    'bg-accent-blue': 'border-accent-blue/30 hover:border-accent-blue/50',
+    'bg-accent-pink': 'border-accent-pink/30 hover:border-accent-pink/50',
+  };
+
+  return (
+    <div className={`bg-brand-card rounded-xl shadow-lg border ${colorClasses[accentColor]} transition-all duration-300 ${isExpanded ? 'col-span-full' : ''}`}>
+      {/* Header - Always Visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-6 flex items-center justify-between hover:bg-brand-light/50 rounded-xl transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className={`w-12 h-12 ${accentColor} bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0`}>
+            <span className={`text-2xl font-bold ${textColor}`}>{number}</span>
+          </div>
+          <div className="text-left">
+            <h2 className={`text-lg font-bold ${textColor} mb-1`}>{title}</h2>
+            <p className="text-sm text-brand-text-muted">{description}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-brand-text-muted font-medium">{tools.length} tools</span>
+          {isExpanded ? (
+            <ChevronUpIcon className="w-5 h-5 text-brand-text-muted" />
+          ) : (
+            <ChevronDownIcon className="w-5 h-5 text-brand-text-muted" />
+          )}
+        </div>
+      </button>
+
+      {/* Expanded Content - Tools Grid */}
+      {isExpanded && (
+        <div className="px-6 pb-6 pt-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {tools.map(toolId => {
+              const tool = ALL_TOOLS[toolId];
+              return tool ? (
+                <ToolCard 
+                  key={tool.id}
+                  tool={tool}
+                  onClick={() => setActiveTool(tool)}
+                  accentColor={accentColor}
+                />
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -98,7 +152,7 @@ export const Welcome: React.FC<WelcomeProps> = ({
     const engagementTools = ['jetreply', 'jetleads', 'jettrust', 'jetevents', 'jetads'];
 
     return (
-      <div className="h-full w-full space-y-8 pb-12">
+      <div className="h-full w-full space-y-6 pb-12">
           
           {/* Quick Stats Cards */}
           <QuickStatsCards 
@@ -108,85 +162,57 @@ export const Welcome: React.FC<WelcomeProps> = ({
               reviewResponseRate={reviewResponseRate}
           />
 
-          {/* Boris Component */}
-          <Boris
-            userFirstName={profileData.user.firstName || 'there'}
-            profileData={profileData}
-            growthPlanTasks={tasks}
-            hasNewReviews={hasNewReviews}
-            newReviewsCount={newReviewsCount}
-            onNavigate={(toolId) => {
-              const tool = ALL_TOOLS[toolId];
-              if (tool) setActiveTool(tool);
-            }}
-            onReplyToReviews={onReplyToReviews}
-            onTaskStatusChange={onTaskStatusChange}
-          />
-        
-          {/* 1. Business Foundation - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="1. Business Foundation"
+          {/* Boris Component - MAIN FOCUS */}
+          <div className="max-w-4xl mx-auto">
+            <Boris
+              userFirstName={profileData.user.firstName || 'there'}
+              profileData={profileData}
+              growthPlanTasks={tasks}
+              hasNewReviews={hasNewReviews}
+              newReviewsCount={newReviewsCount}
+              onNavigate={(toolId) => {
+                const tool = ALL_TOOLS[toolId];
+                if (tool) setActiveTool(tool);
+              }}
+              onReplyToReviews={onReplyToReviews}
+              onTaskStatusChange={onTaskStatusChange}
+            />
+          </div>
+
+          {/* Collapsible Category Cards - Horizontal Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 1. Business Foundation */}
+            <CategoryCard
+              number="1"
+              title="Business Foundation"
               description="Get found and build trust by optimizing your online presence."
-              accentColor="text-accent-purple"
+              tools={businessFoundationTools}
+              accentColor="bg-accent-purple"
+              textColor="text-accent-purple"
+              setActiveTool={setActiveTool}
             />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {businessFoundationTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-purple"
-                  />
-                ) : null;
-              })}
-            </div>
-          </div>
 
-          {/* 2. Marketing and Brand Strategy - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="2. Marketing and Brand Strategy"
+            {/* 2. Marketing and Brand Strategy */}
+            <CategoryCard
+              number="2"
+              title="Marketing Strategy"
               description="Turn strategy into on-brand content that attracts customers."
-              accentColor="text-accent-blue"
+              tools={marketingTools}
+              accentColor="bg-accent-blue"
+              textColor="text-accent-blue"
+              setActiveTool={setActiveTool}
             />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {marketingTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-blue"
-                  />
-                ) : null;
-              })}
-            </div>
-          </div>
 
-          {/* 3. Customer Engagement - Card Grid */}
-          <div className="space-y-6">
-            <SectionHeader 
-              title="3. Customer Engagement"
+            {/* 3. Customer Engagement */}
+            <CategoryCard
+              number="3"
+              title="Customer Engagement"
               description="Turn visibility into revenue by engaging leads and customers."
-              accentColor="text-accent-pink"
+              tools={engagementTools}
+              accentColor="bg-accent-pink"
+              textColor="text-accent-pink"
+              setActiveTool={setActiveTool}
             />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {engagementTools.map(toolId => {
-                const tool = ALL_TOOLS[toolId];
-                return tool ? (
-                  <ToolCard 
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setActiveTool(tool)}
-                    accentColor="bg-accent-pink"
-                  />
-                ) : null;
-              })}
-            </div>
           </div>
           
           <Footer setActiveTool={setActiveTool} />
