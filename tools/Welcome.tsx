@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState, GrowthPlanTask } from '../types';
 import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, SparklesIcon, CheckCircleIcon, StarIcon } from '../components/icons/MiniIcons';
+import { QuickStatsCards } from '../components/QuickStatsCards';
 import { Boris } from '../components/Boris';
 
 interface WelcomeProps {
@@ -153,64 +154,37 @@ export const Welcome: React.FC<WelcomeProps> = ({
     return (
       <div className="h-full w-full space-y-6 pb-12">
           
-          {/* Simplified Stats Header - Just 3 stats */}
-          <div className="flex justify-center gap-6">
-            {/* Growth Score */}
-            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-accent-purple/10 rounded-lg flex items-center justify-center">
-                  <SparklesIcon className="w-4 h-4 text-accent-purple" />
-                </div>
-                <span className="text-xs text-brand-text-muted">Growth Score</span>
-              </div>
-              <div className="text-3xl font-bold text-brand-text">{growthScore}</div>
-              <div className="text-xs text-accent-purple mt-1">Building Momentum</div>
-            </div>
+          {/* Quick Stats Cards */}
+          <QuickStatsCards 
+              profileData={profileData} 
+              growthScore={growthScore}
+              pendingTasksCount={pendingTasksCount}
+              reviewResponseRate={reviewResponseRate}
+          />
 
-            {/* Pending Tasks */}
-            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-accent-pink/10 rounded-lg flex items-center justify-center">
-                  <CheckCircleIcon className="w-4 h-4 text-accent-pink" />
-                </div>
-                <span className="text-xs text-brand-text-muted">Pending Tasks</span>
-              </div>
-              <div className="text-3xl font-bold text-brand-text">{pendingTasksCount}</div>
-              <div className="text-xs text-brand-text-muted mt-1">Tasks to complete</div>
-            </div>
-
-            {/* GBP Reviews */}
-            <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-md min-w-[140px]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-accent-blue/10 rounded-lg flex items-center justify-center">
-                  <StarIcon className="w-4 h-4 text-accent-blue" />
-                </div>
-                <span className="text-xs text-brand-text-muted">GBP Rating</span>
-              </div>
-              <div className="text-3xl font-bold text-brand-text">
-                {profileData.googleBusiness?.rating || '0.0'} ★
-              </div>
-              <div className="text-xs text-brand-text-muted mt-1">
-                {profileData.googleBusiness?.totalReviews || 0} Reviews
-              </div>
-            </div>
-          </div>
-
-          {/* Boris Component - MAIN FOCUS */}
+          {/* Boris Chat Preview - NEW INTEGRATION */}
           <div className="max-w-4xl mx-auto">
-            <Boris
-              userFirstName={profileData.user.firstName || 'there'}
-              profileData={profileData}
-              growthPlanTasks={tasks}
-              hasNewReviews={hasNewReviews}
-              newReviewsCount={newReviewsCount}
-              onNavigate={(toolId) => {
-                const tool = ALL_TOOLS[toolId];
-                if (tool) setActiveTool(tool);
-              }}
-              onReplyToReviews={onReplyToReviews}
-              onTaskStatusChange={onTaskStatusChange}
-            />
+            <button
+              onClick={() => setActiveTool(ALL_TOOLS['ask-boris'])}
+              className="w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 hover:shadow-xl transition-all group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="text-white font-bold text-lg">Ask Boris</h3>
+                  <p className="text-slate-400 text-sm">Your AI Growth Coach is ready to help</p>
+                </div>
+                <ArrowRightIcon className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
+              </div>
+              
+              <div className="bg-slate-800/50 rounded-lg p-4 text-left border border-slate-700/50">
+                <p className="text-slate-200 text-sm">
+                  "Hi {profileData.user.firstName}! I can help you with your growth strategy, answer questions about JetSuite tools, and guide you on what to focus on today. Click to chat with me!"
+                </p>
+              </div>
+            </button>
           </div>
 
           {/* Collapsible Category Cards - Horizontal Layout */}
