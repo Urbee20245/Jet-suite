@@ -24,7 +24,7 @@ export async function generateBorisResponse(
   context: BorisContext,
   conversationHistory: BorisMessage[] = [],
   userId: string
-): Promise<{ response: string; remainingQuestions: number }> {
+): Promise<{ response: string; remainingQuestions: number; dailyLimit: number }> {
   try {
     const response = await fetch('/api/boris/chat', {
       method: 'POST',
@@ -46,19 +46,22 @@ export async function generateBorisResponse(
       // Return error message with fallback
       return {
         response: data.error || data.fallback || "I'm having trouble connecting right now. Try asking me again in a moment!",
-        remainingQuestions: data.remainingQuestions || 0
+        remainingQuestions: data.remainingQuestions || 0,
+        dailyLimit: data.dailyLimit || 5
       };
     }
 
     return {
       response: data.response,
-      remainingQuestions: data.remainingQuestions
+      remainingQuestions: data.remainingQuestions,
+      dailyLimit: data.dailyLimit
     };
   } catch (error) {
     console.error('[Boris AI] Error generating response:', error);
     return {
       response: "I'm having trouble connecting right now. Try asking me again in a moment!",
-      remainingQuestions: 0
+      remainingQuestions: 0,
+      dailyLimit: 5
     };
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon } from './icons/MiniIcons';
 import { BorisChatModal } from './BorisChatModal';
 import confetti from 'canvas-confetti';
@@ -56,6 +56,8 @@ export const Boris: React.FC<BorisProps> = ({
   const [borisState, setBorisState] = useState<BorisState | null>(null);
   const [showWhyDialog, setShowWhyDialog] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+
+  const completedTaskIds = useMemo(() => new Set(growthPlanTasks.filter(t => t.status === 'completed').map(t => t.id)), [growthPlanTasks]);
 
   useEffect(() => {
     determineBorisState();
