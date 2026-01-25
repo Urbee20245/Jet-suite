@@ -2,7 +2,6 @@ import React from 'react';
 import { BorisChat } from '../components/BorisChat';
 import type { ProfileData, GrowthPlanTask } from '../types';
 import type { BorisContext } from '../services/borisAIService';
-import { ALL_TOOLS } from '../constants';
 
 interface AskBorisPageProps {
   userFirstName: string;
@@ -31,16 +30,19 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = ({
   if (profileData.jetbizAnalysis) completedAudits.push('JetBiz');
   if (profileData.jetvizAnalysis) completedAudits.push('JetViz');
 
-  const pendingTasks = growthPlanTasks.filter(t => t.status !== 'completed');
-  const completedTasks = growthPlanTasks.filter(t => t.status === 'completed');
-  
-  // Simple Growth Score calculation for context (actual score is calculated in InternalApp)
+  // Get urgent tasks (high priority, not completed)
+  const urgentTasks = growthPlanTasks
+    .filter(t => t.status !== 'completed' && t.priority === 'High')
+    .slice(0, 3);
+
+  // Calculate growth score (you can adjust this logic as needed)
   const calculateGrowthScore = () => {
     let score = 0;
     if (profileData.business.is_complete) score += 10;
     if (profileData.business.isDnaApproved) score += 10;
-    if (profileData.googleBusiness.status === 'Verified') score += 15;
-    score += Math.min(completedTasks.length * 5, 50);
+    if (profileData.googleBusiness?.status === 'Verified') score += 15;
+    const completedCount = growthPlanTasks.filter(t => t.status === 'completed').length;
+    score += Math.min(completedCount * 5, 50);
     return Math.min(score, 99);
   };
 
@@ -48,24 +50,21 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = ({
     userName: userFirstName || 'there',
     businessName: profileData.business.business_name,
     growthScore: calculateGrowthScore(),
-    pendingTasks: pendingTasks.length,
+    pendingTasks: growthPlanTasks.filter(t => t.status !== 'completed').length,
     completedAudits,
-    urgentTasks: pendingTasks.filter(t => t.priority === 'High').slice(0, 3),
+    urgentTasks,
     newReviews: newReviewsCount
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-hidden">
-        <BorisChat 
-          context={context}
-          onNavigateToTool={(toolId) => {
-            const tool = ALL_TOOLS[toolId];
-            if (tool) onNavigate(tool.id);
-          }}
-          showHeader={true}
-        />
-      </div>
+    <div className="h-full">
+      <BorisChat 
+        context={context}
+        onNavigateToTool={onNavigate}
+        showHeader={true}
+        urgentTasks={urgentTasks}
+        onTaskComplete={onTaskStatusChange}
+      />
     </div>
   );
 };
