@@ -1,4 +1,5 @@
-import { GoogleGenerativeAI } from '@google/genai';
+// services/borisAIService.ts
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
@@ -28,10 +29,6 @@ export async function generateBorisResponse(
   context: BorisContext,
   conversationHistory: BorisMessage[] = []
 ): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    return "AI features are currently disabled due to a missing API key. Please contact human support.";
-  }
-  
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
@@ -109,10 +106,6 @@ ${chatHistory ? `**Previous Conversation:**\n${chatHistory}\n` : ''}
  * Generate daily task recommendation
  */
 export async function generateDailyRecommendation(context: BorisContext): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    return `Welcome, ${context.userName}! Your AI coach is offline, but you have ${context.pendingTasks} tasks waiting. Let's get to work!`;
-  }
-  
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
@@ -130,7 +123,7 @@ You are Boris, the AI Growth Coach. Generate a personalized daily greeting and t
 **Instructions:**
 1. Start with a friendly, personalized greeting
 2. Acknowledge their recent progress (if any)
-3. Suggest 1-2 specific tasks for today (e.g., "Run your JetBiz audit" or "Complete your highest priority task")
+3. Suggest 1-2 specific tasks for today
 4. Keep it motivating and actionable
 5. Total response: 3-4 sentences max
 
