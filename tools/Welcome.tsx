@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState, GrowthPlanTask } from '../types';
-import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
+import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, SparklesIcon } from '../components/icons/MiniIcons';
 import { QuickStatsCards } from '../components/QuickStatsCards';
 import { Boris } from '../components/Boris';
 
@@ -162,21 +162,29 @@ export const Welcome: React.FC<WelcomeProps> = ({
               reviewResponseRate={reviewResponseRate}
           />
 
-          {/* Boris Component - MAIN FOCUS */}
+          {/* Boris Chat Preview - NEW INTEGRATION */}
           <div className="max-w-4xl mx-auto">
-            <Boris
-              userFirstName={profileData.user.firstName || 'there'}
-              profileData={profileData}
-              growthPlanTasks={tasks}
-              hasNewReviews={hasNewReviews}
-              newReviewsCount={newReviewsCount}
-              onNavigate={(toolId) => {
-                const tool = ALL_TOOLS[toolId];
-                if (tool) setActiveTool(tool);
-              }}
-              onReplyToReviews={onReplyToReviews}
-              onTaskStatusChange={onTaskStatusChange}
-            />
+            <button
+              onClick={() => setActiveTool(ALL_TOOLS['ask-boris'])}
+              className="w-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-xl shadow-lg border border-slate-700 p-6 hover:shadow-xl transition-all group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <SparklesIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="text-white font-bold text-lg">Ask Boris</h3>
+                  <p className="text-slate-400 text-sm">Your AI Growth Coach is ready to help</p>
+                </div>
+                <ArrowRightIcon className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
+              </div>
+              
+              <div className="bg-slate-800/50 rounded-lg p-4 text-left border border-slate-700/50">
+                <p className="text-slate-200 text-sm">
+                  "Hi {profileData.user.firstName}! I can help you with your growth strategy, answer questions about JetSuite tools, and guide you on what to focus on today. Click to chat with me!"
+                </p>
+              </div>
+            </button>
           </div>
 
           {/* Collapsible Category Cards - Horizontal Layout */}
