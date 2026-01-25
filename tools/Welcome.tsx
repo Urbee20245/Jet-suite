@@ -146,6 +146,7 @@ export const Welcome: React.FC<WelcomeProps> = ({
   onReplyToReviews,
   onTaskStatusChange
 }) => {
+    const [isToolsExpanded, setIsToolsExpanded] = useState(false);
     // Tool organization by phase
     const businessFoundationTools = ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'];
     const marketingTools = ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetproduct'];
@@ -173,48 +174,59 @@ export const Welcome: React.FC<WelcomeProps> = ({
           
           {/* Access All Tools Card */}
           <div className="max-w-4xl mx-auto mt-6">
-            <div className="bg-brand-card rounded-xl p-6 border border-brand-border shadow-lg">
-              <h3 className="text-lg font-bold text-brand-text mb-2">Access All Tools</h3>
-              <p className="text-sm text-brand-text-muted mb-4">
-                Need a specific tool? Browse all available tools organized by category below.
-              </p>
+            <div className="bg-brand-card rounded-xl border border-brand-border shadow-lg">
+              <button
+                onClick={() => setIsToolsExpanded(!isToolsExpanded)}
+                className="w-full p-6 flex justify-between items-center text-left hover:bg-brand-light/50 rounded-xl transition-colors"
+              >
+                <div>
+                  <h3 className="text-lg font-bold text-brand-text">Access All Tools</h3>
+                  <p className="text-sm text-brand-text-muted mt-1">
+                    Browse all available tools organized by category.
+                  </p>
+                </div>
+                <ChevronDownIcon className={`w-6 h-6 text-brand-text-muted transition-transform ${isToolsExpanded ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isToolsExpanded && (
+                <div className="p-6 border-t border-brand-border">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 1. Business Foundation */}
+                    <CategoryCard
+                      number="1"
+                      title="Business Foundation"
+                      description="Get found and build trust."
+                      tools={businessFoundationTools}
+                      accentColor="bg-accent-purple"
+                      textColor="text-accent-purple"
+                      setActiveTool={setActiveTool}
+                    />
+
+                    {/* 2. Marketing and Brand Strategy */}
+                    <CategoryCard
+                      number="2"
+                      title="Marketing Strategy"
+                      description="Create on-brand content."
+                      tools={marketingTools}
+                      accentColor="bg-accent-blue"
+                      textColor="text-accent-blue"
+                      setActiveTool={setActiveTool}
+                    />
+
+                    {/* 3. Customer Engagement */}
+                    <CategoryCard
+                      number="3"
+                      title="Customer Engagement"
+                      description="Turn visibility into revenue."
+                      tools={engagementTools}
+                      accentColor="bg-accent-pink"
+                      textColor="text-accent-pink"
+                      setActiveTool={setActiveTool}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Collapsible Category Cards - Horizontal Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 1. Business Foundation */}
-            <CategoryCard
-              number="1"
-              title="Business Foundation"
-              description="Get found and build trust by optimizing your online presence."
-              tools={businessFoundationTools}
-              accentColor="bg-accent-purple"
-              textColor="text-accent-purple"
-              setActiveTool={setActiveTool}
-            />
-
-            {/* 2. Marketing and Brand Strategy */}
-            <CategoryCard
-              number="2"
-              title="Marketing Strategy"
-              description="Turn strategy into on-brand content that attracts customers."
-              tools={marketingTools}
-              accentColor="bg-accent-blue"
-              textColor="text-accent-blue"
-              setActiveTool={setActiveTool}
-            />
-
-            {/* 3. Customer Engagement */}
-            <CategoryCard
-              number="3"
-              title="Customer Engagement"
-              description="Turn visibility into revenue by engaging leads and customers."
-              tools={engagementTools}
-              accentColor="bg-accent-pink"
-              textColor="text-accent-pink"
-              setActiveTool={setActiveTool}
-            />
           </div>
           
           <Footer setActiveTool={setActiveTool} />
