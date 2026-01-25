@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Tool, BusinessProfile } from '../types';
-import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon } from './icons/MiniIcons';
+import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon, CheckCircleIcon } from './icons/MiniIcons';
 import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { ALL_TOOLS } from '../constants';
 
@@ -13,6 +13,7 @@ interface HeaderProps {
   onAddBusiness: () => void; 
   setActiveTool: (tool: Tool | null) => void;
   userId?: string; 
+  pendingTasksCount: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
@@ -23,7 +24,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchBusiness,
   onAddBusiness, 
   setActiveTool,
-  userId
+  userId,
+  pendingTasksCount
 }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
   const activeBusiness = businesses.find(b => b.id === activeBusinessId);
@@ -127,6 +129,29 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Glowing Status Indicator */}
         {userId && <SubscriptionStatusBadge userId={userId} />}
         
+        {/* Growth Score */}
+        <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
+          <BoltIcon className="w-5 h-5 text-yellow-500" />
+          <span className="ml-2 text-sm font-bold text-brand-text">
+            {growthScore}
+          </span>
+          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
+            Growth Score
+          </span>
+        </div>
+
+        {/* Pending Tasks */}
+        <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
+          <CheckCircleIcon className="w-5 h-5 text-accent-pink" />
+          <span className="ml-2 text-sm font-bold text-brand-text">
+            {pendingTasksCount}
+          </span>
+          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
+            Pending Tasks
+          </span>
+        </div>
+
+        {/* GBP Reviews */}
         {isVerified && (
             <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
                 <div className="flex items-center">
@@ -147,16 +172,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
             </div>
         )}
-        
-        <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
-          <BoltIcon className="w-5 h-5 text-yellow-500" />
-          <span className="ml-2 text-sm font-bold text-brand-text">
-            {growthScore}
-          </span>
-          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
-            Growth Score
-          </span>
-        </div>
       </div>
 
     </header>

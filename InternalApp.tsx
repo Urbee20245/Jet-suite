@@ -485,6 +485,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           onAddBusiness={() => handleSetActiveTool({ id: 'businessdetails', name: 'Business Details', category: 'foundation' })}
           setActiveTool={handleSetActiveTool}
           userId={userId}
+          pendingTasksCount={pendingTasksCount}
         />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-brand-light relative">
           {isBackgroundLoading && (

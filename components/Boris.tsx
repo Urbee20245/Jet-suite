@@ -99,19 +99,19 @@ export const Boris: React.FC<BorisProps> = ({
     }
     else if (!hasBusinessDetails) {
       stage = 'business_details';
-      message = `Hello, ${userFirstName}! 👋\n\nLet's get started on the right foot. Before we can analyze your business and create your growth strategy, I need you to complete your Business Details.\n\nThis is your foundation - everything else builds on this. Click below to set up your business profile now.`;
+      message = `Let's get started on the right foot. Before we can analyze your business and create your growth strategy, I need you to complete your Business Details.\n\nThis is your foundation - everything else builds on this. Click below to set up your business profile now.`;
       actionButton = { text: 'Complete Business Details', onClick: () => onNavigate('businessdetails') };
     }
     else if (!hasJetBizAudit) {
       stage = 'jetbiz';
       completedItems = ['✓ Business Details'];
-      message = `Great work, ${userFirstName}! Your business details are set up.\n\nNow it's time for your Google Business Profile audit with JetBiz. This is crucial - your GBP is often the FIRST thing customers see when they search for you.\n\nToday's mission: Run your JetBiz audit so we can identify exactly what's holding you back from ranking higher.`;
+      message = `Great work! Your business details are set up.\n\nNow it's time for your Google Business Profile audit with JetBiz. This is crucial - your GBP is often the FIRST thing customers see when they search for you.\n\nToday's mission: Run your JetBiz audit so we can identify exactly what's holding you back from ranking higher.`;
       actionButton = { text: 'Run JetBiz Audit', onClick: () => onNavigate('jetbiz') };
     }
     else if (!hasJetVizAudit) {
       stage = 'jetviz';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit'];
-      message = `Excellent progress, ${userFirstName}! You've completed your GBP audit.\n\nNext up: Your website analysis with JetViz. Your website is your digital storefront - it needs to convert visitors into customers.\n\nToday's mission: Run your JetViz audit to uncover conversion issues, SEO problems, and trust gaps.`;
+      message = `Excellent progress! You've completed your GBP audit.\n\nNext up: Your website analysis with JetViz. Your website is your digital storefront - it needs to convert visitors into customers.\n\nToday's mission: Run your JetViz audit to uncover conversion issues, SEO problems, and trust gaps.`;
       actionButton = { text: 'Run JetViz Audit', onClick: () => onNavigate('jetviz') };
     }
     else if (!allGrowthTasksComplete && incompleteTasks.length > 0) {
@@ -126,16 +126,16 @@ export const Boris: React.FC<BorisProps> = ({
       let progressContext = '';
       
       if (completedCount === 0) {
-        openingLine = `Excellent work, ${userFirstName}!`;
+        openingLine = `Excellent work!`;
         progressContext = `You've completed your Business Details, JetBiz audit, AND JetViz audit. That's your foundation - most businesses never get this far.\n\nNow it's time to execute. You have ${taskCount} tasks in your Growth Plan.`;
       } else if (completedCount < totalTasks / 2) {
-        openingLine = `Good progress, ${userFirstName}!`;
+        openingLine = `Good progress!`;
         progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're building momentum. Keep going - you have ${taskCount} tasks remaining.`;
       } else if (completedCount < totalTasks) {
-        openingLine = `You're crushing it, ${userFirstName}!`;
+        openingLine = `You're crushing it!`;
         progressContext = `You've completed ${completedCount} of ${totalTasks} tasks (${Math.round((completedCount / totalTasks) * 100)}% done).\n\nYou're over halfway there! Stay focused - ${taskCount} tasks to go.`;
       } else {
-        openingLine = `Outstanding, ${userFirstName}!`;
+        openingLine = `Outstanding!`;
         progressContext = `You've completed all your tasks! Time to generate more with another audit.`;
       }
       
@@ -147,7 +147,7 @@ export const Boris: React.FC<BorisProps> = ({
     else {
       stage = 'daily_tools';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit', '✓ JetViz Audit', '✓ All Growth Plan Tasks'];
-      message = `Outstanding work, ${userFirstName}! 🎉 You've completed your Growth Plan.\n\nNow it's time to maintain momentum. Your daily focus should be:\n\n• Marketing & Brand Strategy: Create fresh content with JetCreate, JetContent, and JetImage\n• Customer Engagement: Respond to reviews with JetReply, engage leads with JetLeads\n\nConsistent daily action is what separates growing businesses from stagnant ones. What will you create today?`;
+      message = `Outstanding work! 🎉 You've completed your Growth Plan.\n\nNow it's time to maintain momentum. Your daily focus should be:\n\n• Marketing & Brand Strategy: Create fresh content with JetCreate, JetContent, and JetImage\n• Customer Engagement: Respond to reviews with JetReply, engage leads with JetLeads\n\nConsistent daily action is what separates growing businesses from stagnant ones. What will you create today?`;
       actionButton = null;
     }
 
@@ -262,7 +262,11 @@ export const Boris: React.FC<BorisProps> = ({
         <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
           {borisState.messageIntro ? (
               <>
-                  <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+                  {/* Greeting Message */}
+                  <p className="text-xl font-semibold text-white mb-3">
+                    Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
+                  </p>
+                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
                   {borisState.todaysTasks.length > 0 && (
                       <div className="mt-4 space-y-2">
                           {borisState.todaysTasks.map((task, i) => {
@@ -271,7 +275,7 @@ export const Boris: React.FC<BorisProps> = ({
                               return (
                                   <div key={task.id} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
                                       <div className="flex items-center flex-1">
-                                          <span className={`text-gray-300 text-sm mr-4 ${isCompleted ? 'line-through text-green-400' : ''}`}>{i + 1}. {task.title}</span>
+                                          <span className={`text-base text-gray-300 mr-4 ${isCompleted ? 'line-through text-green-400' : ''}`}>{i + 1}. {task.title}</span>
                                           {!isCompleted && (
                                             <button
                                                 onClick={() => onNavigate(toolId)}
@@ -301,7 +305,13 @@ export const Boris: React.FC<BorisProps> = ({
                   )}
               </>
           ) : (
-              <p className="text-gray-200 whitespace-pre-line leading-relaxed">{borisState.message}</p>
+              <>
+                  {/* Greeting Message */}
+                  <p className="text-xl font-semibold text-white mb-3">
+                    Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
+                  </p>
+                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed">{borisState.message}</p>
+              </>
           )}
         </div>
 
