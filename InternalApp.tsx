@@ -125,6 +125,35 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     }
 
     try {
+      // ============================================
+      // CRITICAL FIX: Load user profile data from profiles table
+      // ============================================
+      console.log('🔍 Loading user profile for userId:', userId);
+      
+      const { data: userProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email, phone, role')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('❌ Error loading user profile:', profileError);
+        console.log('⚠️ Using fallback empty profile data');
+      } else {
+        console.log('✅ Successfully loaded user profile:', {
+          firstName: userProfile?.first_name,
+          lastName: userProfile?.last_name,
+          email: userProfile?.email
+        });
+      }
+
+      // Extract user data with fallbacks
+      const firstName = userProfile?.first_name || '';
+      const lastName = userProfile?.last_name || '';
+      const userRole = userProfile?.role || 'Owner';
+      const userPhone = userProfile?.phone || '';
+      // ============================================
+
       const { data: businessList } = await supabase
         .from('business_profiles')
         .select('*')
@@ -144,7 +173,14 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           : activeBiz.city || activeBiz.state || '';
 
         const profile: ProfileData = {
-          user: { id: userId, firstName: '', lastName: '', email: userEmail, phone: '', role: 'Owner' },
+          user: { 
+            id: userId, 
+            firstName: firstName,  // ✅ FIXED: Now loads from database
+            lastName: lastName,    // ✅ FIXED: Now loads from database
+            email: userEmail, 
+            phone: userPhone,      // ✅ FIXED: Now loads from database
+            role: userRole         // ✅ FIXED: Now loads from database
+          },
           business: {
             ...activeBiz,
             location: locationStr,
@@ -154,6 +190,12 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           isProfileActive: activeBiz.is_complete,
           brandDnaProfile: activeBiz.brand_dna_profile
         };
+        
+        console.log('✅ Profile created with user data:', {
+          firstName: profile.user.firstName,
+          lastName: profile.user.lastName
+        });
+        
         setCurrentProfileData(profile);
 
         const savedTasks = await loadFromSupabase(userId, activeBiz.id, 'tasks');
@@ -249,63 +291,54 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
         : task
     );
+    
     setTasks(updatedTasks);
     
-    if (newStatus === 'completed') {
+    try {
+      await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+      console.log('✅ [InternalApp] Task status synced to Supabase:', taskId, newStatus);
+      
+      if (newStatus === 'completed') {
         setShowConfetti(true);
-    }
-    
-    if (activeBusinessId) {
-      try {
-        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
-      } catch (error) {
-        console.error('❌ [InternalApp] Failed to save task status:', error);
+        toast.success('🎉 Task completed! Great progress!');
       }
+    } catch (error) {
+      console.error('❌ [InternalApp] Failed to sync task status:', error);
     }
   };
 
-  const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis | null, toolId: 'jetbiz' | 'jetviz') => {
-    if (report && activeBusinessId && supabase) {
-        try {
-            await syncToSupabase(userId, activeBusinessId, toolId, report);
-            
-            const { data: currentProfile } = await supabase
-              .from('business_profiles')
-              .select('audits')
-              .eq('id', activeBusinessId)
-              .single();
+  const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis, toolId: 'jetbiz' | 'jetviz') => {
+    if (!currentProfileData) return;
 
+    const storageKey = `${toolId}_analysis`;
+    
+    try {
+        await syncToSupabase(userId, currentProfileData.business.id, storageKey, report);
+        
+        setCurrentProfileData(prev => {
+            if (!prev) return null;
+            
+            const existingAudits = prev.business.audits || {};
             const updatedAudits = {
-              ...(currentProfile?.audits || {}),
-              [toolId]: {
-                completed: true,
-                completedAt: new Date().toISOString(),
-                lastRun: new Date().toISOString()
-              }
+                ...existingAudits,
+                [toolId]: {
+                    report,
+                    timestamp: new Date().toISOString()
+                }
             };
 
-            await supabase
-              .from('business_profiles')
-              .update({ audits: updatedAudits })
-              .eq('id', activeBusinessId);
-
-            console.log(`[${toolId}] Audit completion flag set:`, updatedAudits);
-
-            setCurrentProfileData(prev => {
-                if (!prev) return null;
-                const updatedBusiness = {
-                    ...prev.business,
-                    audits: updatedAudits
-                };
-                return {
-                    ...prev,
-                    business: updatedBusiness,
-                    [`${toolId}Analysis`]: report
-                };
-            });
-        } catch (error) {
-            console.error(`Failed to save ${toolId} analysis:`, error);
-        }
+            const updatedBusiness = {
+                ...prev.business,
+                audits: updatedAudits
+            };
+            return {
+                ...prev,
+                business: updatedBusiness,
+                [`${toolId}Analysis`]: report
+            };
+        });
+    } catch (error) {
+        console.error(`Failed to save ${toolId} analysis:`, error);
     }
   };
 
