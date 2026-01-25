@@ -1,5 +1,7 @@
+// components/BorisChat.tsx
+// CORRECTED VERSION - With proper icon imports
 import React, { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, SparklesIcon, ArrowRightIcon } from './icons/MiniIcons';
+import { PaperAirplaneIconSolid as PaperAirplaneIcon, SparklesIcon } from './icons/MiniIcons';
 import { generateBorisResponse, generateDailyRecommendation, getQuickActions, type BorisMessage, type BorisContext } from '../services/borisAIService';
 
 interface BorisChatProps {
@@ -78,7 +80,7 @@ export const BorisChat: React.FC<BorisChatProps> = ({ context, onNavigateToTool,
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 rounded-xl shadow-2xl">
+    <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       
       {/* Header with Stats */}
       {showHeader && (
@@ -143,8 +145,8 @@ export const BorisChat: React.FC<BorisChatProps> = ({ context, onNavigateToTool,
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                   message.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-none'
-                    : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-tl-none'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800 text-slate-100 border border-slate-700'
                 }`}
               >
                 {message.role === 'boris' && (
@@ -163,11 +165,11 @@ export const BorisChat: React.FC<BorisChatProps> = ({ context, onNavigateToTool,
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 rounded-tl-none">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              <div className="bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                 </div>
               </div>
             </div>
