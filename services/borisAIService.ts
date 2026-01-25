@@ -1,9 +1,4 @@
 // services/borisAIService.ts
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
 export interface BorisMessage {
   id: string;
   role: 'user' | 'boris';
@@ -22,118 +17,79 @@ export interface BorisContext {
 }
 
 /**
- * Generate Boris AI response using Gemini
+ * Generate Boris AI response using API endpoint
  */
 export async function generateBorisResponse(
   userMessage: string,
   context: BorisContext,
-  conversationHistory: BorisMessage[] = []
-): Promise<string> {
+  conversationHistory: BorisMessage[] = [],
+  userId: string
+): Promise<{ response: string; remainingQuestions: number }> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const response = await fetch('/api/boris/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userMessage,
+        context,
+        conversationHistory,
+        userId,
+        type: 'chat'
+      }),
+    });
 
-    // Build system context for Boris
-    const systemContext = `
-You are Boris, the AI Growth Coach for JetSuite - a digital marketing platform for local businesses.
+    const data = await response.json();
 
-**Your Personality:**
-- Friendly, motivating, and action-oriented
-- Use the user's first name (${context.userName})
-- Keep responses concise (2-3 sentences max)
-- Focus on actionable advice
-- Celebrate wins, encourage on challenges
-- Never apologize unnecessarily
+    if (!response.ok) {
+      // Return error message with fallback
+      return {
+        response: data.error || data.fallback || "I'm having trouble connecting right now. Try asking me again in a moment!",
+        remainingQuestions: data.remainingQuestions || 0
+      };
+    }
 
-**User Context:**
-- Business: ${context.businessName}
-- Growth Score: ${context.growthScore}/100
-- Pending Tasks: ${context.pendingTasks}
-- Completed Audits: ${context.completedAudits.join(', ') || 'None yet'}
-- New Reviews: ${context.newReviews}
-
-**Your Role:**
-1. Answer questions about JetSuite tools and features
-2. Guide users on what to do next
-3. Explain marketing concepts simply
-4. Help prioritize tasks
-5. Motivate and celebrate progress
-
-**Available JetSuite Tools:**
-- JetBiz: Google Business Profile audit
-- JetViz: Website analysis
-- JetKeywords: Keyword research
-- JetCompete: Competitor analysis
-- JetCreate: Campaign creation
-- JetSocial: Social media scheduling
-- JetContent: Content generation
-- JetReply: Review management
-
-**Response Guidelines:**
-- Keep it SHORT (2-3 sentences)
-- Be specific and actionable
-- Reference their specific context
-- If they ask "what should I do today?", suggest 1-2 urgent tasks
-- If they ask about a tool, explain it simply
-- Always end with encouragement or next step
-`;
-
-    // Build conversation history
-    const chatHistory = conversationHistory
-      .slice(-6) // Last 6 messages for context
-      .map(msg => `${msg.role === 'user' ? 'User' : 'Boris'}: ${msg.content}`)
-      .join('\n');
-
-    const prompt = `${systemContext}
-
-${chatHistory ? `**Previous Conversation:**\n${chatHistory}\n` : ''}
-
-**User Question:** ${userMessage}
-
-**Boris Response:**`;
-
-    const result = await model.generateContent(prompt);
-    const response = result.response;
-    const text = response.text();
-
-    return text.trim();
+    return {
+      response: data.response,
+      remainingQuestions: data.remainingQuestions
+    };
   } catch (error) {
     console.error('[Boris AI] Error generating response:', error);
-    return "I'm having trouble connecting right now. Try asking me again in a moment!";
+    return {
+      response: "I'm having trouble connecting right now. Try asking me again in a moment!",
+      remainingQuestions: 0
+    };
   }
 }
 
 /**
  * Generate daily task recommendation
  */
-export async function generateDailyRecommendation(context: BorisContext): Promise<string> {
+export async function generateDailyRecommendation(
+  context: BorisContext,
+  userId: string
+): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const response = await fetch('/api/boris/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        context,
+        userId,
+        type: 'greeting'
+      }),
+    });
 
-    const prompt = `
-You are Boris, the AI Growth Coach. Generate a personalized daily greeting and task recommendation.
+    const data = await response.json();
 
-**User Context:**
-- Name: ${context.userName}
-- Business: ${context.businessName}
-- Growth Score: ${context.growthScore}/100
-- Pending Tasks: ${context.pendingTasks}
-- Completed: ${context.completedAudits.join(', ') || 'Just getting started'}
-- New Reviews: ${context.newReviews}
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to generate greeting');
+    }
 
-**Instructions:**
-1. Start with a friendly, personalized greeting
-2. Acknowledge their recent progress (if any)
-3. Suggest 1-2 specific tasks for today
-4. Keep it motivating and actionable
-5. Total response: 3-4 sentences max
-
-**Example Format:**
-"Great work completing your JetBiz audit, [Name]! You're building real momentum. Today, let's focus on [specific task]. This will [specific benefit]. Ready to dive in?"
-
-Generate the greeting now:`;
-
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
+    return data.response;
   } catch (error) {
     console.error('[Boris AI] Error generating daily recommendation:', error);
     return `Good to see you, ${context.userName}! You have ${context.pendingTasks} tasks in your Growth Plan. Let's knock them out today!`;
@@ -141,7 +97,7 @@ Generate the greeting now:`;
 }
 
 /**
- * Generate quick action suggestions
+ * Get quick action suggestions
  */
 export function getQuickActions(context: BorisContext): string[] {
   const actions: string[] = [];

@@ -30,7 +30,20 @@ export const BorisChat: React.FC<BorisChatProps> = ({
   // Load daily greeting on mount
   useEffect(() => {
     const loadDailyGreeting = async () => {
-      const greeting = await generateDailyRecommendation(context);
+      // Get userId from Supabase
+      const supabase = (await import('../integrations/supabase/client')).getSupabaseClient();
+      if (!supabase) {
+        setDailyGreeting(`Good to see you, ${context.userName}! You have ${context.pendingTasks} tasks in your Growth Plan.`);
+        return;
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setDailyGreeting(`Good to see you, ${context.userName}! You have ${context.pendingTasks} tasks in your Growth Plan.`);
+        return;
+      }
+  
+      const greeting = await generateDailyRecommendation(context, user.id);
       setDailyGreeting(greeting);
       
       // Add as first Boris message
@@ -102,20 +115,34 @@ export const BorisChat: React.FC<BorisChatProps> = ({
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
-
+  
     const userMessage: BorisMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: message,
       timestamp: new Date().toISOString()
     };
-
+  
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
-
+  
     try {
-      const response = await generateBorisResponse(message, context, messages);
+      // Get userId from Supabase
+      const supabase = (await import('../integrations/supabase/client')).getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not available');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+  
+      const { response, remainingQuestions } = await generateBorisResponse(
+        message, 
+        context, 
+        messages, 
+        user.id
+      );
       
       const borisMessage: BorisMessage = {
         id: (Date.now() + 1).toString(),
@@ -123,10 +150,37 @@ export const BorisChat: React.FC<BorisChatProps> = ({
         content: response,
         timestamp: new Date().toISOString()
       };
-
+  
       setMessages(prev => [...prev, borisMessage]);
+  
+      // Show remaining questions if low
+      if (remainingQuestions <= 2 && remainingQuestions > 0) {
+        const warningMessage: BorisMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'boris',
+          content: `⚠️ You have ${remainingQuestions} question${remainingQuestions === 1 ? '' : 's'} remaining today.`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, warningMessage]);
+      } else if (remainingQuestions === 0 && !response.includes('Daily limit reached')) {
+        const limitMessage: BorisMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'boris',
+          content: `🚫 Daily question limit reached! You can ask me 5 questions per day. Come back tomorrow for more help!`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, limitMessage]);
+      }
     } catch (error) {
       console.error('Error getting Boris response:', error);
+      
+      const errorMessage: BorisMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'boris',
+        content: "I'm having trouble connecting right now. Try asking me again in a moment!",
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
