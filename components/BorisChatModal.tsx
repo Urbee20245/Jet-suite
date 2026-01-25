@@ -53,7 +53,21 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
     setIsLoading(true);
 
     try {
-      const response = await generateBorisResponse(message, context, messages);
+      // Get userId from Supabase
+      const supabase = (await import('../integrations/supabase/client')).getSupabaseClient();
+      if (!supabase) throw new Error('Supabase client not available');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { response, remainingQuestions } = await generateBorisResponse(
+        message, 
+        context, 
+        messages, 
+        user.id
+      );
       
       const borisMessage: BorisMessage = {
         id: (Date.now() + 1).toString(),
@@ -63,6 +77,25 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
       };
 
       setMessages(prev => [...prev, borisMessage]);
+
+      // Show remaining questions if low
+      if (remainingQuestions <= 2 && remainingQuestions > 0) {
+        const warningMessage: BorisMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'boris',
+          content: `⚠️ You have ${remainingQuestions} question${remainingQuestions === 1 ? '' : 's'} remaining today.`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, warningMessage]);
+      } else if (remainingQuestions === 0 && !response.includes('Daily limit reached')) {
+        const limitMessage: BorisMessage = {
+          id: (Date.now() + 2).toString(),
+          role: 'boris',
+          content: `🚫 Daily question limit reached! You can ask me 5 questions per day. Come back tomorrow for more help!`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, limitMessage]);
+      }
     } catch (error) {
       console.error('Error getting Boris response:', error);
       const errorMessage: BorisMessage = {
