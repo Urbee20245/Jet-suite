@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIconSolid as PaperAirplaneIcon, SparklesIcon, XMarkIcon, CheckCircleIcon } from './icons/MiniIcons';
+import { PaperAirplaneIconSolid as PaperAirplaneIcon, SparklesIcon, XMarkIcon } from './icons/MiniIcons';
 import { generateBorisResponse, type BorisMessage, type BorisContext } from '../services/borisAIService';
-import confetti from 'canvas-confetti';
 
 interface BorisChatModalProps {
   context: BorisContext;
@@ -28,7 +27,6 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,32 +37,6 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
-
-  const triggerConfetti = () => {
-    const count = 200;
-    const defaults = { origin: { y: 0.7 } };
-    function fire(particleRatio: number, opts: any) {
-      confetti({
-        ...defaults,
-        ...opts,
-        particleCount: Math.floor(count * particleRatio),
-        colors: ['#A855F7', '#EC4899', '#8B5CF6', '#F472B6']
-      });
-    }
-    fire(0.25, { spread: 26, startVelocity: 55 });
-    fire(0.2, { spread: 60 });
-    fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-    fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-    fire(0.1, { spread: 120, startVelocity: 45 });
-  };
-
-  const handleTaskComplete = (taskId: string) => {
-    setCompletedTaskIds(prev => new Set([...prev, taskId]));
-    triggerConfetti();
-    if (onTaskComplete) {
-      onTaskComplete(taskId);
-    }
-  };
 
   const handleSendMessage = async (message: string) => {
     if (!message.trim()) return;
@@ -105,25 +77,6 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
     }
   };
 
-  const handleQuickAction = (action: string) => {
-    if (action.startsWith('navigate:')) {
-      const toolId = action.split(':')[1];
-      if (onNavigateToTool) {
-        onNavigateToTool(toolId);
-        onClose();
-      }
-    } else {
-      handleSendMessage(action);
-    }
-  };
-
-  const getTaskNavigationTarget = (task: any) => {
-    const source = task.sourceModule.toLowerCase();
-    if (source.includes('jetbiz')) return 'jetbiz';
-    if (source.includes('jetviz')) return 'jetviz';
-    return 'growthplan';
-  };
-
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
       <div className="bg-gradient-to-br from-purple-900 via-slate-900 to-purple-900 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col border-2 border-purple-600 shadow-2xl">
@@ -157,8 +110,8 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
               <div
                 className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                   message.role === 'user'
-                    ? 'bg-purple-600 text-white rounded-tr-none'
-                    : 'bg-purple-800/40 text-white border border-purple-600/30 rounded-tl-none'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-800/40 text-white border border-purple-600/30'
                 }`}
               >
                 {message.role === 'boris' && (
@@ -186,55 +139,6 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
             </div>
           )}
 
-          {/* Quick Actions / Tasks */}
-          {!isLoading && messages.length > 0 && (
-            <div className="mt-6 pt-4 border-t border-purple-700/30">
-              <p className="text-xs font-semibold text-purple-300 mb-3">Quick Actions:</p>
-              <div className="space-y-2">
-                {urgentTasks && urgentTasks.length > 0 && (
-                  <div className="bg-purple-900/30 p-3 rounded-lg border border-purple-600/30">
-                    <p className="text-sm font-bold text-white mb-2">Urgent Tasks:</p>
-                    {urgentTasks.slice(0, 3).map((task, idx) => (
-                      <div key={task.id} className="flex items-center justify-between py-1">
-                        <span className="text-sm text-gray-300">{idx + 1}. {task.title}</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleQuickAction(`navigate:${getTaskNavigationTarget(task)}`)}
-                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold"
-                          >
-                            Go to Tool
-                          </button>
-                          <button 
-                            onClick={() => handleTaskComplete(task.id)}
-                            disabled={completedTaskIds.has(task.id)}
-                            className={`p-1 rounded-full transition-all ${
-                              completedTaskIds.has(task.id)
-                                ? 'bg-green-500 text-white'
-                                : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300'
-                            }`}
-                            title="Mark as complete"
-                          >
-                            <CheckCircleIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {getQuickActions(context).map((action, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleQuickAction(action)}
-                    className="w-full text-left p-3 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white hover:bg-slate-700/50 transition-colors"
-                  >
-                    {action}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div ref={messagesEndRef} />
         </div>
 
@@ -258,6 +162,9 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
               <PaperAirplaneIcon className="w-4 h-4 text-white" />
             </button>
           </div>
+          <p className="text-xs text-purple-400 text-center mt-2">
+            Boris can make mistakes. Check important info.
+          </p>
         </div>
       </div>
     </div>
