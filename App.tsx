@@ -185,7 +185,15 @@ const CoreApp: React.FC = () => {
       }
 
       if (!hasAnyBusinessProfile) {
-        if (currentPath !== '/onboarding' && !currentPath.startsWith('/privacy-policy') && !currentPath.startsWith('/terms') && !currentPath.startsWith('/contact') && currentPath !== '/admin') {
+        const isWhitelisted = 
+          currentPath === '/onboarding' || 
+          currentPath.startsWith('/privacy-policy') || 
+          currentPath.startsWith('/privacy') || // ADDED
+          currentPath.startsWith('/terms') || 
+          currentPath.startsWith('/contact') || 
+          currentPath === '/admin';
+
+        if (!isWhitelisted) {
           navigate('/onboarding');
         }
         return;
@@ -198,6 +206,7 @@ const CoreApp: React.FC = () => {
         currentPath.startsWith('/demo') ||
         currentPath.startsWith('/get-started') ||
         currentPath.startsWith('/privacy-policy') ||
+        currentPath.startsWith('/privacy') || // ADDED
         currentPath.startsWith('/terms') ||
         currentPath.startsWith('/savings') ||
         currentPath.startsWith('/features') ||
@@ -331,10 +340,10 @@ const App: React.FC = () => {
     const path = typeof window !== 'undefined' ? window.location.pathname : '/';
     const normalized = path.replace(/\/$/, '') || '/';
     
-    if (normalized === '/privacy-policy') {
+    if (normalized === '/privacy-policy' || normalized === '/privacy') {
       return [<PrivacyPolicy />];
     }
-    if (normalized === '/terms') {
+    if (normalized === '/terms' || normalized === '/terms-of-service') {
       return [<TermsOfService />];
     }
     if (normalized === '/contact') {
