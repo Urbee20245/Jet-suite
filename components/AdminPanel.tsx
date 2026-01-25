@@ -12,6 +12,7 @@ import {
   XMarkIcon
 } from './icons/MiniIcons';
 import type { EmailSettings, SMSSettings, UpdateEmailSettingsRequest, UpdateSMSSettingsRequest } from '../Types/emailTypes';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface Profile {
   id: string;
@@ -89,27 +90,42 @@ export default function AdminPanel() {
   const loadEmailSettings = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/email/get-settings');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setEmailSettings(result.data);
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        console.error('Supabase client not available');
+        setLoading(false);
+        return;
+      }
+  
+      const { data, error } = await supabase
+        .from('email_settings')
+        .select('*')
+        .single();
+  
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading email settings:', error);
+        setLoading(false);
+        return;
+      }
+  
+      if (data) {
+        setEmailSettings(data);
         setEmailForm({
-          resend_api_key: result.data.resend_api_key || '',
-          from_email: result.data.from_email || '',
-          from_name: result.data.from_name || '',
-          reply_to_email: result.data.reply_to_email || '',
-          forward_to_email: result.data.forward_to_email || '',
-          forward_enabled: result.data.forward_enabled || false,
-          auto_reply_enabled: result.data.auto_reply_enabled || false,
-          auto_reply_message: result.data.auto_reply_message || '',
-          default_signature: result.data.default_signature || '',
-          daily_email_limit: result.data.daily_email_limit || 100,
-          hourly_email_limit: result.data.hourly_email_limit || 20
+          resend_api_key: data.resend_api_key || '',
+          from_email: data.from_email || '',
+          from_name: data.from_name || '',
+          reply_to_email: data.reply_to_email || '',
+          forward_to_email: data.forward_to_email || '',
+          forward_enabled: data.forward_enabled || false,
+          auto_reply_enabled: data.auto_reply_enabled || false,
+          auto_reply_message: data.auto_reply_message || '',
+          default_signature: data.default_signature || '',
+          daily_email_limit: data.daily_email_limit || 100,
+          hourly_email_limit: data.hourly_email_limit || 20
         });
       }
     } catch (error: any) {
-      showMessage('error', error.message || 'Failed to load email settings');
+      console.error('Error loading email settings:', error);
     }
     setLoading(false);
   };
@@ -117,23 +133,38 @@ export default function AdminPanel() {
   const loadSmsSettings = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/sms/get-settings');
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        setSmsSettings(result.data);
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        console.error('Supabase client not available');
+        setLoading(false);
+        return;
+      }
+  
+      const { data, error } = await supabase
+        .from('sms_settings')
+        .select('*')
+        .single();
+  
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading SMS settings:', error);
+        setLoading(false);
+        return;
+      }
+  
+      if (data) {
+        setSmsSettings(data);
         setSmsForm({
-          twilio_account_sid: result.data.twilio_account_sid || '',
-          twilio_auth_token: result.data.twilio_auth_token || '',
-          twilio_phone_number: result.data.twilio_phone_number || '',
-          sms_enabled: result.data.sms_enabled || false,
-          urgent_tickets_sms: result.data.urgent_tickets_sms || false,
-          daily_sms_limit: result.data.daily_sms_limit || 50,
-          hourly_sms_limit: result.data.hourly_sms_limit || 10
+          twilio_account_sid: data.twilio_account_sid || '',
+          twilio_auth_token: data.twilio_auth_token || '',
+          twilio_phone_number: data.twilio_phone_number || '',
+          sms_enabled: data.sms_enabled || false,
+          urgent_tickets_sms: data.urgent_tickets_sms || false,
+          daily_sms_limit: data.daily_sms_limit || 50,
+          hourly_sms_limit: data.hourly_sms_limit || 10
         });
       }
     } catch (error: any) {
-      showMessage('error', error.message || 'Failed to load SMS settings');
+      console.error('Error loading SMS settings:', error);
     }
     setLoading(false);
   };
@@ -141,19 +172,42 @@ export default function AdminPanel() {
   const saveEmailSettings = async () => {
     setUpdating(true);
     try {
-      const response = await fetch('/api/email/update-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(emailForm)
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        showMessage('error', 'Database connection not available');
+        setUpdating(false);
+        return;
+      }
+  
+      // Check if settings exist
+      const { data: existing } = await supabase
+        .from('email_settings')
+        .select('id')
+        .maybeSingle();
+  
+      let result;
+      if (existing) {
+        // Update existing
+        result = await supabase
+          .from('email_settings')
+          .update(emailForm)
+          .eq('id', existing.id)
+          .select()
+          .single();
+      } else {
+        // Insert new
+        result = await supabase
+          .from('email_settings')
+          .insert([emailForm])
+          .select()
+          .single();
+      }
+  
+      if (result.error) {
+        showMessage('error', result.error.message || 'Failed to save email settings');
+      } else {
         showMessage('success', 'Email settings saved successfully');
         await loadEmailSettings();
-      } else {
-        showMessage('error', result.error || 'Failed to save email settings');
       }
     } catch (error: any) {
       showMessage('error', error.message || 'Failed to save email settings');
@@ -164,19 +218,42 @@ export default function AdminPanel() {
   const saveSmsSettings = async () => {
     setUpdating(true);
     try {
-      const response = await fetch('/api/sms/update-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(smsForm)
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        showMessage('error', 'Database connection not available');
+        setUpdating(false);
+        return;
+      }
+  
+      // Check if settings exist
+      const { data: existing } = await supabase
+        .from('sms_settings')
+        .select('id')
+        .maybeSingle();
+  
+      let result;
+      if (existing) {
+        // Update existing
+        result = await supabase
+          .from('sms_settings')
+          .update(smsForm)
+          .eq('id', existing.id)
+          .select()
+          .single();
+      } else {
+        // Insert new
+        result = await supabase
+          .from('sms_settings')
+          .insert([smsForm])
+          .select()
+          .single();
+      }
+  
+      if (result.error) {
+        showMessage('error', result.error.message || 'Failed to save SMS settings');
+      } else {
         showMessage('success', 'SMS settings saved successfully');
         await loadSmsSettings();
-      } else {
-        showMessage('error', result.error || 'Failed to save SMS settings');
       }
     } catch (error: any) {
       showMessage('error', error.message || 'Failed to save SMS settings');
