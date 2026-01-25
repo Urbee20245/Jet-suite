@@ -124,6 +124,14 @@ export interface BusinessProfile {
   // ADDED JSONB fields from DB (for direct mapping)
   google_business_profile: GoogleBusinessProfile | null;
   brand_dna_profile: BrandDnaProfile | null;
+  
+  // Audits storage for analysis results
+  audits?: {
+    [key: string]: {
+      report: AuditReport | LiveWebsiteAnalysis;
+      timestamp: string;
+    };
+  };
 }
 
 export interface GoogleBusinessProfile {
