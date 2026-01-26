@@ -46,7 +46,7 @@ interface InternalAppProps {
 
 const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
-  const [showProductTour, setShowProductTour] = useState(true);
+  const [showProductTour, setShowProductTour] = useState(false);
   const [kbArticleId, setKbArticleId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<GrowthPlanTask[]>([]);
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(null);
