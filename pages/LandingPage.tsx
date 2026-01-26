@@ -99,11 +99,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   const testimonialsRef = useRef<HTMLDivElement>(null);
   const [starsAnimated, setStarsAnimated] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showVideo, setShowVideo] = useState(false); // NEW STATE for video playback
+
+  const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4";
   
   // Handle video placeholder click
   const handleVideoClick = () => {
-    // Open demo video or modal
-    window.open("https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4", "_blank");
+    setShowVideo(true);
   };
 
   // Animation for stars in testimonials
@@ -340,27 +342,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
                 <div 
                   ref={videoRef}
-                  onClick={handleVideoClick}
-                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group cursor-pointer relative"
+                  onClick={!showVideo ? handleVideoClick : undefined}
+                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group relative"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
                   aria-label="Play demo video: See how JetSuite works"
                 >
-                    {/* Video Preview Image */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
-                        {/* Play Button */}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                                <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                    {showVideo ? (
+                        <video 
+                            src={VIDEO_URL} 
+                            controls 
+                            autoPlay 
+                            loop 
+                            muted 
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <>
+                            {/* Video Preview Image */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
+                                {/* Play Button */}
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                                        <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    {/* Video Stats Overlay */}
-                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
-                        See how it works in 2 minutes
-                    </div>
+                            
+                            {/* Video Stats Overlay */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
+                                See how it works in 2 minutes
+                            </div>
+                        </>
+                    )}
                 </div>
                 <p className="text-center text-gray-500 text-sm mt-4">See how JetSuite works for businesses like yours</p>
             </div>
