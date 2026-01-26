@@ -15,24 +15,34 @@ import type { EmailSettings, SMSSettings, UpdateEmailSettingsRequest, UpdateSMSS
 import { getSupabaseClient } from '../integrations/supabase/client';
 import supportService from '../services/supportService'; // For support tab
 
-interface Profile {
-  id: string;
-  email: string;
-  full_name: string | null;
-  trial_end_date: string | null;
-  subscription_status: string | null;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
-  created_at: string;
+interface AdminProfileData {
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    created_at: string;
+  };
+  billing: {
+    subscription_status: string | null;
+    trial_end_date: string | null;
+    stripe_customer_id: string | null;
+    stripe_subscription_id: string | null;
+    business_count: number;
+    seat_count: number;
+  };
+  business: any; // Primary business profile
+  isProfileActive: boolean;
 }
 
 type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms';
 
 export const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('users');
-  const [users, setUsers] = useState<Profile[]>([]);
+  const [users, setUsers] = useState<AdminProfileData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminProfileData | null>(null);
   const [newTrialDate, setNewTrialDate] = useState('');
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -74,6 +84,7 @@ export const AdminPanel: React.FC = () => {
     const loadTabData = () => {
       switch (activeTab) {
         case 'users':
+        case 'businesses':
           loadUsers();
           break;
         case 'email':
@@ -95,11 +106,19 @@ export const AdminPanel: React.FC = () => {
 
   const loadUsers = async () => {
     setLoading(true);
-    const result = await adminService.getAllUsers();
-    if (result.success && result.users) {
-      setUsers(result.users);
-    } else {
-      showMessage('error', result.error || 'Failed to load users');
+    try {
+        const response = await fetch('/api/admin/get-all-profiles', {
+            headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+        });
+        if (response.ok) {
+            const data = await response.json();
+            setUsers(data.profiles || []);
+        } else {
+            const errorData = await response.json();
+            showMessage('error', errorData.error || 'Failed to load users');
+        }
+    } catch (error) {
+        showMessage('error', 'Failed to load users due to network error');
     }
     setLoading(false);
   };
@@ -142,6 +161,7 @@ export const AdminPanel: React.FC = () => {
         });
       }
       
+      // Load stats
       const today = new Date();
       today.setHours(0,0,0,0);
       const { count: sentToday } = await supabase.from('email_logs').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', today.toISOString());
@@ -309,17 +329,18 @@ export const AdminPanel: React.FC = () => {
     setUpdating(false);
   };
 
-  const getTrialStatusBadge = (user: Profile) => {
-    if (!user.trial_end_date) return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">No Trial</span>;
-    if (isTrialActive(user.trial_end_date)) return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 flex items-center gap-1"><CheckCircleIcon className="h-3 w-3" /> Active</span>;
-    if (isTrialExpired(user.trial_end_date)) return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 flex items-center gap-1"><XCircleIcon className="h-3 w-3" /> Expired</span>;
+  const getTrialStatusBadge = (user: AdminProfileData) => {
+    const trialEndDate = user.billing.trial_end_date;
+    if (!trialEndDate) return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">No Trial</span>;
+    if (isTrialActive(trialEndDate)) return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 flex items-center gap-1"><CheckCircleIcon className="h-3 w-3" /> Active</span>;
+    if (isTrialExpired(trialEndDate)) return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 flex items-center gap-1"><XCircleIcon className="h-3 w-3" /> Expired</span>;
     return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">Unknown</span>;
   };
 
   const getSubscriptionBadge = (status: string | null) => {
     if (!status || status === 'none') return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">No Subscription</span>;
-    const colorMap: Record<string, string> = { active: 'bg-green-100 text-green-700', trialing: 'bg-blue-100 text-blue-700', canceled: 'bg-red-100 text-red-700', past_due: 'bg-yellow-100 text-yellow-700' };
-    return <span className={`px-2 py-1 text-xs rounded-full ${colorMap[status] || 'bg-gray-100 text-gray-700'}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>;
+    const colorMap: Record<string, string> = { active: 'bg-green-100 text-green-700', trialing: 'bg-blue-100 text-blue-700', canceled: 'bg-red-100 text-red-700', past_due: 'bg-yellow-100 text-yellow-700', admin_granted_free: 'bg-purple-100 text-purple-700' };
+    return <span className={`px-2 py-1 text-xs rounded-full ${colorMap[status] || 'bg-gray-100 text-gray-700'}`}>{status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ')}</span>;
   };
 
   const renderTabContent = () => {
@@ -327,10 +348,78 @@ export const AdminPanel: React.FC = () => {
       return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
     }
     switch (activeTab) {
+      case 'overview':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Admin Overview</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Total Users</h3>
+                        <p className="text-4xl font-bold text-blue-600 mt-2">{users.length}</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Active Subscriptions</h3>
+                        <p className="text-4xl font-bold text-green-600 mt-2">{users.filter(u => u.billing.subscription_status === 'active').length}</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Businesses Created</h3>
+                        <p className="text-4xl font-bold text-purple-600 mt-2">{users.reduce((acc, u) => acc + u.billing.business_count, 0)}</p>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700">Quick Actions</h3>
+                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create Free User</button>
+                        <button className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600">Bulk Wipe Free Users</button>
+                        <button className="bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600">Send Announcement</button>
+                        <button className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">View Revenue</button>
+                    </div>
+                </div>
+            </div>
+        );
+      case 'businesses':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Business Profiles ({users.length})</h2>
+                <div className="overflow-x-auto bg-white rounded-lg shadow">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">DNA Approved</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {users.map(user => (
+                                <tr key={user.user.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm font-medium text-gray-900">{user.business.business_name}</div>
+                                        <div className="text-xs text-gray-500">{user.business.location}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.user.email}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {user.business.is_complete ? <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Complete</span> : <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Incomplete</span>}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {user.business.isDnaApproved ? <CheckIcon className="w-5 h-5 text-green-500" /> : <XMarkIcon className="w-5 h-5 text-red-500" />}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button className="text-blue-600 hover:text-blue-900">View Details</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        );
       case 'users':
         return (
           <div>
-            <h2 className="text-2xl font-bold mb-4">User Management</h2>
+            <h2 className="text-2xl font-bold mb-4">User Management ({users.length})</h2>
             <div className="overflow-x-auto bg-white rounded-lg shadow">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -344,22 +433,22 @@ export const AdminPanel: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map(user => (
-                    <tr key={user.id}>
+                    <tr key={user.user.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <UserCircleIcon className="h-8 w-8 text-gray-400" />
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{user.full_name || user.email}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                            <div className="text-sm font-medium text-gray-900">{user.user.firstName} {user.user.lastName}</div>
+                            <div className="text-sm text-gray-500">{user.user.email}</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getTrialStatusBadge(user)}
-                        {user.trial_end_date && <div className="text-xs text-gray-500 mt-1">Ends: {formatTrialEndDate(user.trial_end_date)}</div>}
+                        {user.billing.trial_end_date && <div className="text-xs text-gray-500 mt-1">Ends: {formatTrialEndDate(user.billing.trial_end_date)}</div>}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">{getSubscriptionBadge(user.subscription_status)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getSubscriptionBadge(user.billing.subscription_status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.user.created_at).toLocaleDateString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button onClick={() => setSelectedUser(user)} className="text-blue-600 hover:text-blue-900">Manage</button>
                       </td>
@@ -370,21 +459,153 @@ export const AdminPanel: React.FC = () => {
             </div>
           </div>
         );
+      case 'support':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Support Tickets ({tickets.length})</h2>
+                {isLoadingTickets ? (
+                    <div className="text-center py-12 text-gray-500">Loading tickets...</div>
+                ) : (
+                    <div className="overflow-x-auto bg-white rounded-lg shadow">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {tickets.map(ticket => (
+                                    <tr key={ticket.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{ticket.subject}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.user_email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`text-xs px-2 py-1 rounded-full ${ticket.status === 'open' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                {ticket.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ticket.priority}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(ticket.created_at).toLocaleDateString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        );
+      case 'revenue':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">Revenue Metrics (Mock Data)</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Monthly Recurring Revenue (MRR)</h3>
+                        <p className="text-4xl font-bold text-green-600 mt-2">$1,249</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Annual Run Rate (ARR)</h3>
+                        <p className="text-4xl font-bold text-green-600 mt-2">$14,988</p>
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700">Churn Rate (Last 30 Days)</h3>
+                        <p className="text-4xl font-bold text-red-600 mt-2">2.5%</p>
+                    </div>
+                </div>
+            </div>
+        );
+      case 'announcements':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-gray-900">System Announcements</h2>
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <p className="text-gray-600">Create, edit, or delete system-wide announcements here.</p>
+                    <button className="mt-4 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">Create New Announcement</button>
+                </div>
+            </div>
+        );
       case 'email':
         return (
-          <div>
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold mb-4">Email Settings</h2>
-            {/* Email settings form and stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700">Today's Stats</h3>
+                    <p className="text-4xl font-bold text-blue-600 mt-2">{emailStats.today_sent || 0}</p>
+                    <p className="text-sm text-gray-500">Emails Sent Today</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700">Open Rate</h3>
+                    <p className="text-4xl font-bold text-green-600 mt-2">{emailStats.open_rate?.toFixed(1) || 0}%</p>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700">Failed Today</h3>
+                    <p className="text-4xl font-bold text-red-600 mt-2">{emailStats.failed_today || 0}</p>
+                </div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Resend Configuration</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Resend API Key</label>
+                        <input type="text" value={emailForm.resend_api_key} onChange={e => setEmailForm({...emailForm, resend_api_key: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="sk_resend_..." />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">From Email</label>
+                            <input type="email" value={emailForm.from_email} onChange={e => setEmailForm({...emailForm, from_email: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="support@getjetsuite.com" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">From Name</label>
+                            <input type="text" value={emailForm.from_name} onChange={e => setEmailForm({...emailForm, from_name: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="JetSuite Support" />
+                        </div>
+                    </div>
+                    <button onClick={saveEmailSettings} disabled={updating} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                        {updating ? 'Saving...' : 'Save Email Settings'}
+                    </button>
+                </div>
+            </div>
           </div>
         );
       case 'sms':
         return (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">SMS Settings</h2>
-            {/* SMS settings form */}
-          </div>
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold mb-4">SMS Settings</h2>
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Twilio Configuration</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Twilio Account SID</label>
+                            <input type="text" value={smsForm.twilio_account_sid} onChange={e => setSmsForm({...smsForm, twilio_account_sid: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="ACxxxxxxxx" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Twilio Auth Token</label>
+                            <input type="text" value={smsForm.twilio_auth_token} onChange={e => setSmsForm({...smsForm, twilio_auth_token: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="xxxxxxxx" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Twilio Phone Number</label>
+                            <input type="text" value={smsForm.twilio_phone_number} onChange={e => setSmsForm({...smsForm, twilio_phone_number: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="+15551234567" />
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <label className="flex items-center">
+                                <input type="checkbox" checked={smsForm.sms_enabled} onChange={e => setSmsForm({...smsForm, sms_enabled: e.target.checked})} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                                <span className="ml-2 text-sm text-gray-700">SMS Enabled</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="checkbox" checked={smsForm.urgent_tickets_sms} onChange={e => setSmsForm({...smsForm, urgent_tickets_sms: e.target.checked})} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                                <span className="ml-2 text-sm text-gray-700">Urgent Ticket SMS Alerts</span>
+                            </label>
+                        </div>
+                        <button onClick={saveSmsSettings} disabled={updating} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            {updating ? 'Saving...' : 'Save SMS Settings'}
+                        </button>
+                    </div>
+                </div>
+            </div>
         );
-      // Add other cases here
       default:
         return <div>Select a tab to get started.</div>;
     }

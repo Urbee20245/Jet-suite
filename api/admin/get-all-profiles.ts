@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     console.log('[Admin Get All Profiles] Starting fetch for:', userEmail);
     
-    // 1. Fetch ALL profiles - no filters, no limits
+    // 1. Fetch ALL profiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select(`
@@ -30,7 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         first_name, 
         last_name, 
         role,
-        created_at
+        created_at,
+        trial_end_date,
+        phone
       `)
       .order('created_at', { ascending: false });
 
@@ -39,9 +41,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       throw profilesError;
     }
 
-    console.log(`[Admin Get All Profiles] Found ${profiles?.length || 0} profiles`);
+    // 2. Fetch all billing accounts in one go for efficiency
+    const { data: billingAccounts, error: billingError } = await supabase
+        .from('billing_accounts')
+        .select('*');
+    
+    if (billingError) {
+        console.error('[Admin Get All Profiles] Billing error:', billingError);
+        throw billingError;
+    }
+    const billingMap = new Map(billingAccounts.map(b => [b.user_id, b]));
 
-    // 2. For each profile, fetch their businesses separately
+
+    // 3. For each profile, fetch their businesses and map
     const mappedProfiles = await Promise.all(profiles.map(async (profile) => {
       // Fetch businesses for this user
       const { data: businesses, error: businessError } = await supabase
@@ -57,16 +69,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const businessesArray = businesses || [];
       const primaryBusiness: any = businessesArray.find((b: any) => b.is_primary) || businessesArray[0] || {};
       
-      console.log(`[Admin Get All Profiles] User ${profile.email} has ${businessesArray.length} businesses`);
-      
+      const billing = billingMap.get(profile.id) || {}; // Get billing data
+
       return {
         user: {
           id: profile.id,
           firstName: profile.first_name || '',
           lastName: profile.last_name || '',
           email: profile.email,
-          phone: '', 
+          phone: profile.phone || '',
           role: profile.role || 'Owner',
+          created_at: profile.created_at,
+        },
+        billing: {
+            subscription_status: billing.subscription_status || null,
+            trial_end_date: profile.trial_end_date || null,
+            stripe_customer_id: billing.stripe_customer_id || null,
+            stripe_subscription_id: billing.stripe_subscription_id || null,
+            business_count: billing.business_count || 0,
+            seat_count: billing.seat_count || 0,
         },
         business: {
           id: primaryBusiness.id || 'no-business',
