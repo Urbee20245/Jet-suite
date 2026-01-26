@@ -22,7 +22,7 @@ import { JetProduct } from './tools/JetProduct';
 import { GrowthPlan } from './tools/GrowthPlan';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
-import { AdminPanel } from './tools/AdminPanel';
+import AdminPanel from './components/AdminPanel';
 import { Planner } from './tools/Planner';
 import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
@@ -430,14 +430,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'account':
         return <Account plan={{ name: 'Pro', profileLimit: 1 }} profileData={currentProfileData} onLogout={onLogout} onUpdateProfile={setCurrentProfileData} userId={userId} setActiveTool={handleSetActiveTool} />;
       case 'adminpanel':
-        return <AdminPanel 
-          allProfiles={allProfiles} 
-          setAllProfiles={setAllProfiles} 
-          currentUserProfile={currentProfileData} 
-          setCurrentUserProfile={setCurrentProfileData}
-          onImpersonate={() => {}} 
-          onDataChange={() => loadData(false)} 
-        />;
+        return <AdminPanel />;
       case 'support':
         return <UserSupportTickets />;
       case 'ask-boris':
