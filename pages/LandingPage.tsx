@@ -222,7 +222,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               </h1>
               
               <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
-                  Start your 7-day free trial today.
+                  Start your subscription today.
                   JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
               </p>
               
@@ -230,12 +230,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   <button 
                     onClick={() => navigate('/get-started')} 
                     className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
-                    aria-label="Start Free Trial"
+                    aria-label="Start Subscription"
                   >
-                      Start Free Trial
-                      <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                          🎉 7 Days Free
-                      </span>
+                      Start Subscription
                   </button>
                   <button 
                     onClick={handleVideoClick}
@@ -251,7 +248,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               {/* Trial Disclosure */}
               <p className="text-sm text-gray-500 mt-4">
-                Credit card required. No charge during trial period. Cancel anytime.
+                Cancel anytime. No long-term contracts.
               </p>
 
               {/* Trust Badges */}
@@ -828,15 +825,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         {/* Color Legend */}
                         <div className="flex items-center justify-center gap-4 mt-4 text-xs">
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-red-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
                             <span className="text-red-300">2.8% Start</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-gradient-to-r from-red-500 to-green-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-green-500"></div>
                             <span className="text-yellow-300">Transition</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded bg-green-500"></div>
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
                             <span className="text-green-300">4.1% Target</span>
                           </div>
                         </div>
@@ -948,13 +945,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               <button onClick={() => navigate('/get-started')} 
                 className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4 relative"
-                aria-label="Start Free Trial">
-                Start Free Trial
-                <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                    🎉 7 Days Free
-                </span>
+                aria-label="Start Subscription">
+                Start Subscription
               </button>
-              <p className="text-xs text-gray-500">Credit card required. No charge during trial period.</p>
+              <p className="text-xs text-gray-500">Cancel anytime. No long-term contracts.</p>
             </div>
           </div>
         </div>
@@ -1098,16 +1092,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
         <div className="relative z-10 max-w-4xl mx-auto">
           <h2 className="text-4xl sm:text-6xl font-extrabold text-white mb-6">Start Getting Found Today</h2>
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-            Join 360+ local businesses growing with JetSuite. Start your 7-day free trial now.
+            Join 360+ local businesses growing with JetSuite. Start your subscription now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate('/get-started')} 
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
-              aria-label="Start Free Trial">
-              Start Free Trial
-              <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                  🎉 7 Days Free
-              </span>
+              aria-label="Start Subscription">
+              Start Subscription
             </button>
             <button 
               onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
@@ -1117,7 +1108,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             </button>
           </div>
           <p className="text-sm text-gray-500 mt-4">
-            Credit card required. No charge during trial period. Cancel anytime.
+            Cancel anytime. No long-term contracts.
           </p>
         </div>
       </section>

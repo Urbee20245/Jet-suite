@@ -175,11 +175,11 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
             </div>
 
             <a
-              href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
-              onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
+              href={userId ? `${baseUrl}/app` : `${baseUrl}/get-started`}
+              onClick={(e) => handleNavigation(e, userId ? '/app' : '/get-started')}
               className="px-6 py-2.5 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold rounded-lg transition-opacity shadow-lg shadow-accent-purple/20"
             >
-              {userId ? 'Go to App' : 'Login'}
+              {userId ? 'Go to App' : 'Start Subscription'}
             </a>
           </div>
 
@@ -222,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                       onClick={(e) => handleNavigation(e, '/demo/jetbiz')}
                       className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <LayoutDashboard className="w-4 h-4 text-white" />
                       </div>
                       <div>
@@ -236,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
                       onClick={(e) => handleNavigation(e, '/demo/jetviz')}
                       className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Workflow className="w-4 h-4 text-white" />
                       </div>
                       <div>
@@ -249,14 +249,14 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               </div>
 
               <a
-                href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
-                onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
+                href={userId ? `${baseUrl}/app` : `${baseUrl}/get-started`}
+                onClick={(e) => handleNavigation(e, userId ? '/app' : '/get-started')}
                 className="w-full bg-gradient-to-r from-accent-purple to-accent-pink
                            text-white font-bold px-4 py-3 rounded-xl
                            flex items-center justify-center gap-2"
               >
                 {userId ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                {userId ? 'Go to App' : 'Login'}
+                {userId ? 'Go to App' : 'Start Subscription'}
               </a>
 
               <a href={`${baseUrl}/features`} onClick={(e) => handleNavigation(e, '/features')} className="mobile-item">

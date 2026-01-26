@@ -101,7 +101,7 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
 
             <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25">
-                    Get Started
+                    Start Subscription
                 </button>
                 <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
                     See Pricing & Plans
@@ -418,7 +418,7 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30">
-              Get Started
+              Start Subscription
             </button>
           </div>
       </section>

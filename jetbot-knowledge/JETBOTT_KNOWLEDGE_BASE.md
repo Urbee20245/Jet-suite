@@ -440,7 +440,7 @@ A: Absolutely! Each additional business is $49/month. You can switch between bus
 ### Billing & Account
 
 **Q: Is there a free trial?**
-A: Yes, we offer a 7-day free trial.
+A: No, we currently do not offer a free trial. You can start your subscription immediately or try our free demo tools.
 
 **Q: Can I cancel anytime?**
 A: Yes, JetSuite is month-to-month with no long-term contract. Cancel anytime from your Account settings.

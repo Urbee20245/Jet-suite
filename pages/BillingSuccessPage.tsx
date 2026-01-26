@@ -31,7 +31,7 @@ export const BillingSuccessPage: React.FC<BillingSuccessPageProps> = ({ navigate
           </h1>
           
           <p className="text-xl text-gray-300 mb-8">
-            Your payment was successful and your account is being activated.
+            Your subscription payment was successful and your account is being activated.
           </p>
 
           <div className="bg-brand-darker border border-slate-600 rounded-lg p-6 mb-8 text-left">

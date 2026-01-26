@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { MinusIcon, PlusIcon } from '../components/icons/MiniIcons';
-import { getTrialEndDateDisplay } from '../utils/dateTimeUtils';
 
 interface GetStartedPageProps {
   navigate: (path: string) => void;
@@ -92,10 +91,10 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-            Start Your Free Trial
+            Start Your Subscription
           </h1>
           <p className="text-lg sm:text-xl text-gray-400">
-            Complete the form below to start your free trial - no charge until {getTrialEndDateDisplay()}
+            Complete the form below to proceed to secure checkout.
           </p>
         </div>
 
@@ -222,7 +221,9 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-semibold text-gray-300">Number of Businesses</label>
-                    <span className="text-xs text-gray-400">${basePlan} base + ${additionalBusinessCost}/mo additional</span>
+                    <span className="text-xs text-gray-400">
+                      ${basePlan} base + ${additionalBusinessCost}/mo each additional
+                    </span>
                   </div>
                   <div className="flex items-center gap-4">
                     <button
@@ -250,7 +251,9 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-sm font-semibold text-gray-300">Team Seats</label>
-                    <span className="text-xs text-gray-400">1 included + ${seatCost}/mo additional</span>
+                    <span className="text-xs text-gray-400">
+                      1 included + ${seatCost}/mo each additional
+                    </span>
                   </div>
                   <div className="flex items-center gap-4">
                     <button
@@ -298,7 +301,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
     <div className="flex justify-between text-gray-300 text-sm">
       <span>
         {seats === 1 
-          ? `1 Additional Seat` 
+          ? '1 Additional Seat' 
           : `${seats} Additional Seats`}
       </span>
       <span className="font-semibold">${seats * seatCost}/mo</span>
@@ -345,10 +348,10 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
 
               <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg text-center">
                 <p className="text-green-400 font-bold text-lg">
-                  ✨ Your 7-day free trial starts today.
+                  ✨ Your subscription starts today.
                 </p>
                 <p className="text-green-300 text-sm mt-1">
-                  Your card will be charged ${total}/mo on {getTrialEndDateDisplay()} unless you cancel.
+                  You will be charged ${total}/mo immediately.
                 </p>
               </div>
 
@@ -364,7 +367,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                   </>
                 ) : (
                   <>
-                    Start Free Trial
+                    Start Subscription
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -373,7 +376,7 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
               </button>
 
               <p className="text-center text-xs text-gray-500 mt-4">
-                Credit card required. No charge during trial period. Cancel anytime.
+                Cancel anytime. No long-term contracts.
               </p>
             </div>
           </div>

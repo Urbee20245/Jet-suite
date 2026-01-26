@@ -267,22 +267,19 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
                 </span>
             </h1>
             <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-400 leading-relaxed">
-                Try all 20 tools free for 7 days. Everything you need to dominate local search and grow your business.
+                Start your subscription today. Everything you need to dominate local search and grow your business.
             </p>
             
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 relative">
-                    Start 7-Day Free Trial
-                    <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                        🎉 7 Days Free
-                    </span>
+                    Start Subscription
                 </button>
                 <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
                     See Pricing & Value
                 </button>
             </div>
             <p className="text-sm text-gray-500 mt-4">
-                Credit card required. No charge during trial period. Cancel anytime.
+                Cancel anytime. No long-term contracts.
             </p>
         </div>
 
@@ -470,7 +467,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             </div>
             <div className="text-center mt-8">
                 <p className="text-xl text-white font-bold">Your Price: <span className="text-blue-400 text-3xl">$149/mo</span></p>
-                <p className="text-sm text-gray-500">Try all 20 tools free for 7 days.</p>
+                <p className="text-sm text-gray-500">Start your subscription today.</p>
             </div>
         </div>
       </section>
@@ -498,17 +495,16 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
       </section>
 
       {/* 11. CTA SECTION */}
-      <section className="py-24 px-4 bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker text-center relative overflow-hidden">
+      <section className="py-24 px-4 text-center bg-gradient-to-br from-blue-900 via-slate-900 to-brand-darker text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
           <div className="relative z-10 max-w-4xl mx-auto">
             <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to Access All 20 Growth Tools?</h2>
-            <p className="text-xl text-gray-300 mb-10">Start your 7-day free trial now. Join 360+ local businesses growing with JetSuite.</p>
+            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+              Join 360+ local businesses growing with JetSuite. Start your subscription now.
+            </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative">
-                    Start 7-Day Free Trial
-                    <span className="absolute -top-3 -right-3 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full rotate-6 shadow-md">
-                        🎉 7 Days Free
-                    </span>
+                    Start Subscription
                 </button>
                 <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
                     Schedule a Demo
@@ -516,7 +512,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
                 </button>
             </div>
             <p className="text-sm text-gray-500 mt-4">
-                Credit card required. No charge during trial period. Cancel anytime.
+                Cancel anytime. No long-term contracts.
             </p>
           </div>
       </section>
