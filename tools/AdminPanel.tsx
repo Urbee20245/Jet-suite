@@ -8,6 +8,7 @@ import { Loader } from '../components/Loader';
 import supportService from '../services/supportService';
 import emailService from '../services/emailService';
 import smsService from '../services/smsService';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 const ITEMS_PER_PAGE = 20;
@@ -320,25 +321,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const loadEmailSettings = async () => {
       setIsLoadingEmailSettings(true);
       try {
-        const response = await fetch('/api/email/get-settings');
-        const result = await response.json();
-        if (result.success) {
-          setEmailSettings(result.data);
+        const supabase = getSupabaseClient();
+        
+        // Load email settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('email_settings')
+          .select('*')
+          .maybeSingle();
+
+        if (settingsError && settingsError.code !== 'PGRST116') {
+          console.error('Error loading email settings:', settingsError);
+        } else if (settingsData) {
+          setEmailSettings(settingsData);
         }
 
         // Load templates
-        const templatesResponse = await fetch('/api/email/get-templates');
-        const templatesResult = await templatesResponse.json();
-        if (templatesResult.success) {
-          setEmailTemplates(templatesResult.data);
+        const { data: templatesData, error: templatesError } = await supabase
+          .from('email_templates')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!templatesError) {
+          setEmailTemplates(templatesData || []);
         }
 
-        // Load stats
-        const statsResponse = await fetch('/api/email/get-stats');
-        const statsResult = await statsResponse.json();
-        if (statsResult.success) {
-          setEmailStats(statsResult.data);
-        }
+        // Load stats - count emails sent today
+        const today = new Date().toISOString().split('T')[0];
+        const { data: logsData } = await supabase
+          .from('email_logs')
+          .select('*')
+          .gte('created_at', `${today}T00:00:00Z`)
+          .lte('created_at', `${today}T23:59:59Z`);
+
+        const sentToday = logsData?.filter(log => log.status === 'sent').length || 0;
+        const failedToday = logsData?.filter(log => log.status === 'failed').length || 0;
+        
+        setEmailStats({
+          sent_today: sentToday,
+          sent_this_month: sentToday,
+          failed_today: failedToday
+        });
+
       } catch (error) {
         console.error('Error loading email settings:', error);
         showToast('Failed to load email settings', 'error');
@@ -350,18 +373,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     // Load SMS Settings
     const loadSMSSettings = async () => {
       try {
-        const response = await fetch('/api/sms/get-settings');
-        const result = await response.json();
-        if (result.success) {
-          setSmsSettings(result.data);
+        const supabase = getSupabaseClient();
+        
+        // Load SMS settings
+        const { data: settingsData, error: settingsError } = await supabase
+          .from('sms_settings')
+          .select('*')
+          .maybeSingle();
+
+        if (settingsError && settingsError.code !== 'PGRST116') {
+          console.error('Error loading SMS settings:', settingsError);
+        } else if (settingsData) {
+          setSmsSettings(settingsData);
         }
 
-        // Load stats
-        const statsResponse = await fetch('/api/sms/get-stats');
-        const statsResult = await statsResponse.json();
-        if (statsResult.success) {
-          setSmsStats(statsResult.data);
-        }
+        // Load stats - count SMS sent today
+        const today = new Date().toISOString().split('T')[0];
+        const { data: logsData } = await supabase
+          .from('sms_logs')
+          .select('*')
+          .gte('created_at', `${today}T00:00:00Z`)
+          .lte('created_at', `${today}T23:59:59Z`);
+
+        const sentToday = logsData?.filter(log => log.status === 'sent').length || 0;
+        const failedToday = logsData?.filter(log => log.status === 'failed').length || 0;
+        
+        setSmsStats({
+          sent_today: sentToday,
+          sent_this_month: sentToday,
+          failed_today: failedToday
+        });
+
       } catch (error) {
         console.error('Error loading SMS settings:', error);
         showToast('Failed to load SMS settings', 'error');
@@ -381,18 +423,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const handleSaveEmailSettings = async () => {
       setIsSavingEmailSettings(true);
       try {
-        const response = await fetch('/api/email/update-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emailSettings)
-        });
+        const supabase = getSupabaseClient();
+        
+        // Check if settings exist
+        const { data: existing } = await supabase
+          .from('email_settings')
+          .select('id')
+          .maybeSingle();
 
-        const result = await response.json();
-        if (result.success) {
+        let result;
+        if (existing) {
+          // Update existing
+          result = await supabase
+            .from('email_settings')
+            .update(emailSettings)
+            .eq('id', existing.id)
+            .select()
+            .single();
+        } else {
+          // Insert new
+          result = await supabase
+            .from('email_settings')
+            .insert([emailSettings])
+            .select()
+            .single();
+        }
+
+        if (result.error) {
+          showToast(result.error.message || 'Failed to save settings', 'error');
+        } else {
           showToast('Email settings saved successfully', 'success');
           setEmailSettings(result.data);
-        } else {
-          showToast(result.error || 'Failed to save settings', 'error');
         }
       } catch (error) {
         console.error('Error saving email settings:', error);
@@ -405,18 +466,37 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     // Save SMS Settings
     const handleSaveSMSSettings = async () => {
       try {
-        const response = await fetch('/api/sms/update-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(smsSettings)
-        });
+        const supabase = getSupabaseClient();
+        
+        // Check if settings exist
+        const { data: existing } = await supabase
+          .from('sms_settings')
+          .select('id')
+          .maybeSingle();
 
-        const result = await response.json();
-        if (result.success) {
+        let result;
+        if (existing) {
+          // Update existing
+          result = await supabase
+            .from('sms_settings')
+            .update(smsSettings)
+            .eq('id', existing.id)
+            .select()
+            .single();
+        } else {
+          // Insert new
+          result = await supabase
+            .from('sms_settings')
+            .insert([smsSettings])
+            .select()
+            .single();
+        }
+
+        if (result.error) {
+          showToast(result.error.message || 'Failed to save settings', 'error');
+        } else {
           showToast('SMS settings saved successfully', 'success');
           setSmsSettings(result.data);
-        } else {
-          showToast(result.error || 'Failed to save settings', 'error');
         }
       } catch (error) {
         console.error('Error saving SMS settings:', error);

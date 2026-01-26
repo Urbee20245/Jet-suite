@@ -1,0 +1,110 @@
+/* Custom Driver.js Tour Styles for JetSuite */
+
+.driver-popover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  padding: 0;
+}
+
+.driver-popover-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 12px;
+  padding: 20px 20px 0 20px;
+}
+
+.driver-popover-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 0 20px 20px 20px;
+  white-space: pre-line;
+}
+
+.driver-popover-footer {
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 12px 12px;
+}
+
+.driver-popover-progress-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.driver-popover-btn {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.driver-popover-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.driver-popover-btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.driver-popover-close-btn {
+  color: white !important;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.driver-popover-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.driver-active-element {
+  outline: 3px solid #667eea !important;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.driver-overlay {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 640px) {
+  .driver-popover {
+    max-width: 90vw;
+  }
+  
+  .driver-popover-title {
+    font-size: 18px;
+  }
+  
+  .driver-popover-description {
+    font-size: 14px;
+  }
+}

@@ -49,6 +49,7 @@ const ToolButton: React.FC<{
 
   return (
     <button
+      data-tour={tool.id === "business-details" ? "business-details" : tool.id === "jetbiz" ? "jetbiz" : tool.id === "jetviz" ? "jetviz" : tool.id === "growth-plan" ? "growth-plan" : tool.id === "ask-boris" ? "ask-boris" : undefined}
       key={tool.id}
       onClick={() => !isComingSoon && onClick()}
       disabled={isComingSoon}

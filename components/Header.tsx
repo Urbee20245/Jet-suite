@@ -28,7 +28,15 @@ export const Header: React.FC<HeaderProps> = ({
   pendingTasksCount
 }) => {
   const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
+  const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
   const activeBusiness = businesses.find(b => b.id === activeBusinessId);
+
+  const handleRestartTour = () => {
+    if ((window as any).restartProductTour) {
+      (window as any).restartProductTour();
+    }
+    setIsHelpMenuOpen(false);
+  };
   const title = activeTool ? activeTool.name : 'Command Center';
   
   const activeBusinessName = activeBusiness?.business_name || 'Loading Business...';
@@ -169,6 +177,50 @@ export const Header: React.FC<HeaderProps> = ({
                 
                 <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
                     <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
+
+        {/* Help Menu */}
+        <div className="relative">
+          <button
+            data-tour="header-help"
+            onClick={() => setIsHelpMenuOpen(!isHelpMenuOpen)}
+            className="p-2 hover:bg-brand-light rounded-lg transition-colors"
+            title="Help & Support"
+          >
+            <QuestionMarkCircleIcon className="w-6 h-6 text-brand-text-muted hover:text-brand-text" />
+          </button>
+
+          {isHelpMenuOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-brand-card border border-brand-border rounded-lg shadow-lg py-2 z-50">
+              <button
+                onClick={handleRestartTour}
+                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
+              >
+                <span>🎓</span>
+                <span>Take Product Tour</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTool(ALL_TOOLS["knowledge-base"]);
+                  setIsHelpMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
+              >
+                <span>📚</span>
+                <span>Knowledge Base</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTool(ALL_TOOLS["support-tickets"]);
+                  setIsHelpMenuOpen(false);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
+              >
+                <span>💬</span>
+                <span>Contact Support</span>
+              </button>
+            </div>
+          )}
+        </div>
                 </div>
             </div>
         )}
