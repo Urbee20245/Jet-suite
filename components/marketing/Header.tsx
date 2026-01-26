@@ -1,231 +1,295 @@
-import React, { useState } from 'react';
-import type { Tool, BusinessProfile } from '../types';
-import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon, CheckCircleIcon } from './icons/MiniIcons';
-import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
-import { ALL_TOOLS } from '../constants';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Menu,
+  X,
+  Zap,
+  Rocket,
+  ChevronDown,
+  LayoutDashboard,
+  Workflow,
+  DollarSign,
+  HelpCircle,
+  Calculator,
+  PlayCircle,
+  LogIn,
+  Mail,
+} from 'lucide-react';
+import { SubscriptionStatusBadge } from '../SubscriptionStatusBadge';
 
 interface HeaderProps {
-  activeTool: Tool | null;
-  growthScore: number;
-  businesses: BusinessProfile[];
-  activeBusinessId: string | null;
-  onSwitchBusiness: (id: string) => void;
-  onAddBusiness: () => void; 
-  setActiveTool: (tool: Tool | null) => void;
-  userId?: string; 
-  pendingTasksCount: number;
+  navigate: (path: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ 
-  activeTool, 
-  growthScore, 
-  businesses, 
-  activeBusinessId, 
-  onSwitchBusiness,
-  onAddBusiness, 
-  setActiveTool,
-  userId,
-  pendingTasksCount
-}) => {
-  const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
-  const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
-  const activeBusiness = businesses.find(b => b.id === activeBusinessId);
+export const Header: React.FC<HeaderProps> = ({ navigate }) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [freeToolsOpen, setFreeToolsOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleRestartTour = () => {
-    if ((window as any).restartProductTour) {
-      (window as any).restartProductTour();
-    }
-    setIsHelpMenuOpen(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('jetsuite_userId') : null;
+    setUserId(storedUserId);
+  }, []);
+
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    e.preventDefault();
+    navigate(path);
+    closeMobile();
   };
-  const title = activeTool ? activeTool.name : 'Command Center';
+
+  const closeMobile = () => {
+    setMobileOpen(false);
+    setFreeToolsOpen(false);
+  };
   
-  const activeBusinessName = activeBusiness?.business_name || 'Loading Business...';
-  
-  const gbpData = activeBusiness?.google_business_profile;
-  const reviewCount = gbpData?.reviewCount || 0;
-  const rating = gbpData?.rating || 0;
-  const isVerified = gbpData?.status === 'Verified';
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setFreeToolsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
+
+  const baseUrl = "https://getjetsuite.com";
 
   return (
-    <header className="bg-brand-card shadow-sm border-b border-brand-border p-4 flex items-center justify-between h-16 flex-shrink-0 relative z-50">
-      
-      <div className="flex items-center">
-        <img
-          src="/Jetsuitewing.png"
-          alt="JetSuite"
-          className="h-8 w-auto"
-        />
+    <header className="sticky top-0 z-50 bg-brand-darker/80 backdrop-blur-lg border-b border-slate-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-20">
 
-        <div className="relative ml-4">
-          <button 
-            onClick={() => setIsSwitcherOpen(!isSwitcherOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-brand-light hover:bg-brand-border rounded-lg border border-brand-border transition-colors group"
+          {/* LOGO */}
+          <a
+            href={`${baseUrl}/`}
+            onClick={(e) => handleNavigation(e, '/')}
+            className="flex items-center gap-3"
           >
-            <span className="text-sm font-bold text-brand-text truncate max-w-[150px]">
-              {activeBusinessName}
-            </span>
-            <ChevronDownIcon
-              className={`w-4 h-4 text-brand-text-muted transition-transform ${
-                isSwitcherOpen ? 'rotate-180' : ''
-              }`}
+            <img
+              src="/Jetsuitewing.png"
+              alt="JetSuite Logo"
+              className="w-10 h-10"
             />
-          </button>
-
-          {isSwitcherOpen && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-brand-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-1">
-              <div className="p-2 border-b border-brand-light bg-brand-light/50">
-                <span className="text-[10px] font-bold text-brand-text-muted uppercase tracking-wider px-2">
-                  Switch Business
-                </span>
+            <div className="leading-tight">
+              <div className="text-xl font-bold text-white">JetSuite</div>
+              <div className="text-xs text-gray-400 -mt-1">
+                by Jet Automations
               </div>
-
-              <div className="max-h-60 overflow-y-auto">
-                {businesses.map(biz => (
-                  <button
-                    key={biz.id}
-                    onClick={() => {
-                      onSwitchBusiness(biz.id);
-                      setIsSwitcherOpen(false);
-                    }}
-                    className={`w-full text-left p-3 flex items-center justify-between hover:bg-brand-light transition-colors ${
-                      activeBusinessId === biz.id ? 'bg-accent-purple/5' : ''
-                    }`}
-                  >
-                    <div>
-                      <p
-                        className={`text-sm font-bold ${
-                          activeBusinessId === biz.id
-                            ? 'text-accent-purple'
-                            : 'text-brand-text'
-                        }`}
-                      >
-                        {biz.business_name}
-                      </p>
-                      <p className="text-xs text-brand-text-muted">
-                        {biz.location}
-                      </p>
-                    </div>
-
-                    {activeBusinessId === biz.id && (
-                      <div className="w-2 h-2 rounded-full bg-accent-purple"></div>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <button 
-                onClick={() => {
-                  onAddBusiness();
-                  setIsSwitcherOpen(false);
-                }}
-                className="w-full p-3 text-center text-xs font-bold text-accent-purple bg-brand-light hover:bg-brand-border transition-colors border-t border-brand-border"
-              >
-                + Add Another Business
-              </button>
             </div>
-          )}
-        </div>
+          </a>
 
-        <span className="mx-3 text-brand-text-muted hidden sm:inline">/</span>
+          {/* DESKTOP NAV (TEXT ONLY) */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <a
+              href={`${baseUrl}/features`}
+              onClick={(e) => handleNavigation(e, '/features')}
+              className="text-gray-300 hover:text-white font-medium"
+            >
+              Features
+            </a>
+            <a
+              href={`${baseUrl}/how-it-works`}
+              onClick={(e) => handleNavigation(e, '/how-it-works')}
+              className="text-gray-300 hover:text-white font-medium"
+            >
+              How It Works
+            </a>
+            <a
+              href={`${baseUrl}/pricing`}
+              onClick={(e) => handleNavigation(e, '/pricing')}
+              className="text-gray-300 hover:text-white font-medium"
+            >
+              Pricing
+            </a>
+            <a
+              href={`${baseUrl}/savings`}
+              onClick={(e) => handleNavigation(e, '/savings')}
+              className="text-accent-cyan hover:text-accent-purple font-semibold"
+            >
+              💰 Calculate Savings
+            </a>
+            <a
+              href={`${baseUrl}/faq`}
+              onClick={(e) => handleNavigation(e, '/faq')}
+              className="text-gray-300 hover:text-white font-medium"
+            >
+              FAQ
+            </a>
+          </nav>
 
-        <h2 className="text-xl font-semibold text-brand-text hidden sm:block">
-          {title}
-        </h2>
-      </div>
+          {/* DESKTOP CTAs */}
+          <div className="hidden md:flex items-center gap-4">
+            
+            {userId && <SubscriptionStatusBadge userId={userId} />}
 
-      <div className="flex items-center space-x-4">
-        {/* Glowing Status Indicator */}
-        {userId && <SubscriptionStatusBadge userId={userId} />}
-        
-        {/* Growth Score */}
-        <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
-          <BoltIcon className="w-5 h-5 text-yellow-500" />
-          <span className="ml-2 text-sm font-bold text-brand-text">
-            {growthScore}
-          </span>
-          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
-            Growth Score
-          </span>
-        </div>
-
-        {/* Pending Tasks */}
-        <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex items-center">
-          <CheckCircleIcon className="w-5 h-5 text-accent-pink" />
-          <span className="ml-2 text-sm font-bold text-brand-text">
-            {pendingTasksCount}
-          </span>
-          <span className="ml-1 text-xs text-brand-text-muted hidden sm:inline">
-            Pending Tasks
-          </span>
-        </div>
-
-        {/* GBP Reviews */}
-        {isVerified && (
-            <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
-                <div className="flex items-center">
-                    <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-400" />
-                    <span className="ml-1 text-sm font-bold text-brand-text">
-                        {rating.toFixed(1)}
-                    </span>
-                    <span className="ml-1 text-xs text-brand-text-muted">
-                        ({reviewCount})
-                    </span>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setFreeToolsOpen(!freeToolsOpen)}
+                className="bg-gradient-to-r from-accent-cyan to-accent-purple hover:opacity-90
+                           text-white font-bold px-4 py-2.5 rounded-lg
+                           shadow-lg shadow-accent-cyan/30
+                           flex items-center gap-2 transition-all"
+              >
+                <Zap className="w-5 h-5" />
+                Try Free Tools
+                <ChevronDown className={`w-4 h-4 transition-transform ${freeToolsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {freeToolsOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-2">
+                    <a
+                      href={`${baseUrl}/demo/jetbiz`}
+                      onClick={(e) => handleNavigation(e, '/demo/jetbiz')}
+                      className="w-full text-left p-3 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <LayoutDashboard className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">JetBiz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze Google Business Profile</div>
+                      </div>
+                    </a>
+                    
+                    <a
+                      href={`${baseUrl}/demo/jetviz`}
+                      onClick={(e) => handleNavigation(e, '/demo/jetviz')}
+                      className="w-full text-left p-3 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Workflow className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">JetViz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze website performance</div>
+                      </div>
+                    </a>
+                  </div>
                 </div>
-                <span className="text-xs text-brand-text-muted hidden sm:inline">
-                    GBP Reviews
-                </span>
-                
-                <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
-                    <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
+              )}
+            </div>
 
-        {/* Help Menu */}
-        <div className="relative">
+            <a
+              href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
+              onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
+              className="px-6 py-2.5 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold rounded-lg transition-opacity shadow-lg shadow-accent-purple/20"
+            >
+              {userId ? 'Go to App' : 'Login'}
+            </a>
+          </div>
+
           <button
-            data-tour="header-help"
-            onClick={() => setIsHelpMenuOpen(!isHelpMenuOpen)}
-            className="p-2 hover:bg-brand-light rounded-lg transition-colors"
-            title="Help & Support"
+            className="md:hidden text-white"
+            onClick={() => setMobileOpen(!mobileOpen)}
           >
-            <QuestionMarkCircleIcon className="w-6 h-6 text-brand-text-muted hover:text-brand-text" />
+            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-
-          {isHelpMenuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-brand-card border border-brand-border rounded-lg shadow-lg py-2 z-50">
-              <button
-                onClick={handleRestartTour}
-                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
-              >
-                <span>🎓</span>
-                <span>Take Product Tour</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTool(ALL_TOOLS["knowledge-base"]);
-                  setIsHelpMenuOpen(false);
-                }}
-                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
-              >
-                <span>📚</span>
-                <span>Knowledge Base</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTool(ALL_TOOLS["support-tickets"]);
-                  setIsHelpMenuOpen(false);
-                }}
-                className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
-              >
-                <span>💬</span>
-                <span>Contact Support</span>
-              </button>
-            </div>
-          )}
         </div>
+
+        {mobileOpen && (
+          <div className="md:hidden pb-6">
+            <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900/90 p-4 space-y-3">
+              
+              {userId && (
+                <div className="flex justify-center py-2">
+                  <SubscriptionStatusBadge userId={userId} />
                 </div>
+              )}
+
+              <div className="relative">
+                <button
+                  onClick={() => setFreeToolsOpen(!freeToolsOpen)}
+                  className="w-full bg-gradient-to-r from-accent-cyan to-accent-purple
+                             text-white font-bold px-4 py-3 rounded-xl
+                             flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    Try Free Tools
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${freeToolsOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {freeToolsOpen && (
+                  <div className="mt-2 space-y-2 pl-4">
+                    <a
+                      href={`${baseUrl}/demo/jetbiz`}
+                      onClick={(e) => handleNavigation(e, '/demo/jetbiz')}
+                      className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <LayoutDashboard className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">JetBiz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze GBP</div>
+                      </div>
+                    </a>
+                    
+                    <a
+                      href={`${baseUrl}/demo/jetviz`}
+                      onClick={(e) => handleNavigation(e, '/demo/jetviz')}
+                      className="w-full text-left p-3 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-3"
+                    >
+                      <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+                        <Workflow className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">JetViz Lite</div>
+                        <div className="text-xs text-gray-400">Analyze website</div>
+                      </div>
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <a
+                href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
+                onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
+                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink
+                           text-white font-bold px-4 py-3 rounded-xl
+                           flex items-center justify-center gap-2"
+              >
+                {userId ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                {userId ? 'Go to App' : 'Login'}
+              </a>
+
+              <a href={`${baseUrl}/features`} onClick={(e) => handleNavigation(e, '/features')} className="mobile-item">
+                <LayoutDashboard size={18} /> Features
+              </a>
+
+              <a href={`${baseUrl}/how-it-works`} onClick={(e) => handleNavigation(e, '/how-it-works')} className="mobile-item">
+                <Workflow size={18} /> How It Works
+              </a>
+
+              <a href={`${baseUrl}/pricing`} onClick={(e) => handleNavigation(e, '/pricing')} className="mobile-item">
+                <DollarSign size={18} /> Pricing
+              </a>
+
+              <a href={`${baseUrl}/savings`} onClick={(e) => handleNavigation(e, '/savings')} className="mobile-item">
+                <Calculator size={18} /> 💰 Calculate Savings
+              </a>
+
+              <a href={`${baseUrl}/faq`} onClick={(e) => handleNavigation(e, '/faq')} className="mobile-item">
+                <HelpCircle size={18} /> FAQ
+              </a>
+              
+              <a href={`${baseUrl}/contact`} onClick={(e) => handleNavigation(e, '/contact')} className="mobile-item">
+                <Mail size={18} /> Contact Us
+              </a>
+
+              <div className="pt-2 text-center text-xs text-gray-400">
+                JetSuite <span className="text-gray-500">by Jet Automations</span>
+              </div>
             </div>
+          </div>
         )}
       </div>
-
     </header>
   );
 };
