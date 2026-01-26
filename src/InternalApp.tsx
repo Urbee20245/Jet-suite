@@ -1,39 +1,39 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Toaster, toast } from 'react-hot-toast';
-import { Sidebar } from './components/Sidebar';
-import { Header } from './components/Header';
-import { Welcome } from './tools/Welcome';
-import { BusinessDetails } from './tools/BusinessDetails';
-import { JetBiz } from './tools/JetBiz';
-import { JetViz } from './tools/JetViz';
-import { JetKeywords } from './tools/JetKeywords';
-import { JetCompete } from './tools/JetCompete';
-import { JetCreate } from './tools/JetCreate';
-import { JetSocial } from './tools/JetSocial';
-import { JetImage } from './tools/JetImage';
-import { JetContent } from './tools/JetContent';
-import { JetReply } from './tools/JetReply';
-import { JetTrust } from './tools/JetTrust';
-import { JetLeads } from './tools/JetLeads';
-import { JetEvents } from './tools/JetEvents';
-import { JetAds } from './tools/JetAds';
-import { JetProduct } from './tools/JetProduct';
-import { GrowthPlan } from './tools/GrowthPlan';
-import { KnowledgeBase } from './tools/KnowledgeBase';
-import { Account } from './tools/Account';
-import { AdminPanel } from './tools/AdminPanel';
-import { Planner } from './tools/Planner';
-import UserSupportTickets from './tools/UserSupportTickets'; 
-import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import { AskBorisPage } from './tools/AskBoris';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
-import { syncToSupabase, loadFromSupabase } from './utils/syncService';
-import { getSupabaseClient } from './integrations/supabase/client';
-import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from './services/borisService';
-import { ALL_TOOLS } from './constants';
-import { Confetti } from './components/Confetti';
-import { ProductTour } from './components/ProductTour';
+import { Sidebar } from '@/components/Sidebar';
+import { Header } from '@/components/Header';
+import { Welcome } from '@/tools/Welcome';
+import { BusinessDetails } from '@/tools/BusinessDetails';
+import { JetBiz } from '@/tools/JetBiz';
+import { JetViz } from '@/tools/JetViz';
+import { JetKeywords } from '@/tools/JetKeywords';
+import { JetCompete } from '@/tools/JetCompete';
+import { JetCreate } from '@/tools/JetCreate';
+import { JetSocial } from '@/tools/JetSocial';
+import { JetImage } from '@/tools/JetImage';
+import { JetContent } from '@/tools/JetContent';
+import { JetReply } from '@/tools/JetReply';
+import { JetTrust } from '@/tools/JetTrust';
+import { JetLeads } from '@/tools/JetLeads';
+import { JetEvents } from '@/tools/JetEvents';
+import { JetAds } from '@/tools/JetAds';
+import { JetProduct } from '@/tools/JetProduct';
+import { GrowthPlan } from '@/tools/GrowthPlan';
+import { KnowledgeBase } from '@/tools/KnowledgeBase';
+import { Account } from '@/tools/Account';
+import { AdminPanel } from '@/tools/AdminPanel';
+import { Planner } from '@/tools/Planner';
+import UserSupportTickets from '@/tools/UserSupportTickets'; 
+import { GrowthScoreHistory } from '@/tools/profile/GrowthScoreHistory';
+import { AskBorisPage } from '@/tools/AskBoris';
+import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from '@/types';
+import { syncToSupabase, loadFromSupabase } from '@/utils/syncService';
+import { getSupabaseClient } from '@/integrations/supabase/client';
+import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from '@/services/borisService';
+import { ALL_TOOLS } from '@/constants';
+import { Confetti } from '@/components/Confetti';
+import { ProductTour } from '@/components/ProductTour';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -426,7 +426,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
             if (tool) handleSetActiveTool(tool);
           }}
           onReplyToReviews={handleReplyToReviews}
-          onTaskStatusChange={handleTaskStatusChange as any}
+          onTaskStatusChange={handleTaskStatusChange}
         />;
       default:
         return (
@@ -444,7 +444,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
                   hasNewReviews={hasNewReviews}
                   newReviewsCount={newReviewsCount}
                   onReplyToReviews={handleReplyToReviews}
-                  onTaskStatusChange={onTaskStatusChange as any}
+                  onTaskStatusChange={handleTaskStatusChange as any}
                 />
             </>
         );

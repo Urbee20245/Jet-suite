@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
-import { getSupabaseClient } from '../integrations/supabase/client';
+import { getSupabaseClient } from '@/integrations/supabase/client';
 
 interface ProductTourProps {
   userId: string;
@@ -41,7 +41,6 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
           popover: {
             title: `Welcome to JetSuite, ${userFirstName}! 🚀`,
             description: 'Let\'s take a quick 2-minute tour to show you how to grow your business with AI-powered tools. Ready?\n\nClick "Next" to start or "Close" if you\'re already familiar.',
-            side: 'center',
             align: 'center'
           }
         },
@@ -140,7 +139,6 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
           popover: {
             title: '🎉 You\'re All Set!',
             description: 'Here\'s your action plan:\n\n1️⃣ Complete Business Details\n2️⃣ Run JetBiz audit\n3️⃣ Run JetViz audit\n4️⃣ Check your Growth Plan\n5️⃣ Complete 3-5 weekly tasks\n\nAsk Boris if you need help! Let\'s grow your business! 🚀',
-            side: 'center',
             align: 'center'
           }
         }
