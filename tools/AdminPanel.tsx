@@ -29,7 +29,7 @@ interface Profile {
 type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms';
 
 export const AdminPanel: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>('users');
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
@@ -142,7 +142,6 @@ export const AdminPanel: React.FC = () => {
         });
       }
       
-      // Load stats
       const today = new Date();
       today.setHours(0,0,0,0);
       const { count: sentToday } = await supabase.from('email_logs').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', today.toISOString());
@@ -150,10 +149,10 @@ export const AdminPanel: React.FC = () => {
       
       setEmailStats({
         sent_today: sentToday,
-        sent_this_month: sentToday, // Placeholder
+        sent_this_month: sentToday,
         failed_today: failedToday,
-        total_sent: sentToday, // Placeholder
-        today_sent: sentToday, // Placeholder
+        total_sent: sentToday,
+        today_sent: sentToday,
         open_rate: 0,
         click_rate: 0
       });
@@ -328,17 +327,76 @@ export const AdminPanel: React.FC = () => {
       return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
     }
     switch (activeTab) {
-      case 'users': return <div>User Management Content</div>; // Placeholder
-      case 'email': return <div>Email Settings Content</div>; // Placeholder
-      case 'sms': return <div>SMS Settings Content</div>; // Placeholder
+      case 'users':
+        return (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">User Management</h2>
+            <div className="overflow-x-auto bg-white rounded-lg shadow">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trial Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users.map(user => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <UserCircleIcon className="h-8 w-8 text-gray-400" />
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{user.full_name || user.email}</div>
+                            <div className="text-sm text-gray-500">{user.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getTrialStatusBadge(user)}
+                        {user.trial_end_date && <div className="text-xs text-gray-500 mt-1">Ends: {formatTrialEndDate(user.trial_end_date)}</div>}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getSubscriptionBadge(user.subscription_status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onClick={() => setSelectedUser(user)} className="text-blue-600 hover:text-blue-900">Manage</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      case 'email':
+        return (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Email Settings</h2>
+            {/* Email settings form and stats */}
+          </div>
+        );
+      case 'sms':
+        return (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">SMS Settings</h2>
+            {/* SMS settings form */}
+          </div>
+        );
       // Add other cases here
-      default: return <div>Select a tab</div>;
+      default:
+        return <div>Select a tab to get started.</div>;
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* ... existing header and message divs ... */}
+      {message && (
+        <div className={`p-4 mb-4 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {message.text}
+        </div>
+      )}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
           {(['overview', 'businesses', 'users', 'support', 'revenue', 'announcements', 'email', 'sms'] as TabType[]).map(tab => (
