@@ -33,6 +33,8 @@ import { getSupabaseClient } from './integrations/supabase/client';
 import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from './services/borisService';
 import { ALL_TOOLS } from './constants';
 import { Confetti } from './components/Confetti';
+import { ProductTour } from './components/ProductTour';
+import './styles/tour.css';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 
@@ -44,6 +46,7 @@ interface InternalAppProps {
 
 const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }) => {
   const [activeTool, setActiveTool] = useState<Tool | null>(null);
+  const [showProductTour, setShowProductTour] = useState(true);
   const [kbArticleId, setKbArticleId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<GrowthPlanTask[]>([]);
   const [activeBusinessId, setActiveBusinessId] = useState<string | null>(null);
@@ -496,6 +499,15 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           {renderActiveTool()}
         </main>
       </div>
+
+      {/* Product Tour */}
+      {showProductTour && currentProfileData && (
+        <ProductTour 
+          userId={userId}
+          userFirstName={currentProfileData.user.firstName || 'there'}
+          onComplete={() => setShowProductTour(false)}
+        />
+      )}
     </div>
   );
 };
