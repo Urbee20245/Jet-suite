@@ -22,7 +22,7 @@ import { JetProduct } from './tools/JetProduct';
 import { GrowthPlan } from './tools/GrowthPlan';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
-import AdminPanel from './components/AdminPanel';
+import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
