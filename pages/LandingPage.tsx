@@ -360,18 +360,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         />
                     ) : (
                         <>
-                            {/* Video Preview Image */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40">
-                                {/* Play Button */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                                        <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
-                                    </div>
+                            {/* Video Cover Image */}
+                            <img 
+                                src="/Jetcover.png" 
+                                alt="JetSuite Demo Video Cover" 
+                                className="absolute inset-0 w-full h-full object-cover"
+                            />
+                            
+                            {/* Dark Overlay for contrast */}
+                            <div className="absolute inset-0 bg-black/40"></div> 
+
+                            {/* Play Button */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 relative z-10">
+                                    <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
                                 </div>
                             </div>
                             
                             {/* Video Stats Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors">
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors z-10">
                                 See how it works in 2 minutes
                             </div>
                         </>
