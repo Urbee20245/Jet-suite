@@ -4,6 +4,7 @@ import { BorisChatModal } from './BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
+import { manuallyStartTour } from '../components/ProductTour'; // <-- NEW IMPORT
 
 interface BorisProps {
   userFirstName: string;
@@ -348,20 +349,17 @@ export const Boris: React.FC<BorisProps> = ({
             Why this matters
           </button>
 
-          {borisState.showUpsell && (
-            <>
-              <span className="text-gray-600">•</span>
-              <a
-                href="https://customwebsitesplus.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold"
-              >
-                <BoltIcon className="w-4 h-4" />
-                Need help? We can handle this ↗
-              </a>
-            </>
-          )}
+          {/* NEW: Product Tour Trigger (Replaces conditional upsell link) */}
+          <>
+            <span className="text-gray-600">•</span>
+            <button
+              onClick={manuallyStartTour}
+              className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
+            >
+              <InformationCircleIcon className="w-4 h-4" />
+              📖 Take the Product Tour
+            </button>
+          </>
         </div>
 
         {showWhyDialog && (
