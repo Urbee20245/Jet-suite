@@ -103,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   // Handle video placeholder click
   const handleVideoClick = () => {
     // Open demo video or modal
-    window.open("https://www.youtube.com/watch?v=demo", "_blank");
+    window.open("https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4", "_blank");
   };
 
   // Animation for stars in testimonials
