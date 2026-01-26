@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSupabaseClient } from '../integrations/supabase/client';
-import AdminPanel from '../components/AdminPanel';
+import { AdminPanel } from '../tools/AdminPanel';
 import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 interface AdminProps {
@@ -18,6 +18,10 @@ export default function Admin({ navigate }: AdminProps) {
   const checkAdminAccess = async () => {
     try {
       const supabase = getSupabaseClient();
+      if (!supabase) {
+        navigate('/');
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
