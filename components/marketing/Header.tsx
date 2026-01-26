@@ -175,11 +175,11 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
             </div>
 
             <a
-              href={userId ? `${baseUrl}/app` : `${baseUrl}/get-started`}
-              onClick={(e) => handleNavigation(e, userId ? '/app' : '/get-started')}
+              href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
+              onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
               className="px-6 py-2.5 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold rounded-lg transition-opacity shadow-lg shadow-accent-purple/20"
             >
-              {userId ? 'Go to App' : 'Start Subscription'}
+              {userId ? 'Go to App' : 'Login'}
             </a>
           </div>
 
@@ -249,14 +249,14 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
               </div>
 
               <a
-                href={userId ? `${baseUrl}/app` : `${baseUrl}/get-started`}
-                onClick={(e) => handleNavigation(e, userId ? '/app' : '/get-started')}
+                href={userId ? `${baseUrl}/app` : `${baseUrl}/login`}
+                onClick={(e) => handleNavigation(e, userId ? '/app' : '/login')}
                 className="w-full bg-gradient-to-r from-accent-purple to-accent-pink
                            text-white font-bold px-4 py-3 rounded-xl
                            flex items-center justify-center gap-2"
               >
                 {userId ? <LayoutDashboard className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                {userId ? 'Go to App' : 'Start Subscription'}
+                {userId ? 'Go to App' : 'Login'}
               </a>
 
               <a href={`${baseUrl}/features`} onClick={(e) => handleNavigation(e, '/features')} className="mobile-item">
