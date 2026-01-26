@@ -21,7 +21,7 @@ import {
   AdminPanelIcon,
   PlannerIcon,
   JetProductIcon,
-  BusinessIcon,
+  BusinessIcon
 } from './components/icons/ToolIcons';
 import { TicketIcon } from './components/SupportIcons';
 import { SparklesIcon as SparklesIconSolid } from './components/icons/MiniIcons';
