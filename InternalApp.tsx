@@ -63,6 +63,26 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
   const [newReviewsCount, setNewReviewCount] = useState(0);
   const [pendingReviews, setPendingReviews] = useState<any[]>([]);
 
+  // Show tour for new users only
+  useEffect(() => {
+    if (!userId || !currentProfileData) return;
+    
+    // Check if user has completed tour before
+    const tourCompleted = localStorage.getItem(`jetsuite_tour_completed_${userId}`);
+    if (tourCompleted) return;
+    
+    // Check if this is a truly new user (no business data)
+    const hasBusinessData = currentProfileData.business && 
+                           Object.keys(currentProfileData.business).length > 0;
+    
+    // Only show tour for brand new users after a short delay
+    if (!hasBusinessData) {
+      setTimeout(() => {
+        setShowProductTour(true);
+      }, 2000);
+    }
+  }, [userId, currentProfileData]);
+
   const supabase = getSupabaseClient();
   const isAdmin = userEmail === ADMIN_EMAIL;
 

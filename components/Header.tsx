@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Tool, BusinessProfile } from '../types';
-import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon, CheckCircleIcon } from './icons/MiniIcons';
+import { BoltIcon, ChevronDownIcon, StarIcon, MapPinIcon, CheckCircleIcon, QuestionMarkCircleIcon } from './icons/MiniIcons';
 import { SubscriptionStatusBadge } from './SubscriptionStatusBadge';
 import { ALL_TOOLS } from '../constants';
 
