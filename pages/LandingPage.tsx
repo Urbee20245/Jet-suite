@@ -94,6 +94,9 @@ const testimonials = [
     }
 ];
 
+const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4";
+const COVER_IMAGE_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26165442/Jetcover.png"; // New absolute URL
+
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
@@ -101,7 +104,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [showVideo, setShowVideo] = useState(false); // NEW STATE for video playback
 
-  const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4";
   
   // Handle video placeholder click
   const handleVideoClick = () => {
@@ -362,7 +364,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         <>
                             {/* Video Cover Image */}
                             <img 
-                                src="/Jetcover.png" 
+                                src={COVER_IMAGE_URL} 
                                 alt="JetSuite Demo Video Cover" 
                                 className="absolute inset-0 w-full h-full object-cover"
                             />
