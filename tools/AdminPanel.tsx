@@ -8,6 +8,7 @@ import { Loader } from '../components/Loader';
 import supportService from '../services/supportService';
 import emailService from '../services/emailService';
 import smsService from '../services/smsService';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
 const ITEMS_PER_PAGE = 20;
@@ -224,12 +225,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const [creationResult, setCreationResult] = useState<{ success: boolean; message: string } | null>(null);
     const [isGrantingAccess, setIsGrantingAccess] = useState<string | null>(null);
     
-    // Edit Modals State
-    const [showEditUserModal, setShowEditUserModal] = useState(false);
-    const [editingUser, setEditingUser] = useState<ProfileData | null>(null);
-    const [showEditBusinessModal, setShowEditBusinessModal] = useState(false);
-    const [editingBusiness, setEditingBusiness] = useState<ProfileData | null>(null);
-    
     // Pagination State
     const [usersPage, setUsersPage] = useState(1);
     const [businessesPage, setBusinessesPage] = useState(1);
@@ -316,28 +311,66 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     }, [activeTab]);
 
-    // Load Email Settings
+    // Load Email Settings (REPLACED with direct Supabase access)
     const loadEmailSettings = async () => {
       setIsLoadingEmailSettings(true);
       try {
-        const response = await fetch('/api/email/get-settings');
-        const result = await response.json();
-        if (result.success) {
-          setEmailSettings(result.data);
+        const { getSupabaseClient } = await import('../integrations/supabase/client');
+        const supabase = getSupabaseClient();
+        
+        if (!supabase) {
+          console.error('Supabase client not available');
+          setIsLoadingEmailSettings(false);
+          return;
         }
 
-        // Load templates
-        const templatesResponse = await fetch('/api/email/get-templates');
-        const templatesResult = await templatesResponse.json();
-        if (templatesResult.success) {
-          setEmailTemplates(templatesResult.data);
+        // Load email settings
+        const { data: emailData, error: emailError } = await supabase
+          .from('email_settings')
+          .select('*')
+          .maybeSingle();
+
+        if (emailError && emailError.code !== 'PGRST116') {
+          console.error('Error loading email settings:', emailError);
+        } else if (emailData) {
+          setEmailSettings(emailData);
+        } else {
+          // No settings exist yet - set default empty state
+          setEmailSettings(null);
         }
 
-        // Load stats
-        const statsResponse = await fetch('/api/email/get-stats');
-        const statsResult = await statsResponse.json();
-        if (statsResult.success) {
-          setEmailStats(statsResult.data);
+        // Load email templates
+        const { data: templatesData, error: templatesError } = await supabase
+          .from('email_templates')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (templatesError) {
+          console.error('Error loading email templates:', templatesError);
+        } else {
+          setEmailTemplates(templatesData || []);
+        }
+
+        // Load email stats (count of emails sent today)
+        const today = new Date().toISOString().split('T')[0];
+        const { data: logsData, error: logsError } = await supabase
+          .from('email_logs')
+          .select('*', { count: 'exact', head: false })
+          .gte('created_at', `${today}T00:00:00Z`)
+          .lte('created_at', `${today}T23:59:59Z`);
+
+        if (logsError) {
+          console.error('Error loading email stats:', logsError);
+          setEmailStats({ sent_today: 0, sent_this_month: 0, failed_today: 0 });
+        } else {
+          const sentToday = logsData?.filter(log => log.status === 'sent').length || 0;
+          const failedToday = logsData?.filter(log => log.status === 'failed').length || 0;
+          
+          setEmailStats({
+            sent_today: sentToday,
+            sent_this_month: sentToday, // For now, same as today
+            failed_today: failedToday
+          });
         }
       } catch (error) {
         console.error('Error loading email settings:', error);
@@ -347,20 +380,52 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     };
 
-    // Load SMS Settings
+    // Load SMS Settings (REPLACED with direct Supabase access)
     const loadSMSSettings = async () => {
       try {
-        const response = await fetch('/api/sms/get-settings');
-        const result = await response.json();
-        if (result.success) {
-          setSmsSettings(result.data);
+        const { getSupabaseClient } = await import('../integrations/supabase/client');
+        const supabase = getSupabaseClient();
+        
+        if (!supabase) {
+          console.error('Supabase client not available');
+          return;
         }
 
-        // Load stats
-        const statsResponse = await fetch('/api/sms/get-stats');
-        const statsResult = await statsResponse.json();
-        if (statsResult.success) {
-          setSmsStats(statsResult.data);
+        // Load SMS settings
+        const { data: smsData, error: smsError } = await supabase
+          .from('sms_settings')
+          .select('*')
+          .maybeSingle();
+
+        if (smsError && smsError.code !== 'PGRST116') {
+          console.error('Error loading SMS settings:', smsError);
+        } else if (smsData) {
+          setSmsSettings(smsData);
+        } else {
+          // No settings exist yet - set default empty state
+          setSmsSettings(null);
+        }
+
+        // Load SMS stats (count of SMS sent today)
+        const today = new Date().toISOString().split('T')[0];
+        const { data: logsData, error: logsError } = await supabase
+          .from('sms_logs')
+          .select('*', { count: 'exact', head: false })
+          .gte('created_at', `${today}T00:00:00Z`)
+          .lte('created_at', `${today}T23:59:59Z`);
+
+        if (logsError) {
+          console.error('Error loading SMS stats:', logsError);
+          setSmsStats({ sent_today: 0, sent_this_month: 0, failed_today: 0 });
+        } else {
+          const sentToday = logsData?.filter(log => log.status === 'sent').length || 0;
+          const failedToday = logsData?.filter(log => log.status === 'failed').length || 0;
+          
+          setSmsStats({
+            sent_today: sentToday,
+            sent_this_month: sentToday, // For now, same as today
+            failed_today: failedToday
+          });
         }
       } catch (error) {
         console.error('Error loading SMS settings:', error);
@@ -368,55 +433,111 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     };
 
-    // useEffect to load when tab changes
-    useEffect(() => {
-      if (activeTab === 'email') {
-        loadEmailSettings();
-      } else if (activeTab === 'sms') {
-        loadSMSSettings();
-      }
-    }, [activeTab]);
-
-    // Save Email Settings
+    // Save Email Settings (REPLACED with direct Supabase access)
     const handleSaveEmailSettings = async () => {
-      setIsSavingEmailSettings(true);
+      if (!emailSettings) return;
+      
       try {
-        const response = await fetch('/api/email/update-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emailSettings)
-        });
+        const { getSupabaseClient } = await import('../integrations/supabase/client');
+        const supabase = getSupabaseClient();
+        
+        if (!supabase) {
+          showToast('Database connection not available', 'error');
+          return;
+        }
 
-        const result = await response.json();
-        if (result.success) {
-          showToast('Email settings saved successfully', 'success');
-          setEmailSettings(result.data);
+        // Check if settings exist
+        const { data: existing, error: checkError } = await supabase
+          .from('email_settings')
+          .select('id')
+          .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking email settings:', checkError);
+          showToast('Failed to save email settings', 'error');
+          return;
+        }
+
+        let result;
+        if (existing) {
+          // Update existing settings
+          result = await supabase
+            .from('email_settings')
+            .update(emailSettings)
+            .eq('id', existing.id)
+            .select()
+            .single();
         } else {
-          showToast(result.error || 'Failed to save settings', 'error');
+          // Insert new settings
+          result = await supabase
+            .from('email_settings')
+            .insert([emailSettings])
+            .select()
+            .single();
+        }
+
+        if (result.error) {
+          console.error('Error saving email settings:', result.error);
+          showToast('Failed to save email settings', 'error');
+        } else {
+          showToast('Email settings saved successfully', 'success');
+          loadEmailSettings();
         }
       } catch (error) {
         console.error('Error saving email settings:', error);
         showToast('Failed to save email settings', 'error');
-      } finally {
-        setIsSavingEmailSettings(false);
       }
     };
 
-    // Save SMS Settings
+    // Save SMS Settings (REPLACED with direct Supabase access)
     const handleSaveSMSSettings = async () => {
+      if (!smsSettings) return;
+      
       try {
-        const response = await fetch('/api/sms/update-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(smsSettings)
-        });
+        const { getSupabaseClient } = await import('../integrations/supabase/client');
+        const supabase = getSupabaseClient();
+        
+        if (!supabase) {
+          showToast('Database connection not available', 'error');
+          return;
+        }
 
-        const result = await response.json();
-        if (result.success) {
-          showToast('SMS settings saved successfully', 'success');
-          setSmsSettings(result.data);
+        // Check if settings exist
+        const { data: existing, error: checkError } = await supabase
+          .from('sms_settings')
+          .select('id')
+          .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking SMS settings:', checkError);
+          showToast('Failed to save SMS settings', 'error');
+          return;
+        }
+
+        let result;
+        if (existing) {
+          // Update existing settings
+          result = await supabase
+            .from('sms_settings')
+            .update(smsSettings)
+            .eq('id', existing.id)
+            .select()
+            .single();
         } else {
-          showToast(result.error || 'Failed to save settings', 'error');
+          // Insert new settings
+          result = await supabase
+            .from('sms_settings')
+            .insert([smsSettings])
+            .select()
+            .single();
+        }
+
+        if (result.error) {
+          console.error('Error saving SMS settings:', result.error);
+          showToast('Failed to save SMS settings', 'error');
+        } else {
+          showToast('SMS settings saved successfully', 'success');
+          loadSMSSettings();
         }
       } catch (error) {
         console.error('Error saving SMS settings:', error);
@@ -424,7 +545,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     };
 
-    // Send Individual Email
+    // Send Individual Email (Kept as API call, as the API route exists and handles the service layer logic)
     const handleSendEmail = async () => {
       try {
         const response = await fetch('/api/email/send-email', {
@@ -448,7 +569,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     };
 
-    // Send Broadcast Email
+    // Send Broadcast Email (Kept as API call, as the API route exists and handles complex audience filtering)
     const handleSendBroadcast = async () => {
       showConfirm(
         'Send Broadcast Email',
@@ -1769,20 +1890,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {emailStats ? (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{emailStats.total_sent}</div>
-                        <div className="text-sm text-gray-600">Total Sent</div>
-                      </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{emailStats.today_sent}</div>
+                        <div className="text-2xl font-bold text-blue-600">{emailStats.sent_today}</div>
                         <div className="text-sm text-gray-600">Sent Today</div>
                       </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{emailStats.sent_this_month}</div>
+                        <div className="text-sm text-gray-600">Sent This Month</div>
+                      </div>
                       <div className="bg-purple-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">{emailStats.open_rate.toFixed(1)}%</div>
-                        <div className="text-sm text-gray-600">Open Rate</div>
+                        <div className="text-2xl font-bold text-purple-600">{emailStats.failed_today}</div>
+                        <div className="text-sm text-gray-600">Failed Today</div>
                       </div>
                       <div className="bg-orange-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600">{emailStats.click_rate.toFixed(1)}%</div>
-                        <div className="text-sm text-gray-600">Click Rate</div>
+                        <div className="text-2xl font-bold text-orange-600">N/A</div>
+                        <div className="text-sm text-gray-600">Open Rate</div>
                       </div>
                     </div>
                   ) : (
@@ -1948,20 +2069,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   {smsStats ? (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="bg-blue-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{smsStats.total_sent}</div>
-                        <div className="text-sm text-gray-600">Total Sent</div>
-                      </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">{smsStats.today_sent}</div>
+                        <div className="text-2xl font-bold text-blue-600">{smsStats.sent_today}</div>
                         <div className="text-sm text-gray-600">Sent Today</div>
                       </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{smsStats.sent_this_month}</div>
+                        <div className="text-sm text-gray-600">Sent This Month</div>
+                      </div>
                       <div className="bg-purple-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">{smsStats.delivery_rate.toFixed(1)}%</div>
+                        <div className="text-2xl font-bold text-purple-600">N/A</div>
                         <div className="text-sm text-gray-600">Delivery Rate</div>
                       </div>
                       <div className="bg-red-50 p-4 rounded-lg">
-                        <div className="text-2xl font-bold text-red-600">{smsStats.total_failed}</div>
-                        <div className="text-sm text-gray-600">Failed</div>
+                        <div className="text-2xl font-bold text-red-600">{smsStats.failed_today}</div>
+                        <div className="text-sm text-gray-600">Failed Today</div>
                       </div>
                     </div>
                   ) : (
