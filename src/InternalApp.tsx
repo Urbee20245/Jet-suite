@@ -3,35 +3,35 @@ import { v4 as uuidv4 } from 'uuid';
 import { Toaster, toast } from 'react-hot-toast';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
-import { Welcome } from '../tools/Welcome';
-import { BusinessDetails } from '../tools/BusinessDetails';
-import { JetBiz } from '../tools/JetBiz';
-import { JetViz } from '../tools/JetViz';
-import { JetKeywords } from '../tools/JetKeywords';
-import { JetCompete } from '../tools/JetCompete';
-import { JetCreate } from '../tools/JetCreate';
-import { JetSocial } from '../tools/JetSocial';
-import { JetImage } from '../tools/JetImage';
-import { JetContent } from '../tools/JetContent';
-import { JetReply } from '../tools/JetReply';
-import { JetTrust } from '../tools/JetTrust';
-import { JetLeads } from '../tools/JetLeads';
-import { JetEvents } from '../tools/JetEvents';
-import { JetAds } from '../tools/JetAds';
-import { JetProduct } from '../tools/JetProduct';
-import { GrowthPlan } from '../tools/GrowthPlan';
-import { KnowledgeBase } from '../tools/KnowledgeBase';
-import { Account } from '../tools/Account';
-import { AdminPanel } from '../tools/AdminPanel';
-import { Planner } from '../tools/Planner';
-import UserSupportTickets from '../tools/UserSupportTickets'; 
-import { GrowthScoreHistory } from '../tools/profile/GrowthScoreHistory';
-import { AskBorisPage } from '../tools/AskBoris';
-import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from '../types';
-import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
-import { getSupabaseClient } from '../integrations/supabase/client';
-import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from '../services/borisService';
-import { ALL_TOOLS } from '../constants';
+import { Welcome } from '@/tools/Welcome';
+import { BusinessDetails } from '@/tools/BusinessDetails';
+import { JetBiz } from '@/tools/JetBiz';
+import { JetViz } from '@/tools/JetViz';
+import { JetKeywords } from '@/tools/JetKeywords';
+import { JetCompete } from '@/tools/JetCompete';
+import { JetCreate } from '@/tools/JetCreate';
+import { JetSocial } from '@/tools/JetSocial';
+import { JetImage } from '@/tools/JetImage';
+import { JetContent } from '@/tools/JetContent';
+import { JetReply } from '@/tools/JetReply';
+import { JetTrust } from '@/tools/JetTrust';
+import { JetLeads } from '@/tools/JetLeads';
+import { JetEvents } from '@/tools/JetEvents';
+import { JetAds } from '@/tools/JetAds';
+import { JetProduct } from '@/tools/JetProduct';
+import { GrowthPlan } from '@/tools/GrowthPlan';
+import { KnowledgeBase } from '@/tools/KnowledgeBase';
+import { Account } from '@/tools/Account';
+import { AdminPanel } from '@/tools/AdminPanel';
+import { Planner } from '@/tools/Planner';
+import UserSupportTickets from '@/tools/UserSupportTickets'; 
+import { GrowthScoreHistory } from '@/tools/profile/GrowthScoreHistory';
+import { AskBorisPage } from '@/tools/AskBoris';
+import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from '@/types';
+import { syncToSupabase, loadFromSupabase } from '@/utils/syncService';
+import { getSupabaseClient } from '@/integrations/supabase/client';
+import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisReplyConfirmation } from '@/services/borisService';
+import { ALL_TOOLS } from '@/constants';
 import { Confetti } from '@/components/Confetti';
 import { ProductTour } from '@/components/ProductTour';
 
@@ -159,7 +159,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
 
       if (businessList && businessList.length > 0) {
         setBusinesses(businessList);
-        const activeBiz = businessList.find((b: any) => b.id === activeBusinessId) || businessList[0];
+        const activeBiz = businessList.find(b => b.id === activeBusinessId) || businessList[0];
         
         if (activeBiz.id !== activeBusinessId) {
           setActiveBusinessId(activeBiz.id);
@@ -228,13 +228,13 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     
     if (tool?.id === 'growthplan' && userId && activeBusinessId) {
       loadFromSupabase(userId, activeBusinessId, 'tasks')
-        .then((savedTasks: GrowthPlanTask[] | null) => {
+        .then(savedTasks => {
           if (savedTasks && Array.isArray(savedTasks)) {
             console.log('✅ [Navigation] Loaded tasks for Growth Plan:', savedTasks.length);
             setTasks(savedTasks);
           }
         })
-        .catch((err: any) => console.error('❌ [Navigation] Failed to load tasks:', err));
+        .catch(err => console.error('❌ [Navigation] Failed to load tasks:', err));
     }
   };
 
@@ -304,8 +304,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     }
   };
 
-  const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis | null, toolId: 'jetbiz' | 'jetviz') => {
-    if (!currentProfileData || !report) return;
+  const handleSaveAnalysis = async (report: AuditReport | LiveWebsiteAnalysis, toolId: 'jetbiz' | 'jetviz') => {
+    if (!currentProfileData) return;
 
     const storageKey = `${toolId}_analysis`;
     
@@ -421,7 +421,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           growthPlanTasks={tasks}
           hasNewReviews={hasNewReviews}
           newReviewsCount={newReviewsCount}
-          onNavigate={(toolId: string) => {
+          onNavigate={(toolId) => {
             const tool = ALL_TOOLS[toolId];
             if (tool) handleSetActiveTool(tool);
           }}
@@ -444,7 +444,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
                   hasNewReviews={hasNewReviews}
                   newReviewsCount={newReviewsCount}
                   onReplyToReviews={handleReplyToReviews}
-                  onTaskStatusChange={handleTaskStatusChange}
+                  onTaskStatusChange={handleTaskStatusChange as any}
                 />
             </>
         );
