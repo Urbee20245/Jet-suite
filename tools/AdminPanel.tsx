@@ -98,6 +98,21 @@ export const AdminPanel: React.FC = () => {
   // Business details modal state
   const [selectedBusiness, setSelectedBusiness] = useState<AdminProfileData | null>(null);
 
+  // Send email form state
+  const [sendEmailForm, setSendEmailForm] = useState({
+    to: '',
+    subject: '',
+    body: ''
+  });
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  // Send SMS form state
+  const [sendSmsForm, setSendSmsForm] = useState({
+    to: '',
+    message: ''
+  });
+  const [sendingSms, setSendingSms] = useState(false);
+
   useEffect(() => {
     const loadTabData = () => {
       switch (activeTab) {
@@ -507,6 +522,71 @@ export const AdminPanel: React.FC = () => {
   const showMessage = (type: 'success' | 'error', text: string) => {
     setMessage({ type, text });
     setTimeout(() => setMessage(null), 5000);
+  };
+
+  const sendEmail = async () => {
+    if (!sendEmailForm.to || !sendEmailForm.subject || !sendEmailForm.body) {
+      showMessage('error', 'Please fill in all email fields');
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const response = await fetch('/api/admin/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({
+          to: sendEmailForm.to,
+          subject: sendEmailForm.subject,
+          body: sendEmailForm.body
+        })
+      });
+
+      if (response.ok) {
+        showMessage('success', 'Email sent successfully!');
+        setSendEmailForm({ to: '', subject: '', body: '' });
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to send email');
+      }
+    } catch (error: any) {
+      showMessage('error', error.message || 'Failed to send email');
+    }
+    setSendingEmail(false);
+  };
+
+  const sendSms = async () => {
+    if (!sendSmsForm.to || !sendSmsForm.message) {
+      showMessage('error', 'Please fill in phone number and message');
+      return;
+    }
+    setSendingSms(true);
+    try {
+      const response = await fetch('/api/admin/send-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({
+          to: sendSmsForm.to,
+          message: sendSmsForm.message
+        })
+      });
+
+      if (response.ok) {
+        showMessage('success', 'SMS sent successfully!');
+        setSendSmsForm({ to: '', message: '' });
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to send SMS');
+      }
+    } catch (error: any) {
+      showMessage('error', error.message || 'Failed to send SMS');
+    }
+    setSendingSms(false);
   };
 
   const handleExtendTrial = async (userId: string) => {
@@ -1221,6 +1301,51 @@ export const AdminPanel: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Send Email */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Send Email</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">To (Email Address)</label>
+                        <input
+                            type="email"
+                            value={sendEmailForm.to}
+                            onChange={e => setSendEmailForm({...sendEmailForm, to: e.target.value})}
+                            className="w-full mt-1 p-2 border rounded-lg"
+                            placeholder="recipient@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Subject</label>
+                        <input
+                            type="text"
+                            value={sendEmailForm.subject}
+                            onChange={e => setSendEmailForm({...sendEmailForm, subject: e.target.value})}
+                            className="w-full mt-1 p-2 border rounded-lg"
+                            placeholder="Email subject"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Message (HTML supported)</label>
+                        <textarea
+                            value={sendEmailForm.body}
+                            onChange={e => setSendEmailForm({...sendEmailForm, body: e.target.value})}
+                            className="w-full mt-1 p-2 border rounded-lg"
+                            rows={6}
+                            placeholder="Enter your email message here..."
+                        />
+                    </div>
+                    <button
+                        onClick={sendEmail}
+                        disabled={sendingEmail}
+                        className="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                    >
+                        <EnvelopeIcon className="w-5 h-5" />
+                        {sendingEmail ? 'Sending...' : 'Send Email'}
+                    </button>
+                </div>
+            </div>
           </div>
         );
       case 'sms':
@@ -1275,6 +1400,44 @@ export const AdminPanel: React.FC = () => {
                         </div>
                         <button onClick={saveSmsSettings} disabled={updating} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:opacity-50">
                             {updating ? 'Saving...' : 'Save SMS Settings'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Send SMS */}
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Send SMS</h3>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">To (Phone Number)</label>
+                            <input
+                                type="tel"
+                                value={sendSmsForm.to}
+                                onChange={e => setSendSmsForm({...sendSmsForm, to: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                placeholder="+1234567890 or 1234567890"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Include country code or it will default to +1 (US)</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Message</label>
+                            <textarea
+                                value={sendSmsForm.message}
+                                onChange={e => setSendSmsForm({...sendSmsForm, message: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                rows={4}
+                                placeholder="Enter your SMS message here..."
+                                maxLength={1600}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">{sendSmsForm.message.length}/1600 characters</p>
+                        </div>
+                        <button
+                            onClick={sendSms}
+                            disabled={sendingSms}
+                            className="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            <DevicePhoneMobileIcon className="w-5 h-5" />
+                            {sendingSms ? 'Sending...' : 'Send SMS'}
                         </button>
                     </div>
                 </div>
