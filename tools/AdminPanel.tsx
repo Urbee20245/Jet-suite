@@ -92,9 +92,19 @@ export const AdminPanel: React.FC = () => {
     end_date: ''
   });
 
+  // Create free user state
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState({ email: '', firstName: '', lastName: '' });
+
+  // Business details modal state
+  const [selectedBusiness, setSelectedBusiness] = useState<AdminProfileData | null>(null);
+
   useEffect(() => {
     const loadTabData = () => {
       switch (activeTab) {
+        case 'overview':
+          loadUsers();
+          break;
         case 'users':
         case 'businesses':
           loadUsers();
@@ -326,6 +336,140 @@ export const AdminPanel: React.FC = () => {
     setUpdating(false);
   };
 
+  const createFreeUser = async () => {
+    if (!createUserForm.email) {
+      showMessage('error', 'Email is required');
+      return;
+    }
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/create-free-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify(createUserForm)
+      });
+      if (response.ok) {
+        showMessage('success', 'Free user created successfully');
+        setShowCreateUserForm(false);
+        setCreateUserForm({ email: '', firstName: '', lastName: '' });
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to create user');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to create user');
+    }
+    setUpdating(false);
+  };
+
+  const bulkWipeFreeUsers = async () => {
+    if (!confirm('WARNING: This will permanently delete ALL free user data. This cannot be undone. Are you sure?')) return;
+    if (!confirm('FINAL WARNING: All free users will lose their data permanently. Type "DELETE" to confirm.')) return;
+
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/bulk-wipe-free-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        showMessage('success', `Successfully wiped ${data.count || 0} free users`);
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to wipe free users');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to wipe free users');
+    }
+    setUpdating(false);
+  };
+
+  const grantFreeAccess = async (userId: string) => {
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/grant-free-access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({ userId })
+      });
+      if (response.ok) {
+        showMessage('success', 'Free access granted');
+        setSelectedUser(null);
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to grant free access');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to grant free access');
+    }
+    setUpdating(false);
+  };
+
+  const wipeUserData = async (userId: string) => {
+    if (!confirm('WARNING: This will permanently delete all data for this user. Continue?')) return;
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/wipe-user-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({ userId })
+      });
+      if (response.ok) {
+        showMessage('success', 'User data wiped successfully');
+        setSelectedUser(null);
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to wipe user data');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to wipe user data');
+    }
+    setUpdating(false);
+  };
+
+  const resetUserDna = async (userId: string) => {
+    if (!confirm('This will reset the DNA approval status for this user. Continue?')) return;
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/reset-dna', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({ userId })
+      });
+      if (response.ok) {
+        showMessage('success', 'DNA reset successfully');
+        setSelectedBusiness(null);
+        await loadUsers();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to reset DNA');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to reset DNA');
+    }
+    setUpdating(false);
+  };
+
   const saveEmailSettings = async () => {
     setUpdating(true);
     try {
@@ -451,18 +595,74 @@ export const AdminPanel: React.FC = () => {
                     </div>
                     <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-700">Businesses Created</h3>
-                        <p className="text-4xl font-bold text-purple-600 mt-2">{users.reduce((acc, u) => acc + u.billing.business_count, 0)}</p>
+                        <p className="text-4xl font-bold text-purple-600 mt-2">{users.reduce((acc, u) => acc + (u.billing?.business_count || 0), 0)}</p>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-700">Quick Actions</h3>
                     <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create Free User</button>
-                        <button className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600">Bulk Wipe Free Users</button>
-                        <button className="bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600">Send Announcement</button>
-                        <button className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">View Revenue</button>
+                        <button onClick={() => setShowCreateUserForm(true)} className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600">Create Free User</button>
+                        <button onClick={bulkWipeFreeUsers} disabled={updating} className="bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 disabled:opacity-50">Bulk Wipe Free Users</button>
+                        <button onClick={() => setActiveTab('announcements')} className="bg-yellow-500 text-white p-3 rounded-lg hover:bg-yellow-600">Send Announcement</button>
+                        <button onClick={() => setActiveTab('revenue')} className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">View Revenue</button>
                     </div>
                 </div>
+
+                {/* Create Free User Modal */}
+                {showCreateUserForm && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create Free User</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Email *</label>
+                                    <input
+                                        type="email"
+                                        value={createUserForm.email}
+                                        onChange={e => setCreateUserForm({...createUserForm, email: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                        placeholder="user@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">First Name</label>
+                                    <input
+                                        type="text"
+                                        value={createUserForm.firstName}
+                                        onChange={e => setCreateUserForm({...createUserForm, firstName: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                        placeholder="John"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                                    <input
+                                        type="text"
+                                        value={createUserForm.lastName}
+                                        onChange={e => setCreateUserForm({...createUserForm, lastName: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                        placeholder="Doe"
+                                    />
+                                </div>
+                                <div className="flex gap-2 pt-4">
+                                    <button
+                                        onClick={createFreeUser}
+                                        disabled={updating}
+                                        className="flex-1 bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                    >
+                                        {updating ? 'Creating...' : 'Create User'}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowCreateUserForm(false)}
+                                        className="flex-1 bg-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-400"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
       case 'businesses':
@@ -484,24 +684,100 @@ export const AdminPanel: React.FC = () => {
                             {users.map(user => (
                                 <tr key={user.user.id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{user.business.business_name}</div>
-                                        <div className="text-xs text-gray-500">{user.business.location}</div>
+                                        <div className="text-sm font-medium text-gray-900">{user.business?.business_name || 'No Business'}</div>
+                                        <div className="text-xs text-gray-500">{user.business?.location || '-'}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.user.email}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        {user.business.is_complete ? <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Complete</span> : <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Incomplete</span>}
+                                        {user.business?.is_complete ? <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Complete</span> : <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Incomplete</span>}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        {user.business.isDnaApproved ? <CheckIcon className="w-5 h-5 text-green-500" /> : <XMarkIcon className="w-5 h-5 text-red-500" />}
+                                        {user.business?.isDnaApproved ? <CheckIcon className="w-5 h-5 text-green-500" /> : <XMarkIcon className="w-5 h-5 text-red-500" />}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button className="text-blue-600 hover:text-blue-900">View Details</button>
+                                        <button onClick={() => setSelectedBusiness(user)} className="text-blue-600 hover:text-blue-900">View Details</button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Business Details Modal */}
+                {selectedBusiness && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                            <div className="flex justify-between items-start mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Business Details</h3>
+                                <button onClick={() => setSelectedBusiness(null)} className="text-gray-400 hover:text-gray-600">
+                                    <XMarkIcon className="w-6 h-6" />
+                                </button>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Business Name</label>
+                                        <p className="text-gray-900">{selectedBusiness.business?.business_name || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Owner</label>
+                                        <p className="text-gray-900">{selectedBusiness.user.firstName} {selectedBusiness.user.lastName}</p>
+                                        <p className="text-sm text-gray-500">{selectedBusiness.user.email}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Location</label>
+                                        <p className="text-gray-900">{selectedBusiness.business?.location || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Industry</label>
+                                        <p className="text-gray-900">{selectedBusiness.business?.industry || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Website</label>
+                                        <p className="text-gray-900">{selectedBusiness.business?.website || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Phone</label>
+                                        <p className="text-gray-900">{selectedBusiness.business?.phone || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">DNA Approved</label>
+                                        <p className={selectedBusiness.business?.isDnaApproved ? 'text-green-600' : 'text-red-600'}>
+                                            {selectedBusiness.business?.isDnaApproved ? 'Yes' : 'No'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Profile Complete</label>
+                                        <p className={selectedBusiness.business?.is_complete ? 'text-green-600' : 'text-yellow-600'}>
+                                            {selectedBusiness.business?.is_complete ? 'Yes' : 'No'}
+                                        </p>
+                                    </div>
+                                </div>
+                                {selectedBusiness.business?.description && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-500">Description</label>
+                                        <p className="text-gray-900 text-sm">{selectedBusiness.business.description}</p>
+                                    </div>
+                                )}
+                                <div className="flex gap-2 pt-4 border-t">
+                                    <button
+                                        onClick={() => resetUserDna(selectedBusiness.user.id)}
+                                        disabled={updating}
+                                        className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 disabled:opacity-50"
+                                    >
+                                        Reset DNA
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedBusiness(null)}
+                                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
       case 'users':
@@ -545,6 +821,114 @@ export const AdminPanel: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* User Management Modal */}
+            {selectedUser && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Manage User</h3>
+                    <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600">
+                      <XMarkIcon className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* User Info */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <UserCircleIcon className="h-12 w-12 text-gray-400" />
+                        <div>
+                          <p className="font-medium text-gray-900">{selectedUser.user.firstName} {selectedUser.user.lastName}</p>
+                          <p className="text-sm text-gray-500">{selectedUser.user.email}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-2">
+                        {getTrialStatusBadge(selectedUser)}
+                        {getSubscriptionBadge(selectedUser.billing.subscription_status)}
+                      </div>
+                    </div>
+
+                    {/* Extend Trial */}
+                    <div className="border-t pt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Extend Trial</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="date"
+                          value={newTrialDate}
+                          onChange={e => setNewTrialDate(e.target.value)}
+                          className="flex-1 p-2 border rounded-lg"
+                        />
+                        <button
+                          onClick={() => handleExtendTrial(selectedUser.user.id)}
+                          disabled={updating || !newTrialDate}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          Extend
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Change Subscription Status */}
+                    <div className="border-t pt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Change Subscription Status</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => handleUpdateSubscription(selectedUser.user.id, 'active')}
+                          disabled={updating}
+                          className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 disabled:opacity-50 text-sm"
+                        >
+                          Set Active
+                        </button>
+                        <button
+                          onClick={() => handleUpdateSubscription(selectedUser.user.id, 'canceled')}
+                          disabled={updating}
+                          className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 disabled:opacity-50 text-sm"
+                        >
+                          Set Canceled
+                        </button>
+                        <button
+                          onClick={() => handleUpdateSubscription(selectedUser.user.id, 'trialing')}
+                          disabled={updating}
+                          className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 text-sm"
+                        >
+                          Set Trialing
+                        </button>
+                        <button
+                          onClick={() => grantFreeAccess(selectedUser.user.id)}
+                          disabled={updating}
+                          className="bg-purple-500 text-white p-2 rounded-lg hover:bg-purple-600 disabled:opacity-50 text-sm"
+                        >
+                          Grant Free Access
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div className="border-t pt-4">
+                      <label className="block text-sm font-medium text-red-600 mb-2">Danger Zone</label>
+                      <button
+                        onClick={() => wipeUserData(selectedUser.user.id)}
+                        disabled={updating}
+                        className="w-full bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                      >
+                        Wipe All User Data
+                      </button>
+                    </div>
+
+                    {/* Close Button */}
+                    <div className="border-t pt-4">
+                      <button
+                        onClick={() => setSelectedUser(null)}
+                        className="w-full bg-gray-300 text-gray-700 p-2 rounded-lg hover:bg-gray-400"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'support':
