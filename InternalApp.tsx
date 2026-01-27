@@ -34,6 +34,7 @@ import { checkForNewReviews, generateBorisReplies, postBorisReplies, getBorisRep
 import { ALL_TOOLS } from './constants';
 import { Confetti } from './components/Confetti';
 import { ProductTour } from './components/ProductTour';
+import { AnnouncementPopup } from './components/AnnouncementPopup';
 import './styles/tour.css';
 
 const ADMIN_EMAIL = 'theivsightcompany@gmail.com';
@@ -521,6 +522,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
           onComplete={() => setShowProductTour(false)}
         />
       )}
+
+      {/* Announcement Popup for system announcements */}
+      <AnnouncementPopup />
     </div>
   );
 };
