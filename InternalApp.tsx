@@ -513,9 +513,9 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         </main>
       </div>
 
-      {/* Product Tour */}
-      {showProductTour && currentProfileData && (
-        <ProductTour 
+      {/* Product Tour - Always mounted so restart works */}
+      {currentProfileData && (
+        <ProductTour
           userId={userId}
           userFirstName={currentProfileData.user.firstName || 'there'}
           onComplete={() => setShowProductTour(false)}
