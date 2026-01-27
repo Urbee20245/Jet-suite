@@ -203,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
               <button
                 onClick={() => {
-                  setActiveTool(ALL_TOOLS["knowledge-base"]);
+                  setActiveTool(ALL_TOOLS["knowledgebase"]);
                   setIsHelpMenuOpen(false);
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
@@ -213,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
               <button
                 onClick={() => {
-                  setActiveTool(ALL_TOOLS["support-tickets"]);
+                  setActiveTool(ALL_TOOLS["support"]);
                   setIsHelpMenuOpen(false);
                 }}
                 className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
