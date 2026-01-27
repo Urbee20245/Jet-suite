@@ -161,22 +161,25 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* GBP Reviews */}
         {isVerified && (
-            <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
-                <div className="flex items-center">
-                    <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-400" />
-                    <span className="ml-1 text-sm font-bold text-brand-text">
-                        {rating.toFixed(1)}
-                    </span>
-                    <span className="ml-1 text-xs text-brand-text-muted">
-                        ({reviewCount})
-                    </span>
-                </div>
-                <span className="text-xs text-brand-text-muted hidden sm:inline">
-                    GBP Reviews
-                </span>
-                
-                <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
-                    <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
+          <div className="bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 flex flex-col items-center group relative">
+            <div className="flex items-center">
+              <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-400" />
+              <span className="ml-1 text-sm font-bold text-brand-text">
+                {rating.toFixed(1)}
+              </span>
+              <span className="ml-1 text-xs text-brand-text-muted">
+                ({reviewCount})
+              </span>
+            </div>
+            <span className="text-xs text-brand-text-muted hidden sm:inline">
+              GBP Reviews
+            </span>
+
+            <div className="absolute top-full mt-2 hidden group-hover:block bg-gray-800 text-white text-xs p-2 rounded-lg shadow-lg w-48 z-50">
+              <p>Data syncs every 24 hours. New reviews may take time to appear.</p>
+            </div>
+          </div>
+        )}
 
         {/* Help Menu */}
         <div className="relative">
@@ -195,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={handleRestartTour}
                 className="w-full px-4 py-2 text-left text-sm text-brand-text hover:bg-brand-light transition-colors flex items-center gap-2"
               >
-                <span>🎓</span>
+                <QuestionMarkCircleIcon className="w-4 h-4" />
                 <span>Take Product Tour</span>
               </button>
               <button
@@ -221,9 +224,6 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
         </div>
-                </div>
-            </div>
-        )}
       </div>
 
     </header>

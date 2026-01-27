@@ -149,7 +149,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
     try {
       const supabase = getSupabaseClient();
       if (!supabase) return;
-      
+
       await supabase
         .from('user_preferences')
         .upsert({
@@ -162,7 +162,13 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
     }
   };
 
-  (window as any).restartProductTour = () => startTour(true);
+  // Set up global restart function
+  useEffect(() => {
+    (window as any).restartProductTour = () => startTour(true);
+    return () => {
+      delete (window as any).restartProductTour;
+    };
+  }, []);
 
   return null;
 };
