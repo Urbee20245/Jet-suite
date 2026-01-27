@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
-      // Fetch SMS settings
+      // Fetch SMS settings (without credentials - those come from env vars)
       const { data, error } = await supabase
         .from('sms_settings')
         .select('*')
@@ -26,15 +26,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw error;
       }
 
-      return res.status(200).json({ settings: data || null });
+      // Check if Twilio env vars are configured
+      const twilioConfigured = !!(
+        process.env.TWILIO_ACCOUNT_SID &&
+        process.env.TWILIO_AUTH_TOKEN &&
+        process.env.TWILIO_PHONE_NUMBER
+      );
+
+      return res.status(200).json({
+        settings: data || null,
+        env_configured: {
+          twilio: twilioConfigured
+        }
+      });
     }
 
     if (req.method === 'POST' || req.method === 'PUT') {
-      // Save SMS settings
+      // Save SMS settings (credentials are NOT stored in DB - they come from env vars)
       const {
-        twilio_account_sid,
-        twilio_auth_token,
-        twilio_phone_number,
         sms_enabled,
         urgent_tickets_sms,
         daily_sms_limit,
@@ -43,9 +52,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const settingsData = {
         id: 1, // Fixed ID to ensure only one row
-        twilio_account_sid,
-        twilio_auth_token,
-        twilio_phone_number,
         sms_enabled: sms_enabled || false,
         urgent_tickets_sms: urgent_tickets_sms || false,
         daily_sms_limit: daily_sms_limit || 50,

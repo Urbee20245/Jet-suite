@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === 'GET') {
-      // Fetch email settings
+      // Fetch email settings (without API keys - those come from env vars)
       const { data, error } = await supabase
         .from('email_settings')
         .select('*')
@@ -42,19 +42,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq('status', 'failed')
         .gte('created_at', today.toISOString());
 
+      // Check if RESEND_API_KEY env var is configured
+      const resendConfigured = !!process.env.RESEND_API_KEY;
+
       return res.status(200).json({
         settings: data || null,
         stats: {
           sent_today: sentToday || 0,
           failed_today: failedToday || 0
+        },
+        env_configured: {
+          resend_api_key: resendConfigured
         }
       });
     }
 
     if (req.method === 'POST' || req.method === 'PUT') {
-      // Save email settings
+      // Save email settings (API keys are NOT stored in DB - they come from env vars)
       const {
-        resend_api_key,
         from_email,
         from_name,
         reply_to_email,
@@ -69,7 +74,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const settingsData = {
         id: 1, // Fixed ID to ensure only one row
-        resend_api_key,
         from_email,
         from_name,
         reply_to_email,

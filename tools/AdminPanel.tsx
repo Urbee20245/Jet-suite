@@ -1149,13 +1149,23 @@ export const AdminPanel: React.FC = () => {
                     <p className="text-4xl font-bold text-red-600 mt-2">{emailStats.failed_today || 0}</p>
                 </div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-700 mb-4">Resend Configuration</h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Resend API Key</label>
-                        <input type="text" value={emailForm.resend_api_key} onChange={e => setEmailForm({...emailForm, resend_api_key: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="sk_resend_..." />
+            {/* Environment Variables Required */}
+            <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-amber-800 mb-3">Required Environment Variables</h3>
+                <p className="text-sm text-amber-700 mb-4">Set these in your Vercel project settings (Settings → Environment Variables):</p>
+                <div className="bg-white rounded-lg p-4 font-mono text-sm space-y-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-purple-600 font-semibold">RESEND_API_KEY</span>
+                        <span className="text-gray-500">= your Resend API key (starts with re_)</span>
                     </div>
+                </div>
+                <p className="text-xs text-amber-600 mt-3">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">resend.com/api-keys</a></p>
+            </div>
+
+            {/* Email Configuration */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Email Configuration</h3>
+                <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">From Email</label>
@@ -1165,6 +1175,46 @@ export const AdminPanel: React.FC = () => {
                             <label className="block text-sm font-medium text-gray-700">From Name</label>
                             <input type="text" value={emailForm.from_name} onChange={e => setEmailForm({...emailForm, from_name: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="JetSuite Support" />
                         </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Reply-To Email</label>
+                            <input type="email" value={emailForm.reply_to_email} onChange={e => setEmailForm({...emailForm, reply_to_email: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="reply@getjetsuite.com" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Forward To Email</label>
+                            <input type="email" value={emailForm.forward_to_email} onChange={e => setEmailForm({...emailForm, forward_to_email: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="admin@getjetsuite.com" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Daily Email Limit</label>
+                            <input type="number" value={emailForm.daily_email_limit} onChange={e => setEmailForm({...emailForm, daily_email_limit: parseInt(e.target.value) || 100})} className="w-full mt-1 p-2 border rounded-lg" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Hourly Email Limit</label>
+                            <input type="number" value={emailForm.hourly_email_limit} onChange={e => setEmailForm({...emailForm, hourly_email_limit: parseInt(e.target.value) || 20})} className="w-full mt-1 p-2 border rounded-lg" />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <label className="flex items-center">
+                            <input type="checkbox" checked={emailForm.forward_enabled} onChange={e => setEmailForm({...emailForm, forward_enabled: e.target.checked})} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                            <span className="ml-2 text-sm text-gray-700">Enable Forwarding</span>
+                        </label>
+                        <label className="flex items-center">
+                            <input type="checkbox" checked={emailForm.auto_reply_enabled} onChange={e => setEmailForm({...emailForm, auto_reply_enabled: e.target.checked})} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                            <span className="ml-2 text-sm text-gray-700">Enable Auto-Reply</span>
+                        </label>
+                    </div>
+                    {emailForm.auto_reply_enabled && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Auto-Reply Message</label>
+                            <textarea value={emailForm.auto_reply_message} onChange={e => setEmailForm({...emailForm, auto_reply_message: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" rows={3} placeholder="Thank you for contacting us..." />
+                        </div>
+                    )}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Default Signature</label>
+                        <textarea value={emailForm.default_signature} onChange={e => setEmailForm({...emailForm, default_signature: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" rows={2} placeholder="Best regards, JetSuite Team" />
                     </div>
                     <button onClick={saveEmailSettings} disabled={updating} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:opacity-50">
                         {updating ? 'Saving...' : 'Save Email Settings'}
@@ -1177,22 +1227,43 @@ export const AdminPanel: React.FC = () => {
         return (
             <div className="space-y-6">
                 <h2 className="text-2xl font-bold mb-4">SMS Settings</h2>
+
+                {/* Environment Variables Required */}
+                <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg">
+                    <h3 className="text-lg font-semibold text-amber-800 mb-3">Required Environment Variables</h3>
+                    <p className="text-sm text-amber-700 mb-4">Set these in your Vercel project settings (Settings → Environment Variables):</p>
+                    <div className="bg-white rounded-lg p-4 font-mono text-sm space-y-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-purple-600 font-semibold">TWILIO_ACCOUNT_SID</span>
+                            <span className="text-gray-500">= your Twilio Account SID (starts with AC)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-purple-600 font-semibold">TWILIO_AUTH_TOKEN</span>
+                            <span className="text-gray-500">= your Twilio Auth Token</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-purple-600 font-semibold">TWILIO_PHONE_NUMBER</span>
+                            <span className="text-gray-500">= your Twilio phone number (+1XXXXXXXXXX)</span>
+                        </div>
+                    </div>
+                    <p className="text-xs text-amber-600 mt-3">Get your credentials from <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="underline">console.twilio.com</a></p>
+                </div>
+
+                {/* SMS Configuration */}
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-4">Twilio Configuration</h3>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">SMS Configuration</h3>
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Twilio Account SID</label>
-                            <input type="text" value={smsForm.twilio_account_sid} onChange={e => setSmsForm({...smsForm, twilio_account_sid: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="ACxxxxxxxx" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Daily SMS Limit</label>
+                                <input type="number" value={smsForm.daily_sms_limit} onChange={e => setSmsForm({...smsForm, daily_sms_limit: parseInt(e.target.value) || 50})} className="w-full mt-1 p-2 border rounded-lg" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Hourly SMS Limit</label>
+                                <input type="number" value={smsForm.hourly_sms_limit} onChange={e => setSmsForm({...smsForm, hourly_sms_limit: parseInt(e.target.value) || 10})} className="w-full mt-1 p-2 border rounded-lg" />
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Twilio Auth Token</label>
-                            <input type="text" value={smsForm.twilio_auth_token} onChange={e => setSmsForm({...smsForm, twilio_auth_token: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="xxxxxxxx" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Twilio Phone Number</label>
-                            <input type="text" value={smsForm.twilio_phone_number} onChange={e => setSmsForm({...smsForm, twilio_phone_number: e.target.value})} className="w-full mt-1 p-2 border rounded-lg" placeholder="+15551234567" />
-                        </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-6">
                             <label className="flex items-center">
                                 <input type="checkbox" checked={smsForm.sms_enabled} onChange={e => setSmsForm({...smsForm, sms_enabled: e.target.checked})} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
                                 <span className="ml-2 text-sm text-gray-700">SMS Enabled</span>
