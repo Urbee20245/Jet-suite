@@ -105,6 +105,8 @@ export const AdminPanel: React.FC = () => {
     body: ''
   });
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailRecipientType, setEmailRecipientType] = useState<'custom' | 'user' | 'all'>('custom');
+  const [selectedEmailUserId, setSelectedEmailUserId] = useState('');
 
   // Send SMS form state
   const [sendSmsForm, setSendSmsForm] = useState({
@@ -112,6 +114,8 @@ export const AdminPanel: React.FC = () => {
     message: ''
   });
   const [sendingSms, setSendingSms] = useState(false);
+  const [smsRecipientType, setSmsRecipientType] = useState<'custom' | 'user' | 'all'>('custom');
+  const [selectedSmsUserId, setSelectedSmsUserId] = useState('');
 
   useEffect(() => {
     const loadTabData = () => {
@@ -125,9 +129,11 @@ export const AdminPanel: React.FC = () => {
           break;
         case 'email':
           loadEmailSettings();
+          loadUsers(); // Load users for recipient selection
           break;
         case 'sms':
           loadSmsSettings();
+          loadUsers(); // Load users for recipient selection
           break;
         case 'support':
           loadTickets();
@@ -525,10 +531,38 @@ export const AdminPanel: React.FC = () => {
   };
 
   const sendEmail = async () => {
-    if (!sendEmailForm.to || !sendEmailForm.subject || !sendEmailForm.body) {
-      showMessage('error', 'Please fill in all email fields');
+    if (!sendEmailForm.subject || !sendEmailForm.body) {
+      showMessage('error', 'Please fill in subject and message');
       return;
     }
+
+    // Determine recipients based on recipient type
+    let recipients: string[] = [];
+    if (emailRecipientType === 'custom') {
+      if (!sendEmailForm.to) {
+        showMessage('error', 'Please enter an email address');
+        return;
+      }
+      recipients = [sendEmailForm.to];
+    } else if (emailRecipientType === 'user') {
+      if (!selectedEmailUserId) {
+        showMessage('error', 'Please select a user');
+        return;
+      }
+      const user = users.find(u => u.user.id === selectedEmailUserId);
+      if (!user) {
+        showMessage('error', 'User not found');
+        return;
+      }
+      recipients = [user.user.email];
+    } else if (emailRecipientType === 'all') {
+      recipients = users.map(u => u.user.email).filter(Boolean);
+      if (recipients.length === 0) {
+        showMessage('error', 'No users with email addresses found');
+        return;
+      }
+    }
+
     setSendingEmail(true);
     try {
       const response = await fetch('/api/admin/send-email', {
@@ -538,15 +572,18 @@ export const AdminPanel: React.FC = () => {
           'x-user-email': 'theivsightcompany@gmail.com'
         },
         body: JSON.stringify({
-          to: sendEmailForm.to,
+          to: recipients,
           subject: sendEmailForm.subject,
           body: sendEmailForm.body
         })
       });
 
       if (response.ok) {
-        showMessage('success', 'Email sent successfully!');
+        const recipientCount = recipients.length;
+        showMessage('success', `Email sent successfully to ${recipientCount} recipient${recipientCount > 1 ? 's' : ''}!`);
         setSendEmailForm({ to: '', subject: '', body: '' });
+        setEmailRecipientType('custom');
+        setSelectedEmailUserId('');
       } else {
         const data = await response.json();
         showMessage('error', data.error || 'Failed to send email');
@@ -558,33 +595,74 @@ export const AdminPanel: React.FC = () => {
   };
 
   const sendSms = async () => {
-    if (!sendSmsForm.to || !sendSmsForm.message) {
-      showMessage('error', 'Please fill in phone number and message');
+    if (!sendSmsForm.message) {
+      showMessage('error', 'Please enter a message');
       return;
     }
-    setSendingSms(true);
-    try {
-      const response = await fetch('/api/admin/send-sms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': 'theivsightcompany@gmail.com'
-        },
-        body: JSON.stringify({
-          to: sendSmsForm.to,
-          message: sendSmsForm.message
-        })
-      });
 
-      if (response.ok) {
-        showMessage('success', 'SMS sent successfully!');
-        setSendSmsForm({ to: '', message: '' });
-      } else {
-        const data = await response.json();
-        showMessage('error', data.error || 'Failed to send SMS');
+    // Determine recipients based on recipient type
+    let recipients: string[] = [];
+    if (smsRecipientType === 'custom') {
+      if (!sendSmsForm.to) {
+        showMessage('error', 'Please enter a phone number');
+        return;
       }
-    } catch (error: any) {
-      showMessage('error', error.message || 'Failed to send SMS');
+      recipients = [sendSmsForm.to];
+    } else if (smsRecipientType === 'user') {
+      if (!selectedSmsUserId) {
+        showMessage('error', 'Please select a user');
+        return;
+      }
+      const user = users.find(u => u.user.id === selectedSmsUserId);
+      if (!user || !user.business?.phone) {
+        showMessage('error', 'Selected user does not have a phone number');
+        return;
+      }
+      recipients = [user.business.phone];
+    } else if (smsRecipientType === 'all') {
+      recipients = users.map(u => u.business?.phone).filter(Boolean);
+      if (recipients.length === 0) {
+        showMessage('error', 'No users with phone numbers found');
+        return;
+      }
+    }
+
+    setSendingSms(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    // Send SMS to each recipient (Twilio sends one at a time)
+    for (const recipient of recipients) {
+      try {
+        const response = await fetch('/api/admin/send-sms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-email': 'theivsightcompany@gmail.com'
+          },
+          body: JSON.stringify({
+            to: recipient,
+            message: sendSmsForm.message
+          })
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      showMessage('success', `SMS sent to ${successCount} recipient${successCount > 1 ? 's' : ''}${failCount > 0 ? ` (${failCount} failed)` : ''}!`);
+      setSendSmsForm({ to: '', message: '' });
+      setSmsRecipientType('custom');
+      setSelectedSmsUserId('');
+    } else {
+      showMessage('error', 'Failed to send SMS to any recipients');
     }
     setSendingSms(false);
   };
@@ -1306,16 +1384,85 @@ export const AdminPanel: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-700 mb-4">Send Email</h3>
                 <div className="space-y-4">
+                    {/* Recipient Type Selection */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">To (Email Address)</label>
-                        <input
-                            type="email"
-                            value={sendEmailForm.to}
-                            onChange={e => setSendEmailForm({...sendEmailForm, to: e.target.value})}
-                            className="w-full mt-1 p-2 border rounded-lg"
-                            placeholder="recipient@example.com"
-                        />
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Send To</label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="emailRecipientType"
+                                    checked={emailRecipientType === 'custom'}
+                                    onChange={() => setEmailRecipientType('custom')}
+                                    className="h-4 w-4 text-blue-600 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Custom Email</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="emailRecipientType"
+                                    checked={emailRecipientType === 'user'}
+                                    onChange={() => setEmailRecipientType('user')}
+                                    className="h-4 w-4 text-blue-600 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Specific User</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input
+                                    type="radio"
+                                    name="emailRecipientType"
+                                    checked={emailRecipientType === 'all'}
+                                    onChange={() => setEmailRecipientType('all')}
+                                    className="h-4 w-4 text-blue-600 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">All Users ({users.length})</span>
+                            </label>
+                        </div>
                     </div>
+
+                    {/* Custom Email Input */}
+                    {emailRecipientType === 'custom' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Email Address</label>
+                            <input
+                                type="email"
+                                value={sendEmailForm.to}
+                                onChange={e => setSendEmailForm({...sendEmailForm, to: e.target.value})}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                                placeholder="recipient@example.com"
+                            />
+                        </div>
+                    )}
+
+                    {/* User Selection Dropdown */}
+                    {emailRecipientType === 'user' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Select User</label>
+                            <select
+                                value={selectedEmailUserId}
+                                onChange={e => setSelectedEmailUserId(e.target.value)}
+                                className="w-full mt-1 p-2 border rounded-lg"
+                            >
+                                <option value="">-- Select a user --</option>
+                                {users.map(u => (
+                                    <option key={u.user.id} value={u.user.id}>
+                                        {u.user.firstName} {u.user.lastName} ({u.user.email})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* All Users Info */}
+                    {emailRecipientType === 'all' && (
+                        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                            <p className="text-sm text-blue-800">
+                                This will send the email to all {users.length} users in the system.
+                            </p>
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Subject</label>
                         <input
@@ -1342,7 +1489,7 @@ export const AdminPanel: React.FC = () => {
                         className="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
                     >
                         <EnvelopeIcon className="w-5 h-5" />
-                        {sendingEmail ? 'Sending...' : 'Send Email'}
+                        {sendingEmail ? 'Sending...' : emailRecipientType === 'all' ? `Send Email to All (${users.length})` : 'Send Email'}
                     </button>
                 </div>
             </div>
@@ -1408,17 +1555,89 @@ export const AdminPanel: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Send SMS</h3>
                     <div className="space-y-4">
+                        {/* Recipient Type Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">To (Phone Number)</label>
-                            <input
-                                type="tel"
-                                value={sendSmsForm.to}
-                                onChange={e => setSendSmsForm({...sendSmsForm, to: e.target.value})}
-                                className="w-full mt-1 p-2 border rounded-lg"
-                                placeholder="+1234567890 or 1234567890"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Include country code or it will default to +1 (US)</p>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Send To</label>
+                            <div className="flex gap-4">
+                                <label className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="smsRecipientType"
+                                        checked={smsRecipientType === 'custom'}
+                                        onChange={() => setSmsRecipientType('custom')}
+                                        className="h-4 w-4 text-blue-600 border-gray-300"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">Custom Number</span>
+                                </label>
+                                <label className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="smsRecipientType"
+                                        checked={smsRecipientType === 'user'}
+                                        onChange={() => setSmsRecipientType('user')}
+                                        className="h-4 w-4 text-blue-600 border-gray-300"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">Specific User</span>
+                                </label>
+                                <label className="flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="smsRecipientType"
+                                        checked={smsRecipientType === 'all'}
+                                        onChange={() => setSmsRecipientType('all')}
+                                        className="h-4 w-4 text-blue-600 border-gray-300"
+                                    />
+                                    <span className="ml-2 text-sm text-gray-700">All Users with Phone ({users.filter(u => u.business?.phone).length})</span>
+                                </label>
+                            </div>
                         </div>
+
+                        {/* Custom Phone Input */}
+                        {smsRecipientType === 'custom' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={sendSmsForm.to}
+                                    onChange={e => setSendSmsForm({...sendSmsForm, to: e.target.value})}
+                                    className="w-full mt-1 p-2 border rounded-lg"
+                                    placeholder="+1234567890 or 1234567890"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Include country code or it will default to +1 (US)</p>
+                            </div>
+                        )}
+
+                        {/* User Selection Dropdown */}
+                        {smsRecipientType === 'user' && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Select User</label>
+                                <select
+                                    value={selectedSmsUserId}
+                                    onChange={e => setSelectedSmsUserId(e.target.value)}
+                                    className="w-full mt-1 p-2 border rounded-lg"
+                                >
+                                    <option value="">-- Select a user --</option>
+                                    {users.filter(u => u.business?.phone).map(u => (
+                                        <option key={u.user.id} value={u.user.id}>
+                                            {u.user.firstName} {u.user.lastName} ({u.business?.phone})
+                                        </option>
+                                    ))}
+                                </select>
+                                {users.filter(u => u.business?.phone).length === 0 && (
+                                    <p className="text-xs text-amber-600 mt-1">No users have phone numbers in their business profile.</p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* All Users Info */}
+                        {smsRecipientType === 'all' && (
+                            <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                                <p className="text-sm text-blue-800">
+                                    This will send an SMS to {users.filter(u => u.business?.phone).length} users who have phone numbers in their business profiles.
+                                </p>
+                            </div>
+                        )}
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Message</label>
                             <textarea
@@ -1437,7 +1656,7 @@ export const AdminPanel: React.FC = () => {
                             className="bg-green-600 text-white p-3 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
                         >
                             <DevicePhoneMobileIcon className="w-5 h-5" />
-                            {sendingSms ? 'Sending...' : 'Send SMS'}
+                            {sendingSms ? 'Sending...' : smsRecipientType === 'all' ? `Send SMS to All (${users.filter(u => u.business?.phone).length})` : 'Send SMS'}
                         </button>
                     </div>
                 </div>
