@@ -12,7 +12,6 @@ import {
   XMarkIcon
 } from '../components/icons/MiniIcons';
 import type { EmailSettings, SMSSettings, UpdateEmailSettingsRequest, UpdateSMSSettingsRequest } from '../Types/emailTypes';
-import { getSupabaseClient } from '../integrations/supabase/client';
 import supportService from '../services/supportService'; // For support tab
 
 interface AdminProfileData {
@@ -151,53 +150,43 @@ export const AdminPanel: React.FC = () => {
   const loadEmailSettings = async () => {
     setLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        console.error('Supabase client not available');
+      const response = await fetch('/api/admin/email-settings', {
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error loading email settings:', errorData.error);
         setLoading(false);
         return;
       }
-  
-      const { data, error } = await supabase
-        .from('email_settings')
-        .select('*')
-        .single();
-  
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading email settings:', error);
-        setLoading(false);
-        return;
-      }
-  
-      if (data) {
-        setEmailSettings(data);
+
+      const { settings, stats } = await response.json();
+
+      if (settings) {
+        setEmailSettings(settings);
         setEmailForm({
-          resend_api_key: data.resend_api_key || '',
-          from_email: data.from_email || '',
-          from_name: data.from_name || '',
-          reply_to_email: data.reply_to_email || '',
-          forward_to_email: data.forward_to_email || '',
-          forward_enabled: data.forward_enabled || false,
-          auto_reply_enabled: data.auto_reply_enabled || false,
-          auto_reply_message: data.auto_reply_message || '',
-          default_signature: data.default_signature || '',
-          daily_email_limit: data.daily_email_limit || 100,
-          hourly_email_limit: data.hourly_email_limit || 20
+          resend_api_key: settings.resend_api_key || '',
+          from_email: settings.from_email || '',
+          from_name: settings.from_name || '',
+          reply_to_email: settings.reply_to_email || '',
+          forward_to_email: settings.forward_to_email || '',
+          forward_enabled: settings.forward_enabled || false,
+          auto_reply_enabled: settings.auto_reply_enabled || false,
+          auto_reply_message: settings.auto_reply_message || '',
+          default_signature: settings.default_signature || '',
+          daily_email_limit: settings.daily_email_limit || 100,
+          hourly_email_limit: settings.hourly_email_limit || 20
         });
       }
-      
-      // Load stats
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const { count: sentToday } = await supabase.from('email_logs').select('*', { count: 'exact', head: true }).eq('status', 'sent').gte('created_at', today.toISOString());
-      const { count: failedToday } = await supabase.from('email_logs').select('*', { count: 'exact', head: true }).eq('status', 'failed').gte('created_at', today.toISOString());
-      
+
+      // Set stats from API response
       setEmailStats({
-        sent_today: sentToday,
-        sent_this_month: sentToday,
-        failed_today: failedToday,
-        total_sent: sentToday,
-        today_sent: sentToday,
+        sent_today: stats?.sent_today || 0,
+        sent_this_month: stats?.sent_today || 0,
+        failed_today: stats?.failed_today || 0,
+        total_sent: stats?.sent_today || 0,
+        today_sent: stats?.sent_today || 0,
         open_rate: 0,
         click_rate: 0
       });
@@ -211,34 +200,29 @@ export const AdminPanel: React.FC = () => {
   const loadSmsSettings = async () => {
     setLoading(true);
     try {
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        console.error('Supabase client not available');
+      const response = await fetch('/api/admin/sms-settings', {
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error loading SMS settings:', errorData.error);
         setLoading(false);
         return;
       }
-  
-      const { data, error } = await supabase
-        .from('sms_settings')
-        .select('*')
-        .single();
-  
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading SMS settings:', error);
-        setLoading(false);
-        return;
-      }
-  
-      if (data) {
-        setSmsSettings(data);
+
+      const { settings } = await response.json();
+
+      if (settings) {
+        setSmsSettings(settings);
         setSmsForm({
-          twilio_account_sid: data.twilio_account_sid || '',
-          twilio_auth_token: data.twilio_auth_token || '',
-          twilio_phone_number: data.twilio_phone_number || '',
-          sms_enabled: data.sms_enabled || false,
-          urgent_tickets_sms: data.urgent_tickets_sms || false,
-          daily_sms_limit: data.daily_sms_limit || 50,
-          hourly_sms_limit: data.hourly_sms_limit || 10
+          twilio_account_sid: settings.twilio_account_sid || '',
+          twilio_auth_token: settings.twilio_auth_token || '',
+          twilio_phone_number: settings.twilio_phone_number || '',
+          sms_enabled: settings.sms_enabled || false,
+          urgent_tickets_sms: settings.urgent_tickets_sms || false,
+          daily_sms_limit: settings.daily_sms_limit || 50,
+          hourly_sms_limit: settings.hourly_sms_limit || 10
         });
       }
     } catch (error: any) {
@@ -473,21 +457,18 @@ export const AdminPanel: React.FC = () => {
   const saveEmailSettings = async () => {
     setUpdating(true);
     try {
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        showMessage('error', 'Database connection not available');
-        setUpdating(false);
-        return;
-      }
+      const response = await fetch('/api/admin/email-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify(emailForm)
+      });
 
-      // Use upsert with a fixed id to ensure only one row exists
-      const settingsWithId = { ...emailForm, id: 1 };
-      const { error } = await supabase
-        .from('email_settings')
-        .upsert(settingsWithId, { onConflict: 'id' });
-
-      if (error) {
-        showMessage('error', error.message || 'Failed to save email settings');
+      if (!response.ok) {
+        const errorData = await response.json();
+        showMessage('error', errorData.error || 'Failed to save email settings');
       } else {
         showMessage('success', 'Email settings saved successfully');
         await loadEmailSettings();
@@ -501,21 +482,18 @@ export const AdminPanel: React.FC = () => {
   const saveSmsSettings = async () => {
     setUpdating(true);
     try {
-      const supabase = getSupabaseClient();
-      if (!supabase) {
-        showMessage('error', 'Database connection not available');
-        setUpdating(false);
-        return;
-      }
+      const response = await fetch('/api/admin/sms-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify(smsForm)
+      });
 
-      // Use upsert with a fixed id to ensure only one row exists
-      const settingsWithId = { ...smsForm, id: 1 };
-      const { error } = await supabase
-        .from('sms_settings')
-        .upsert(settingsWithId, { onConflict: 'id' });
-
-      if (error) {
-        showMessage('error', error.message || 'Failed to save SMS settings');
+      if (!response.ok) {
+        const errorData = await response.json();
+        showMessage('error', errorData.error || 'Failed to save SMS settings');
       } else {
         showMessage('success', 'SMS settings saved successfully');
         await loadSmsSettings();
