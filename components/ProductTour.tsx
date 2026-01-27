@@ -26,8 +26,8 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
     }
   };
 
-  const startTour = () => {
-    if (tourStarted) return;
+  const startTour = (isManualRestart: boolean = false) => {
+    if (tourStarted && !isManualRestart) return;
     setTourStarted(true);
     
     const driverObj = driver({
@@ -162,7 +162,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ userId, userFirstName,
     }
   };
 
-  (window as any).restartProductTour = startTour;
+  (window as any).restartProductTour = () => startTour(true);
 
   return null;
 };
@@ -172,3 +172,5 @@ export const manuallyStartTour = () => {
     (window as any).restartProductTour();
   }
 };
+
+export default ProductTour;
