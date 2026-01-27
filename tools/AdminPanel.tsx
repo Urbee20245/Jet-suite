@@ -80,6 +80,18 @@ export const AdminPanel: React.FC = () => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
 
+  // Announcements state
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+  const [announcementForm, setAnnouncementForm] = useState({
+    title: '',
+    message: '',
+    type: 'info',
+    target_audience: 'all',
+    priority: 1,
+    end_date: ''
+  });
+
   useEffect(() => {
     const loadTabData = () => {
       switch (activeTab) {
@@ -95,6 +107,9 @@ export const AdminPanel: React.FC = () => {
           break;
         case 'support':
           loadTickets();
+          break;
+        case 'announcements':
+          loadAnnouncements();
           break;
         default:
           setLoading(false);
@@ -238,6 +253,79 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const loadAnnouncements = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/announcements', {
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAnnouncements(data || []);
+      } else {
+        showMessage('error', 'Failed to load announcements');
+      }
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+      showMessage('error', 'Failed to load announcements');
+    }
+    setLoading(false);
+  };
+
+  const createAnnouncement = async () => {
+    if (!announcementForm.title || !announcementForm.message) {
+      showMessage('error', 'Title and message are required');
+      return;
+    }
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/announcements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify(announcementForm)
+      });
+      if (response.ok) {
+        showMessage('success', 'Announcement created successfully');
+        setShowAnnouncementForm(false);
+        setAnnouncementForm({ title: '', message: '', type: 'info', target_audience: 'all', priority: 1, end_date: '' });
+        await loadAnnouncements();
+      } else {
+        const data = await response.json();
+        showMessage('error', data.error || 'Failed to create announcement');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to create announcement');
+    }
+    setUpdating(false);
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return;
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/announcements', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify({ id })
+      });
+      if (response.ok) {
+        showMessage('success', 'Announcement deleted');
+        await loadAnnouncements();
+      } else {
+        showMessage('error', 'Failed to delete announcement');
+      }
+    } catch (error) {
+      showMessage('error', 'Failed to delete announcement');
+    }
+    setUpdating(false);
+  };
+
   const saveEmailSettings = async () => {
     setUpdating(true);
     try {
@@ -247,15 +335,15 @@ export const AdminPanel: React.FC = () => {
         setUpdating(false);
         return;
       }
-  
-      const { data: existing } = await supabase.from('email_settings').select('id').maybeSingle();
-  
-      const result = existing
-        ? await supabase.from('email_settings').update(emailForm).eq('id', existing.id).select().single()
-        : await supabase.from('email_settings').insert([emailForm]).select().single();
-  
-      if (result.error) {
-        showMessage('error', result.error.message || 'Failed to save email settings');
+
+      // Use upsert with a fixed id to ensure only one row exists
+      const settingsWithId = { ...emailForm, id: 1 };
+      const { error } = await supabase
+        .from('email_settings')
+        .upsert(settingsWithId, { onConflict: 'id' });
+
+      if (error) {
+        showMessage('error', error.message || 'Failed to save email settings');
       } else {
         showMessage('success', 'Email settings saved successfully');
         await loadEmailSettings();
@@ -275,15 +363,15 @@ export const AdminPanel: React.FC = () => {
         setUpdating(false);
         return;
       }
-  
-      const { data: existing } = await supabase.from('sms_settings').select('id').maybeSingle();
-  
-      const result = existing
-        ? await supabase.from('sms_settings').update(smsForm).eq('id', existing.id).select().single()
-        : await supabase.from('sms_settings').insert([smsForm]).select().single();
-  
-      if (result.error) {
-        showMessage('error', result.error.message || 'Failed to save SMS settings');
+
+      // Use upsert with a fixed id to ensure only one row exists
+      const settingsWithId = { ...smsForm, id: 1 };
+      const { error } = await supabase
+        .from('sms_settings')
+        .upsert(settingsWithId, { onConflict: 'id' });
+
+      if (error) {
+        showMessage('error', error.message || 'Failed to save SMS settings');
       } else {
         showMessage('success', 'SMS settings saved successfully');
         await loadSmsSettings();
@@ -520,10 +608,163 @@ export const AdminPanel: React.FC = () => {
       case 'announcements':
         return (
             <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">System Announcements</h2>
-                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-                    <p className="text-gray-600">Create, edit, or delete system-wide announcements here.</p>
-                    <button className="mt-4 bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">Create New Announcement</button>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-900">System Announcements ({announcements.length})</h2>
+                    <button
+                        onClick={() => setShowAnnouncementForm(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    >
+                        Create New Announcement
+                    </button>
+                </div>
+
+                {showAnnouncementForm && (
+                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4">New Announcement</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Title</label>
+                                <input
+                                    type="text"
+                                    value={announcementForm.title}
+                                    onChange={e => setAnnouncementForm({...announcementForm, title: e.target.value})}
+                                    className="w-full mt-1 p-2 border rounded-lg"
+                                    placeholder="Announcement title"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Message</label>
+                                <textarea
+                                    value={announcementForm.message}
+                                    onChange={e => setAnnouncementForm({...announcementForm, message: e.target.value})}
+                                    className="w-full mt-1 p-2 border rounded-lg"
+                                    rows={4}
+                                    placeholder="Announcement message"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Type</label>
+                                    <select
+                                        value={announcementForm.type}
+                                        onChange={e => setAnnouncementForm({...announcementForm, type: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                    >
+                                        <option value="info">Info</option>
+                                        <option value="warning">Warning</option>
+                                        <option value="success">Success</option>
+                                        <option value="error">Error</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Target Audience</label>
+                                    <select
+                                        value={announcementForm.target_audience}
+                                        onChange={e => setAnnouncementForm({...announcementForm, target_audience: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                    >
+                                        <option value="all">All Users</option>
+                                        <option value="free">Free Users</option>
+                                        <option value="paid">Paid Users</option>
+                                        <option value="trial">Trial Users</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Priority (1-5)</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="5"
+                                        value={announcementForm.priority}
+                                        onChange={e => setAnnouncementForm({...announcementForm, priority: parseInt(e.target.value) || 1})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">End Date (optional)</label>
+                                    <input
+                                        type="date"
+                                        value={announcementForm.end_date}
+                                        onChange={e => setAnnouncementForm({...announcementForm, end_date: e.target.value})}
+                                        className="w-full mt-1 p-2 border rounded-lg"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={createAnnouncement}
+                                    disabled={updating}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                >
+                                    {updating ? 'Creating...' : 'Create Announcement'}
+                                </button>
+                                <button
+                                    onClick={() => setShowAnnouncementForm(false)}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+                    {announcements.length === 0 ? (
+                        <div className="p-6 text-center text-gray-500">No announcements yet. Create one to get started.</div>
+                    ) : (
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Audience</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {announcements.map((ann: any) => (
+                                    <tr key={ann.id}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{ann.title}</div>
+                                            <div className="text-xs text-gray-500 truncate max-w-xs">{ann.message}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 py-1 text-xs rounded-full ${
+                                                ann.type === 'info' ? 'bg-blue-100 text-blue-800' :
+                                                ann.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                                ann.type === 'success' ? 'bg-green-100 text-green-800' :
+                                                'bg-red-100 text-red-800'
+                                            }`}>
+                                                {ann.type}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{ann.target_audience}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 py-1 text-xs rounded-full ${ann.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                {ann.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {new Date(ann.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button
+                                                onClick={() => deleteAnnouncement(ann.id)}
+                                                className="text-red-600 hover:text-red-900"
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
         );
