@@ -100,12 +100,40 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
     fetchPageData();
   }, [slug]);
 
-  const handleRatingClick = (selectedRating: number) => {
+  const handleRatingClick = async (selectedRating: number) => {
     setRating(selectedRating);
+
+    if (selectedRating >= 4) {
+      // POSITIVE REVIEW: Save rating internally and redirect immediately.
+      const supabase = getSupabaseClient();
+      if (supabase && pageData) {
+        try {
+          await supabase.from('public_reviews').insert({
+            review_page_id: pageData.id,
+            rating: selectedRating,
+            message: 'Positive rating submitted (redirected to GBP)',
+            author_name: 'Anonymous Positive',
+          });
+        } catch (err) {
+          console.error('Failed to submit positive review:', err);
+        }
+      }
+      
+      // Immediately redirect to GBP
+      setSubmitted(true);
+      if (pageData?.google_review_url) {
+        setTimeout(() => {
+          window.open(pageData.google_review_url, '_blank');
+        }, 500); // Shorter delay for immediate feel
+      }
+    }
+    // If rating < 4, the state update (setRating) triggers the message form to appear.
   };
 
   const handleSubmit = async () => {
     if (rating === 0) return;
+    
+    // This function is now only called for negative reviews (rating < 4)
     setSubmitted(true);
 
     const supabase = getSupabaseClient();
@@ -119,12 +147,11 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
         });
         if (error) throw error;
       } catch (err) {
-        console.error('Failed to submit review:', err);
-        // Fail silently on the backend, user experience is more important
+        console.error('Failed to submit negative review:', err);
       }
     }
 
-    // Redirect to Google review after a brief delay
+    // Redirect to Google review after a brief delay (as requested by user)
     if (pageData?.google_review_url) {
       setTimeout(() => {
         window.open(pageData.google_review_url, '_blank');
@@ -251,8 +278,10 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
                 />
               </div>
 
-              {rating > 0 && (
+              {/* Message Form (Only for negative reviews) */}
+              {rating > 0 && rating < 4 && (
                 <div className="space-y-4 animate-in fade-in">
+                  <p className="text-sm text-gray-600">We're sorry to hear that. Please tell us how we can improve:</p>
                   <textarea
                     value={reviewMessage}
                     onChange={(e) => setReviewMessage(e.target.value)}
@@ -272,7 +301,7 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
                     className="w-full text-white font-bold py-3 px-6 rounded-lg transition"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    Submit Review
+                    Submit Feedback & Continue to Review
                   </button>
                 </div>
               )}
