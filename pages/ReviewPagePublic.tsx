@@ -55,68 +55,6 @@ const StarRatingInput: React.FC<{
   );
 };
 
-const QRCodeGenerator: React.FC<{ url: string; businessName: string }> = ({ url, businessName }) => {
-  const qrCodeRef = useRef<HTMLDivElement>(null);
-
-  const downloadQrCode = (format: 'png' | 'jpeg') => {
-    if (!qrCodeRef.current) return;
-
-    const canvas = qrCodeRef.current.querySelector('canvas');
-    if (!canvas) return;
-
-    const filename = `${businessName.replace(/\s/g, '_')}_review_qr.${format}`;
-
-    if (format === 'png') {
-      const pngUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = pngUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    } else if (format === 'jpeg') {
-      // Use html2canvas to capture the canvas and convert to JPEG
-      html2canvas(canvas, { backgroundColor: '#ffffff' }).then(jpegCanvas => {
-        const jpegUrl = jpegCanvas.toDataURL('image/jpeg', 1.0);
-        const a = document.createElement('a');
-        a.href = jpegUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      });
-    }
-  };
-
-  return (
-    <div className="mt-12 p-6 bg-gray-100 rounded-xl shadow-inner">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Download Your Review QR Code</h3>
-      <p className="text-sm text-gray-600 mb-4">Place this QR code on receipts, flyers, or business cards to instantly direct customers to your review page.</p>
-      
-      <div ref={qrCodeRef} className="flex justify-center mb-6 p-4 bg-white rounded-lg shadow-md">
-        <QRCodeCanvas value={url} size={256} level="H" />
-      </div>
-
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => downloadQrCode('png')}
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Download PNG
-        </button>
-        <button
-          onClick={() => downloadQrCode('jpeg')}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Download JPEG
-        </button>
-      </div>
-    </div>
-  );
-};
-
 export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
   const [pageData, setPageData] = useState<ReviewPageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -209,7 +147,6 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
   }
 
   const primaryColor = pageData.primary_color || '#F59E0B';
-  const reviewPageUrl = `${window.location.origin}/r/${pageData.slug}`;
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -308,23 +245,18 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
             </>
           )}
           
-          {/* QR Code Generator */}
-          <QRCodeGenerator url={reviewPageUrl} businessName={pageData.business_name} />
-
           {/* Footer */}
           <div className="mt-auto pt-16">
-            <p className="text-xs text-gray-400">
-              Powered by{' '}
-              <a
-                href="https://getjetsuite.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold hover:underline"
-                style={{ color: '#6366F1' }}
-              >
-                repbarn<sup className="text-yellow-500">*****</sup>
-              </a>
-            </p>
+            <a
+              href="https://getjetsuite.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Powered by 
+              <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="h-4 w-auto" />
+              <span className="font-semibold">JetSuite</span>
+            </a>
           </div>
         </div>
       </div>
