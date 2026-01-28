@@ -57,6 +57,7 @@ export const Boris: React.FC<BorisProps> = ({
   const [borisState, setBorisState] = useState<BorisState | null>(null);
   const [showWhyDialog, setShowWhyDialog] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
+  const [initialChatMsg, setInitialChatMsg] = useState<string | undefined>(undefined); // State for initial message
 
   const completedTaskIds = useMemo(() => new Set(growthPlanTasks.filter(t => t.status === 'completed').map(t => t.id)), [growthPlanTasks]);
 
@@ -202,6 +203,13 @@ export const Boris: React.FC<BorisProps> = ({
     onTaskStatusChange(taskId, 'completed');
   };
 
+  // NEW: Handle opening chat modal with contextual message
+  const handleAskBorisAboutTask = (taskTitle: string) => {
+    const initialMsg = `I have a question about the task: "${taskTitle}". What should I know about this task, and how can I complete it?`;
+    setInitialChatMsg(initialMsg);
+    setShowChatModal(true);
+  };
+
   // Build context for chat
   const buildChatContext = (): BorisContext => {
     const completedAudits: string[] = [];
@@ -283,13 +291,23 @@ export const Boris: React.FC<BorisProps> = ({
                                           </div>
                                           <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>{task.title}</span>
                                           {!isCompleted && (
-                                            <button
-                                                onClick={() => onNavigate(toolId)}
-                                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1 ml-3"
-                                                title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
-                                            >
-                                                {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'} <ArrowRightIcon className="w-3 h-3" />
-                                            </button>
+                                            <div className="flex items-center gap-2 ml-3">
+                                                <button
+                                                    onClick={() => onNavigate(toolId)}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1"
+                                                    title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
+                                                >
+                                                    View Task
+                                                </button>
+                                                <span className="text-gray-500">|</span>
+                                                <button
+                                                    onClick={() => handleAskBorisAboutTask(task.title)}
+                                                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors font-semibold flex items-center gap-1"
+                                                    title="Ask Boris about this task"
+                                                >
+                                                    Ask Boris
+                                                </button>
+                                            </div>
                                           )}
                                       </div>
                                       <button 
@@ -333,7 +351,10 @@ export const Boris: React.FC<BorisProps> = ({
 
         {/* Ask a Question Button */}
         <button
-          onClick={() => setShowChatModal(true)}
+          onClick={() => {
+            setInitialChatMsg(undefined); // Clear any previous task message
+            setShowChatModal(true);
+          }}
           className="w-full bg-slate-800/50 hover:bg-slate-700/50 border border-purple-500/30 text-purple-300 font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
         >
           <ChatBubbleLeftRightIcon className="w-5 h-5" />
@@ -397,6 +418,7 @@ export const Boris: React.FC<BorisProps> = ({
           onNavigateToTool={onNavigate}
           onTaskComplete={handleTaskComplete}
           urgentTasks={borisState.todaysTasks}
+          initialMessage={initialChatMsg} // Pass the initial message
         />
       )}
     </>

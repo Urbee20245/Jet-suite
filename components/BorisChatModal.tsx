@@ -8,6 +8,7 @@ interface BorisChatModalProps {
   onNavigateToTool?: (toolId: string) => void;
   onTaskComplete?: (taskId: string) => void;
   urgentTasks?: any[];
+  initialMessage?: string; // NEW PROP
 }
 
 export const BorisChatModal: React.FC<BorisChatModalProps> = ({ 
@@ -15,22 +16,17 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   onClose,
   onNavigateToTool,
   onTaskComplete,
-  urgentTasks = []
+  urgentTasks = [],
+  initialMessage // Use new prop
 }) => {
-  const [messages, setMessages] = useState<BorisMessage[]>([
-    {
-      id: '1',
-      role: 'boris',
-      content: `Hi ${context.userName}! I'm here to help. Ask me anything about your growth strategy, JetSuite tools, or what you should focus on next!`,
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const [messages, setMessages] = useState<BorisMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [remainingQuestions, setRemainingQuestions] = useState<number | null>(null);
   const [dailyLimit, setDailyLimit] = useState<number>(5);
+  const [isInitialized, setIsInitialized] = useState(false); // Track if initial message is sent
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,8 +35,31 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+  
+  // Initialize chat with welcome message or initial message
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    let initialContent = `Hi ${context.userName}! I'm here to help. Ask me anything about your growth strategy, JetSuite tools, or what you should focus on next!`;
+    
+    if (initialMessage) {
+        // If an initial message is provided, send it immediately as a user message
+        handleSendMessage(initialMessage, true);
+    } else {
+        // Otherwise, start with the standard welcome message
+        setMessages([
+            {
+                id: '1',
+                role: 'boris',
+                content: initialContent,
+                timestamp: new Date().toISOString()
+            }
+        ]);
+    }
+    setIsInitialized(true);
+  }, [initialMessage, isInitialized]); // Only run on mount/initialMessage change
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string, isInitial = false) => {
     if (!message.trim()) return;
 
     const userMessage: BorisMessage = {
@@ -50,7 +69,11 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
       timestamp: new Date().toISOString()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Only add user message to display if it's not the initial hidden message
+    if (!isInitial) {
+        setMessages(prev => [...prev, userMessage]);
+    }
+    
     setInputValue('');
     setIsLoading(true);
 
