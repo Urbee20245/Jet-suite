@@ -3,14 +3,22 @@ import type { Tool, ProfileData, BusinessReview } from '../types';
 import { fetchBusinessReviews } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { 
-  InformationCircleIcon, 
-  StarIcon, 
+import { getSupabaseClient } from '../integrations/supabase/client';
+import {
+  InformationCircleIcon,
+  StarIcon,
   ArrowPathIcon,
   ArrowDownTrayIcon,
   CheckCircleIcon,
   CodeBracketIcon,
-  SparklesIcon
+  SparklesIcon,
+  EnvelopeIcon,
+  PhotoIcon,
+  LinkIcon,
+  GlobeAltIcon,
+  PaperAirplaneIcon,
+  UserGroupIcon,
+  ExclamationTriangleIcon
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 
@@ -22,6 +30,26 @@ interface JetTrustProps {
 
 type WidgetLayout = 'grid' | 'carousel' | 'list';
 type StarFilter = 3 | 4 | 5;
+type ActiveTab = 'widget' | 'reviewpage' | 'emails';
+
+interface ReviewPageSettings {
+  id?: string;
+  slug: string;
+  business_name: string;
+  logo_url: string | null;
+  hero_image_url: string | null;
+  primary_color: string;
+  google_review_url: string;
+  is_active: boolean;
+}
+
+interface EmailRecipient {
+  email: string;
+  name: string;
+}
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_DAILY_EMAILS = 5;
 
 const StarRating: React.FC<{ rating: number; size?: 'sm' | 'md' }> = ({ rating, size = 'md' }) => {
   const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
@@ -158,6 +186,32 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
   const [backgroundColor, setBackgroundColor] = useState('#F9FAFB');
   const [cardColor, setCardColor] = useState('#FFFFFF');
 
+  // Tab navigation
+  const [activeTab, setActiveTab] = useState<ActiveTab>('widget');
+
+  // Review Page state
+  const [reviewPageSettings, setReviewPageSettings] = useState<ReviewPageSettings>({
+    slug: '',
+    business_name: profileData.business.business_name || '',
+    logo_url: null,
+    hero_image_url: null,
+    primary_color: '#F59E0B',
+    google_review_url: '',
+    is_active: true
+  });
+  const [reviewPageLoading, setReviewPageLoading] = useState(false);
+  const [reviewPageSaved, setReviewPageSaved] = useState(false);
+  const [reviewPageError, setReviewPageError] = useState('');
+  const [existingReviewPage, setExistingReviewPage] = useState<ReviewPageSettings | null>(null);
+  const [reviewPageLinkCopied, setReviewPageLinkCopied] = useState(false);
+
+  // Email review request state
+  const [emailRecipients, setEmailRecipients] = useState<EmailRecipient[]>([{ email: '', name: '' }]);
+  const [emailsSentToday, setEmailsSentToday] = useState(0);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState('');
+  const [emailError, setEmailError] = useState('');
+
   const reviewUrl = profileData.googleBusiness.mapsUrl || 
     `https://search.google.com/local/writereview?placeid=${profileData.googleBusiness.placeId}`;
 
@@ -236,6 +290,69 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     const filtered = reviews.filter(r => r.rating >= minStars);
     setFilteredReviews(filtered);
   }, [reviews, minStars]);
+
+  // Fetch existing review page settings
+  useEffect(() => {
+    const fetchReviewPage = async () => {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
+
+      try {
+        const userId = localStorage.getItem('jetsuite_userId');
+        if (!userId) return;
+
+        const { data, error: fetchError } = await supabase
+          .from('review_pages')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (!fetchError && data) {
+          setExistingReviewPage(data as ReviewPageSettings);
+          setReviewPageSettings(data as ReviewPageSettings);
+        } else {
+          // Set default slug from business name
+          const defaultSlug = profileData.business.business_name
+            ?.toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '') || '';
+          setReviewPageSettings(prev => ({
+            ...prev,
+            slug: defaultSlug,
+            google_review_url: reviewUrl
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching review page:', err);
+      }
+    };
+
+    fetchReviewPage();
+  }, [profileData.business.business_name, reviewUrl]);
+
+  // Fetch today's email count
+  useEffect(() => {
+    const fetchEmailCount = async () => {
+      const supabase = getSupabaseClient();
+      if (!supabase) return;
+
+      try {
+        const userId = localStorage.getItem('jetsuite_userId');
+        if (!userId) return;
+
+        const { data, error: countError } = await supabase
+          .rpc('get_user_today_email_count', { p_user_id: userId });
+
+        if (!countError && typeof data === 'number') {
+          setEmailsSentToday(data);
+        }
+      } catch (err) {
+        console.error('Error fetching email count:', err);
+      }
+    };
+
+    fetchEmailCount();
+  }, []);
 
   // Generate widget embed code
   const generateWidgetCode = () => {
@@ -415,21 +532,262 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
 
   const handleExportForSocial = () => {
     if (filteredReviews.length === 0) return;
-    
+
     // Create formatted text for social media
     let socialText = `⭐ What Our Customers Are Saying! ⭐\n\n`;
-    
+
     filteredReviews.slice(0, 3).forEach((review, index) => {
       const stars = '⭐'.repeat(review.rating);
       socialText += `${stars}\n"${review.text}"\n- ${review.author}\n\n`;
     });
-    
+
     socialText += `See more reviews and leave yours: ${reviewUrl}\n\n`;
     socialText += `#CustomerReviews #${profileData.business.business_name.replace(/\s+/g, '')}`;
-    
+
     navigator.clipboard.writeText(socialText);
     setSocialCopied(true);
     setTimeout(() => setSocialCopied(false), 2000);
+  };
+
+  // Review Page Handlers
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setReviewPageError('Please upload an image file (JPEG, PNG, etc.)');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > MAX_IMAGE_SIZE) {
+      setReviewPageError('Image must be less than 5MB');
+      return;
+    }
+
+    setReviewPageError('');
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result as string;
+      if (type === 'logo') {
+        setReviewPageSettings(prev => ({ ...prev, logo_url: base64 }));
+      } else {
+        setReviewPageSettings(prev => ({ ...prev, hero_image_url: base64 }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveReviewPage = async () => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setReviewPageError('Service unavailable');
+      return;
+    }
+
+    // Validate slug
+    if (!reviewPageSettings.slug || reviewPageSettings.slug.length < 3) {
+      setReviewPageError('URL slug must be at least 3 characters');
+      return;
+    }
+
+    if (!/^[a-z0-9-]+$/.test(reviewPageSettings.slug)) {
+      setReviewPageError('URL slug can only contain lowercase letters, numbers, and hyphens');
+      return;
+    }
+
+    if (!reviewPageSettings.google_review_url) {
+      setReviewPageError('Google review URL is required');
+      return;
+    }
+
+    setReviewPageLoading(true);
+    setReviewPageError('');
+    setReviewPageSaved(false);
+
+    try {
+      const userId = localStorage.getItem('jetsuite_userId');
+      if (!userId) throw new Error('User not logged in');
+
+      const pageData = {
+        user_id: userId,
+        business_id: profileData.business.id || userId,
+        slug: reviewPageSettings.slug,
+        business_name: reviewPageSettings.business_name,
+        logo_url: reviewPageSettings.logo_url,
+        hero_image_url: reviewPageSettings.hero_image_url,
+        primary_color: reviewPageSettings.primary_color,
+        google_review_url: reviewPageSettings.google_review_url,
+        is_active: reviewPageSettings.is_active
+      };
+
+      if (existingReviewPage?.id) {
+        // Update existing
+        const { error: updateError } = await supabase
+          .from('review_pages')
+          .update(pageData)
+          .eq('id', existingReviewPage.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Check if slug is already taken
+        const { data: existingSlug } = await supabase
+          .from('review_pages')
+          .select('id')
+          .eq('slug', reviewPageSettings.slug)
+          .single();
+
+        if (existingSlug) {
+          setReviewPageError('This URL slug is already taken. Please choose another.');
+          setReviewPageLoading(false);
+          return;
+        }
+
+        // Insert new
+        const { data: newPage, error: insertError } = await supabase
+          .from('review_pages')
+          .insert(pageData)
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        setExistingReviewPage(newPage as ReviewPageSettings);
+      }
+
+      setReviewPageSaved(true);
+      setTimeout(() => setReviewPageSaved(false), 3000);
+    } catch (err: any) {
+      console.error('Error saving review page:', err);
+      setReviewPageError(err.message || 'Failed to save review page');
+    } finally {
+      setReviewPageLoading(false);
+    }
+  };
+
+  const handleCopyReviewPageLink = () => {
+    const link = `${window.location.origin}/r/${reviewPageSettings.slug}`;
+    navigator.clipboard.writeText(link);
+    setReviewPageLinkCopied(true);
+    setTimeout(() => setReviewPageLinkCopied(false), 2000);
+  };
+
+  // Email Handlers
+  const addEmailRecipient = () => {
+    if (emailRecipients.length < 5) {
+      setEmailRecipients([...emailRecipients, { email: '', name: '' }]);
+    }
+  };
+
+  const removeEmailRecipient = (index: number) => {
+    setEmailRecipients(emailRecipients.filter((_, i) => i !== index));
+  };
+
+  const updateEmailRecipient = (index: number, field: 'email' | 'name', value: string) => {
+    const updated = [...emailRecipients];
+    updated[index][field] = value;
+    setEmailRecipients(updated);
+  };
+
+  const handleSendReviewEmails = async () => {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      setEmailError('Service unavailable');
+      return;
+    }
+
+    // Filter valid recipients
+    const validRecipients = emailRecipients.filter(r =>
+      r.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email)
+    );
+
+    if (validRecipients.length === 0) {
+      setEmailError('Please enter at least one valid email address');
+      return;
+    }
+
+    const remainingEmails = MAX_DAILY_EMAILS - emailsSentToday;
+    if (validRecipients.length > remainingEmails) {
+      setEmailError(`You can only send ${remainingEmails} more email(s) today`);
+      return;
+    }
+
+    if (!existingReviewPage) {
+      setEmailError('Please save your review page first before sending emails');
+      return;
+    }
+
+    setEmailSending(true);
+    setEmailError('');
+    setEmailSuccess('');
+
+    try {
+      const userId = localStorage.getItem('jetsuite_userId');
+      if (!userId) throw new Error('User not logged in');
+
+      const reviewPageUrl = `${window.location.origin}/r/${reviewPageSettings.slug}`;
+      let sentCount = 0;
+
+      for (const recipient of validRecipients) {
+        // Log the email request
+        const { error: insertError } = await supabase
+          .from('review_email_requests')
+          .insert({
+            user_id: userId,
+            review_page_id: existingReviewPage.id,
+            recipient_email: recipient.email,
+            recipient_name: recipient.name || null,
+            status: 'pending'
+          });
+
+        if (insertError) {
+          console.error('Failed to log email:', insertError);
+          continue;
+        }
+
+        // Send email via API
+        try {
+          const response = await fetch('/api/email/send-review-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: recipient.email,
+              recipientName: recipient.name || 'Valued Customer',
+              businessName: reviewPageSettings.business_name,
+              reviewUrl: reviewPageUrl
+            })
+          });
+
+          if (response.ok) {
+            sentCount++;
+            // Update status to sent
+            await supabase
+              .from('review_email_requests')
+              .update({ status: 'sent', sent_at: new Date().toISOString() })
+              .eq('recipient_email', recipient.email)
+              .eq('review_page_id', existingReviewPage.id)
+              .eq('status', 'pending');
+          }
+        } catch (emailErr) {
+          console.error('Email send failed:', emailErr);
+        }
+      }
+
+      if (sentCount > 0) {
+        setEmailSuccess(`Successfully sent ${sentCount} review request email(s)!`);
+        setEmailsSentToday(prev => prev + sentCount);
+        setEmailRecipients([{ email: '', name: '' }]);
+      } else {
+        setEmailError('Failed to send emails. Please try again later.');
+      }
+    } catch (err: any) {
+      console.error('Error sending emails:', err);
+      setEmailError(err.message || 'Failed to send emails');
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   // Check if GBP is not connected
@@ -476,12 +834,56 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
             <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>Works even with zero reviews - start collecting reviews today</li>
                 <li>Your reviews are automatically fetched from your Google Business Profile</li>
-                <li>Choose a layout style (Grid, Carousel, or List)</li>
-                <li>Filter by minimum star rating (3, 4, or 5 stars) if you have reviews</li>
+                <li>Create a public review page to collect reviews from customers</li>
+                <li>Send up to 5 review request emails per day to customers</li>
                 <li>Generate embed code and add to your website immediately</li>
             </ul>
         </HowToUse>
       )}
+
+      {/* Tab Navigation */}
+      <div className="bg-brand-card rounded-xl shadow-sm border border-brand-border overflow-hidden">
+        <div className="flex border-b border-brand-border">
+          <button
+            onClick={() => setActiveTab('widget')}
+            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'widget'
+                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
+                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
+            }`}
+          >
+            <CodeBracketIcon className="w-4 h-4" />
+            Review Widget
+          </button>
+          <button
+            onClick={() => setActiveTab('reviewpage')}
+            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'reviewpage'
+                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
+                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
+            }`}
+          >
+            <GlobeAltIcon className="w-4 h-4" />
+            Public Review Page
+          </button>
+          <button
+            onClick={() => setActiveTab('emails')}
+            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'emails'
+                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
+                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
+            }`}
+          >
+            <EnvelopeIcon className="w-4 h-4" />
+            Email Requests
+            {emailsSentToday > 0 && (
+              <span className="bg-accent-purple text-white text-xs px-1.5 py-0.5 rounded-full">
+                {emailsSentToday}/{MAX_DAILY_EMAILS}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* Tool Description */}
       <div className="bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
@@ -513,6 +915,400 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         </div>
       </div>
 
+      {/* ==================== REVIEW PAGE TAB ==================== */}
+      {activeTab === 'reviewpage' && (
+        <div className="space-y-6">
+          {/* Review Page Setup */}
+          <div className="bg-brand-card p-6 rounded-xl shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+                <GlobeAltIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-brand-text">Public Review Page</h2>
+                <p className="text-sm text-brand-text-muted">Create a beautiful page for customers to leave reviews</p>
+              </div>
+            </div>
+
+            {existingReviewPage && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                    <span className="text-green-800 font-semibold">Your review page is live!</span>
+                  </div>
+                  <button
+                    onClick={handleCopyReviewPageLink}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    {reviewPageLinkCopied ? 'Copied!' : 'Copy Link'}
+                  </button>
+                </div>
+                <p className="text-sm text-green-700 mt-2">
+                  {window.location.origin}/r/{reviewPageSettings.slug}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Settings */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Page URL Slug *
+                  </label>
+                  <div className="flex items-center">
+                    <span className="bg-brand-light px-3 py-2 rounded-l-lg border border-r-0 border-brand-border text-sm text-brand-text-muted">
+                      {window.location.origin}/r/
+                    </span>
+                    <input
+                      type="text"
+                      value={reviewPageSettings.slug}
+                      onChange={e => setReviewPageSettings(prev => ({
+                        ...prev,
+                        slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                      }))}
+                      placeholder="your-business-name"
+                      className="flex-1 px-3 py-2 border border-brand-border rounded-r-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                    />
+                  </div>
+                  <p className="text-xs text-brand-text-muted mt-1">Only lowercase letters, numbers, and hyphens</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Business Name
+                  </label>
+                  <input
+                    type="text"
+                    value={reviewPageSettings.business_name}
+                    onChange={e => setReviewPageSettings(prev => ({ ...prev, business_name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Google Review URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={reviewPageSettings.google_review_url}
+                    onChange={e => setReviewPageSettings(prev => ({ ...prev, google_review_url: e.target.value }))}
+                    placeholder="https://g.page/..."
+                    className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                  />
+                  <p className="text-xs text-brand-text-muted mt-1">Where customers will be redirected after rating</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Primary Color
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={reviewPageSettings.primary_color}
+                      onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                      className="w-10 h-10 rounded border-none cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={reviewPageSettings.primary_color}
+                      onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                      className="flex-1 px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Image Uploads */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Logo (optional)
+                  </label>
+                  <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
+                    {reviewPageSettings.logo_url ? (
+                      <div className="relative">
+                        <img
+                          src={reviewPageSettings.logo_url}
+                          alt="Logo preview"
+                          className="h-20 mx-auto object-contain"
+                        />
+                        <button
+                          onClick={() => setReviewPageSettings(prev => ({ ...prev, logo_url: null }))}
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
+                        <p className="text-sm text-brand-text-muted">Click to upload logo</p>
+                        <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG</p>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={e => handleImageUpload(e, 'logo')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-brand-text mb-2">
+                    Hero Image (optional)
+                  </label>
+                  <p className="text-xs text-brand-text-muted mb-2">Displayed on the left side of the page on desktop</p>
+                  <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
+                    {reviewPageSettings.hero_image_url ? (
+                      <div className="relative">
+                        <img
+                          src={reviewPageSettings.hero_image_url}
+                          alt="Hero preview"
+                          className="h-32 mx-auto object-cover rounded"
+                        />
+                        <button
+                          onClick={() => setReviewPageSettings(prev => ({ ...prev, hero_image_url: null }))}
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer">
+                        <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
+                        <p className="text-sm text-brand-text-muted">Click to upload hero image</p>
+                        <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG - Best at 800x1200px</p>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={e => handleImageUpload(e, 'hero')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {reviewPageError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                <p className="text-red-600 text-sm">{reviewPageError}</p>
+              </div>
+            )}
+
+            {reviewPageSaved && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                <p className="text-green-600 text-sm">Review page saved successfully!</p>
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              {existingReviewPage && (
+                <a
+                  href={`/r/${reviewPageSettings.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 border border-brand-border rounded-lg text-brand-text font-semibold hover:bg-brand-light transition"
+                >
+                  Preview Page
+                </a>
+              )}
+              <button
+                onClick={handleSaveReviewPage}
+                disabled={reviewPageLoading}
+                className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity disabled:opacity-50 flex items-center gap-2"
+              >
+                {reviewPageLoading ? (
+                  <>
+                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircleIcon className="w-4 h-4" />
+                    {existingReviewPage ? 'Update Page' : 'Create Page'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== EMAIL REQUESTS TAB ==================== */}
+      {activeTab === 'emails' && (
+        <div className="space-y-6">
+          {/* Email Request Section */}
+          <div className="bg-brand-card p-6 rounded-xl shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center">
+                <EnvelopeIcon className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-brand-text">Send Review Request Emails</h2>
+                <p className="text-sm text-brand-text-muted">Request reviews from your customers via email</p>
+              </div>
+            </div>
+
+            {/* Daily Limit Info */}
+            <div className="mb-6 p-4 bg-accent-blue/5 border border-accent-blue/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <UserGroupIcon className="w-5 h-5 text-accent-blue" />
+                  <span className="text-brand-text font-semibold">Daily Email Limit</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-accent-blue">{emailsSentToday}</span>
+                  <span className="text-brand-text-muted">/ {MAX_DAILY_EMAILS} sent today</span>
+                </div>
+              </div>
+              <div className="mt-2 w-full bg-brand-light rounded-full h-2">
+                <div
+                  className="h-2 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full transition-all"
+                  style={{ width: `${(emailsSentToday / MAX_DAILY_EMAILS) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {!existingReviewPage && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-3">
+                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                <div>
+                  <p className="text-yellow-800 font-semibold">Review Page Required</p>
+                  <p className="text-yellow-700 text-sm">
+                    Please create your public review page first before sending email requests.
+                    <button
+                      onClick={() => setActiveTab('reviewpage')}
+                      className="text-accent-purple font-semibold ml-1 hover:underline"
+                    >
+                      Create Review Page →
+                    </button>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Email Recipients Form */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-brand-text">
+                Email Recipients ({emailRecipients.length}/{MAX_DAILY_EMAILS - emailsSentToday} remaining today)
+              </label>
+
+              {emailRecipients.map((recipient, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                  <div className="flex-1">
+                    <input
+                      type="email"
+                      value={recipient.email}
+                      onChange={e => updateEmailRecipient(index, 'email', e.target.value)}
+                      placeholder="customer@email.com"
+                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={recipient.name}
+                      onChange={e => updateEmailRecipient(index, 'name', e.target.value)}
+                      placeholder="Customer name (optional)"
+                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                    />
+                  </div>
+                  {emailRecipients.length > 1 && (
+                    <button
+                      onClick={() => removeEmailRecipient(index)}
+                      className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {emailRecipients.length < (MAX_DAILY_EMAILS - emailsSentToday) && emailRecipients.length < 5 && (
+                <button
+                  onClick={addEmailRecipient}
+                  className="text-accent-purple hover:text-accent-pink font-semibold text-sm flex items-center gap-1"
+                >
+                  + Add another recipient
+                </button>
+              )}
+            </div>
+
+            {emailError && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                <p className="text-red-600 text-sm">{emailError}</p>
+              </div>
+            )}
+
+            {emailSuccess && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                <p className="text-green-600 text-sm">{emailSuccess}</p>
+              </div>
+            )}
+
+            <div className="mt-6">
+              <button
+                onClick={handleSendReviewEmails}
+                disabled={emailSending || emailsSentToday >= MAX_DAILY_EMAILS || !existingReviewPage}
+                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {emailSending ? (
+                  <>
+                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <PaperAirplaneIcon className="w-5 h-5" />
+                    Send Review Request Emails
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Email Template Preview */}
+            <div className="mt-6 p-4 bg-brand-light rounded-lg">
+              <p className="text-xs text-brand-text-muted mb-2 font-semibold">EMAIL PREVIEW</p>
+              <div className="bg-white p-4 rounded border border-brand-border">
+                <p className="text-sm text-brand-text">
+                  <strong>Subject:</strong> {reviewPageSettings.business_name} would love your feedback!
+                </p>
+                <hr className="my-3 border-brand-border" />
+                <p className="text-sm text-brand-text-muted">
+                  Hi [Customer Name],
+                  <br /><br />
+                  Thank you for choosing <strong>{reviewPageSettings.business_name}</strong>! We hope you had a great experience with us.
+                  <br /><br />
+                  We'd really appreciate it if you could take a moment to share your feedback. Your review helps us improve and helps others discover our business.
+                  <br /><br />
+                  <span className="text-accent-purple">[Leave a Review Button]</span>
+                  <br /><br />
+                  Thank you for your support!
+                  <br />
+                  - The {reviewPageSettings.business_name} Team
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== WIDGET TAB ==================== */}
+      {activeTab === 'widget' && (
+      <>
       {/* Widget Configuration */}
       <div className="bg-brand-card p-6 rounded-xl shadow-lg">
         <h2 className="text-2xl font-bold text-brand-text mb-6">Widget Configuration</h2>
@@ -757,6 +1553,8 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
             )}
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

@@ -159,15 +159,16 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
     const [refinePrompt, setRefinePrompt] = useState('');
     const [generatingImageFor, setGeneratingImageFor] = useState<string | null>(null);
 
-    const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
+    const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false);
     const [isLoadingAssets, setIsLoadingAssets] = useState(false);
     const [error, setError] = useState('');
+    const [hasStartedGeneration, setHasStartedGeneration] = useState(false);
 
     const [connections, setConnections] = useState<SocialConnection[]>([]);
     const [schedulingAsset, setSchedulingAsset] = useState<SocialPostAsset | AdCopyAsset | null>(null);
     const [scheduleSuccess, setScheduleSuccess] = useState('');
-    
-    const [showHowTo, setShowHowTo] = useState(true); // <-- ADDED STATE
+
+    const [showHowTo, setShowHowTo] = useState(true);
 
     const isProfileLocked = profileData.business.is_complete;
 
@@ -229,39 +230,37 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
         }
     };
 
-    useEffect(() => {
-        // Only fetch ideas if the profile is locked and DNA exists
-        if (profileData.brandDnaProfile && isProfileLocked) {
-            const fetchCampaigns = async () => {
-                setIsLoadingCampaigns(true);
-                setError('');
-                try {
-                    const ideas = await generateCampaignIdeas(profileData);
-                    
-                    // Generate images for all campaigns with individual try-catch to prevent blocking the whole list
-                    const ideasWithImages = await Promise.all(
-                        ideas.map(async (idea) => {
-                            let imageUrl = '';
-                            try {
-                                imageUrl = await generateCampaignImage(idea);
-                            } catch (e) {
-                                console.error(`Failed to generate image for idea ${idea.id}`, e);
-                            }
-                            return { ...idea, imageUrl };
-                        })
-                    );
-                    
-                    setCampaignIdeas(ideasWithImages);
-                } catch (e) {
-                    setError('Failed to generate campaign ideas. Please try again.');
-                    console.error(e);
-                } finally {
-                    setIsLoadingCampaigns(false);
-                }
-            };
-            fetchCampaigns();
+    const handleStartGeneration = async () => {
+        if (!profileData.brandDnaProfile || !isProfileLocked) return;
+
+        setHasStartedGeneration(true);
+        setIsLoadingCampaigns(true);
+        setError('');
+
+        try {
+            const ideas = await generateCampaignIdeas(profileData);
+
+            // Generate images for all campaigns with individual try-catch to prevent blocking the whole list
+            const ideasWithImages = await Promise.all(
+                ideas.map(async (idea) => {
+                    let imageUrl = '';
+                    try {
+                        imageUrl = await generateCampaignImage(idea);
+                    } catch (e) {
+                        console.error(`Failed to generate image for idea ${idea.id}`, e);
+                    }
+                    return { ...idea, imageUrl };
+                })
+            );
+
+            setCampaignIdeas(ideasWithImages);
+        } catch (e) {
+            setError('Failed to generate campaign ideas. Please try again.');
+            console.error(e);
+        } finally {
+            setIsLoadingCampaigns(false);
         }
-    }, [profileData, isProfileLocked]);
+    };
 
     const handleSelectCampaign = async (campaign: CampaignIdea, modifier?: string) => {
         setSelectedCampaign(campaign);
@@ -477,7 +476,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     <SparklesIcon className="w-16 h-16 mx-auto mb-4 text-accent-purple" />
                     <h2 className="text-2xl font-bold text-brand-text mb-2">Business DNA Required</h2>
                     <p className="text-sm text-brand-text-muted mb-6">
-                        JetCreate uses your Business DNA to generate perfectly on-brand campaigns. 
+                        JetCreate uses your Business DNA to generate perfectly on-brand campaigns.
                         Complete your Business Details to unlock this tool.
                     </p>
 
@@ -494,8 +493,107 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
             </div>
         );
     }
-    
-    // 3. LOADING STATE
+
+    // 3. PRE-GENERATION STATE: Show explanation and button before generating
+    if (!hasStartedGeneration && campaignIdeas.length === 0) {
+        return (
+            <div className="h-full flex items-center justify-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
+                <div className="bg-brand-card p-8 rounded-2xl max-w-2xl w-full shadow-xl border border-brand-border">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-accent-purple/20 to-accent-pink/20 mb-4">
+                            <SparklesIcon className="w-10 h-10 text-accent-purple" />
+                        </div>
+                        <h1 className="text-3xl font-bold text-brand-text mb-2">Campaign Idea Generator</h1>
+                        <p className="text-brand-text-muted">
+                            Create AI-powered marketing campaigns tailored to your brand
+                        </p>
+                    </div>
+
+                    {/* Feature Explanation */}
+                    <div className="bg-brand-light rounded-xl p-6 mb-8 border border-brand-border">
+                        <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
+                            <InformationCircleIcon className="w-5 h-5 text-accent-blue" />
+                            What this feature does
+                        </h3>
+                        <div className="space-y-4 text-sm text-brand-text-muted">
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-full bg-accent-purple/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-xs font-bold text-accent-purple">1</span>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-brand-text">AI-Generated Campaign Ideas</p>
+                                    <p>Using your Business DNA, our AI creates unique marketing campaign concepts tailored to your brand identity, industry, and target audience.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-full bg-accent-pink/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-xs font-bold text-accent-pink">2</span>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-brand-text">Ready-to-Use Creative Assets</p>
+                                    <p>For each campaign, get social media posts and ad copy optimized for platforms like Instagram, Facebook, LinkedIn, and more.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-full bg-accent-blue/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-xs font-bold text-accent-blue">3</span>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-brand-text">Branded Imagery</p>
+                                    <p>Generate custom campaign images that incorporate your logo and brand colors for a cohesive visual identity.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                                <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <span className="text-xs font-bold text-green-600">4</span>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-brand-text">Schedule & Post</p>
+                                    <p>Once you're happy with your content, schedule it directly to your connected social media accounts or download for later use.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* How to Use */}
+                    <div className="bg-gradient-to-r from-accent-purple/5 to-accent-pink/5 rounded-xl p-6 mb-8 border border-accent-purple/20">
+                        <h3 className="font-bold text-brand-text mb-3">How to use</h3>
+                        <ol className="space-y-2 text-sm text-brand-text-muted list-decimal list-inside">
+                            <li>Click the button below to generate campaign ideas based on your business</li>
+                            <li>Select a campaign idea or create your own custom campaign</li>
+                            <li>Review and edit the generated social posts and ad copy</li>
+                            <li>Generate branded images for your assets</li>
+                            <li>Schedule posts to your social accounts or download them</li>
+                        </ol>
+                    </div>
+
+                    {/* Business DNA Status */}
+                    <div className="flex items-center justify-center gap-2 mb-6 text-sm">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span className="text-brand-text-muted">
+                            Using <span className="font-semibold text-brand-text">{profileData.business.business_name}</span> Brand DNA
+                        </span>
+                    </div>
+
+                    {/* CTA Button */}
+                    <button
+                        onClick={handleStartGeneration}
+                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                    >
+                        <SparklesIcon className="w-6 h-6" />
+                        Generate Campaign Ideas
+                    </button>
+
+                    <p className="text-center text-xs text-brand-text-muted mt-4">
+                        This process may take a few minutes as we craft personalized campaigns for your business.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // 4. LOADING STATE
     if (isLoadingCampaigns) {
         return (
             <AnalysisLoadingState 
