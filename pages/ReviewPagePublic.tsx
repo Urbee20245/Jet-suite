@@ -62,6 +62,8 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const [authorName, setAuthorName] = useState('');
 
   useEffect(() => {
     const fetchPageData = async () => {
@@ -98,26 +100,32 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
     fetchPageData();
   }, [slug]);
 
-  const handleRatingClick = async (selectedRating: number) => {
+  const handleRatingClick = (selectedRating: number) => {
     setRating(selectedRating);
+  };
 
-    // Log the click for analytics
+  const handleSubmit = async () => {
+    if (rating === 0) return;
+    setSubmitted(true);
+
     const supabase = getSupabaseClient();
     if (supabase && pageData) {
       try {
-        await supabase.from('review_page_clicks').insert({
+        const { error } = await supabase.from('public_reviews').insert({
           review_page_id: pageData.id,
-          rating_clicked: selectedRating,
-          clicked_at: new Date().toISOString(),
+          rating: rating,
+          message: reviewMessage,
+          author_name: authorName || 'Anonymous',
         });
+        if (error) throw error;
       } catch (err) {
-        console.error('Failed to log click:', err);
+        console.error('Failed to submit review:', err);
+        // Fail silently on the backend, user experience is more important
       }
     }
 
     // Redirect to Google review after a brief delay
     if (pageData?.google_review_url) {
-      setSubmitted(true);
       setTimeout(() => {
         window.open(pageData.google_review_url, '_blank');
       }, 1000);
@@ -234,7 +242,7 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
               </h2>
 
               {/* Star Rating */}
-              <div className="mb-12">
+              <div className="mb-8">
                 <StarRatingInput
                   rating={rating}
                   onRatingChange={handleRatingClick}
@@ -242,6 +250,32 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
                   onHoverChange={setHoverRating}
                 />
               </div>
+
+              {rating > 0 && (
+                <div className="space-y-4 animate-in fade-in">
+                  <textarea
+                    value={reviewMessage}
+                    onChange={(e) => setReviewMessage(e.target.value)}
+                    placeholder="Share your experience (optional)"
+                    rows={4}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={authorName}
+                    onChange={(e) => setAuthorName(e.target.value)}
+                    placeholder="Your name (optional)"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                  />
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full text-white font-bold py-3 px-6 rounded-lg transition"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    Submit Review
+                  </button>
+                </div>
+              )}
             </>
           )}
           
