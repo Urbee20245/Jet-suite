@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getSupabaseClient } from '../integrations/supabase/client';
-import * as QRCodeModule from 'qrcode.react';
+import QRCode from 'qrcode.react';
 import html2canvas from 'html2canvas';
-
-// Access the QRCode component from the namespace import
-const QRCode = QRCodeModule.default || QRCodeModule.QRCode;
 
 interface ReviewPageData {
   id: string;
