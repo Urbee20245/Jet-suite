@@ -498,7 +498,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
     if (!hasStartedGeneration && campaignIdeas.length === 0) {
         return (
             <div className="h-full flex items-center justify-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
-                <div className="bg-brand-card p-8 rounded-2xl max-w-2xl w-full shadow-xl border border-brand-border">
+                <div className="bg-brand-card p-8 rounded-2xl max-w-4xl w-full shadow-xl border border-brand-border">
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-accent-purple/20 to-accent-pink/20 mb-4">
@@ -510,8 +510,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                         </p>
                     </div>
 
-                    {/* Feature Explanation and How-To Sections (Stacked) */}
-                    <div className="grid grid-cols-1 gap-6">
+                    {/* Feature Explanation and How-To Sections (Horizontal on MD+, Stacked on Mobile) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Feature Explanation */}
                         <div className="bg-brand-light rounded-xl p-6 border border-brand-border">
                             <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
