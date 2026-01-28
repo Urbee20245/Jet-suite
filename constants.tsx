@@ -24,7 +24,6 @@ import {
   BusinessIcon,
 } from './components/icons/ToolIcons';
 import { TicketIcon } from './components/SupportIcons';
-import { SparklesIcon as SparklesIconSolid } from './components/icons/MiniIcons';
 
 export const ALL_TOOLS: { [key: string]: Tool } = {
   // Special Home Tool
