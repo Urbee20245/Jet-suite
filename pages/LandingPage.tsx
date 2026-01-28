@@ -234,9 +234,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   <button 
                     onClick={() => navigate('/get-started')} 
                     className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
-                    aria-label="Start Subscription"
+                    aria-label="Get Started"
                   >
-                      Start Subscription
+                      Get Started
                   </button>
                   <button 
                     onClick={handleVideoClick}
@@ -837,11 +837,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                           <div className="flex justify-between mt-2 text-xs">
                             <div className="flex items-center gap-1">
                               <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                              <span className="text-red-300">Low Trust</span>
+                              <span className="text-red-300">2.8% Start</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                              <span className="text-green-300 font-medium">High Conversion</span>
+                              <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-green-500"></div>
+                              <span className="text-yellow-300">Transition</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                              <span className="text-green-300">4.1% Target</span>
                             </div>
                           </div>
                         </div>
@@ -969,8 +973,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               <button onClick={() => navigate('/get-started')} 
                 className="glow-card glow-card-rounded-xl w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg mb-4 relative"
-                aria-label="Start Subscription">
-                Start Subscription
+                aria-label="Get Started">
+                Get Started
               </button>
               <p className="text-xs text-gray-500">Cancel anytime. No long-term contracts.</p>
             </div>
@@ -1121,8 +1125,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button onClick={() => navigate('/get-started')} 
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
-              aria-label="Start Subscription">
-              Start Subscription
+              aria-label="Get Started">
+              Get Started
             </button>
             <button 
               onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
