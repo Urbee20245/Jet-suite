@@ -624,6 +624,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
 
       const pageData = {
         user_id: userId,
+        business_id: profileData.business.id,
         slug: reviewPageSettings.slug,
         business_name: reviewPageSettings.business_name,
         logo_url: reviewPageSettings.logo_url,
