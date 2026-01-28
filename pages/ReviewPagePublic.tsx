@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getSupabaseClient } from '../integrations/supabase/client';
-import QRCode from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import html2canvas from 'html2canvas';
 
 interface ReviewPageData {
@@ -94,7 +94,7 @@ const QRCodeGenerator: React.FC<{ url: string; businessName: string }> = ({ url,
       <p className="text-sm text-gray-600 mb-4">Place this QR code on receipts, flyers, or business cards to instantly direct customers to your review page.</p>
       
       <div ref={qrCodeRef} className="flex justify-center mb-6 p-4 bg-white rounded-lg shadow-md">
-        <QRCode value={url} size={256} level="H" renderAs="canvas" />
+        <QRCodeCanvas value={url} size={256} level="H" />
       </div>
 
       <div className="flex justify-center gap-4">
