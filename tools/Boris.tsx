@@ -282,27 +282,29 @@ export const Boris: React.FC<BorisProps> = ({
                               const isCompleted = completedTaskIds.has(task.id);
                               return (
                                   <div key={task.id || i} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                                      <div className="flex items-center flex-1 gap-2">
+                                      <div className="flex items-center flex-1 gap-2 overflow-hidden">
                                           <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center">
                                               <span className="text-purple-600 font-bold text-sm">{i + 1}</span>
                                           </div>
                                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                              <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>
+                                              <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''} truncate`}>
                                                   {task.title}
                                               </span>
                                               {!isCompleted && (
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => handleAskBorisAboutTask(task.title)}
-                                                        className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors font-bold uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20"
+                                                        className="text-[10px] text-purple-400 hover:text-white hover:bg-purple-500 transition-all font-bold uppercase tracking-wider bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/30 flex items-center gap-1"
                                                     >
+                                                        <SparklesIconSolid className="w-2.5 h-2.5" />
                                                         Ask Boris
                                                     </button>
                                                     <button
                                                         onClick={() => onNavigate(toolId)}
-                                                        className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-bold uppercase tracking-wider px-1.5 py-0.5"
+                                                        className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-bold uppercase tracking-wider flex items-center gap-1"
                                                     >
                                                         View Task
+                                                        <ArrowRightIcon className="w-2.5 h-2.5" />
                                                     </button>
                                                 </div>
                                               )}
