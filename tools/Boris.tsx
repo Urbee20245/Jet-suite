@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon } from './icons/MiniIcons';
-import { BorisChatModal } from './BorisChatModal';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { BorisChatModal } from '../components/BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
