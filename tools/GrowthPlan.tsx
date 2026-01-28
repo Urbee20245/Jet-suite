@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import type { GrowthPlanTask, Tool } from '../types';
+import type { GrowthPlanTask, Tool, ProfileData } from '../types';
 import { ALL_TOOLS } from '../constants';
-import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon, ChatBubbleLeftRightIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
 import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
+import { BorisChatModal } from '../components/BorisChatModal';
 
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
@@ -13,7 +14,8 @@ interface GrowthPlanProps {
   growthScore: number;
   userId: string;
   activeBusinessId: string | null;
-  onPlanSaved?: (tasks: GrowthPlanTask[]) => void; // New prop
+  profileData: ProfileData; // Added profileData to build context
+  onPlanSaved?: (tasks: GrowthPlanTask[]) => void;
 }
 
 const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: string } } = {
@@ -22,14 +24,19 @@ const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: 
   completed: { badge: 'bg-green-100 text-green-800', text: 'Completed' },
 };
 
-const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; onRemove: (id: string) => void; }> = ({ task, onStatusChange, onRemove }) => {
+const PendingTaskCard: React.FC<{ 
+    task: GrowthPlanTask; 
+    onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; 
+    onRemove: (id: string) => void;
+    onAskBoris: (taskTitle: string) => void;
+}> = ({ task, onStatusChange, onRemove, onAskBoris }) => {
   
   const handleMarkComplete = () => {
     onStatusChange(task.id, 'completed');
   };
 
   return (
-    <div className="p-5 rounded-xl shadow-md border bg-white border-brand-border hover:border-accent-purple/50 glow-card glow-card-rounded-xl">
+    <div className="p-5 rounded-xl shadow-md border bg-white border-brand-border hover:border-accent-purple/50 transition-all glow-card glow-card-rounded-xl group">
         <div className="flex justify-between items-start">
             <h3 className="text-lg font-bold text-brand-text pr-4">{task.title}</h3>
             <div className="flex items-center gap-2">
@@ -61,9 +68,18 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
                 <p className="text-brand-text">{task.whyItMatters}</p>
             </div>
 
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg">
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg relative">
                 <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
+                
+                {/* Contextual Ask Boris Button */}
+                <button
+                    onClick={() => onAskBoris(task.title)}
+                    className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-purple-600 hover:text-purple-800 transition-colors bg-white/50 px-2 py-1 rounded"
+                >
+                    <ChatBubbleLeftRightIcon className="w-3 h-3" />
+                    Ask Boris
+                </button>
             </div>
         </div>
 
@@ -73,7 +89,7 @@ const PendingTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: str
                 <span className="mx-2">|</span>
                 <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
             </div>
-            <button onClick={handleMarkComplete} className="bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">Mark Complete ✓</button>
+            <button onClick={handleMarkComplete} className="bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">Mark Complete ✓</button>
         </div>
     </div>
   );
@@ -89,7 +105,7 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
     };
 
     return (
-        <div className="p-4 rounded-xl bg-green-50 border border-green-200">
+        <div className="p-4 rounded-xl bg-green-50 border border-green-200 transition-all">
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
                     <CheckCircleIcon className="w-5 h-5 text-green-600"/>
@@ -120,30 +136,30 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
     )
 }
 
-export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId, onPlanSaved }) => {
+export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId, profileData, onPlanSaved }) => {
   const [showCompleted, setShowCompleted] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  
+  // Boris Modal state
+  const [showBorisModal, setShowBorisModal] = useState(false);
+  const [initialBorisMsg, setInitialBorisMsg] = useState<string | undefined>(undefined);
 
-  // Auto-load tasks when component mounts
   useEffect(() => {
     const autoLoadTasks = async () => {
       if (!userId || !activeBusinessId) return;
-      
       try {
         const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
         if (data && Array.isArray(data) && data.length > 0) {
           setTasks(data);
-          console.log('✅ [GrowthPlan] Auto-loaded', data.length, 'tasks on mount');
         }
       } catch (error) {
         console.error('❌ [GrowthPlan] Auto-load failed:', error);
       }
     };
-
     autoLoadTasks();
-  }, [userId, activeBusinessId]); // Only run when component mounts or business changes
+  }, [userId, activeBusinessId]);
 
   const { jetbizTasks, jetvizTasks, otherTasks, completedTasks } = useMemo(() => {
     const jetbizTasks = tasks.filter(t => t.sourceModule === 'JetBiz' && t.status !== 'completed');
@@ -154,7 +170,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   }, [tasks]);
 
   const pendingTasksCount = jetbizTasks.length + jetvizTasks.length + otherTasks.length;
-  
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
   const handleRemoveTask = (taskId: string) => {
@@ -170,21 +185,14 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   };
   
   const handleManualSave = async () => {
-    if (!userId || !activeBusinessId) {
-        setStatusMessage('Error: Cannot save without active user or business ID.');
-        return;
-    }
-    
+    if (!userId || !activeBusinessId) return;
     setIsSaving(true);
-    setStatusMessage('Saving all tasks...');
-    
     try {
         await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
         setStatusMessage('✅ Growth Plan saved successfully!');
-        if (onPlanSaved) onPlanSaved(tasks); // Trigger update for Home page
+        if (onPlanSaved) onPlanSaved(tasks);
     } catch (error) {
-        setStatusMessage('❌ Failed to save plan. Please try again.');
-        console.error('Manual save failed:', error);
+        setStatusMessage('❌ Failed to save plan.');
     } finally {
         setIsSaving(false);
         setTimeout(() => setStatusMessage(''), 4000);
@@ -193,26 +201,27 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
 
   const handleRetrieveTasks = async () => {
     if (!userId || !activeBusinessId) return;
-
     setIsRetrieving(true);
-    setStatusMessage('Retrieving tasks from database...');
-
     try {
       const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
       if (data && Array.isArray(data)) {
         setTasks(data);
         setStatusMessage('✅ Successfully retrieved your tasks.');
-        if (onPlanSaved) onPlanSaved(data); // Sync home count with retrieved data
+        if (onPlanSaved) onPlanSaved(data);
       } else {
-        setStatusMessage('ℹ️ No saved tasks found in database.');
+        setStatusMessage('ℹ️ No saved tasks found.');
       }
     } catch (error) {
       setStatusMessage('❌ Failed to retrieve tasks.');
-      console.error('Retrieve failed:', error);
     } finally {
       setIsRetrieving(false);
       setTimeout(() => setStatusMessage(''), 4000);
     }
+  };
+
+  const handleAskBoris = (taskTitle: string) => {
+    setInitialBorisMsg(`I have a question about the task: "${taskTitle}". What should I know about this task, and how can I complete it?`);
+    setShowBorisModal(true);
   };
 
   return (
@@ -252,14 +261,14 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
                       disabled={isSaving || isRetrieving}
                       className="w-full text-accent-purple hover:text-accent-pink font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                   >
-                      {isRetrieving ? 'Retrieving...' : <><ArrowPathIcon className="w-4 h-4" /> Retrieve Pending & Completed Tasks</>}
+                      {isRetrieving ? 'Retrieving...' : <><ArrowPathIcon className="w-4 h-4" /> Retrieve Tasks</>}
                   </button>
                 </div>
 
                 <div className="flex items-start gap-2 pt-2 border-t border-brand-border">
                     <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
                     <p className="text-sm text-brand-text-muted leading-snug">
-                        {statusMessage || 'Save your changes to persist them across sessions. Click retrieve to sync with the database.'}
+                        {statusMessage || 'Save your changes to persist them across sessions.'}
                     </p>
                 </div>
             </div>
@@ -282,42 +291,34 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
         <div className="mt-8">
           <h3 className="text-xl font-bold text-brand-text mb-4">Pending Tasks ({pendingTasksCount})</h3>
           
-          {pendingTasksCount > 0 ? (
-            <div className="space-y-8">
-              {jetbizTasks.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-brand-text mb-3">Your Business Analysis (JetBiz)</h4>
-                  <div className="space-y-4">
-                    {jetbizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
-                  </div>
+          <div className="space-y-8">
+            {jetbizTasks.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-brand-text mb-3">Your Business Analysis (JetBiz)</h4>
+                <div className="space-y-4">
+                  {jetbizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
                 </div>
-              )}
-              
-              {jetvizTasks.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-brand-text mb-3">Your Visual Analysis (JetViz)</h4>
-                  <div className="space-y-4">
-                    {jetvizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
-                  </div>
+              </div>
+            )}
+            
+            {jetvizTasks.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-brand-text mb-3">Your Visual Analysis (JetViz)</h4>
+                <div className="space-y-4">
+                  {jetvizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
                 </div>
-              )}
+              </div>
+            )}
 
-              {otherTasks.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-brand-text mb-3">Other Tasks</h4>
-                  <div className="space-y-4">
-                    {otherTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
-                  </div>
+            {otherTasks.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold text-brand-text mb-3">Other Tasks</h4>
+                <div className="space-y-4">
+                  {otherTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
                 </div>
-              )}
-            </div>
-          ) : (
-             <div className="text-center bg-brand-card p-12 rounded-xl shadow-lg border-2 border-dashed border-green-400">
-                <CheckCircleIcon className="w-16 h-16 mx-auto text-green-500" />
-                <h3 className="text-xl font-bold text-brand-text mt-4">All tasks complete!</h3>
-                <p className="text-brand-text-muted mt-2">Run a new analysis to generate more tasks.</p>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           <div className="mt-12">
             <div className="flex justify-between items-center mb-4">
@@ -340,9 +341,26 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
             <GrowthPlanIcon className="w-16 h-16 mx-auto text-brand-text-muted opacity-50" />
             <h3 className="text-xl font-bold text-brand-text mt-4">Your Growth Plan is Empty</h3>
             <p className="text-brand-text-muted mt-2 mb-6">Run an analysis from a tool like JetBiz or JetViz to automatically generate your prioritized action plan.</p>
-            <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-lg">Start an Analysis</button>
+            <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-lg shadow-md">Start an Analysis</button>
           </div>
         </div>
+      )}
+
+      {showBorisModal && (
+        <BorisChatModal
+          context={{
+            userName: profileData.user.firstName || 'there',
+            businessName: profileData.business.business_name,
+            growthScore: growthScore,
+            pendingTasks: pendingTasksCount,
+            completedAudits: [],
+            urgentTasks: tasks.filter(t => t.priority === 'High' && t.status !== 'completed'),
+            newReviews: 0
+          }}
+          onClose={() => setShowBorisModal(false)}
+          initialMessage={initialBorisMsg}
+          onTaskComplete={(taskId) => onTaskStatusChange(taskId, 'completed')}
+        />
       )}
     </div>
   );

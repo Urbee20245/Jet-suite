@@ -4,7 +4,7 @@ import { BorisChatModal } from '../components/BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
-import { manuallyStartTour } from '../components/ProductTour'; // <-- NEW IMPORT
+import { manuallyStartTour } from '../components/ProductTour';
 
 interface BorisProps {
   userFirstName: string;
@@ -57,7 +57,7 @@ export const Boris: React.FC<BorisProps> = ({
   const [borisState, setBorisState] = useState<BorisState | null>(null);
   const [showWhyDialog, setShowWhyDialog] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
-  const [initialChatMsg, setInitialChatMsg] = useState<string | undefined>(undefined); // State for initial message
+  const [initialChatMsg, setInitialChatMsg] = useState<string | undefined>(undefined);
 
   const completedTaskIds = useMemo(() => new Set(growthPlanTasks.filter(t => t.status === 'completed').map(t => t.id)), [growthPlanTasks]);
 
@@ -203,14 +203,12 @@ export const Boris: React.FC<BorisProps> = ({
     onTaskStatusChange(taskId, 'completed');
   };
 
-  // NEW: Handle opening chat modal with contextual message
   const handleAskBorisAboutTask = (taskTitle: string) => {
     const initialMsg = `I have a question about the task: "${taskTitle}". What should I know about this task, and how can I complete it?`;
     setInitialChatMsg(initialMsg);
     setShowChatModal(true);
   };
 
-  // Build context for chat
   const buildChatContext = (): BorisContext => {
     const completedAudits: string[] = [];
     if (profileData.jetbizAnalysis) completedAudits.push('JetBiz');
@@ -273,7 +271,6 @@ export const Boris: React.FC<BorisProps> = ({
         <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
           {borisState.messageIntro ? (
               <>
-                  {/* Greeting Message */}
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
@@ -294,16 +291,14 @@ export const Boris: React.FC<BorisProps> = ({
                                             <div className="flex items-center gap-2 ml-3">
                                                 <button
                                                     onClick={() => onNavigate(toolId)}
-                                                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1"
-                                                    title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
+                                                    className="text-[10px] sm:text-xs text-blue-400 hover:text-blue-300 transition-colors font-bold uppercase tracking-wider"
                                                 >
                                                     View Task
                                                 </button>
-                                                <span className="text-gray-500">|</span>
+                                                <span className="text-gray-600 text-xs">|</span>
                                                 <button
                                                     onClick={() => handleAskBorisAboutTask(task.title)}
-                                                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors font-semibold flex items-center gap-1"
-                                                    title="Ask Boris about this task"
+                                                    className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-bold uppercase tracking-wider"
                                                 >
                                                     Ask Boris
                                                 </button>
@@ -318,7 +313,6 @@ export const Boris: React.FC<BorisProps> = ({
                                               ? 'bg-green-500 text-white'
                                               : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300'
                                           }`}
-                                          title="Mark as complete"
                                       >
                                           <CheckCircleIcon className="w-5 h-5" />
                                       </button>
@@ -330,7 +324,6 @@ export const Boris: React.FC<BorisProps> = ({
               </>
           ) : (
               <>
-                  {/* Greeting Message */}
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
@@ -342,17 +335,16 @@ export const Boris: React.FC<BorisProps> = ({
         {borisState.actionButton && (
           <button
             onClick={borisState.actionButton.onClick}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group mb-3"
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-2 group mb-3 shadow-lg"
           >
             {borisState.actionButton.text}
             <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
         )}
 
-        {/* Ask a Question Button */}
         <button
           onClick={() => {
-            setInitialChatMsg(undefined); // Clear any previous task message
+            setInitialChatMsg(undefined);
             setShowChatModal(true);
           }}
           className="w-full bg-slate-800/50 hover:bg-slate-700/50 border border-purple-500/30 text-purple-300 font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
@@ -361,7 +353,7 @@ export const Boris: React.FC<BorisProps> = ({
           Ask a Question
         </button>
 
-        <div className="mt-3 text-sm flex items-center justify-center gap-4">
+        <div className="mt-4 text-sm flex items-center justify-center gap-4">
           <button
             onClick={() => setShowWhyDialog(true)}
             className="text-gray-400 hover:text-purple-400 transition-colors flex items-center gap-1"
@@ -369,28 +361,24 @@ export const Boris: React.FC<BorisProps> = ({
             <InformationCircleIcon className="w-4 h-4" />
             Why this matters
           </button>
-
-          {/* NEW: Product Tour Trigger (Replaces conditional upsell link) */}
-          <>
-            <span className="text-gray-600">•</span>
-            <button
-              onClick={manuallyStartTour}
-              className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
-            >
-              <InformationCircleIcon className="w-4 h-4" />
-              Take the Product Tour
-            </button>
-          </>
+          <span className="text-gray-600">•</span>
+          <button
+            onClick={manuallyStartTour}
+            className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold"
+          >
+            <InformationCircleIcon className="w-4 h-4" />
+            Product Tour
+          </button>
         </div>
 
         {showWhyDialog && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-purple-500/30">
-              <h4 className="text-lg font-bold text-white mb-3">Why This Matters</h4>
-              <p className="text-gray-300 mb-4 leading-relaxed">{handleWhyQuestion()}</p>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-purple-500/30 shadow-2xl">
+              <h4 className="text-xl font-bold text-white mb-3">Why This Matters</h4>
+              <p className="text-gray-300 mb-6 leading-relaxed">{handleWhyQuestion()}</p>
               
               {borisState.showUpsell && (
-                <div className="my-4 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+                <div className="my-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
                   <h5 className="font-bold text-blue-300 flex items-center gap-2">💡 Don't have time?</h5>
                   <p className="text-sm text-blue-200 mt-2">Custom Websites Plus can handle this for you.</p>
                   <a href="https://customwebsitesplus.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-white hover:underline mt-3 inline-block">
@@ -401,7 +389,7 @@ export const Boris: React.FC<BorisProps> = ({
 
               <button
                 onClick={() => setShowWhyDialog(false)}
-                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl"
+                className="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg"
               >
                 Got It - Let's Go!
               </button>
@@ -410,7 +398,6 @@ export const Boris: React.FC<BorisProps> = ({
         )}
       </div>
 
-      {/* Chat Modal */}
       {showChatModal && (
         <BorisChatModal
           context={buildChatContext()}
@@ -418,7 +405,7 @@ export const Boris: React.FC<BorisProps> = ({
           onNavigateToTool={onNavigate}
           onTaskComplete={handleTaskComplete}
           urgentTasks={borisState.todaysTasks}
-          initialMessage={initialChatMsg} // Pass the initial message
+          initialMessage={initialChatMsg}
         />
       )}
     </>
