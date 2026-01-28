@@ -1,174 +1,221 @@
--- JetSuite Billing Accounts Table
--- This table tracks Stripe subscription information for authenticated users
-
--- Enable UUID extension (if not already enabled)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Create billing_accounts table
-CREATE TABLE IF NOT EXISTS billing_accounts (
-  -- Primary key
+-- ============================================================================
+-- JETTRUST REVIEW PAGES SYSTEM
+-- Added: January 2026
+-- Purpose: Enable public review collection pages and email review requests
+-- ============================================================================
+ 
+-- Create review_pages table for storing public review page settings
+CREATE TABLE IF NOT EXISTS review_pages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  
-  -- User reference (should match your auth.users table)
-  user_id UUID NOT NULL UNIQUE,
-  user_email TEXT NOT NULL,
-  
-  -- Stripe identifiers
-  stripe_customer_id TEXT UNIQUE,
-  stripe_subscription_id TEXT UNIQUE,
-  
-  -- Subscription details
-  subscription_status TEXT CHECK (subscription_status IN (
-    'active',
-    'trialing',
-    'past_due',
-    'canceled',
-    'unpaid',
-    'incomplete',
-    'incomplete_expired',
-    'paused'
-  )),
-  subscription_plan TEXT, -- e.g., 'base_149', 'business_49', 'seat_15'
-  current_period_start TIMESTAMP WITH TIME ZONE,
-  current_period_end TIMESTAMP WITH TIME ZONE,
-  cancel_at_period_end BOOLEAN DEFAULT FALSE,
-  
-  -- Usage limits
-  seat_count INTEGER DEFAULT 1 CHECK (seat_count >= 0),
-  business_count INTEGER DEFAULT 1 CHECK (business_count >= 0),
-  
-  -- Founder pricing (lifetime-locked, non-client-editable)
-  is_founder BOOLEAN DEFAULT FALSE NOT NULL,
-  
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  business_id UUID NOT NULL REFERENCES public.business_profiles(id) ON DELETE CASCADE, -- Corrected FK reference
+ 
+  -- Page identification
+  slug TEXT NOT NULL UNIQUE, -- URL slug: getjetsuite.com/r/{slug}
+ 
+  -- Business details
+  business_name TEXT NOT NULL,
+  logo_url TEXT, -- Base64 or URL for logo
+  hero_image_url TEXT, -- Base64 or URL for hero image (left side)
+ 
+  -- Styling
+  primary_color TEXT DEFAULT '#F59E0B', -- Primary brand color
+ 
+  -- Review link
+  google_review_url TEXT NOT NULL, -- Google Business review URL
+ 
+  -- Status
+  is_active BOOLEAN DEFAULT TRUE,
+ 
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Create index for faster lookups
-CREATE INDEX idx_billing_user_id ON billing_accounts(user_id);
-CREATE INDEX idx_billing_stripe_customer_id ON billing_accounts(stripe_customer_id);
-CREATE INDEX idx_billing_stripe_subscription_id ON billing_accounts(stripe_subscription_id);
-CREATE INDEX idx_billing_status ON billing_accounts(subscription_status);
-
--- Create updated_at trigger
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+ 
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_review_pages_user_id ON review_pages(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_pages_slug ON review_pages(slug);
+CREATE INDEX IF NOT EXISTS idx_review_pages_business_id ON review_pages(business_id);
+ 
+-- Create updated_at trigger for review_pages
+CREATE OR REPLACE FUNCTION update_review_pages_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_billing_accounts_updated_at
-  BEFORE UPDATE ON billing_accounts
+ 
+DROP TRIGGER IF EXISTS update_review_pages_updated_at ON review_pages;
+CREATE TRIGGER update_review_pages_updated_at
+  BEFORE UPDATE ON review_pages
   FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-
--- Row Level Security (RLS) Policies
-ALTER TABLE billing_accounts ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can read their own billing data
-CREATE POLICY "Users can view own billing account"
-  ON billing_accounts
-  FOR SELECT
+  EXECUTE FUNCTION update_review_pages_updated_at();
+ 
+-- RLS for review_pages
+ALTER TABLE review_pages ENABLE ROW LEVEL SECURITY;
+ 
+-- Policy: Users can view their own review pages
+CREATE POLICY "Users can view own review pages"
+  ON review_pages FOR SELECT
   USING (auth.uid() = user_id);
-
--- Policy: Service role can do everything (for server-side operations)
-CREATE POLICY "Service role has full access"
-  ON billing_accounts
-  FOR ALL
-  USING (auth.role() = 'service_role');
-
--- Insert initial record for existing users (optional)
--- Uncomment and modify if you have existing users
--- INSERT INTO billing_accounts (user_id, user_email, subscription_status, seat_count, business_count)
--- SELECT 
---   id as user_id,
---   email as user_email,
---   'active' as subscription_status,
---   1 as seat_count,
---   1 as business_count
--- FROM auth.users
--- ON CONFLICT (user_id) DO NOTHING;
-
--- Grant permissions
-GRANT SELECT ON billing_accounts TO authenticated;
-GRANT ALL ON billing_accounts TO service_role;
-
--- Comments for documentation
-COMMENT ON TABLE billing_accounts IS 'Stores Stripe billing and subscription information for JetSuite users';
-COMMENT ON COLUMN billing_accounts.user_id IS 'Foreign key to auth.users.id';
-COMMENT ON COLUMN billing_accounts.stripe_customer_id IS 'Stripe customer ID (cus_xxx)';
-COMMENT ON COLUMN billing_accounts.stripe_subscription_id IS 'Stripe subscription ID (sub_xxx)';
-COMMENT ON COLUMN billing_accounts.subscription_status IS 'Current status of Stripe subscription';
-COMMENT ON COLUMN billing_accounts.current_period_end IS 'When the current billing period ends';
-COMMENT ON COLUMN billing_accounts.seat_count IS 'Number of team member seats';
-COMMENT ON COLUMN billing_accounts.business_count IS 'Number of business profiles allowed';
-COMMENT ON COLUMN billing_accounts.is_founder IS 'Founder pricing flag - lifetime-locked once set, not client-editable';
-
--- Business Profiles Table
-CREATE TABLE IF NOT EXISTS business_profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id),
-  business_name TEXT NOT NULL,
-  website_url TEXT,
-  phone VARCHAR(50),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- RLS for business_profiles
-ALTER TABLE business_profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own business profile"
-  ON business_profiles FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own business profile"
-  ON business_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own business profile"
-  ON business_profiles FOR INSERT
+ 
+-- Policy: Anyone can view active review pages (for public access)
+CREATE POLICY "Anyone can view active review pages"
+  ON review_pages FOR SELECT
+  USING (is_active = TRUE);
+ 
+-- Policy: Users can insert their own review pages
+CREATE POLICY "Users can insert own review pages"
+  ON review_pages FOR INSERT
   WITH CHECK (auth.uid() = user_id);
-
--- Add missing columns if table exists
-DO $$ 
-BEGIN 
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'business_profiles' AND column_name = 'phone') THEN
-        ALTER TABLE business_profiles ADD COLUMN phone VARCHAR(50);
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'business_profiles' AND column_name = 'website_url') THEN
-        ALTER TABLE business_profiles ADD COLUMN website_url TEXT;
-    END IF;
-END $$;
-
-
+ 
+-- Policy: Users can update their own review pages
+CREATE POLICY "Users can update own review pages"
+  ON review_pages FOR UPDATE
+  USING (auth.uid() = user_id);
+ 
+-- Policy: Users can delete their own review pages
+CREATE POLICY "Users can delete own review pages"
+  ON review_pages FOR DELETE
+  USING (auth.uid() = user_id);
+ 
+-- Service role full access
+CREATE POLICY "Service role has full access to review_pages"
+  ON review_pages FOR ALL
+  USING (auth.role() = 'service_role');
+ 
 -- ============================================================================
--- TRIAL MANAGEMENT SYSTEM
--- Added: January 2026
--- Purpose: Enable 7-day free trial tracking for new users
+-- REVIEW PAGE ANALYTICS
 -- ============================================================================
-
--- Add trial_end_date column to profiles table
-ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS trial_end_date DATE;
-
--- Add comment explaining the column
-COMMENT ON COLUMN profiles.trial_end_date IS 'Date when the user trial ends (7 days from account creation by default). NULL means no trial set.';
-
--- Create index for efficient querying of trial status
-CREATE INDEX IF NOT EXISTS idx_profiles_trial_end_date ON profiles(trial_end_date);
-
--- Optional: Set trial end date for existing users (7 days from their creation)
--- Uncomment the lines below if you want to give existing users a trial
-/*
-UPDATE profiles 
-SET trial_end_date = (created_at::date + INTERVAL '7 days')::date
-WHERE trial_end_date IS NULL 
-  AND created_at IS NOT NULL;
-*/
-
--- End of Trial Management System
+ 
+-- Create review_page_clicks table for tracking analytics
+CREATE TABLE IF NOT EXISTS review_page_clicks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  review_page_id UUID NOT NULL REFERENCES review_pages(id) ON DELETE CASCADE,
+  rating_clicked INTEGER CHECK (rating_clicked >= 1 AND rating_clicked <= 5),
+  clicked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+ 
+  -- Optional: track referrer/source
+  referrer TEXT,
+  user_agent TEXT
+);
+ 
+-- Create index for analytics queries
+CREATE INDEX IF NOT EXISTS idx_review_page_clicks_page_id ON review_page_clicks(review_page_id);
+CREATE INDEX IF NOT EXISTS idx_review_page_clicks_clicked_at ON review_page_clicks(clicked_at);
+ 
+-- RLS for review_page_clicks
+ALTER TABLE review_page_clicks ENABLE ROW LEVEL SECURITY;
+ 
+-- Policy: Anyone can insert clicks (for public tracking)
+CREATE POLICY "Anyone can insert review page clicks"
+  ON review_page_clicks FOR INSERT
+  WITH CHECK (TRUE);
+ 
+-- Policy: Users can view clicks for their own review pages
+CREATE POLICY "Users can view clicks for own review pages"
+  ON review_page_clicks FOR SELECT
+  USING (
+    review_page_id IN (
+      SELECT id FROM review_pages WHERE user_id = auth.uid()
+    )
+  );
+ 
+-- Service role full access
+CREATE POLICY "Service role has full access to review_page_clicks"
+  ON review_page_clicks FOR ALL
+  USING (auth.role() = 'service_role');
+ 
 -- ============================================================================
+-- REVIEW EMAIL REQUESTS
+-- Purpose: Track emails sent for review collection (5 per day limit)
+-- ============================================================================
+ 
+CREATE TABLE IF NOT EXISTS review_email_requests (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  review_page_id UUID NOT NULL REFERENCES review_pages(id) ON DELETE CASCADE,
+ 
+  -- Recipient info
+  recipient_email TEXT NOT NULL,
+  recipient_name TEXT,
+ 
+  -- Email status
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'bounced')),
+  error_message TEXT,
+ 
+  -- Tracking
+  sent_at TIMESTAMP WITH TIME ZONE,
+  opened_at TIMESTAMP WITH TIME ZONE,
+  clicked_at TIMESTAMP WITH TIME ZONE,
+ 
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ 
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_review_email_requests_user_id ON review_email_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_email_requests_created_at ON review_email_requests(created_at);
+CREATE INDEX IF NOT EXISTS idx_review_email_requests_status ON review_email_requests(status);
+ 
+-- RLS for review_email_requests
+ALTER TABLE review_email_requests ENABLE ROW LEVEL SECURITY;
+ 
+-- Policy: Users can view their own email requests
+CREATE POLICY "Users can view own review email requests"
+  ON review_email_requests FOR SELECT
+  USING (auth.uid() = user_id);
+ 
+-- Policy: Users can insert their own email requests
+CREATE POLICY "Users can insert own review email requests"
+  ON review_email_requests FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+ 
+-- Service role full access
+CREATE POLICY "Service role has full access to review_email_requests"
+  ON review_email_requests FOR ALL
+  USING (auth.role() = 'service_role');
+ 
+-- ============================================================================
+-- HELPER FUNCTION: Count today's emails for a user
+-- ============================================================================
+ 
+CREATE OR REPLACE FUNCTION get_user_today_email_count(p_user_id UUID)
+RETURNS INTEGER AS $$
+DECLARE
+  email_count INTEGER;
+BEGIN
+  SELECT COUNT(*)
+  INTO email_count
+  FROM review_email_requests
+  WHERE user_id = p_user_id
+    AND DATE(created_at AT TIME ZONE 'UTC') = DATE(NOW() AT TIME ZONE 'UTC');
+ 
+  RETURN email_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+ 
+-- Grant execute to authenticated users
+GRANT EXECUTE ON FUNCTION get_user_today_email_count(UUID) TO authenticated;
+ 
+-- ============================================================================
+-- COMMENTS
+-- ============================================================================
+ 
+COMMENT ON TABLE review_pages IS 'Public review collection pages for businesses';
+COMMENT ON COLUMN review_pages.slug IS 'URL slug for public access at getjetsuite.com/r/{slug}';
+COMMENT ON COLUMN review_pages.logo_url IS 'Business logo - base64 or URL (max 5MB recommended)';
+COMMENT ON COLUMN review_pages.hero_image_url IS 'Hero image for left side of page - base64 or URL (max 5MB)';
+ 
+COMMENT ON TABLE review_page_clicks IS 'Analytics tracking for review page interactions';
+ 
+COMMENT ON TABLE review_email_requests IS 'Tracks emails sent for review collection (5 per day limit enforced in app)';
+ 
+-- Grant permissions
+GRANT SELECT, INSERT, UPDATE, DELETE ON review_pages TO authenticated;
+GRANT SELECT, INSERT ON review_page_clicks TO authenticated;
+GRANT SELECT, INSERT ON review_email_requests TO authenticated;
+GRANT ALL ON review_pages TO service_role;
+GRANT ALL ON review_page_clicks TO service_role;
+GRANT ALL ON review_email_requests TO service_role;
