@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessReview } from '../types';
 import { fetchBusinessReviews } from '../services/geminiService';
 import { Loader } from '../components/Loader';
@@ -305,6 +305,8 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           .from('review_pages')
           .select('*')
           .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .single();
 
         if (!fetchError && data) {
@@ -622,7 +624,6 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
 
       const pageData = {
         user_id: userId,
-        business_id: profileData.business.id || userId,
         slug: reviewPageSettings.slug,
         business_name: reviewPageSettings.business_name,
         logo_url: reviewPageSettings.logo_url,
@@ -741,7 +742,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       for (const recipient of validRecipients) {
         // Log the email request
         const { error: insertError } = await supabase
-          .from('review_email_requests')
+          .from('review_request_emails')
           .insert({
             user_id: userId,
             review_page_id: existingReviewPage.id,
@@ -772,7 +773,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
             sentCount++;
             // Update status to sent
             await supabase
-              .from('review_email_requests')
+              .from('review_request_emails')
               .update({ status: 'sent', sent_at: new Date().toISOString() })
               .eq('recipient_email', recipient.email)
               .eq('review_page_id', existingReviewPage.id)

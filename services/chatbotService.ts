@@ -4,7 +4,7 @@
 // =====================================================
 
 import { GoogleGenAI, Type } from "@google/genai";
-import type {
+import type { 
   ChatMessage,
   ChatbotResponse,
   ChatbotContext,
@@ -208,7 +208,7 @@ Your response MUST be a valid JSON object matching this schema:
     fullPrompt += `\nUser: ${userMessage}\nJetBot:`;
 
     const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash-exp",
+        model: "gemini-1.5-flash-latest",
         contents: fullPrompt,
         config: {
             responseMimeType: "application/json" 

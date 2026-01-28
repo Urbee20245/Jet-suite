@@ -32,7 +32,7 @@ export const fetchRealDateTime = async (): Promise<Date> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-1.5-flash-latest',
       contents: 'What is the current date and time right now in ISO 8601 format? Use Google Search to get the accurate current date and time. Respond with ONLY the ISO timestamp, nothing else.',
       config: {
         tools: [{ googleSearch: {} }],
