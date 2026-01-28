@@ -271,6 +271,7 @@ export const Boris: React.FC<BorisProps> = ({
         <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
           {borisState.messageIntro ? (
               <>
+                  {/* Greeting Message */}
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
@@ -282,28 +283,31 @@ export const Boris: React.FC<BorisProps> = ({
                               const isCompleted = completedTaskIds.has(task.id);
                               return (
                                   <div key={task.id || i} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                                      <div className="flex items-center flex-1">
-                                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">
+                                      <div className="flex items-center flex-1 gap-2">
+                                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center">
                                               <span className="text-purple-600 font-bold text-sm">{i + 1}</span>
                                           </div>
-                                          <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>{task.title}</span>
-                                          {!isCompleted && (
-                                            <div className="flex items-center gap-2 ml-3">
-                                                <button
-                                                    onClick={() => onNavigate(toolId)}
-                                                    className="text-[10px] sm:text-xs text-blue-400 hover:text-blue-300 transition-colors font-bold uppercase tracking-wider"
-                                                >
-                                                    View Task
-                                                </button>
-                                                <span className="text-gray-600 text-xs">|</span>
-                                                <button
-                                                    onClick={() => handleAskBorisAboutTask(task.title)}
-                                                    className="text-[10px] sm:text-xs text-purple-400 hover:text-purple-300 transition-colors font-bold uppercase tracking-wider"
-                                                >
-                                                    Ask Boris
-                                                </button>
-                                            </div>
-                                          )}
+                                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                              <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>
+                                                  {task.title}
+                                              </span>
+                                              {!isCompleted && (
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleAskBorisAboutTask(task.title)}
+                                                        className="text-[10px] text-purple-400 hover:text-purple-300 transition-colors font-bold uppercase tracking-wider bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20"
+                                                    >
+                                                        Ask Boris
+                                                    </button>
+                                                    <button
+                                                        onClick={() => onNavigate(toolId)}
+                                                        className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors font-bold uppercase tracking-wider"
+                                                    >
+                                                        View Task
+                                                    </button>
+                                                </div>
+                                              )}
+                                          </div>
                                       </div>
                                       <button 
                                           onClick={() => handleTaskComplete(task.id)}
@@ -313,6 +317,7 @@ export const Boris: React.FC<BorisProps> = ({
                                               ? 'bg-green-500 text-white'
                                               : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300'
                                           }`}
+                                          title="Mark as complete"
                                       >
                                           <CheckCircleIcon className="w-5 h-5" />
                                       </button>
@@ -324,6 +329,7 @@ export const Boris: React.FC<BorisProps> = ({
               </>
           ) : (
               <>
+                  {/* Greeting Message */}
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
@@ -342,6 +348,7 @@ export const Boris: React.FC<BorisProps> = ({
           </button>
         )}
 
+        {/* Ask a Question Button */}
         <button
           onClick={() => {
             setInitialChatMsg(undefined);
@@ -398,6 +405,7 @@ export const Boris: React.FC<BorisProps> = ({
         )}
       </div>
 
+      {/* Chat Modal */}
       {showChatModal && (
         <BorisChatModal
           context={buildChatContext()}
