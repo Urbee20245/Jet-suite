@@ -316,10 +316,18 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
             ?.toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-|-$/g, '') || '';
+          
+          // --- NEW LOGIC: Use DNA for defaults ---
+          const dna = profileData.business.dna;
+          const dnaColor = dna?.colors?.[0] || '#F59E0B';
+          const dnaLogo = dna?.logo || null;
+
           setReviewPageSettings(prev => ({
             ...prev,
             slug: defaultSlug,
-            google_review_url: reviewUrl
+            google_review_url: reviewUrl,
+            primary_color: dnaColor, // Use DNA color
+            logo_url: dnaLogo,       // Use DNA logo
           }));
         }
       } catch (err) {
@@ -328,7 +336,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
     };
 
     fetchReviewPage();
-  }, [profileData.business.business_name, reviewUrl]);
+  }, [profileData.business.business_name, reviewUrl, profileData.business.dna]);
 
   // Fetch today's email count
   useEffect(() => {
@@ -385,7 +393,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       .jetsuite-header { text-align: center; margin-bottom: 2rem; }
       .jetsuite-title { font-size: 1.875rem; font-weight: bold; color: \${widgetData.colors.text}; margin-bottom: 0.5rem; }
       .jetsuite-subtitle { color: \${widgetData.colors.text}; opacity: 0.7; }
-      .jetsuite-reviews-${layout} { display: ${layout === 'grid' ? 'grid' : layout === 'list' ? 'flex' : 'flex'}; ${layout === 'grid' ? 'grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));' : layout === 'list' ? 'flex-direction: column; max-width: 42rem; margin: 0 auto;' : 'overflow-x: auto;'} gap: 1rem; }
+      .jetsuite-reviews-\${layout} { display: ${layout === 'grid' ? 'grid' : layout === 'list' ? 'flex' : 'flex'}; ${layout === 'grid' ? 'grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));' : layout === 'list' ? 'flex-direction: column; max-width: 42rem; margin: 0 auto;' : 'overflow-x: auto;'} gap: 1rem; }
       .jetsuite-review { background: \${widgetData.colors.card}; padding: 1rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 6px rgba(0,0,0,0.05); ${layout === 'carousel' ? 'min-width: 320px;' : ''} }
       .jetsuite-review-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; }
       .jetsuite-author { font-weight: 600; color: \${widgetData.colors.text}; }
@@ -638,7 +646,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           .from('review_pages')
           .select('id')
           .eq('slug', reviewPageSettings.slug)
-          .single();
+          .maybeSingle();
 
         if (existingSlug) {
           setReviewPageError('This URL slug is already taken. Please choose another.');
