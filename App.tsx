@@ -11,6 +11,7 @@ import { getSupabaseClient } from './integrations/supabase/client';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ContactPage } from './pages/ContactPage';
 import Admin from './pages/Admin';
+import { ReviewPagePublic } from './pages/ReviewPagePublic';
 
 // This component contains the original dynamic logic of the app.
 const CoreApp: React.FC = () => {
@@ -339,7 +340,7 @@ const App: React.FC = () => {
   const [staticPageComponent] = useMemo(() => {
     const path = typeof window !== 'undefined' ? window.location.pathname : '/';
     const normalized = path.replace(/\/$/, '') || '/';
-    
+
     if (normalized === '/privacy-policy' || normalized === '/privacy') {
       return [<PrivacyPolicy />];
     }
@@ -348,6 +349,13 @@ const App: React.FC = () => {
     }
     if (normalized === '/contact') {
       return [<ContactPage />];
+    }
+    // Public review page route: /r/{slug}
+    if (normalized.startsWith('/r/')) {
+      const slug = normalized.replace('/r/', '');
+      if (slug && slug.length > 0) {
+        return [<ReviewPagePublic slug={slug} />];
+      }
     }
     return [null];
   }, []);
