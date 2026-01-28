@@ -4,7 +4,7 @@ import { BorisChatModal } from '../components/BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
-import { manuallyStartTour } from '../components/ProductTour';
+import { manuallyStartTour } from '../components/ProductTour'; // <-- NEW IMPORT
 
 interface BorisProps {
   userFirstName: string;
@@ -349,6 +349,7 @@ export const Boris: React.FC<BorisProps> = ({
             Why this matters
           </button>
 
+          {/* NEW: Product Tour Trigger (Replaces conditional upsell link) */}
           <>
             <span className="text-gray-600">•</span>
             <button
