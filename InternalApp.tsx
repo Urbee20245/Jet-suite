@@ -26,7 +26,6 @@ import { AdminPanel } from './tools/AdminPanel';
 import { Planner } from './tools/Planner';
 import UserSupportTickets from './tools/UserSupportTickets'; 
 import { GrowthScoreHistory } from './tools/profile/GrowthScoreHistory';
-import { AskBorisPage } from './tools/AskBoris';
 import type { Tool, GrowthPlanTask, ProfileData, ReadinessState, AuditReport, LiveWebsiteAnalysis } from './types';
 import { syncToSupabase, loadFromSupabase } from './utils/syncService';
 import { getSupabaseClient } from './integrations/supabase/client';
@@ -434,20 +433,6 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <AdminPanel />;
       case 'support':
         return <UserSupportTickets />;
-      case 'ask-boris':
-        return <AskBorisPage
-          userFirstName={currentProfileData.user.firstName || 'there'}
-          profileData={currentProfileData}
-          growthPlanTasks={tasks}
-          hasNewReviews={hasNewReviews}
-          newReviewsCount={newReviewsCount}
-          onNavigate={(toolId) => {
-            const tool = ALL_TOOLS[toolId];
-            if (tool) handleSetActiveTool(tool);
-          }}
-          onReplyToReviews={handleReplyToReviews}
-          onTaskStatusChange={handleTaskStatusChange as any}
-        />;
       default:
         return (
             <>

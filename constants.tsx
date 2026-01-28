@@ -29,7 +29,6 @@ import { SparklesIcon as SparklesIconSolid } from './components/icons/MiniIcons'
 export const ALL_TOOLS: { [key: string]: Tool } = {
   // Special Home Tool
   home: { id: 'home', name: 'Home', description: 'Your command center for weekly growth.', icon: HomeIcon },
-  'ask-boris': { id: 'ask-boris', name: 'Ask Boris', description: 'Chat with your AI growth coach.', icon: SparklesIconSolid },
   
   // Profile Tools
   businessdetails: { id: 'businessdetails', name: 'Business Details', description: 'Manage your core business information.', icon: BusinessIcon },
@@ -73,7 +72,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
 export const TOOLS: Tool[] = Object.values(ALL_TOOLS);
 
 // --- SIDEBAR NAVIGATION STRUCTURE ---
-export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'ask-boris', 'businessdetails', 'planner', 'growthplan', 'growthscore'];
+export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', 'growthplan', 'growthscore'];
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
