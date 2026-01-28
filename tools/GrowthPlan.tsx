@@ -1,10 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import type { GrowthPlanTask, Tool, ProfileData } from '../types';
 import { ALL_TOOLS } from '../constants';
-import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon, ChatBubbleLeftRightIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
 import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
-import { BorisChatModal } from '../components/BorisChatModal';
 
 interface GrowthPlanProps {
   tasks: GrowthPlanTask[];
@@ -14,7 +13,7 @@ interface GrowthPlanProps {
   growthScore: number;
   userId: string;
   activeBusinessId: string | null;
-  profileData: ProfileData; // Added profileData to build context
+  profileData: ProfileData;
   onPlanSaved?: (tasks: GrowthPlanTask[]) => void;
 }
 
@@ -28,8 +27,7 @@ const PendingTaskCard: React.FC<{
     task: GrowthPlanTask; 
     onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; 
     onRemove: (id: string) => void;
-    onAskBoris: (taskTitle: string) => void;
-}> = ({ task, onStatusChange, onRemove, onAskBoris }) => {
+}> = ({ task, onStatusChange, onRemove }) => {
   
   const handleMarkComplete = () => {
     onStatusChange(task.id, 'completed');
@@ -71,15 +69,6 @@ const PendingTaskCard: React.FC<{
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg relative">
                 <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
-                
-                {/* Contextual Ask Boris Button */}
-                <button
-                    onClick={() => onAskBoris(task.title)}
-                    className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-purple-600 hover:text-purple-800 transition-colors bg-white/50 px-2 py-1 rounded"
-                >
-                    <ChatBubbleLeftRightIcon className="w-3 h-3" />
-                    Ask Boris
-                </button>
             </div>
         </div>
 
@@ -141,10 +130,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   const [isSaving, setIsSaving] = useState(false);
   const [isRetrieving, setIsRetrieving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  
-  // Boris Modal state
-  const [showBorisModal, setShowBorisModal] = useState(false);
-  const [initialBorisMsg, setInitialBorisMsg] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const autoLoadTasks = async () => {
@@ -219,11 +204,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
     }
   };
 
-  const handleAskBoris = (taskTitle: string) => {
-    setInitialBorisMsg(`I have a question about the task: "${taskTitle}". What should I know about this task, and how can I complete it?`);
-    setShowBorisModal(true);
-  };
-
   return (
     <div>
       <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
@@ -296,7 +276,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
               <div>
                 <h4 className="text-lg font-semibold text-brand-text mb-3">Your Business Analysis (JetBiz)</h4>
                 <div className="space-y-4">
-                  {jetbizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
+                  {jetbizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
                 </div>
               </div>
             )}
@@ -305,7 +285,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
               <div>
                 <h4 className="text-lg font-semibold text-brand-text mb-3">Your Visual Analysis (JetViz)</h4>
                 <div className="space-y-4">
-                  {jetvizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
+                  {jetvizTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
                 </div>
               </div>
             )}
@@ -314,7 +294,7 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
               <div>
                 <h4 className="text-lg font-semibold text-brand-text mb-3">Other Tasks</h4>
                 <div className="space-y-4">
-                  {otherTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} onAskBoris={handleAskBoris} />)}
+                  {otherTasks.map(task => <PendingTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} />)}
                 </div>
               </div>
             )}
@@ -344,23 +324,6 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
             <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-lg shadow-md">Start an Analysis</button>
           </div>
         </div>
-      )}
-
-      {showBorisModal && (
-        <BorisChatModal
-          context={{
-            userName: profileData.user.firstName || 'there',
-            businessName: profileData.business.business_name,
-            growthScore: growthScore,
-            pendingTasks: pendingTasksCount,
-            completedAudits: [],
-            urgentTasks: tasks.filter(t => t.priority === 'High' && t.status !== 'completed'),
-            newReviews: 0
-          }}
-          onClose={() => setShowBorisModal(false)}
-          initialMessage={initialBorisMsg}
-          onTaskComplete={(taskId) => onTaskStatusChange(taskId, 'completed')}
-        />
       )}
     </div>
   );
