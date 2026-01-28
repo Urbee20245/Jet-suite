@@ -251,7 +251,7 @@ export const ReviewPagePublic: React.FC<ReviewPagePublicProps> = ({ slug }) => {
               href="https://getjetsuite.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center justify-center gap-2 text-xs text-black hover:text-gray-800 transition-colors"
             >
               Powered by 
               <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="h-4 w-auto" />
