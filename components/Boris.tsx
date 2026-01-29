@@ -513,6 +513,3 @@ export const Boris: React.FC<BorisProps> = ({
     </>
   );
 };
-    </>
-  );
-};
