@@ -226,7 +226,7 @@ export const Boris: React.FC<BorisProps> = ({
 
   if (!borisState) {
     return (
-      <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-8 shadow-lg border border-slate-200">
+      <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-8 shadow-lg border border-slate-200">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center animate-pulse">
             <SparklesIconSolid className="w-8 h-8 text-blue-600" />
@@ -312,83 +312,79 @@ export const Boris: React.FC<BorisProps> = ({
             </div>
 
             {borisState.messageIntro ? (
-              <>
-                <div className="mb-8">
-                  <div className="inline-flex items-center gap-2 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse"></div>
-                    <span className="text-blue-600 font-semibold text-sm">ACTION REQUIRED</span>
-                  </div>
-                  <p className="text-base text-slate-700 whitespace-pre-line leading-relaxed mb-6">{borisState.messageIntro}</p>
-                  
-                  {/* Today's Tasks Section */}
-                  {borisState.todaysTasks.length > 0 && (
-                    <div className="mt-8">
-                      <div className="flex flex-col items-center mb-6">
-                        <h4 className="text-xl font-bold text-slate-900 text-center mb-3 tracking-tight">
-                          Today's Priority Tasks
-                        </h4>
-                        <div className="animate-bounce mt-1">
-                          <ChevronDownIcon className="w-6 h-6 text-indigo-500" />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {borisState.todaysTasks.map((task, i) => {
-                          const toolId = getTaskNavigationTarget(task);
-                          const isCompleted = completedTaskIds.has(task.id);
-                          return (
-                            <div key={task.id || i} className="group bg-gradient-to-r from-slate-50 to-white hover:from-blue-50 hover:to-indigo-50 border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition-all duration-200">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                                    isCompleted 
-                                      ? 'bg-gradient-to-br from-emerald-100 to-green-100' 
-                                      : 'bg-gradient-to-br from-blue-100 to-indigo-100'
-                                  }`}>
-                                    <span className={`font-bold text-sm ${
-                                      isCompleted ? 'text-emerald-700' : 'text-blue-700'
-                                    }`}>{i + 1}</span>
-                                  </div>
-                                  <div className="flex-1">
-                                    <p className={`font-medium ${isCompleted ? 'text-emerald-700 line-through' : 'text-slate-900'}`}>
-                                      {task.title}
-                                    </p>
-                                    <div className="flex items-center gap-3 mt-1">
-                                      {!isCompleted && (
-                                        <>
-                                          <button
-                                            onClick={() => onNavigate(toolId)}
-                                            className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
-                                          >
-                                            {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'}
-                                            <ArrowRightIcon className="w-3.5 h-3.5" />
-                                          </button>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                <button 
-                                  onClick={() => handleTaskComplete(task.id)}
-                                  disabled={isCompleted}
-                                  className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                                    isCompleted
-                                      ? 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-sm'
-                                      : 'bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-600 hover:to-indigo-700 hover:text-white hover:shadow-md'
-                                  }`}
-                                  title={isCompleted ? "Task completed" : "Mark as complete"}
-                                >
-                                  <CheckCircleIcon className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
+              <div className="mb-8">
+                <div className="inline-flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-pulse"></div>
+                  <span className="text-blue-600 font-semibold text-sm">ACTION REQUIRED</span>
+                </div>
+                <p className="text-base text-slate-700 whitespace-pre-line leading-relaxed mb-6">{borisState.messageIntro}</p>
+                
+                {/* Today's Tasks Section */}
+                {borisState.todaysTasks.length > 0 && (
+                  <div className="mt-8">
+                    <div className="flex flex-col items-center mb-6">
+                      <h4 className="text-xl font-bold text-slate-900 text-center mb-3 tracking-tight">
+                        Today's Priority Tasks
+                      </h4>
+                      <div className="animate-bounce mt-1">
+                        <ChevronDownIcon className="w-6 h-6 text-indigo-500" />
                       </div>
                     </div>
-                  )}
-                </div>
-              </>
+                    
+                    <div className="space-y-3">
+                      {borisState.todaysTasks.map((task, i) => {
+                        const toolId = getTaskNavigationTarget(task);
+                        const isCompleted = completedTaskIds.has(task.id);
+                        return (
+                          <div key={task.id || i} className="group bg-gradient-to-r from-slate-50 to-white hover:from-blue-50 hover:to-indigo-50 border border-slate-200 hover:border-blue-300 rounded-xl p-4 transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                                  isCompleted 
+                                    ? 'bg-gradient-to-br from-emerald-100 to-green-100' 
+                                    : 'bg-gradient-to-br from-blue-100 to-indigo-100'
+                                }`}>
+                                  <span className={`font-bold text-sm ${
+                                    isCompleted ? 'text-emerald-700' : 'text-blue-700'
+                                  }`}>{i + 1}</span>
+                                </div>
+                                <div className="flex-1">
+                                  <p className={`font-medium ${isCompleted ? 'text-emerald-700 line-through' : 'text-slate-900'}`}>
+                                    {task.title}
+                                  </p>
+                                  <div className="flex items-center gap-3 mt-1">
+                                    {!isCompleted && (
+                                      <button
+                                        onClick={() => onNavigate(toolId)}
+                                        className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1"
+                                      >
+                                        {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'}
+                                        <ArrowRightIcon className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => handleTaskComplete(task.id)}
+                                disabled={isCompleted}
+                                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                                  isCompleted
+                                    ? 'bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-sm'
+                                    : 'bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-700 hover:from-blue-600 hover:to-indigo-700 hover:text-white hover:shadow-md'
+                                }`}
+                                title={isCompleted ? "Task completed" : "Mark as complete"}
+                              >
+                                <CheckCircleIcon className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-5 border border-slate-200">
                 <p className="text-base text-slate-700 whitespace-pre-line leading-relaxed">{borisState.message}</p>
@@ -509,9 +505,6 @@ export const Boris: React.FC<BorisProps> = ({
           urgentTasks={borisState.todaysTasks}
         />
       )}
-    </>
-  );
-};
     </>
   );
 };
