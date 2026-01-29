@@ -3,7 +3,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client with service role for admin operations
-const supabaseUrl = process.env.SUPABASE_URL; // Use standard key for serverless functions
+const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -16,55 +16,70 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     autoRefreshToken: false,
     persistSession: false
   }
-}) as any; // Cast to any to access admin functions not exposed in default SupabaseClient type
+}) as any;
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { userId, firstName, lastName, role, email } = req.body;
+  const { userId, firstName, lastName, phone, role, email } = req.body;
 
-  // Validate required fields - userId and email are critical for the profiles table upsert
+  // Validate required fields
   if (!userId || !firstName || !lastName || !email) {
     return res.status(400).json({ 
       message: 'Missing required fields: userId, firstName, lastName, or email' 
     });
   }
 
+  // Validate phone number format if provided (optional field)
+  if (phone && phone.length > 0) {
+    const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        message: 'Invalid phone number format. Use digits, spaces, dashes, parentheses, and + only.'
+      });
+    }
+    
+    // Check reasonable length (between 7 and 20 characters after removing spaces/dashes)
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    if (cleanPhone.length < 7 || cleanPhone.length > 20) {
+      return res.status(400).json({
+        message: 'Phone number must be between 7 and 20 digits.'
+      });
+    }
+  }
+
   try {
     console.log('Updating profile for UUID:', userId);
 
-    // 1. Update user metadata in Supabase Auth by UUID (Optional, but good practice)
-    // Accessing admin functions via the 'admin' property on supabase.auth
+    // 1. Update user metadata in Supabase Auth
     const { error: authError } = await supabase.auth.admin.updateUserById(
       userId,
       {
         user_metadata: {
           first_name: firstName,
           last_name: lastName,
+          phone: phone || '',
           role: role || '',
         },
-        // Do NOT update email here unless explicitly requested and verified, 
-        // as it requires special handling in Supabase Auth.
       }
     );
 
     if (authError) {
       console.warn('Auth metadata update warning:', authError.message);
-      // Continue even if metadata update fails, as the primary goal is the public profile table
     }
 
-    // 2. Update the public profiles table using the UUID as the primary key
-    // CRITICAL: Include email in the upsert data to satisfy the non-nullable constraint.
+    // 2. Update the public profiles table
     const { data: profileData, error: dbError } = await supabase
       .from('profiles')
       .upsert({
         id: userId,
         first_name: firstName,
         last_name: lastName,
+        phone: phone || null, // Store as null if empty
         role: role || '',
-        email: email, // Ensure email is included
+        email: email,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' })
       .select()
