@@ -271,7 +271,7 @@ export const Boris: React.FC<BorisProps> = ({
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
-                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed mb-6">{borisState.messageIntro}</p>
+                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed mb-6 text-center">{borisState.messageIntro}</p>
                   
                 {/* ENHANCED: Elegant and prominent "Here's what you need to focus on TODAY" with down arrow */}
 {borisState.todaysTasks.length > 0 && (
