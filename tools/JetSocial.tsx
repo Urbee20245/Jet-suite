@@ -1,6 +1,3 @@
-Jetsocial · TSX
-Copy
-
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, SocialConnection } from '../types';
 import { generateSocialPosts, generateImage } from '../services/geminiService';
@@ -20,12 +17,19 @@ interface JetSocialProps {
   setActiveTool: (tool: Tool | null) => void;
 }
 
-interface Post {
+interface PostIdea {
     platform: string;
     post_text: string;
     hashtags: string;
     visual_suggestion: string;
-    visual_suggestions?: string[]; // Array for multiple suggestions
+}
+
+interface GeneratedPost {
+    platform: string;
+    post_text: string;
+    hashtags: string;
+    visual_suggestion: string;
+    generated_image?: string;
 }
 
 const socialPlatforms = ['Facebook', 'Instagram', 'X (Twitter)', 'LinkedIn', 'TikTok', 'Google Business Profile'];
@@ -50,33 +54,38 @@ const platformNameToPlatformId: { [key: string]: string } = {
 };
 
 type ViewMode = 'generate' | 'planner' | 'connections';
+type WorkflowStage = 'input' | 'ideas' | 'final';
 
 export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActiveTool }) => {
   const { industry: businessType } = profileData.business;
   
-  // Get userId from localStorage (matching App.tsx pattern)
+  // Get userId from localStorage
   const [userId, setUserId] = useState<string>('');
   
-  // FIXED: Changed dependency array from [userId] to [] to prevent infinite loop
   useEffect(() => {
     const storedUserId = localStorage.getItem('jetsuite_userId');
     if (storedUserId) {
       setUserId(storedUserId);
     }
-  }, []); // Empty dependency array - runs only once on mount
+  }, []);
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('generate');
   
-  // Generate posts state (existing functionality)
+  // Workflow state
+  const [workflowStage, setWorkflowStage] = useState<WorkflowStage>('input');
+  
+  // Generate posts state
   const [topic, setTopic] = useState('');
   const [tone, setTone] = useState('Friendly');
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [postIdeas, setPostIdeas] = useState<PostIdea[]>([]);
+  const [selectedIdea, setSelectedIdea] = useState<PostIdea | null>(null);
+  const [finalPost, setFinalPost] = useState<GeneratedPost | null>(null);
+  
   const [loading, setLoading] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['Facebook']);
-  const [generatedImages, setGeneratedImages] = useState<{ [key: string]: string[] }>({});
-  const [imageLoading, setImageLoading] = useState<string | null>(null);
   const [copySuccess, setCopySuccess] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
   
@@ -86,7 +95,6 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
   
   // Schedule post state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [selectedPostForSchedule, setSelectedPostForSchedule] = useState<Post | null>(null);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('09:00');
   const [scheduling, setScheduling] = useState(false);
@@ -117,7 +125,8 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // STAGE 1: Generate 3 post ideas
+  const handleGenerateIdeas = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!topic) {
       setError('Please fill out the Topic/Offer.');
@@ -127,77 +136,88 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
       setError('Please select at least one social media platform.');
       return;
     }
+    
     setError('');
     setLoading(true);
-    setPosts([]);
-    setGeneratedImages({});
+    setPostIdeas([]);
+    
     try {
       const result = await generateSocialPosts(businessType, topic, tone, selectedPlatforms);
-      setPosts(result.posts);
+      // Get first 3 posts for selected platforms
+      const ideas = result.posts.slice(0, 3);
+      setPostIdeas(ideas);
+      setWorkflowStage('ideas');
     } catch (err) {
-      setError('Failed to generate posts. Please try again.');
+      setError('Failed to generate ideas. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGenerateImage = async (platform: string, prompts: string[], postIndex: number) => {
-    setImageLoading(platform);
+  // STAGE 2: User selects an idea and we generate the full post with image
+  const handleSelectIdea = async (idea: PostIdea) => {
+    setSelectedIdea(idea);
+    setGeneratingImage(true);
     setError('');
+    
     try {
-        const aspectRatio = platformDetails[platform].aspectRatio;
-        const imagePromises = prompts.map(prompt => generateImage(prompt, '1K', aspectRatio));
-        const base64DataArray = await Promise.all(imagePromises);
-        const imageUrls = base64DataArray.map(data => `data:image/png;base64,${data}`);
-        
-        setGeneratedImages(prev => ({ 
-          ...prev, 
-          [`${platform}-${postIndex}`]: imageUrls 
-        }));
+      const aspectRatio = platformDetails[idea.platform].aspectRatio;
+      const base64Data = await generateImage(idea.visual_suggestion, '1K', aspectRatio);
+      const imageUrl = `data:image/png;base64,${base64Data}`;
+      
+      setFinalPost({
+        ...idea,
+        generated_image: imageUrl
+      });
+      setWorkflowStage('final');
     } catch (err: any) {
-        console.error(err);
-        setError(`Failed to generate images for ${platform}. Please try again.`);
+      console.error(err);
+      setError(`Failed to generate image. Please try again.`);
     } finally {
-        setImageLoading(null);
+      setGeneratingImage(false);
     }
   };
-  
-  const handleCopyAndPost = (platform: string, text: string) => {
-      const fullText = `${text} ${posts.find(p => p.platform === platform)?.hashtags || ''}`;
-      navigator.clipboard.writeText(fullText.trim());
-      setCopySuccess(`Content for ${platform} copied!`);
-      setTimeout(() => setCopySuccess(''), 2000);
-      
-      const postUrl = platformDetails[platform].postUrl;
-      if (platform === 'X (Twitter)' || platform === 'Facebook' || platform === 'LinkedIn') {
-          window.open(postUrl + encodeURIComponent(fullText.trim()), '_blank');
-      } else {
-          window.open(postUrl, '_blank');
-      }
+
+  const handleStartOver = () => {
+    setWorkflowStage('input');
+    setPostIdeas([]);
+    setSelectedIdea(null);
+    setFinalPost(null);
+    setTopic('');
+    setError('');
   };
 
-  const handleSchedulePost = (post: Post) => {
-    setSelectedPostForSchedule(post);
+  const handleCopyAndPost = (platform: string, text: string, hashtags: string) => {
+    const fullText = `${text}\n\n${hashtags}`;
+    navigator.clipboard.writeText(fullText.trim());
+    setCopySuccess(`Content copied to clipboard!`);
+    setTimeout(() => setCopySuccess(''), 2000);
     
-    // Set default schedule date to tomorrow using utility
+    const postUrl = platformDetails[platform].postUrl;
+    if (platform === 'X (Twitter)' || platform === 'Facebook' || platform === 'LinkedIn') {
+      window.open(postUrl + encodeURIComponent(fullText.trim()), '_blank');
+    } else {
+      window.open(postUrl, '_blank');
+    }
+  };
+
+  const handleSchedulePost = () => {
     setScheduledDate(getTomorrowDate());
-    
     setShowScheduleModal(true);
   };
 
   const confirmSchedulePost = async () => {
-    if (!selectedPostForSchedule || !scheduledDate || !userId) {
+    if (!finalPost || !scheduledDate || !userId) {
       setError('Please select a date to schedule the post');
       return;
     }
 
-    // Get connections for the platform
-    const platformId = platformNameToPlatformId[selectedPostForSchedule.platform];
+    const platformId = platformNameToPlatformId[finalPost.platform];
     const platformConnections = connections.filter(c => c.platform === platformId);
 
     if (platformConnections.length === 0) {
-      setError(`Please connect your ${selectedPostForSchedule.platform} account first`);
+      setError(`Please connect your ${finalPost.platform} account first`);
       setShowScheduleModal(false);
       setViewMode('connections');
       return;
@@ -213,10 +233,10 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
       }));
 
       await createScheduledPost(userId, {
-        post_text: selectedPostForSchedule.post_text,
-        hashtags: selectedPostForSchedule.hashtags,
-        visual_suggestion: selectedPostForSchedule.visual_suggestion,
-        image_url: generatedImages[`${selectedPostForSchedule.platform}-${posts.findIndex(p => p === selectedPostForSchedule)}`]?.[0] || null,
+        post_text: finalPost.post_text,
+        hashtags: finalPost.hashtags,
+        visual_suggestion: finalPost.visual_suggestion,
+        image_url: finalPost.generated_image,
         scheduled_date: scheduledDate,
         scheduled_time: scheduledTime,
         timezone: 'America/New_York',
@@ -227,7 +247,6 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
       setCopySuccess('Post scheduled successfully!');
       setTimeout(() => setCopySuccess(''), 3000);
       setShowScheduleModal(false);
-      setSelectedPostForSchedule(null);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -235,16 +254,17 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     }
   };
 
-  // Download post text as .txt file
-  const handleDownloadText = (post: Post, index: number) => {
-    const content = `${post.platform} Post #${index + 1}
+  const handleDownloadText = () => {
+    if (!finalPost) return;
     
-${post.post_text}
+    const content = `${finalPost.platform} Post
 
-${post.hashtags}
+${finalPost.post_text}
+
+${finalPost.hashtags}
 
 ---
-Visual Suggestion: ${post.visual_suggestion}
+Visual: ${finalPost.visual_suggestion}
 ---
 
 Generated by JetSuite - ${new Date().toLocaleDateString()}`;
@@ -253,48 +273,45 @@ Generated by JetSuite - ${new Date().toLocaleDateString()}`;
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${post.platform}_Post_${index + 1}_${Date.now()}.txt`;
+    link.download = `${finalPost.platform}_Post_${Date.now()}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    setCopySuccess(`${post.platform} Post #${index + 1} text downloaded!`);
+    setCopySuccess(`Post text downloaded!`);
     setTimeout(() => setCopySuccess(''), 2000);
   };
 
-  // Download generated images
-  const handleDownloadImage = (platform: string, postIndex: number, imageIndex: number) => {
-    const imageKey = `${platform}-${postIndex}`;
-    const imageDataArray = generatedImages[imageKey];
-    if (!imageDataArray || !imageDataArray[imageIndex]) return;
+  const handleDownloadImage = () => {
+    if (!finalPost || !finalPost.generated_image) return;
 
     const link = document.createElement('a');
-    link.href = imageDataArray[imageIndex];
-    link.download = `${platform}_Image_${postIndex + 1}_Option_${imageIndex + 1}_${Date.now()}.png`;
+    link.href = finalPost.generated_image;
+    link.download = `${finalPost.platform}_Image_${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    setCopySuccess(`${platform} image ${imageIndex + 1} downloaded!`);
+    setCopySuccess(`Image downloaded!`);
     setTimeout(() => setCopySuccess(''), 2000);
   };
 
   if (!businessType) {
     return (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-            <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-            <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-            <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant social media posts.
-            </p>
-            <button
-                onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-                className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-                Go to Business Details
-            </button>
-        </div>
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
+        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
+        <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
+        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+          Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant social media posts.
+        </p>
+        <button
+          onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+        >
+          Go to Business Details
+        </button>
+      </div>
     );
   }
 
@@ -356,203 +373,255 @@ Generated by JetSuite - ${new Date().toLocaleDateString()}`;
       {/* Generate Posts View */}
       {viewMode === 'generate' && (
         <>
-          {showHowTo && (
+          {showHowTo && workflowStage === 'input' && (
             <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
-                <ul className="list-disc pl-5 space-y-1 mt-2">
-                    <li>Your business type is automatically used from your active profile.</li>
-                    <li>Enter a topic or offer for your post.</li>
-                    <li>Select the social media platforms you want to post on.</li>
-                    <li>Choose a tone and click 'Generate Posts'.</li>
-                    <li>(Optional) Generate a unique AI image for each post.</li>
-                    <li>Schedule posts to your 7-day calendar or copy & post immediately.</li>
-                </ul>
+              <ul className="list-disc pl-5 space-y-1 mt-2">
+                <li>Enter a topic or offer for your post.</li>
+                <li>Select the social media platforms you want to post on.</li>
+                <li>Click 'Generate Post Ideas' to see 3 concepts.</li>
+                <li>Choose your favorite idea - we'll generate the image for you.</li>
+                <li>Schedule, download, or post immediately!</li>
+              </ul>
             </HowToUse>
           )}
-          
-          <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <p className="text-brand-text-muted mb-6">{tool.description}</p>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
+
+          {/* STAGE 1: Input Form */}
+          {workflowStage === 'input' && (
+            <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
+              <p className="text-brand-text-muted mb-6">{tool.description}</p>
+              
+              <form onSubmit={handleGenerateIdeas}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
                     <span className="text-sm font-medium text-brand-text mr-2">Business Type:</span>
                     <span className="font-semibold text-brand-text">{businessType}</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Topic / Offer (e.g., New Fall Latte)"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="Topic / Offer (e.g., New Fall Latte)"
-                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-                />
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-brand-text mb-2">Platforms</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {socialPlatforms.map(platform => (
-                    <label
-                      key={platform}
-                      className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition ${
-                        selectedPlatforms.includes(platform)
-                          ? 'bg-accent-purple/10 border-accent-purple'
-                          : 'bg-brand-light border-brand-border'
-                      } border`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedPlatforms.includes(platform)}
-                        onChange={() => handlePlatformChange(platform)}
-                        className="form-checkbox h-4 w-4 text-accent-purple rounded focus:ring-accent-purple/50"
-                      />
-                      <span className="text-brand-text text-sm font-medium">{platform}</span>
-                    </label>
-                  ))}
+                
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-brand-text mb-2">Platforms</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {socialPlatforms.map(platform => (
+                      <label
+                        key={platform}
+                        className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition ${
+                          selectedPlatforms.includes(platform)
+                            ? 'bg-accent-purple/10 border-accent-purple'
+                            : 'bg-brand-light border-brand-border'
+                        } border`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPlatforms.includes(platform)}
+                          onChange={() => handlePlatformChange(platform)}
+                          className="form-checkbox h-4 w-4 text-accent-purple rounded focus:ring-accent-purple/50"
+                        />
+                        <span className="text-brand-text text-sm font-medium">{platform}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="tone" className="block text-sm font-medium text-brand-text mb-2">Tone</label>
-                <select
-                  id="tone"
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                
+                <div className="mb-6">
+                  <label htmlFor="tone" className="block text-sm font-medium text-brand-text mb-2">Tone</label>
+                  <select
+                    id="tone"
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                    className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                  >
+                    <option>Friendly</option>
+                    <option>Professional</option>
+                    <option>Urgent</option>
+                    <option>Playful</option>
+                    <option>Informative</option>
+                  </select>
+                </div>
+                
+                {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+                
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
-                  <option>Friendly</option>
-                  <option>Professional</option>
-                  <option>Urgent</option>
-                  <option>Playful</option>
-                  <option>Informative</option>
-                </select>
-              </div>
-              
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-              
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-              >
-                {loading ? 'Generating...' : 'Generate Posts'}
-              </button>
-            </form>
-          </div>
-          
+                  {loading ? 'Generating Ideas...' : '✨ Generate Post Ideas'}
+                </button>
+              </form>
+            </div>
+          )}
+
           {loading && (
             <AnalysisLoadingState 
-                title="Generating Social Media Posts"
-                message="Our AI is drafting platform-optimized posts and visual suggestions based on your brand DNA. This can take up to 5 minutes."
-                durationEstimateSeconds={300}
+              title="Generating Post Ideas"
+              message="Our AI is creating 3 unique post concepts for you to choose from. This takes about 30 seconds."
+              durationEstimateSeconds={30}
             />
           )}
-          
-          {posts.length > 0 && (
-            <div className="mt-6 space-y-6">
-                {copySuccess && (
-                  <div className="bg-green-100 text-green-800 text-sm font-semibold p-3 rounded-lg text-center shadow">
-                    {copySuccess}
+
+          {/* STAGE 2: Show 3 Ideas */}
+          {workflowStage === 'ideas' && postIdeas.length > 0 && (
+            <div className="space-y-6">
+              <div className="bg-brand-card p-6 rounded-xl shadow-lg">
+                <h2 className="text-2xl font-bold text-brand-text mb-2">Choose Your Favorite Idea</h2>
+                <p className="text-brand-text-muted">Select one of these concepts and we'll generate the full post with image for you.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {postIdeas.map((idea, index) => (
+                  <div key={index} className="bg-brand-card p-6 rounded-xl shadow-lg border-2 border-transparent hover:border-accent-purple transition-all">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-accent-purple">Idea #{index + 1}</h3>
+                      <span className="text-sm font-semibold bg-accent-purple/10 text-accent-purple px-3 py-1 rounded-full">
+                        {idea.platform}
+                      </span>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-brand-text mb-2">Post Copy:</h4>
+                      <p className="text-brand-text-muted text-sm line-clamp-4">{idea.post_text}</p>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-brand-text mb-2">Hashtags:</h4>
+                      <p className="text-accent-cyan text-xs">{idea.hashtags}</p>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-brand-text mb-2">Image Concept:</h4>
+                      <p className="text-brand-text-muted text-xs italic">
+                        📷 {idea.visual_suggestion}
+                      </p>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleSelectIdea(idea)}
+                      disabled={generatingImage}
+                      className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-lg transition duration-300 hover:shadow-lg disabled:opacity-50"
+                    >
+                      {generatingImage ? 'Generating...' : '✅ Select This One'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-center">
+                <button
+                  onClick={handleStartOver}
+                  className="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-lg transition"
+                >
+                  ← Start Over
+                </button>
+              </div>
+            </div>
+          )}
+
+          {generatingImage && (
+            <AnalysisLoadingState 
+              title="Generating Your Image"
+              message="Creating a professional image based on your selected concept. This takes about 20-30 seconds."
+              durationEstimateSeconds={25}
+            />
+          )}
+
+          {/* STAGE 3: Final Post with Image */}
+          {workflowStage === 'final' && finalPost && (
+            <div className="space-y-6">
+              {copySuccess && (
+                <div className="bg-green-100 text-green-800 text-sm font-semibold p-3 rounded-lg text-center shadow">
+                  {copySuccess}
+                </div>
+              )}
+
+              <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-accent-purple">{finalPost.platform} Post</h2>
+                  <button
+                    onClick={handleStartOver}
+                    className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold py-2 px-4 rounded-lg transition"
+                  >
+                    ← Create Another
+                  </button>
+                </div>
+
+                {/* Post Content */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-brand-text mb-2">Post Text:</h3>
+                  <p className="text-brand-text-muted whitespace-pre-wrap bg-brand-light p-4 rounded-lg">
+                    {finalPost.post_text}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-brand-text mb-2">Hashtags:</h3>
+                  <p className="text-accent-cyan text-sm">{finalPost.hashtags}</p>
+                </div>
+
+                {/* Generated Image */}
+                {finalPost.generated_image && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-brand-text mb-2">Generated Image:</h3>
+                    <img
+                      src={finalPost.generated_image}
+                      alt="Generated post visual"
+                      className="rounded-lg w-full h-auto shadow-lg"
+                    />
                   </div>
                 )}
-                
-                {posts.map((post, index) => {
-                    const imageKey = `${post.platform}-${index}`;
-                    const hasGeneratedImages = generatedImages[imageKey] && generatedImages[imageKey].length > 0;
-                    // Create 2 visual suggestions from the original one
-                    const visualSuggestions = post.visual_suggestions || [
-                      post.visual_suggestion,
-                      `Alternative: ${post.visual_suggestion} with different colors and composition`
-                    ];
-                    
-                    return (
-                      <div key={index} className="bg-brand-card p-6 rounded-xl shadow-lg">
-                        <h3 className="text-lg font-bold text-accent-purple mb-2">{post.platform} Post #{index + 1}</h3>
-                        <p className="text-brand-text-muted whitespace-pre-wrap">{post.post_text}</p>
-                        <p className="text-accent-cyan mt-4 text-sm break-words font-medium">{post.hashtags}</p>
-                        
-                        {/* Visual Suggestions Section */}
-                        <div className="mt-6 space-y-4">
-                          <h4 className="text-base font-bold text-brand-text">Choose Your Visual:</h4>
-                          
-                          {visualSuggestions.map((suggestion, suggestionIndex) => (
-                            <div key={suggestionIndex} className="bg-brand-light p-4 rounded-lg border border-brand-border">
-                              <h5 className="text-sm font-semibold text-brand-text mb-2">Visual Suggestion #{suggestionIndex + 1}</h5>
-                              <p className="text-brand-text-muted text-sm italic mb-3">
-                                {post.platform === 'TikTok' ? `🎬 ${suggestion}` : `📷 ${suggestion}`}
-                              </p>
-                              
-                              {hasGeneratedImages && generatedImages[imageKey][suggestionIndex] ? (
-                                <div>
-                                  <img
-                                    src={generatedImages[imageKey][suggestionIndex]}
-                                    alt={`Visual ${suggestionIndex + 1} for ${post.platform}`}
-                                    className="rounded-md w-full h-auto"
-                                  />
-                                  <button
-                                    onClick={() => handleDownloadImage(post.platform, index, suggestionIndex)}
-                                    className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition duration-300"
-                                  >
-                                    🖼️ Download This Image
-                                  </button>
-                                </div>
-                              ) : null}
-                            </div>
-                          ))}
-                          
-                          {/* Generate Images Button - Only show if images haven't been generated yet */}
-                          {!hasGeneratedImages && (
-                            <button
-                              onClick={() => handleGenerateImage(post.platform, visualSuggestions, index)}
-                              disabled={imageLoading === post.platform}
-                              className="w-full bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-4 rounded-lg transition duration-300 disabled:opacity-50 shadow hover:shadow-md"
-                            >
-                              {imageLoading === post.platform ? 'Generating Images...' : '✨ Generate Both Images'}
-                            </button>
-                          )}
-                        </div>
 
-                        {/* Action Buttons - Only show AFTER images are generated */}
-                        {hasGeneratedImages && (
-                          <div className="mt-6 border-t border-brand-border pt-6 space-y-3">
-                            <h4 className="text-sm font-semibold text-brand-text mb-3">Ready to Post? Choose an action:</h4>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <button
-                                onClick={() => handleSchedulePost(post)}
-                                className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-lg transition duration-300 hover:shadow-lg"
-                              >
-                                📅 Schedule Post
-                              </button>
-                              <button
-                                onClick={() => handleCopyAndPost(post.platform, post.post_text)}
-                                className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300"
-                              >
-                                📋 Copy & Post Now
-                              </button>
-                            </div>
-                            
-                            <button
-                              onClick={() => handleDownloadText(post, index)}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300"
-                            >
-                              📄 Download Post Text
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                })}
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-bold text-brand-text">Ready to Post?</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button
+                      onClick={handleSchedulePost}
+                      className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-lg transition duration-300 hover:shadow-lg"
+                    >
+                      📅 Schedule to Connected Accounts
+                    </button>
+                    <button
+                      onClick={() => handleCopyAndPost(finalPost.platform, finalPost.post_text, finalPost.hashtags)}
+                      className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                    >
+                      📋 Copy & Post Now
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <button
+                      onClick={handleDownloadText}
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300"
+                    >
+                      📄 Download Post Text
+                    </button>
+                    <button
+                      onClick={handleDownloadImage}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300"
+                    >
+                      🖼️ Download Image
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </>
       )}
 
       {/* Schedule Modal */}
-      {showScheduleModal && selectedPostForSchedule && (
+      {showScheduleModal && finalPost && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-md w-full">
             <h3 className="text-xl font-bold text-brand-text mb-4">
-              Schedule {selectedPostForSchedule.platform} Post
+              Schedule {finalPost.platform} Post
             </h3>
 
             {error && (
@@ -590,7 +659,6 @@ Generated by JetSuite - ${new Date().toLocaleDateString()}`;
               <button
                 onClick={() => {
                   setShowScheduleModal(false);
-                  setSelectedPostForSchedule(null);
                   setError('');
                 }}
                 className="flex-1 bg-brand-light text-brand-text px-4 py-2 rounded-lg font-semibold hover:bg-opacity-80 transition"
