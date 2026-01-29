@@ -55,9 +55,164 @@ const platformNameToPlatformId: { [key: string]: string } = {
 
 type ViewMode = 'generate' | 'planner' | 'connections';
 type WorkflowStage = 'input' | 'ideas' | 'final';
+type LogoPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center';
+
+// Auto safe-zones per platform (percentage of image width used as padding)
+const PLATFORM_SAFE_ZONE: Record<string, number> = {
+  'Facebook': 0.10,
+  'Instagram': 0.12,
+  'X (Twitter)': 0.06,
+  'LinkedIn': 0.08,
+  'TikTok': 0.18,
+  'Google Business Profile': 0.10,
+};
+
+const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+
+const getLuminance01 = (r: number, g: number, b: number) => (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+/**
+ * Sample the average brightness of a rectangle on the base image.
+ * Returns 0 (dark) -> 1 (bright).
+ */
+const sampleBrightness = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) => {
+  const sx = Math.floor(clamp(x, 0, ctx.canvas.width - 1));
+  const sy = Math.floor(clamp(y, 0, ctx.canvas.height - 1));
+  const sw = Math.floor(clamp(w, 1, ctx.canvas.width - sx));
+  const sh = Math.floor(clamp(h, 1, ctx.canvas.height - sy));
+
+  const img = ctx.getImageData(sx, sy, sw, sh).data;
+  let total = 0;
+  const pxCount = img.length / 4;
+
+  // Lightweight sampling: stride every ~8 pixels for speed on large images
+  const stride = Math.max(1, Math.floor(pxCount / 2000));
+
+  for (let i = 0; i < img.length; i += 4 * stride) {
+    total += getLuminance01(img[i], img[i + 1], img[i + 2]);
+  }
+
+  return total / Math.ceil(pxCount / stride);
+};
+
+const normalizeLogoSrc = (logoBase64: string) => {
+  if (!logoBase64) return '';
+  return logoBase64.startsWith('data:image') ? logoBase64 : `data:image/png;base64,${logoBase64}`;
+};
+
+/**
+ * Create a monochrome (white or black) logo canvas while preserving alpha.
+ */
+const makeMonoLogoCanvas = (logoImg: HTMLImageElement, target: 'white' | 'black') => {
+  const c = document.createElement('canvas');
+  c.width = logoImg.width;
+  c.height = logoImg.height;
+  const cctx = c.getContext('2d')!;
+  cctx.drawImage(logoImg, 0, 0);
+
+  const imgData = cctx.getImageData(0, 0, c.width, c.height);
+  const d = imgData.data;
+  const v = target === 'white' ? 255 : 0;
+
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3];
+    if (a === 0) continue;
+    d[i] = v;
+    d[i + 1] = v;
+    d[i + 2] = v;
+  }
+
+  cctx.putImageData(imgData, 0, 0);
+  return c;
+};
+
+const calcLogoRect = (canvasW: number, canvasH: number, platform: string, position: LogoPosition) => {
+  const safePct = PLATFORM_SAFE_ZONE[platform] ?? 0.10;
+  const pad = canvasW * safePct;
+
+  // logo size tuned for social posts: ~18% of width
+  const size = canvasW * 0.18;
+  let x = pad;
+  let y = pad;
+
+  if (position.includes('right')) x = canvasW - size - pad;
+  if (position.includes('bottom')) y = canvasH - size - pad;
+
+  if (position === 'center') {
+    x = canvasW / 2 - size / 2;
+    y = canvasH / 2 - size / 2;
+  }
+
+  return { x, y, size, pad };
+};
+
+const composeImageWithLogo = async (
+  baseImageDataUrl: string,
+  logoBase64: string,
+  platform: string,
+  position: LogoPosition
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      reject(new Error('Canvas is not supported in this browser.'));
+      return;
+    }
+
+    const bg = new Image();
+    const logo = new Image();
+
+    bg.onload = () => {
+      canvas.width = bg.width;
+      canvas.height = bg.height;
+      ctx.drawImage(bg, 0, 0);
+
+      const { x, y, size } = calcLogoRect(canvas.width, canvas.height, platform, position);
+
+      // Determine whether we should use a white or black logo based on the area where it will sit
+      const brightness = sampleBrightness(ctx, x, y, size, size);
+      const target: 'white' | 'black' = brightness < 0.55 ? 'white' : 'black';
+
+      logo.onload = () => {
+        const monoLogo = makeMonoLogoCanvas(logo, target);
+
+        ctx.save();
+        ctx.globalAlpha = position === 'center' ? 0.35 : 1;
+
+        // Soft shadow behind logo to help on busy backgrounds
+        ctx.shadowColor = target === 'white' ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.35)';
+        ctx.shadowBlur = Math.max(2, canvas.width * 0.004);
+
+        ctx.drawImage(monoLogo, x, y, size, size);
+
+        ctx.restore();
+        resolve(canvas.toDataURL('image/png'));
+      };
+
+      logo.onerror = () => reject(new Error('Failed to load logo image.'));
+      logo.src = normalizeLogoSrc(logoBase64);
+    };
+
+    bg.onerror = () => reject(new Error('Failed to load base image.'));
+    bg.src = baseImageDataUrl;
+  });
+};
+
 
 export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActiveTool }) => {
   const { industry: businessType } = profileData.business;
+
+  // Business DNA logo (base64)
+  const businessLogoBase64 = profileData.business?.dna?.logo || '';
+
+  // Logo overlay controls
+  const [useLogoOverlay, setUseLogoOverlay] = useState(false);
+  const [logoPosition, setLogoPosition] = useState<LogoPosition>('bottom-right');
+  const [originalGeneratedImage, setOriginalGeneratedImage] = useState<string | null>(null);
+  const [composingLogo, setComposingLogo] = useState(false);
+  const [logoError, setLogoError] = useState('');
   
   // Get userId from localStorage
   const [userId, setUserId] = useState<string>('');
@@ -186,6 +341,12 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
       const aspectRatio = platformDetails[idea.platform].aspectRatio;
       const base64Data = await generateImage(idea.visual_suggestion, '1K', aspectRatio);
       const imageUrl = `data:image/png;base64,${base64Data}`;
+
+      // Reset logo overlay state for this new image
+      setOriginalGeneratedImage(imageUrl);
+      setUseLogoOverlay(false);
+      setLogoPosition('bottom-right');
+      setLogoError('');
       
       setFinalPost({
         ...idea,
@@ -200,6 +361,57 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     }
   };
 
+
+  const applyLogoOverlay = async (position: LogoPosition) => {
+    if (!finalPost?.generated_image) return;
+    if (!businessLogoBase64) {
+      setLogoError('No logo found in your Business DNA. Please add one in Business Details.');
+      return;
+    }
+  
+    const baseImage = originalGeneratedImage || finalPost.generated_image;
+  
+    try {
+      setComposingLogo(true);
+      setLogoError('');
+      const composed = await composeImageWithLogo(baseImage, businessLogoBase64, finalPost.platform, position);
+  
+      setFinalPost(prev => (prev ? { ...prev, generated_image: composed } : prev));
+    } catch (err: any) {
+      console.error(err);
+      setLogoError('Failed to apply your logo. Please try again.');
+    } finally {
+      setComposingLogo(false);
+    }
+  };
+  
+  const handleToggleLogoOverlay = async (checked: boolean) => {
+    setUseLogoOverlay(checked);
+  
+    if (!finalPost) return;
+  
+    if (!checked) {
+      // Restore original
+      if (originalGeneratedImage) {
+        setFinalPost(prev => (prev ? { ...prev, generated_image: originalGeneratedImage } : prev));
+      }
+      return;
+    }
+  
+    // Ensure we preserve a pristine copy
+    if (!originalGeneratedImage && finalPost.generated_image) {
+      setOriginalGeneratedImage(finalPost.generated_image);
+    }
+  
+    await applyLogoOverlay(logoPosition);
+  };
+  
+  const handleSelectLogoPosition = async (position: LogoPosition) => {
+    setLogoPosition(position);
+    if (!useLogoOverlay) return;
+    await applyLogoOverlay(position);
+  };
+
   const handleStartOver = () => {
     setWorkflowStage('input');
     setPostIdeas([]);
@@ -207,6 +419,13 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     setFinalPost(null);
     setTopic('');
     setError('');
+
+    // Reset logo overlay state
+    setUseLogoOverlay(false);
+    setLogoPosition('bottom-right');
+    setOriginalGeneratedImage(null);
+    setComposingLogo(false);
+    setLogoError('');
   };
 
   const handleCopyAndPost = (platform: string, text: string, hashtags: string) => {
@@ -588,12 +807,135 @@ Generated by JetSuite - ${new Date().toLocaleDateString()}`;
                 {/* Generated Image */}
                 {finalPost.generated_image && (
                   <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-brand-text mb-2">Generated Image:</h3>
-                    <img
-                      src={finalPost.generated_image}
-                      alt="Generated post visual"
-                      className="rounded-lg w-full h-auto shadow-lg"
-                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-sm font-semibold text-brand-text">Generated Image:</h3>
+                      {composingLogo && (
+                        <span className="text-xs font-semibold text-brand-text-muted">Applying logo…</span>
+                      )}
+                    </div>
+
+                    {/* Image preview with clickable logo placement placeholders */}
+                    <div className="relative rounded-lg overflow-hidden shadow-lg">
+                      <img
+                        src={finalPost.generated_image}
+                        alt="Generated post visual"
+                        className="w-full h-auto"
+                      />
+
+                      {/* Placeholder locations (only show when user enabled logo overlay and a logo exists) */}
+                      {useLogoOverlay && businessLogoBase64 && (
+                        <>
+                          {/* Top Left */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLogoPosition('top-left')}
+                            className="absolute top-3 left-3 w-16 h-16 border-2 border-dashed border-white/80 bg-black/20 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
+                            title="Place logo: Top Left"
+                          >
+                            Logo
+                          </button>
+
+                          {/* Top Right */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLogoPosition('top-right')}
+                            className="absolute top-3 right-3 w-16 h-16 border-2 border-dashed border-white/80 bg-black/20 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
+                            title="Place logo: Top Right"
+                          >
+                            Logo
+                          </button>
+
+                          {/* Bottom Left */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLogoPosition('bottom-left')}
+                            className="absolute bottom-3 left-3 w-16 h-16 border-2 border-dashed border-white/80 bg-black/20 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
+                            title="Place logo: Bottom Left"
+                          >
+                            Logo
+                          </button>
+
+                          {/* Bottom Right */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLogoPosition('bottom-right')}
+                            className="absolute bottom-3 right-3 w-16 h-16 border-2 border-dashed border-white/80 bg-black/20 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
+                            title="Place logo: Bottom Right"
+                          >
+                            Logo
+                          </button>
+
+                          {/* Center */}
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLogoPosition('center')}
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 border-2 border-dashed border-white/80 bg-black/20 rounded-md flex items-center justify-center text-[10px] font-bold text-white"
+                            title="Place logo: Center (watermark)"
+                          >
+                            Watermark
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Branding Controls */}
+                    <div className="mt-4 bg-brand-light border border-brand-border rounded-lg p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-brand-text">Add Your Logo</p>
+                          <p className="text-xs text-brand-text-muted mt-1">
+                            Auto safe-zones per platform + auto white/black contrast for readability.
+                          </p>
+                        </div>
+
+                        <label className="inline-flex items-center gap-2 select-none">
+                          <input
+                            type="checkbox"
+                            checked={useLogoOverlay}
+                            onChange={(e) => handleToggleLogoOverlay(e.target.checked)}
+                            className="form-checkbox h-4 w-4 text-accent-purple rounded focus:ring-accent-purple/50"
+                            disabled={composingLogo || !businessLogoBase64}
+                          />
+                          <span className="text-sm font-semibold text-brand-text">
+                            {useLogoOverlay ? 'On' : 'Off'}
+                          </span>
+                        </label>
+                      </div>
+
+                      {!businessLogoBase64 && (
+                        <div className="mt-3 text-xs text-yellow-300">
+                          No logo found in your Business DNA. Add one in <span className="font-semibold">Business Details</span>.
+                        </div>
+                      )}
+
+                      {logoError && (
+                        <div className="mt-3 text-xs text-red-400">
+                          {logoError}
+                        </div>
+                      )}
+
+                      {/* Position buttons */}
+                      <div className={`mt-4 grid grid-cols-2 md:grid-cols-5 gap-2 ${useLogoOverlay ? '' : 'opacity-50 pointer-events-none'}`}>
+                        {(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'center'] as LogoPosition[]).map((pos) => (
+                          <button
+                            key={pos}
+                            type="button"
+                            onClick={() => handleSelectLogoPosition(pos)}
+                            className={`py-2 px-3 rounded-lg text-xs font-semibold border transition ${
+                              logoPosition === pos
+                                ? 'bg-accent-purple/20 border-accent-purple text-accent-purple'
+                                : 'bg-brand-card border-brand-border text-brand-text-muted hover:text-brand-text'
+                            }`}
+                          >
+                            {pos === 'center' ? 'Center' : pos.replace('-', ' ').replace('top', 'Top').replace('bottom', 'Bottom').replace('left', 'Left').replace('right', 'Right')}
+                          </button>
+                        ))}
+                      </div>
+
+                      <p className="text-[11px] text-brand-text-muted mt-3">
+                        Tip: You can also click the <span className="font-semibold">Logo</span> placeholder boxes directly on the image.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -701,3 +1043,4 @@ Generated by JetSuite - ${new Date().toLocaleDateString()}`;
     </div>
   );
 };
+
