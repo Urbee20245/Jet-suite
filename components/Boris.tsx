@@ -226,9 +226,9 @@ export const Boris: React.FC<BorisProps> = ({
 
   if (!borisState) {
     return (
-      <div className="relative rounded-2xl p-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50 opacity-70"></div>
+      <div className="relative rounded-2xl p-8 overflow-hidden border-2 border-purple-300/50 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
         <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/40 to-indigo-100/40 animate-pulse"></div>
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
@@ -252,12 +252,17 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl p-8 overflow-hidden">
-      {/* Subtle purple glowing background for entire tab */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50"></div>
+    <div className="relative rounded-2xl p-8 overflow-hidden border-2 border-purple-300/50 bg-gradient-to-br from-purple-50 via-white to-indigo-50 shadow-xl">
+      {/* Enhanced glowing background */}
       <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/30 to-indigo-100/30 animate-pulse"></div>
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-200/40 to-pink-200/40 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-200/40 to-blue-200/40 rounded-full blur-3xl -translate-x-24 translate-y-24"></div>
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
+      
+      {/* Glowing orb effects */}
+      <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-purple-300/30 to-pink-300/30 rounded-full blur-3xl -translate-y-36 translate-x-36"></div>
+      <div className="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-indigo-300/30 to-blue-300/30 rounded-full blur-3xl -translate-x-28 translate-y-28"></div>
+      
+      {/* Inner border glow */}
+      <div className="absolute inset-0 rounded-2xl border border-purple-200/50 pointer-events-none"></div>
       
       {/* Main content */}
       <div className="relative z-10">
@@ -266,7 +271,7 @@ export const Boris: React.FC<BorisProps> = ({
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-lg opacity-20 animate-pulse"></div>
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg border-2 border-white/20">
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg border-2 border-white/30">
                 <SparklesIconSolid className="w-8 h-8 text-white" />
               </div>
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-sm border-2 border-white">
@@ -305,7 +310,7 @@ export const Boris: React.FC<BorisProps> = ({
         {/* Greeting & Content Section */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border border-purple-200">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border border-purple-200 shadow-sm">
               <span className="text-purple-700 font-bold text-sm">
                 {getGreeting().charAt(0)}
               </span>
@@ -320,7 +325,7 @@ export const Boris: React.FC<BorisProps> = ({
 
           {borisState.messageIntro ? (
             <div className="space-y-6">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-slate-200/80 shadow-sm">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"></div>
                   <span className="text-sm font-semibold text-purple-700">Progress Update</span>
@@ -343,7 +348,7 @@ export const Boris: React.FC<BorisProps> = ({
                       const toolId = getTaskNavigationTarget(task);
                       const isCompleted = completedTaskIds.has(task.id);
                       return (
-                        <div key={task.id || i} className="group bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <div key={task.id || i} className="group bg-white/95 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all duration-200 shadow-sm hover:shadow-md">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -393,7 +398,7 @@ export const Boris: React.FC<BorisProps> = ({
               )}
             </div>
           ) : (
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-slate-200/80 shadow-sm">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-sm">
               <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.message}</p>
             </div>
           )}
@@ -404,7 +409,7 @@ export const Boris: React.FC<BorisProps> = ({
           {borisState.actionButton && (
             <button
               onClick={borisState.actionButton.onClick}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group border border-purple-500/20"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group border border-purple-500/30"
             >
               <span className="text-base">{borisState.actionButton.text}</span>
               <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -414,14 +419,14 @@ export const Boris: React.FC<BorisProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setShowChatModal(true)}
-              className="bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-indigo-300 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm"
+              className="bg-white/95 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-indigo-300 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm hover:shadow"
             >
               <ChatBubbleLeftRightIcon className="w-5 h-5 text-indigo-600" />
               <span>Ask Boris</span>
             </button>
             <button
               onClick={manuallyStartTour}
-              className="bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm"
+              className="bg-white/95 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm hover:shadow"
             >
               <InformationCircleIcon className="w-5 h-5 text-slate-600" />
               <span>Product Tour</span>
@@ -429,7 +434,7 @@ export const Boris: React.FC<BorisProps> = ({
           </div>
 
           {/* Footer Links */}
-          <div className="pt-4 border-t border-slate-200/80">
+          <div className="pt-4 border-t border-slate-200">
             <button
               onClick={() => setShowWhyDialog(true)}
               className="text-slate-600 hover:text-indigo-700 transition-colors font-medium flex items-center gap-2 text-sm"
@@ -458,7 +463,7 @@ export const Boris: React.FC<BorisProps> = ({
             </div>
             
             <div className="p-6">
-              <div className="bg-slate-50 rounded-xl p-5 mb-4">
+              <div className="bg-slate-50 rounded-xl p-5 mb-4 border border-slate-200">
                 <p className="text-slate-700 leading-relaxed">
                   {handleWhyQuestion()}
                 </p>
@@ -467,7 +472,7 @@ export const Boris: React.FC<BorisProps> = ({
               {borisState.showUpsell && (
                 <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
                       <span className="text-white font-bold">⚡</span>
                     </div>
                     <div>
