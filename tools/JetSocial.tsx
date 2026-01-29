@@ -53,12 +53,13 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
   // Get userId from localStorage (matching App.tsx pattern)
   const [userId, setUserId] = useState<string>('');
   
+  // FIXED: Changed dependency array from [userId] to [] to prevent infinite loop
   useEffect(() => {
     const storedUserId = localStorage.getItem('jetsuite_userId');
     if (storedUserId) {
       setUserId(storedUserId);
     }
-  }, [userId]);
+  }, []); // Empty dependency array - runs only once on mount
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('generate');
