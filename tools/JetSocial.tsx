@@ -142,10 +142,31 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     setPostIdeas([]);
     
     try {
-      const result = await generateSocialPosts(businessType, topic, tone, selectedPlatforms);
-      // Get first 3 posts for selected platforms
-      const ideas = result.posts.slice(0, 3);
-      setPostIdeas(ideas);
+      // Generate posts for all selected platforms to get variety
+      const allPosts: PostIdea[] = [];
+      
+      for (const platform of selectedPlatforms) {
+        const result = await generateSocialPosts(businessType, topic, tone, [platform]);
+        // Each call returns ~2 posts, add them all
+        result.posts.forEach(post => {
+          allPosts.push({
+            platform: post.platform,
+            post_text: post.post_text,
+            hashtags: post.hashtags,
+            visual_suggestion: post.visual_suggestion
+          });
+        });
+      }
+      
+      // Take first 3 posts (or all if less than 3)
+      const selectedIdeas = allPosts.slice(0, 3);
+      
+      // If we somehow got less than 3, duplicate the first one to ensure 3 options
+      while (selectedIdeas.length < 3 && selectedIdeas.length > 0) {
+        selectedIdeas.push({...selectedIdeas[0]});
+      }
+      
+      setPostIdeas(selectedIdeas);
       setWorkflowStage('ideas');
     } catch (err) {
       setError('Failed to generate ideas. Please try again.');
