@@ -226,17 +226,18 @@ export const Boris: React.FC<BorisProps> = ({
 
   if (!borisState) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-lg opacity-20 animate-pulse"></div>
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
+      <div className="relative rounded-2xl p-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50 opacity-70"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/40 to-indigo-100/40 animate-pulse"></div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
               <SparklesIconSolid className="w-8 h-8 text-white" />
             </div>
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900">Loading Boris...</h3>
-            <p className="text-slate-600 text-sm">Analyzing your progress...</p>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900">Loading Boris...</h3>
+              <p className="text-slate-600 text-sm">Analyzing your progress...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -251,190 +252,191 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Boris Dashboard Card */}
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 relative overflow-hidden">
-        {/* Subtle purple accent background */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500"></div>
-        
-        <div className="relative z-10">
-          {/* Header Section */}
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-lg opacity-20 animate-pulse"></div>
-                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-md">
-                  <SparklesIconSolid className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-sm border-2 border-white">
-                  <BoltIcon className="w-3 h-3 text-white" />
-                </div>
+    <div className="relative rounded-2xl p-8 overflow-hidden">
+      {/* Subtle purple glowing background for entire tab */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-indigo-50"></div>
+      <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/30 to-indigo-100/30 animate-pulse"></div>
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-200/40 to-pink-200/40 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-indigo-200/40 to-blue-200/40 rounded-full blur-3xl -translate-x-24 translate-y-24"></div>
+      
+      {/* Main content */}
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-lg opacity-20 animate-pulse"></div>
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg border-2 border-white/20">
+                <SparklesIconSolid className="w-8 h-8 text-white" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-1">Boris AI</h2>
-                <p className="text-slate-600 font-medium">Your Business Growth Assistant</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs font-semibold bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 px-3 py-1 rounded-full border border-purple-200">
-                    Growth Coach
-                  </span>
-                  <span className="text-xs font-medium text-slate-500">•</span>
-                  <span className="text-xs text-slate-500">Taking action today</span>
-                </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-sm border-2 border-white">
+                <BoltIcon className="w-3 h-3 text-white" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-1">Boris AI</h2>
+              <p className="text-slate-700 font-medium">Your Business Growth Assistant</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs font-semibold bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 px-3 py-1 rounded-full border border-purple-200">
+                  Growth Coach
+                </span>
+                <span className="text-xs font-medium text-slate-500">•</span>
+                <span className="text-xs text-slate-500">Taking action today</span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Progress Indicators */}
-          {borisState.completedItems.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">Completed Milestones</h3>
-              <div className="flex flex-wrap gap-2">
-                {borisState.completedItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-2 rounded-lg border border-emerald-200">
-                    <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-700">{item.replace('✓ ', '')}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Greeting & Content Section */}
+        {/* Progress Indicators */}
+        {borisState.completedItems.length > 0 && (
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center border border-slate-200">
-                <span className="text-slate-700 font-bold text-sm">
-                  {getGreeting().charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-slate-900">
-                  {getGreeting()}, {userFirstName}!
-                </p>
-                <p className="text-sm text-slate-600">Let's make progress today</p>
-              </div>
-            </div>
-
-            {borisState.messageIntro ? (
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-5 border border-slate-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-                    <span className="text-sm font-semibold text-blue-700">Progress Update</span>
-                  </div>
-                  <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+            <h3 className="text-sm font-semibold text-slate-700 mb-3">Completed Milestones</h3>
+            <div className="flex flex-wrap gap-2">
+              {borisState.completedItems.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-green-50 px-3 py-2 rounded-lg border border-emerald-200 shadow-sm">
+                  <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
+                  <span className="text-sm font-medium text-emerald-700">{item.replace('✓ ', '')}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                {/* Today's Tasks Section */}
-                {borisState.todaysTasks.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-slate-900">Today's Priority Tasks</h3>
-                      <div className="animate-bounce">
-                        <ChevronDownIcon className="w-5 h-5 text-indigo-500" />
-                      </div>
+        {/* Greeting & Content Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border border-purple-200">
+              <span className="text-purple-700 font-bold text-sm">
+                {getGreeting().charAt(0)}
+              </span>
+            </div>
+            <div>
+              <p className="text-xl font-bold text-slate-900">
+                {getGreeting()}, {userFirstName}!
+              </p>
+              <p className="text-sm text-slate-600">Let's make progress today</p>
+            </div>
+          </div>
+
+          {borisState.messageIntro ? (
+            <div className="space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-slate-200/80 shadow-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                  <span className="text-sm font-semibold text-purple-700">Progress Update</span>
+                </div>
+                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+              </div>
+
+              {/* Today's Tasks Section */}
+              {borisState.todaysTasks.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-slate-900">Today's Priority Tasks</h3>
+                    <div className="animate-bounce">
+                      <ChevronDownIcon className="w-5 h-5 text-indigo-500" />
                     </div>
-                    
-                    <div className="space-y-3">
-                      {borisState.todaysTasks.map((task, i) => {
-                        const toolId = getTaskNavigationTarget(task);
-                        const isCompleted = completedTaskIds.has(task.id);
-                        return (
-                          <div key={task.id || i} className="group bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all duration-200 shadow-sm hover:shadow-md">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                  isCompleted 
-                                    ? 'bg-gradient-to-br from-emerald-100 to-green-100' 
-                                    : 'bg-gradient-to-br from-indigo-50 to-purple-50'
-                                } border ${isCompleted ? 'border-emerald-200' : 'border-indigo-100'}`}>
-                                  <span className={`font-bold text-sm ${
-                                    isCompleted ? 'text-emerald-700' : 'text-indigo-700'
-                                  }`}>{i + 1}</span>
-                                </div>
-                                <div className="flex-1">
-                                  <p className={`font-medium ${isCompleted ? 'text-emerald-700 line-through' : 'text-slate-900'}`}>
-                                    {task.title}
-                                  </p>
-                                  <div className="flex items-center gap-3 mt-1">
-                                    {!isCompleted && (
-                                      <button
-                                        onClick={() => onNavigate(toolId)}
-                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
-                                      >
-                                        {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'}
-                                        <ArrowRightIcon className="w-3.5 h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {borisState.todaysTasks.map((task, i) => {
+                      const toolId = getTaskNavigationTarget(task);
+                      const isCompleted = completedTaskIds.has(task.id);
+                      return (
+                        <div key={task.id || i} className="group bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-4 transition-all duration-200 shadow-sm hover:shadow-md">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                isCompleted 
+                                  ? 'bg-gradient-to-br from-emerald-100 to-green-100' 
+                                  : 'bg-gradient-to-br from-purple-50 to-indigo-50'
+                              } border ${isCompleted ? 'border-emerald-200' : 'border-indigo-100'}`}>
+                                <span className={`font-bold text-sm ${
+                                  isCompleted ? 'text-emerald-700' : 'text-indigo-700'
+                                }`}>{i + 1}</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className={`font-medium ${isCompleted ? 'text-emerald-700 line-through' : 'text-slate-900'}`}>
+                                  {task.title}
+                                </p>
+                                <div className="flex items-center gap-3 mt-1">
+                                  {!isCompleted && (
+                                    <button
+                                      onClick={() => onNavigate(toolId)}
+                                      className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
+                                    >
+                                      {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'}
+                                      <ArrowRightIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
-                              <button 
-                                onClick={() => handleTaskComplete(task.id)}
-                                disabled={isCompleted}
-                                className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 ${
-                                  isCompleted
-                                    ? 'bg-emerald-500 text-white shadow-sm'
-                                    : 'bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-700 hover:from-indigo-100 hover:to-purple-100 hover:shadow-md border border-indigo-200'
-                                }`}
-                                title={isCompleted ? "Task completed" : "Mark as complete"}
-                              >
-                                <CheckCircleIcon className="w-5 h-5" />
-                              </button>
                             </div>
+                            <button 
+                              onClick={() => handleTaskComplete(task.id)}
+                              disabled={isCompleted}
+                              className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                                isCompleted
+                                  ? 'bg-emerald-500 text-white shadow-sm'
+                                  : 'bg-gradient-to-br from-purple-50 to-indigo-50 text-indigo-700 hover:from-purple-100 hover:to-indigo-100 hover:shadow-md border border-indigo-200'
+                              }`}
+                              title={isCompleted ? "Task completed" : "Mark as complete"}
+                            >
+                              <CheckCircleIcon className="w-5 h-5" />
+                            </button>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl p-5 border border-slate-200">
-                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.message}</p>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-slate-200/80 shadow-sm">
+              <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.message}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-4">
+          {borisState.actionButton && (
+            <button
+              onClick={borisState.actionButton.onClick}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group border border-purple-500/20"
+            >
+              <span className="text-base">{borisState.actionButton.text}</span>
+              <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => setShowChatModal(true)}
+              className="bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-indigo-300 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm"
+            >
+              <ChatBubbleLeftRightIcon className="w-5 h-5 text-indigo-600" />
+              <span>Ask Boris</span>
+            </button>
+            <button
+              onClick={manuallyStartTour}
+              className="bg-white/90 backdrop-blur-sm hover:bg-white border border-slate-300 hover:border-slate-400 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-sm"
+            >
+              <InformationCircleIcon className="w-5 h-5 text-slate-600" />
+              <span>Product Tour</span>
+            </button>
           </div>
 
-          {/* Action Buttons */}
-          <div className="space-y-4">
-            {borisState.actionButton && (
-              <button
-                onClick={borisState.actionButton.onClick}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 group"
-              >
-                <span className="text-base">{borisState.actionButton.text}</span>
-                <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setShowChatModal(true)}
-                className="bg-white hover:bg-slate-50 border border-slate-300 hover:border-indigo-300 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
-              >
-                <ChatBubbleLeftRightIcon className="w-5 h-5 text-indigo-600" />
-                <span>Ask Boris</span>
-              </button>
-              <button
-                onClick={manuallyStartTour}
-                className="bg-slate-50 hover:bg-slate-100 border border-slate-300 hover:border-slate-400 text-slate-800 font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-3"
-              >
-                <InformationCircleIcon className="w-5 h-5 text-slate-600" />
-                <span>Product Tour</span>
-              </button>
-            </div>
-
-            {/* Footer Links */}
-            <div className="pt-4 border-t border-slate-200">
-              <button
-                onClick={() => setShowWhyDialog(true)}
-                className="text-slate-600 hover:text-indigo-700 transition-colors font-medium flex items-center gap-2 text-sm"
-              >
-                <InformationCircleIcon className="w-4 h-4" />
-                Why this matters for your business growth
-              </button>
-            </div>
+          {/* Footer Links */}
+          <div className="pt-4 border-t border-slate-200/80">
+            <button
+              onClick={() => setShowWhyDialog(true)}
+              className="text-slate-600 hover:text-indigo-700 transition-colors font-medium flex items-center gap-2 text-sm"
+            >
+              <InformationCircleIcon className="w-4 h-4" />
+              Why this matters for your business growth
+            </button>
           </div>
         </div>
       </div>
@@ -445,8 +447,8 @@ export const Boris: React.FC<BorisProps> = ({
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200">
             <div className="p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center border border-indigo-100">
-                  <InformationCircleIcon className="w-6 h-6 text-indigo-600" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 flex items-center justify-center border border-purple-100">
+                  <InformationCircleIcon className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900">Strategic Insight</h3>
@@ -463,9 +465,9 @@ export const Boris: React.FC<BorisProps> = ({
               </div>
               
               {borisState.showUpsell && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-bold">⚡</span>
                     </div>
                     <div>
@@ -491,7 +493,7 @@ export const Boris: React.FC<BorisProps> = ({
             <div className="p-6 border-t border-slate-100">
               <button
                 onClick={() => setShowWhyDialog(false)}
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Got It — Let's Continue
               </button>
