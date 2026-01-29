@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon } from './icons/MiniIcons';
+import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon, ChevronDownIcon } from './icons/MiniIcons';
 import { BorisChatModal } from './BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
@@ -142,7 +142,7 @@ export const Boris: React.FC<BorisProps> = ({
         progressContext = `You've completed all your tasks! Time to generate more with another audit.`;
       }
       
-      messageIntro = `${openingLine} ${progressContext}\n\nHere's what you need to focus on TODAY:`;
+      messageIntro = `${openingLine} ${progressContext}`;
       message = '';
       actionButton = { text: 'View Full Growth Plan', onClick: () => onNavigate('growthplan') };
       showUpsell = todaysTasks.some(shouldShowUpsell);
@@ -150,105 +150,107 @@ export const Boris: React.FC<BorisProps> = ({
     else {
       stage = 'daily_tools';
       completedItems = ['✓ Business Details', '✓ JetBiz Audit', '✓ JetViz Audit', '✓ All Growth Plan Tasks'];
-      message = `Outstanding work! 🎉 You've completed your Growth Plan.\n\nNow it's time to maintain momentum. Your daily focus should be:\n\n• Marketing & Brand Strategy: Create fresh content with JetCreate, JetContent, and JetImage\n• Customer Engagement: Respond to reviews with JetReply, engage leads with JetLeads\n\nConsistent daily action is what separates growing businesses from stagnant ones. What will you create today?`;
-      actionButton = null;
+      
+      const toolsWithProgress = EXECUTION_TOOLS.map(toolId => {
+        const tool = ALL_TOOLS.find(t => t.id === toolId);
+        if (!tool) return null;
+        const usage = profileData?.toolUsage?.[toolId] || 0;
+        return { ...tool, usage };
+      }).filter(Boolean);
+      
+      const leastUsedTools = toolsWithProgress.sort((a, b) => a!.usage - b!.usage).slice(0, 3);
+      
+      message = `Outstanding work! You've completed everything in your Growth Plan.\n\nNow it's time to stay sharp. Here are some tools you haven't used lately:`;
+      todaysTasks = leastUsedTools.map(tool => ({
+        id: tool!.id,
+        title: tool!.name,
+        description: tool!.description,
+        sourceModule: tool!.id,
+        status: 'pending'
+      }));
     }
 
     setBorisState({ stage, message, messageIntro, actionButton, completedItems, todaysTasks, showUpsell });
   };
 
-  const handleWhyQuestion = () => {
-    const whyResponses: Record<BorisState['stage'], string> = {
-      business_details: "Completing your Business Details is the most critical first step. This information is the 'brain' for all of JetSuite's AI tools. Accurate details ensure every analysis, piece of content, and recommendation is perfectly tailored to your specific business, location, and industry, which is essential for effective local SEO.",
-      jetbiz: "Your Google Business Profile is your most powerful local SEO tool. It's often the first impression customers get, appearing directly in Google search and Maps. JetBiz identifies exactly what's broken or missing so you can fix it and start showing up higher in local searches immediately.",
-      jetviz: "Your website is your digital storefront. If it loads slowly, looks unprofessional, or doesn't clearly explain what you do, visitors leave. JetViz identifies the exact technical, design, and content issues that are costing you customers, so you can fix them systematically.",
-      growth_plan: "Audits identify problems. Your Growth Plan turns those problems into a prioritized, step-by-step action list. Each task is designed to move the needle on visibility, trust, or revenue. Completing them systematically compounds your results over time.",
-      daily_tools: "Growth isn't about one big push - it's about consistent daily action. Creating content, engaging with reviews, and reaching out to leads builds momentum that competitors can't match. The businesses that win are the ones that show up every single day."
-    };
-    return whyResponses[borisState!.stage];
+  const handleTaskComplete = (taskId: string) => {
+    if (completedTaskIds.has(taskId)) return;
+    onTaskStatusChange(taskId, 'completed');
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   };
-  
-  const getTaskNavigationTarget = (task: any) => {
-    const source = task.sourceModule.toLowerCase();
-    if (FOUNDATION_TOOLS.includes(source)) {
-      return 'growthplan';
-    }
-    if (EXECUTION_TOOLS.includes(source)) {
-      return source;
+
+  const getTaskNavigationTarget = (task: any): string => {
+    if (task.sourceModule && task.sourceModule !== 'growthplan') {
+      return task.sourceModule.toLowerCase();
     }
     return 'growthplan';
   };
 
-  const triggerConfetti = () => {
-    const count = 200;
-    const defaults = { origin: { y: 0.7 } };
-    function fire(particleRatio: number, opts: any) {
-      confetti({
-        ...defaults,
-        ...opts,
-        particleCount: Math.floor(count * particleRatio),
-        colors: ['#A855F7', '#EC4899', '#8B5CF6', '#F472B6']
-      });
+  const handleWhyQuestion = (): string => {
+    if (!borisState) return '';
+    
+    switch (borisState.stage) {
+      case 'business_details':
+        return `Your Business Details are the foundation of everything in JetSuite. Without this information, the AI tools can't personalize content, analyze your market, or create strategies specific to YOUR business. This takes 3 minutes but saves you HOURS later.`;
+      
+      case 'jetbiz':
+        return `Your Google Business Profile is often the FIRST impression customers have of you. It appears in Google Maps, local search, and knowledge panels. JetBiz scans your profile for issues that hurt rankings - missing info, poor photos, weak descriptions, citation problems. Most businesses lose customers daily because of fixable GBP issues they don't even know exist.`;
+      
+      case 'jetviz':
+        return `Your website might look good to you, but is it converting visitors into customers? JetViz analyzes your site like a marketing expert - checking load speed, mobile experience, trust signals, SEO, calls-to-action, and conversion blockers. Most websites leak 70% of their traffic due to preventable issues. JetViz finds them so you can fix them.`;
+      
+      case 'growth_plan':
+        return `Your Growth Plan isn't just a to-do list - it's a strategic roadmap built from your actual business data. Each task is prioritized based on impact and effort. These aren't generic suggestions - they're specific actions that will move YOUR business forward. The businesses that execute their Growth Plans see real results. The ones that don't... stay stuck.`;
+      
+      case 'daily_tools':
+        return `You've completed the foundation work - great! Now it's about consistency. Using JetSuite's tools regularly keeps you visible, builds trust, and attracts customers. Social posts, content creation, review responses, lead generation - these aren't one-time tasks. They're ongoing activities that compound over time. The most successful businesses use these tools DAILY.`;
+      
+      default:
+        return `Every step in JetSuite is designed to help you grow your business systematically. Follow Boris's guidance, complete your tasks, and you'll see real results.`;
     }
-    fire(0.25, { spread: 26, startVelocity: 55 });
-    fire(0.2, { spread: 60 });
-    fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
-    fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
-    fire(0.1, { spread: 120, startVelocity: 45 });
   };
 
-  const handleTaskComplete = (taskId: string) => {
-    triggerConfetti();
-    onTaskStatusChange(taskId, 'completed');
-  };
-
-  // Build context for chat
   const buildChatContext = (): BorisContext => {
-    const completedAudits: string[] = [];
-    if (profileData.jetbizAnalysis) completedAudits.push('JetBiz');
-    if (profileData.jetvizAnalysis) completedAudits.push('JetViz');
-    
-    const completedTasks = growthPlanTasks.filter(t => t.status === 'completed');
-    
-    const calculateGrowthScore = () => {
-      let score = 0;
-      if (profileData.business.is_complete) score += 10;
-      if (profileData.business.isDnaApproved) score += 10;
-      if (profileData.googleBusiness?.status === 'Verified') score += 15;
-      score += Math.min(completedTasks.length * 5, 50);
-      return Math.min(score, 99);
-    };
-
     return {
-      userName: userFirstName,
-      businessName: profileData.business.business_name,
-      growthScore: calculateGrowthScore(),
-      pendingTasks: growthPlanTasks.filter(t => t.status !== 'completed').length,
-      completedAudits,
-      urgentTasks: borisState?.todaysTasks || [],
-      newReviews: newReviewsCount
+      businessName: profileData?.business?.business_name || '',
+      industry: profileData?.business?.industry || '',
+      currentStage: borisState?.stage || 'business_details',
+      completedAudits: {
+        jetBiz: !!(profileData?.business?.audits?.jetbiz?.completed || profileData?.business?.audits?.jetBiz?.completed),
+        jetViz: !!(profileData?.business?.audits?.jetviz?.completed || profileData?.business?.audits?.jetViz?.completed)
+      },
+      pendingTasks: growthPlanTasks.filter(t => t.status !== 'completed'),
+      recentActivity: profileData?.recentActivity || []
     };
   };
 
-  if (!borisState) return null;
+  if (!borisState) {
+    return (
+      <div className="bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 rounded-2xl p-8 shadow-2xl text-white">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+            <SparklesIconSolid className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold">Loading Boris...</h3>
+            <p className="text-purple-200 text-sm">Analyzing your progress...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <div className="bg-[#2D1B4E] border-2 border-purple-600 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl"></div>
-        
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 ring-4 ring-purple-500/20">
-            <SparklesIconSolid className="w-7 h-7 text-white" />
+      <div className="bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 rounded-2xl p-8 shadow-2xl text-white">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center animate-pulse">
+            <SparklesIconSolid className="w-8 h-8 text-white" />
           </div>
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xl font-bold text-white">Boris</h3>
-              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
-                Your Growth Coach
-              </span>
-            </div>
-            <p className="text-xs text-gray-400">Motivating you to take action TODAY</p>
+            <h3 className="text-2xl font-bold">Boris</h3>
+            <p className="text-purple-200 text-sm">Your Growth Coach</p>
+            <p className="text-purple-300 text-xs mt-1">Motivating you to take action TODAY</p>
           </div>
         </div>
 
@@ -269,44 +271,58 @@ export const Boris: React.FC<BorisProps> = ({
                   <p className="text-xl font-semibold text-white mb-3">
                     Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userFirstName}! 👋
                   </p>
-                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+                  <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed mb-6">{borisState.messageIntro}</p>
+                  
+                  {/* ENHANCED: Much larger and bolder "Here's what you need to focus on TODAY" with down arrow */}
                   {borisState.todaysTasks.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                          {borisState.todaysTasks.map((task, i) => {
-                              const toolId = getTaskNavigationTarget(task);
-                              const isCompleted = completedTaskIds.has(task.id);
-                              return (
-                                  <div key={task.id || i} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
-                                      <div className="flex items-center flex-1">
-                                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">
-                                              <span className="text-purple-600 font-bold text-sm">{i + 1}</span>
+                      <div className="mt-6">
+                          <div className="flex flex-col items-center mb-4">
+                              <h4 className="text-3xl font-black text-white text-center mb-2 tracking-tight">
+                                  HERE'S WHAT YOU NEED TO FOCUS ON TODAY:
+                              </h4>
+                              {/* Down Arrow Animation */}
+                              <div className="animate-bounce">
+                                  <ChevronDownIcon className="w-10 h-10 text-pink-400" />
+                              </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                              {borisState.todaysTasks.map((task, i) => {
+                                  const toolId = getTaskNavigationTarget(task);
+                                  const isCompleted = completedTaskIds.has(task.id);
+                                  return (
+                                      <div key={task.id || i} className="flex items-center justify-between bg-slate-800/50 p-3 rounded-lg">
+                                          <div className="flex items-center flex-1">
+                                              <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white flex items-center justify-center mr-3">
+                                                  <span className="text-purple-600 font-bold text-sm">{i + 1}</span>
+                                              </div>
+                                              <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>{task.title}</span>
+                                              {!isCompleted && (
+                                                <button
+                                                    onClick={() => onNavigate(toolId)}
+                                                    className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1 ml-3"
+                                                    title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
+                                                >
+                                                    {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'} <ArrowRightIcon className="w-3 h-3" />
+                                                </button>
+                                              )}
                                           </div>
-                                          <span className={`text-sm text-gray-300 ${isCompleted ? 'line-through text-green-400' : ''}`}>{task.title}</span>
-                                          {!isCompleted && (
-                                            <button
-                                                onClick={() => onNavigate(toolId)}
-                                                className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-semibold flex items-center gap-1 ml-3"
-                                                title={toolId === 'growthplan' ? 'View task details in Growth Plan' : `Go to ${task.sourceModule} tool`}
-                                            >
-                                                {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'} <ArrowRightIcon className="w-3 h-3" />
-                                            </button>
-                                          )}
+                                          <button 
+                                              onClick={() => handleTaskComplete(task.id)}
+                                              disabled={isCompleted}
+                                              className={`p-3 rounded-full flex-shrink-0 transition-all ${
+                                                isCompleted
+                                                  ? 'bg-green-500 text-white'
+                                                  : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300'
+                                              }`}
+                                              title="Mark as complete"
+                                          >
+                                              <CheckCircleIcon className="w-5 h-5" />
+                                          </button>
                                       </div>
-                                      <button 
-                                          onClick={() => handleTaskComplete(task.id)}
-                                          disabled={isCompleted}
-                                          className={`p-3 rounded-full flex-shrink-0 transition-all ${
-                                            isCompleted
-                                              ? 'bg-green-500 text-white'
-                                              : 'bg-purple-500/20 hover:bg-purple-500/40 text-purple-300'
-                                          }`}
-                                          title="Mark as complete"
-                                      >
-                                          <CheckCircleIcon className="w-5 h-5" />
-                                      </button>
-                                  </div>
-                              );
-                          })}
+                                  );
+                              })}
+                          </div>
                       </div>
                   )}
               </>
@@ -349,7 +365,7 @@ export const Boris: React.FC<BorisProps> = ({
             Why this matters
           </button>
 
-          {/* NEW: Product Tour Trigger (Replaces conditional upsell link) */}
+          {/* ENHANCED: Removed book icon from Product Tour */}
           <>
             <span className="text-gray-600">•</span>
             <button
@@ -357,7 +373,7 @@ export const Boris: React.FC<BorisProps> = ({
               className="text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 font-semibold cursor-pointer"
             >
               <InformationCircleIcon className="w-4 h-4" />
-              📖 Take the Product Tour
+              Take the Product Tour
             </button>
           </>
         </div>
