@@ -273,18 +273,18 @@ export const Boris: React.FC<BorisProps> = ({
                   </p>
                   <p className="text-base text-gray-200 whitespace-pre-line leading-relaxed mb-6">{borisState.messageIntro}</p>
                   
-                  {/* ENHANCED: Much larger and bolder "Here's what you need to focus on TODAY" with down arrow */}
-                  {borisState.todaysTasks.length > 0 && (
-                      <div className="mt-6">
-                          <div className="flex flex-col items-center mb-4">
-                              <h4 className="text-3xl font-black text-white text-center mb-2 tracking-tight">
-                                  HERE'S WHAT YOU NEED TO FOCUS ON TODAY:
-                              </h4>
-                              {/* Down Arrow Animation */}
-                              <div className="animate-bounce">
-                                  <ChevronDownIcon className="w-10 h-10 text-pink-400" />
-                              </div>
-                          </div>
+                {/* ENHANCED: Elegant and prominent "Here's what you need to focus on TODAY" with down arrow */}
+{borisState.todaysTasks.length > 0 && (
+    <div className="mt-6">
+        <div className="flex flex-col items-center mb-4">
+            <h4 className="text-xl font-bold text-white text-center mb-2 tracking-wide">
+                Here's what you need to focus on TODAY:
+            </h4>
+            {/* Down Arrow Animation */}
+            <div className="animate-bounce">
+                <ChevronDownIcon className="w-8 h-8 text-pink-400" />
+            </div>
+        </div>
                           
                           <div className="space-y-2">
                               {borisState.todaysTasks.map((task, i) => {
