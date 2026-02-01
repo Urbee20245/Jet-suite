@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { createRoot, hydrateRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
@@ -48,23 +49,14 @@ if (!rootElement) {
 }
 
 try {
-  const app = (
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
     <React.StrictMode>
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
     </React.StrictMode>
   );
-
-  // If HTML already exists (from prerendering), hydrate it.
-  // Otherwise, do a normal client render.
-  if (rootElement.hasChildNodes()) {
-    hydrateRoot(rootElement, app);
-  } else {
-    const root = createRoot(rootElement);
-    root.render(app);
-  }
-
   console.log('React app mounted successfully');
 } catch (error) {
   console.error('Failed to mount React app:', error);

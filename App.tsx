@@ -13,32 +13,6 @@ import { ContactPage } from './pages/ContactPage';
 import Admin from './pages/Admin';
 import { ReviewPagePublic } from './pages/ReviewPagePublic';
 
-function hasAuthHint(): boolean {
-  try {
-    // This app already stores a user id on sign-in.
-    // If it's present, we assume a session may exist and keep the original
-    // "blocking" behavior to avoid any logged-in flash.
-    return !!localStorage.getItem('jetsuite_userId');
-  } catch {
-    return false;
-  }
-}
-
-function isPublicMarketingRoute(pathname: string): boolean {
-  const normalized = pathname.replace(/\/$/, '') || '/';
-  return (
-    normalized === '/' ||
-    normalized === '/features' ||
-    normalized === '/how-it-works' ||
-    normalized === '/pricing' ||
-    normalized === '/faq' ||
-    normalized === '/get-started' ||
-    normalized === '/demo/jetviz' ||
-    normalized === '/demo/jetbiz' ||
-    normalized === '/savings'
-  );
-}
-
 // This component contains the original dynamic logic of the app.
 const CoreApp: React.FC = () => {
   console.log('[App] CoreApp rendering');
@@ -279,28 +253,13 @@ const CoreApp: React.FC = () => {
 
   try {
     const normalizedPath = currentPath.replace(/\/$/, '') || '/';
-
+    
     // Admin route - must be logged in to access
     if (normalizedPath === '/admin') {
       return <Admin navigate={navigate} />;
     }
 
-    // For public marketing pages, render immediately (to support prerendered HTML + SEO).
-    // If we detect a likely existing session, we keep the original blocking behavior
-    // to avoid a logged-in "flash" of marketing content.
     if (!sessionChecked) {
-      const isMarketing = isPublicMarketingRoute(normalizedPath);
-      if (isMarketing && !hasAuthHint()) {
-        return (
-          <MarketingWebsite 
-            currentPath={currentPath} 
-            navigate={navigate} 
-            onLoginSuccess={handleLoginSuccess} 
-            onLogout={handleLogout}
-          />
-        );
-      }
-
       return (
         <div className="min-h-screen flex items-center justify-center bg-brand-dark">
           <div className="text-center">
@@ -377,16 +336,6 @@ const CoreApp: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  // Signal to the build-time prerenderer that the initial UI is mounted.
-  // (No-op in browsers; safe if nothing is listening.)
-  useEffect(() => {
-    try {
-      document.dispatchEvent(new Event('prerender-ready'));
-    } catch {
-      // ignore
-    }
-  }, []);
-
   // This check runs immediately on the client, before any state is set.
   const [staticPageComponent] = useMemo(() => {
     const path = typeof window !== 'undefined' ? window.location.pathname : '/';
