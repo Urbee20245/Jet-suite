@@ -4,11 +4,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// Check for required environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Check for required environment variables (support both NEXT_PUBLIC_ and non-prefixed)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const TIKTOK_CLIENT_KEY = process.env.TIKTOK_CLIENT_KEY;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
 
 if (!supabaseUrl || !supabaseServiceKey || !TIKTOK_CLIENT_KEY || !APP_URL) {
   throw new Error('Missing required environment variables for TikTok OAuth setup.');

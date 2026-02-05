@@ -366,6 +366,7 @@ export interface SocialConnection {
   platform_user_id?: string;
   platform_username?: string;
   platform_page_id?: string;
+  metadata?: Record<string, any>;
   is_active: boolean;
   last_synced_at?: string;
   created_at: string;
