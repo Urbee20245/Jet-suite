@@ -69,16 +69,28 @@ CREATE INDEX IF NOT EXISTS idx_social_connections_active
 ALTER TABLE public.social_connections ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can read their own connections (for client-side access if needed)
-CREATE POLICY "Users can view own social connections"
-  ON public.social_connections
-  FOR SELECT
-  USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'Users can view own social connections' AND tablename = 'social_connections'
+  ) THEN
+    CREATE POLICY "Users can view own social connections"
+      ON public.social_connections
+      FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Policy: Users can update their own connections (for disconnect)
-CREATE POLICY "Users can update own social connections"
-  ON public.social_connections
-  FOR UPDATE
-  USING (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'Users can update own social connections' AND tablename = 'social_connections'
+  ) THEN
+    CREATE POLICY "Users can update own social connections"
+      ON public.social_connections
+      FOR UPDATE
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Policy: Service role can do everything (insert/update/delete via API routes)
 -- Note: Service role key automatically bypasses RLS
