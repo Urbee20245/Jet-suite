@@ -301,31 +301,29 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     setPostIdeas([]);
     
     try {
-      // Generate posts for all selected platforms to get variety
-      const allPosts: PostIdea[] = [];
-      
-      for (const platform of selectedPlatforms) {
-        const result = await generateSocialPosts(businessType, topic, tone, [platform]);
-        // Each call returns ~2 posts, add them all
-        result.posts.forEach(post => {
-          allPosts.push({
-            platform: post.platform,
-            post_text: post.post_text,
-            hashtags: post.hashtags,
-            visual_suggestion: post.visual_suggestion
-          });
-        });
+      // Single call requesting exactly 3 unique ideas across selected platforms
+      const result = await generateSocialPosts(businessType, topic, tone, selectedPlatforms, 3);
+
+      const allPosts: PostIdea[] = (result.posts || []).map((post: any) => ({
+        platform: post.platform,
+        post_text: post.post_text,
+        hashtags: post.hashtags,
+        visual_suggestion: post.visual_suggestion,
+      }));
+
+      // Take the first 3 unique ideas (by post_text) — never duplicate
+      const seen = new Set<string>();
+      const uniqueIdeas: PostIdea[] = [];
+      for (const idea of allPosts) {
+        const key = idea.post_text.trim().toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueIdeas.push(idea);
+        }
+        if (uniqueIdeas.length >= 3) break;
       }
-      
-      // Take first 3 posts (or all if less than 3)
-      const selectedIdeas = allPosts.slice(0, 3);
-      
-      // If we somehow got less than 3, duplicate the first one to ensure 3 options
-      while (selectedIdeas.length < 3 && selectedIdeas.length > 0) {
-        selectedIdeas.push({...selectedIdeas[0]});
-      }
-      
-      setPostIdeas(selectedIdeas);
+
+      setPostIdeas(uniqueIdeas);
       setWorkflowStage('ideas');
     } catch (err) {
       setError('Failed to generate ideas. Please try again.');
