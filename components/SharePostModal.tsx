@@ -36,14 +36,15 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
   const [copyFeedback, setCopyFeedback] = useState('');
   const [nativeShareError, setNativeShareError] = useState('');
 
-  if (!isOpen) return null;
-
-  const fullText = [postText, hashtags].filter(Boolean).join('\n\n').trim();
+  // Defensive: coerce props to strings (DB may return non-string types)
+  const safePostText = typeof postText === 'string' ? postText : String(postText ?? '');
+  const safeHashtags = typeof hashtags === 'string' ? hashtags : Array.isArray(hashtags) ? hashtags.join(' ') : String(hashtags ?? '');
+  const fullText = [safePostText, safeHashtags].filter(Boolean).join('\n\n').trim();
 
   // --- Native share sheet (preferred) ---
   const supportsNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  const handleNativeShare = async () => {
+  const handleNativeShare = useCallback(async () => {
     setNativeShareError('');
     try {
       const shareData: ShareData = {
@@ -74,7 +75,7 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
       if (err?.name === 'AbortError') return;
       setNativeShareError('Share failed. Use the platform buttons below instead.');
     }
-  };
+  }, [fullText, platform, imageUrl, onClose]);
 
   // --- WhatsApp deep link ---
   const handleWhatsAppShare = useCallback(() => {
@@ -84,9 +85,6 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
 
   // --- Telegram share URL ---
   const handleTelegramShare = useCallback(() => {
-    // Telegram's share/url expects a url param. Since we're sharing text content,
-    // we encode the full post text as the text param. The url param is required,
-    // so we use a minimal placeholder if there's no canonical post URL.
     const url = `https://t.me/share/url?url=${encodeURIComponent(' ')}&text=${encodeURIComponent(fullText)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [fullText]);
@@ -102,6 +100,9 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
       setTimeout(() => setCopyFeedback(''), 2000);
     }
   }, [fullText]);
+
+  // Early return AFTER all hooks (React Rules of Hooks)
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -120,9 +121,9 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
 
         {/* Post preview */}
         <div className="bg-brand-light border border-brand-border rounded-lg p-4 mb-5 max-h-40 overflow-y-auto">
-          <p className="text-brand-text text-sm whitespace-pre-wrap line-clamp-5">{postText}</p>
-          {hashtags && (
-            <p className="text-accent-cyan text-xs mt-2">{hashtags}</p>
+          <p className="text-brand-text text-sm whitespace-pre-wrap line-clamp-5">{safePostText}</p>
+          {safeHashtags && (
+            <p className="text-accent-cyan text-xs mt-2">{safeHashtags}</p>
           )}
         </div>
 
