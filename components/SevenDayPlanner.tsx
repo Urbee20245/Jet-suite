@@ -8,6 +8,7 @@ import {
 import type { ScheduledPost, SocialConnection, CalendarDay } from '../types';
 import { Loader } from './Loader';
 import { generateNextNDays, formatDateForDisplay } from '../utils/dateTimeUtils';
+import { SharePostModal } from './SharePostModal';
 
 interface SevenDayPlannerProps {
   userId: string;
@@ -216,6 +217,9 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  // Share modal state for planner posts
+  const [sharePost, setSharePost] = useState<ScheduledPost | null>(null);
+
   const handleConnectionToggle = (connectionId: string) => {
     setSelectedConnections(prev =>
       prev.includes(connectionId)
@@ -323,12 +327,20 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => onPostDeleted(post.id)}
-                      className="ml-4 text-red-600 hover:text-red-800 text-sm font-semibold"
-                    >
-                      Delete
-                    </button>
+                    <div className="ml-4 flex items-center gap-2">
+                      <button
+                        onClick={() => setSharePost(post)}
+                        className="text-teal-600 hover:text-teal-800 text-sm font-semibold"
+                      >
+                        Share
+                      </button>
+                      <button
+                        onClick={() => onPostDeleted(post.id)}
+                        className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -428,6 +440,17 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Share modal for planner posts */}
+        {sharePost && (
+          <SharePostModal
+            isOpen={!!sharePost}
+            onClose={() => setSharePost(null)}
+            postText={sharePost.post_text}
+            hashtags={sharePost.hashtags}
+            imageUrl={sharePost.image_url}
+          />
+        )}
       </div>
     </div>
   );
