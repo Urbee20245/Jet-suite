@@ -306,11 +306,11 @@ export const generateLocalContent = async (businessType: string, topic: string, 
     }
 };
 
-export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[]) => {
+export const generateSocialPosts = async (businessType: string, topic: string, tone: string, platforms: string[], count: number = 2) => {
     try {
         const ai = getAiClient();
         const currentMonthYear = getCurrentMonthYear();
-        const basePrompt = `You are a social media manager. Generate distinct posts for a '${businessType}'. Topic: '${topic}'. Tone: '${tone}'. Platforms: ${platforms.join(', ')}. Use ${currentMonthYear} context.`;
+        const basePrompt = `You are a social media manager. Generate exactly ${count} unique and distinct post ideas for a '${businessType}'. Topic: '${topic}'. Tone: '${tone}'. Platforms: ${platforms.join(', ')}. Use ${currentMonthYear} context. Each post MUST have a completely different angle, hook, and visual concept — no duplicates or near-duplicates.`;
         const prompt = injectDateContext(basePrompt);
 
         const response = await ai.models.generateContent({
