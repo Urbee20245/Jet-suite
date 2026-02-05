@@ -78,17 +78,23 @@ const platformNames: { [key: string]: string } = {
   'google_business': 'Google Business',
 };
 
-// OAuth-enabled platforms (all now have real OAuth!)
-const oauthPlatforms = ['facebook', 'google_business', 'tiktok'];
+// All four platforms use real OAuth (Instagram via Facebook)
+const oauthPlatforms = ['facebook', 'instagram', 'google_business', 'tiktok'];
 
-// Platforms that support OAuth
+// Map platform names to their API auth endpoint paths
+const platformAuthPaths: Record<string, string> = {
+  facebook: 'facebook',
+  instagram: 'facebook',        // Instagram connects through Facebook OAuth
+  google_business: 'google',    // API route is /api/auth/google/
+  tiktok: 'tiktok',
+};
+
+// Platforms available for connection
 const availablePlatforms: SocialPlatform[] = [
   'facebook',
   'instagram', // Auto-detects through Facebook OAuth
   'google_business',
   'tiktok',
-  // 'twitter',   // Coming soon
-  // 'linkedin',  // Coming soon
 ];
 
 export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> = ({
@@ -124,9 +130,10 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
   const handleConnectOAuth = (platform: SocialPlatform) => {
     setConnectingPlatform(platform);
     setError('');
-    
-    // Redirect to OAuth authorization endpoint
-    window.location.href = `/api/auth/${platform}/authorize?userId=${userId}`;
+
+    // Use mapped path (e.g. google_business -> google, instagram -> facebook)
+    const authPath = platformAuthPaths[platform] || platform;
+    window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}`;
   };
 
   const handleConnect = (platform: SocialPlatform) => {
@@ -200,11 +207,20 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
       )}
 
       {/* Success message from OAuth callback */}
-      {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('success') === 'facebook_connected' && (
-        <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
-          ✓ Facebook account connected successfully!
-        </div>
-      )}
+      {typeof window !== 'undefined' && (() => {
+        const success = new URLSearchParams(window.location.search).get('success');
+        const successMessages: Record<string, string> = {
+          facebook_connected: 'Facebook account connected successfully! Instagram will also be connected if linked to your Facebook page.',
+          google_business_connected: 'Google Business Profile connected successfully!',
+          tiktok_connected: 'TikTok account connected successfully!',
+        };
+        const message = success ? successMessages[success] : null;
+        return message ? (
+          <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
+            {message}
+          </div>
+        ) : null;
+      })()}
 
       {/* Connected Accounts */}
       {connections.length > 0 && (
@@ -260,7 +276,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
               const Icon = platformIcons[platform];
               const colorClass = platformColors[platform];
               const isConnecting = connectingPlatform === platform;
-              
+
               return (
                 <button
                   key={platform}
@@ -270,9 +286,14 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
                 >
                   <div className="flex items-center gap-3">
                     {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
-                    <span className="font-semibold text-brand-text">
-                      {platformNames[platform]}
-                    </span>
+                    <div>
+                      <span className="font-semibold text-brand-text">
+                        {platformNames[platform]}
+                      </span>
+                      {platform === 'instagram' && (
+                        <p className="text-xs text-brand-text-muted">Connects via Facebook</p>
+                      )}
+                    </div>
                   </div>
                   <span className="text-sm font-semibold text-accent-blue">
                     {isConnecting ? 'Connecting...' : 'Connect →'}
@@ -301,7 +322,8 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
         </div>
       )}
 
-      {showAddModal && (
+      {/* Manual connection modal - only for non-OAuth platforms (future: twitter, linkedin) */}
+      {showAddModal && !oauthPlatforms.includes(selectedPlatform) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-brand-card p-6 rounded-xl shadow-2xl max-w-md w-full">
             <h3 className="text-xl font-bold text-brand-text mb-4">Connect {platformNames[selectedPlatform]}</h3>
@@ -318,9 +340,6 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
                   placeholder="@username or Business Name"
                   className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
                 />
-                <p className="text-xs text-brand-text-muted mt-1">
-                  Note: This is a mock connection for demo purposes.
-                </p>
               </div>
             </div>
 

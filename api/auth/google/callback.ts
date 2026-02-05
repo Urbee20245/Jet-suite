@@ -5,12 +5,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// Check for required environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Check for required environment variables (support both NEXT_PUBLIC_ and non-prefixed)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !APP_URL || !ENCRYPTION_KEY) {
@@ -242,7 +242,7 @@ export default async function handler(
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'google_business')
-      .single();
+      .maybeSingle();
 
     if (existingConnection) {
       console.log('Updating existing Google Business connection');

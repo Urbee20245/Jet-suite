@@ -5,12 +5,12 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-// Check for required environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Check for required environment variables (support both NEXT_PUBLIC_ and non-prefixed)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey || !FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET || !APP_URL || !ENCRYPTION_KEY) {
@@ -229,83 +229,82 @@ export default async function handler(
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 60);
 
-    // Save Facebook connection
+    // Prepare Facebook connection data
+    const fbConnectionData = {
+      user_id: userId,
+      platform: 'facebook',
+      access_token: encrypt(longLivedTokens.access_token),
+      token_expires_at: expiresAt.toISOString(),
+      platform_user_id: userProfile.id,
+      platform_username: userProfile.name,
+      platform_page_id: pages.length > 0 ? pages[0].id : null,
+      metadata: {
+        page_name: pages.length > 0 ? pages[0].name : null,
+        page_count: pages.length,
+        has_instagram: !!instagramAccount,
+      },
+      is_active: true,
+    };
+
+    // Save Facebook connection (upsert: update if exists, insert if not)
     const { data: existingFBConnection } = await supabase
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'facebook')
-      .single();
+      .maybeSingle();
 
     if (existingFBConnection) {
       console.log('Updating existing Facebook connection');
       await supabase
         .from('social_connections')
-        .update({
-          access_token: encrypt(longLivedTokens.access_token),
-          token_expires_at: expiresAt.toISOString(),
-          platform_user_id: userProfile.id,
-          platform_username: userProfile.name,
-          platform_page_id: pages.length > 0 ? pages[0].id : null,
-          is_active: true,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ ...fbConnectionData, updated_at: new Date().toISOString() })
         .eq('id', existingFBConnection.id);
     } else {
       console.log('Creating new Facebook connection');
       await supabase
         .from('social_connections')
-        .insert({
-          user_id: userId,
-          platform: 'facebook',
-          access_token: encrypt(longLivedTokens.access_token),
-          token_expires_at: expiresAt.toISOString(),
-          platform_user_id: userProfile.id,
-          platform_username: userProfile.name,
-          platform_page_id: pages.length > 0 ? pages[0].id : null,
-          is_active: true,
-        });
+        .insert(fbConnectionData);
     }
 
-    // Save Instagram connection if found
+    // Save Instagram connection if found through Facebook
     if (instagramAccount && pageWithInstagram) {
       console.log('Saving Instagram connection:', instagramAccount.username);
-      
+
+      const igConnectionData = {
+        user_id: userId,
+        platform: 'instagram',
+        access_token: encrypt(pageWithInstagram.access_token),
+        token_expires_at: expiresAt.toISOString(),
+        platform_user_id: instagramAccount.id,
+        platform_username: instagramAccount.username,
+        platform_page_id: pageWithInstagram.id,
+        metadata: {
+          connected_via: 'facebook',
+          facebook_page_id: pageWithInstagram.id,
+          facebook_page_name: pageWithInstagram.name,
+        },
+        is_active: true,
+      };
+
       const { data: existingIGConnection } = await supabase
         .from('social_connections')
         .select('id')
         .eq('user_id', userId)
         .eq('platform', 'instagram')
-        .single();
+        .maybeSingle();
 
       if (existingIGConnection) {
         console.log('Updating existing Instagram connection');
         await supabase
           .from('social_connections')
-          .update({
-            access_token: encrypt(pageWithInstagram.access_token),
-            token_expires_at: expiresAt.toISOString(),
-            platform_user_id: instagramAccount.id,
-            platform_username: instagramAccount.username,
-            platform_page_id: pageWithInstagram.id,
-            is_active: true,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...igConnectionData, updated_at: new Date().toISOString() })
           .eq('id', existingIGConnection.id);
       } else {
         console.log('Creating new Instagram connection');
         await supabase
           .from('social_connections')
-          .insert({
-            user_id: userId,
-            platform: 'instagram',
-            access_token: encrypt(pageWithInstagram.access_token),
-            token_expires_at: expiresAt.toISOString(),
-            platform_user_id: instagramAccount.id,
-            platform_username: instagramAccount.username,
-            platform_page_id: pageWithInstagram.id,
-            is_active: true,
-          });
+          .insert(igConnectionData);
       }
     } else {
       console.log('No Instagram Business account found');
