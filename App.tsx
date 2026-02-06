@@ -316,6 +316,7 @@ const CoreApp: React.FC = () => {
       '/contact',
       '/privacy-policy',
       '/terms',
+      '/terms-of-service',
       '/schedule-demo'
     ];
 

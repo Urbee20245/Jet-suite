@@ -1736,27 +1736,14 @@ export const AdminPanel: React.FC = () => {
                         <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
                             <li>Go to <a href="https://app.cal.com/event-types" target="_blank" rel="noopener noreferrer" className="underline font-medium">app.cal.com/event-types</a></li>
                             <li>Click on the event you want to use for demos</li>
-                            <li>Copy the event slug from the URL (e.g., <code className="bg-blue-100 px-1 rounded">your-username/30min</code>)</li>
-                            <li>Or use the full format: <code className="bg-blue-100 px-1 rounded">username/event-slug</code></li>
+                            <li>Your event URL will look like: <code className="bg-blue-100 px-1 rounded">cal.com/your-username/event-name</code></li>
+                            <li>Enter just the path after cal.com/ — e.g., <code className="bg-blue-100 px-1 rounded">your-username/event-name</code></li>
                         </ol>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com API Key</label>
-                            <input
-                                type="password"
-                                value={calcomForm.calcom_api_key}
-                                onChange={e => setCalcomForm({ ...calcomForm, calcom_api_key: e.target.value })}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                placeholder="cal_live_xxxxxxxxxxxx"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Find this at <a href="https://app.cal.com/settings/developer/api-keys" target="_blank" rel="noopener noreferrer" className="underline">Settings &gt; Developer &gt; API Keys</a>
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com Event ID (slug)</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com Event ID</label>
                             <input
                                 type="text"
                                 value={calcomForm.calcom_event_id}
@@ -1765,7 +1752,7 @@ export const AdminPanel: React.FC = () => {
                                 placeholder="your-username/jetsuite-demo"
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                                This is your Cal.com event slug (e.g., <code className="bg-gray-100 px-1 rounded">team/jetsuite/30min</code>)
+                                Enter the path from your Cal.com event URL (e.g., <code className="bg-gray-100 px-1 rounded">your-username/30min</code>)
                             </p>
                         </div>
                         <div className="flex items-center gap-4 pt-2">

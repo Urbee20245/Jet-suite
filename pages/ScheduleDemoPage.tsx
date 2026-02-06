@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     CheckCircleIcon,
     PlayCircleIcon,
@@ -17,6 +17,7 @@ interface ScheduleDemoPageProps {
 export const ScheduleDemoPage: React.FC<ScheduleDemoPageProps> = ({ navigate }) => {
     const [calEventId, setCalEventId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const calContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const fetchCalEvent = async () => {
@@ -34,17 +35,27 @@ export const ScheduleDemoPage: React.FC<ScheduleDemoPageProps> = ({ navigate }) 
         fetchCalEvent();
     }, []);
 
-    // Load Cal.com embed script
+    // Load and initialize Cal.com embed properly
     useEffect(() => {
-        if (!calEventId) return;
+        if (!calEventId || !calContainerRef.current) return;
 
-        const script = document.createElement('script');
-        script.src = 'https://app.cal.com/embed/embed.js';
-        script.async = true;
-        document.head.appendChild(script);
+        // Use an iframe-based embed which is the most reliable approach
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://cal.com/${calEventId}?embed=true&theme=dark&layout=month_view`;
+        iframe.style.width = '100%';
+        iframe.style.minHeight = '500px';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '8px';
+        iframe.style.overflow = 'hidden';
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('allowfullscreen', 'true');
+
+        const container = calContainerRef.current;
+        container.innerHTML = '';
+        container.appendChild(iframe);
 
         return () => {
-            document.head.removeChild(script);
+            if (container) container.innerHTML = '';
         };
     }, [calEventId]);
 
@@ -138,9 +149,8 @@ export const ScheduleDemoPage: React.FC<ScheduleDemoPageProps> = ({ navigate }) 
                                         </div>
                                     ) : calEventId ? (
                                         <div
-                                            data-cal-link={calEventId}
-                                            data-cal-config='{"layout":"month_view","theme":"dark"}'
-                                            style={{ width: '100%', minHeight: '400px', overflow: 'auto' }}
+                                            ref={calContainerRef}
+                                            style={{ width: '100%', minHeight: '500px', overflow: 'hidden' }}
                                         ></div>
                                     ) : (
                                         /* Fallback form if Cal.com is not configured */
