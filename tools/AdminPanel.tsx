@@ -35,7 +35,7 @@ interface AdminProfileData {
   isProfileActive: boolean;
 }
 
-type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms';
+type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms' | 'settings';
 
 export const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -117,6 +117,10 @@ export const AdminPanel: React.FC = () => {
   const [smsRecipientType, setSmsRecipientType] = useState<'custom' | 'user' | 'all'>('custom');
   const [selectedSmsUserId, setSelectedSmsUserId] = useState('');
 
+  // Cal.com settings state
+  const [calcomForm, setCalcomForm] = useState({ calcom_api_key: '', calcom_event_id: '' });
+  const [calcomLoaded, setCalcomLoaded] = useState(false);
+
   useEffect(() => {
     const loadTabData = () => {
       switch (activeTab) {
@@ -140,6 +144,9 @@ export const AdminPanel: React.FC = () => {
           break;
         case 'announcements':
           loadAnnouncements();
+          break;
+        case 'settings':
+          loadCalcomSettings();
           break;
         default:
           setLoading(false);
@@ -250,6 +257,51 @@ export const AdminPanel: React.FC = () => {
       console.error('Error loading SMS settings:', error);
     }
     setLoading(false);
+  };
+
+  const loadCalcomSettings = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/calcom-settings', {
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+      if (response.ok) {
+        const { settings } = await response.json();
+        if (settings) {
+          setCalcomForm({
+            calcom_api_key: settings.calcom_api_key || '',
+            calcom_event_id: settings.calcom_event_id || ''
+          });
+        }
+        setCalcomLoaded(true);
+      }
+    } catch (error: any) {
+      console.error('Error loading Cal.com settings:', error);
+    }
+    setLoading(false);
+  };
+
+  const saveCalcomSettings = async () => {
+    setUpdating(true);
+    try {
+      const response = await fetch('/api/admin/calcom-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': 'theivsightcompany@gmail.com'
+        },
+        body: JSON.stringify(calcomForm)
+      });
+      if (response.ok) {
+        showMessage('success', 'Cal.com settings saved successfully!');
+      } else {
+        const errorData = await response.json();
+        showMessage('error', errorData.error || 'Failed to save Cal.com settings');
+      }
+    } catch (error: any) {
+      showMessage('error', 'Failed to save Cal.com settings');
+    }
+    setUpdating(false);
   };
 
   const loadTickets = async () => {
@@ -1662,6 +1714,105 @@ export const AdminPanel: React.FC = () => {
                 </div>
             </div>
         );
+      case 'settings':
+        return (
+            <div className="space-y-6">
+                <h2 className="text-2xl font-bold mb-4">Platform Settings</h2>
+
+                {/* Cal.com Integration */}
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="bg-blue-100 p-2.5 rounded-lg">
+                            <CalendarIcon className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-700">Cal.com Integration</h3>
+                            <p className="text-sm text-gray-500">Connect your Cal.com calendar for demo scheduling on the marketing site.</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+                        <h4 className="text-sm font-semibold text-blue-800 mb-2">How to find your Cal.com Event ID</h4>
+                        <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                            <li>Go to <a href="https://app.cal.com/event-types" target="_blank" rel="noopener noreferrer" className="underline font-medium">app.cal.com/event-types</a></li>
+                            <li>Click on the event you want to use for demos</li>
+                            <li>Copy the event slug from the URL (e.g., <code className="bg-blue-100 px-1 rounded">your-username/30min</code>)</li>
+                            <li>Or use the full format: <code className="bg-blue-100 px-1 rounded">username/event-slug</code></li>
+                        </ol>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com API Key</label>
+                            <input
+                                type="password"
+                                value={calcomForm.calcom_api_key}
+                                onChange={e => setCalcomForm({ ...calcomForm, calcom_api_key: e.target.value })}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="cal_live_xxxxxxxxxxxx"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Find this at <a href="https://app.cal.com/settings/developer/api-keys" target="_blank" rel="noopener noreferrer" className="underline">Settings &gt; Developer &gt; API Keys</a>
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com Event ID (slug)</label>
+                            <input
+                                type="text"
+                                value={calcomForm.calcom_event_id}
+                                onChange={e => setCalcomForm({ ...calcomForm, calcom_event_id: e.target.value })}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="your-username/jetsuite-demo"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                This is your Cal.com event slug (e.g., <code className="bg-gray-100 px-1 rounded">team/jetsuite/30min</code>)
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 pt-2">
+                            <button
+                                onClick={saveCalcomSettings}
+                                disabled={updating}
+                                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                            >
+                                {updating ? 'Saving...' : 'Save Cal.com Settings'}
+                            </button>
+                            {calcomForm.calcom_event_id && (
+                                <a
+                                    href={`https://app.cal.com/${calcomForm.calcom_event_id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                                >
+                                    Preview on Cal.com
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Demo Page Preview */}
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Schedule Demo Page</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                        Your Cal.com calendar is embedded on the public Schedule Demo page. Visitors who click "Schedule a Personalized Demo" on the marketing site will be directed to this page.
+                    </p>
+                    <div className="flex items-center gap-4">
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${calcomForm.calcom_event_id ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <div className={`w-2 h-2 rounded-full ${calcomForm.calcom_event_id ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                            {calcomForm.calcom_event_id ? 'Cal.com Connected' : 'Not Configured - Fallback form active'}
+                        </div>
+                        <a
+                            href="/schedule-demo"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                        >
+                            View Demo Page
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
       default:
         return <div>Select a tab to get started.</div>;
     }
@@ -1676,7 +1827,7 @@ export const AdminPanel: React.FC = () => {
       )}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {(['overview', 'businesses', 'users', 'support', 'revenue', 'announcements', 'email', 'sms'] as TabType[]).map(tab => (
+          {(['overview', 'businesses', 'users', 'support', 'revenue', 'announcements', 'email', 'sms', 'settings'] as TabType[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

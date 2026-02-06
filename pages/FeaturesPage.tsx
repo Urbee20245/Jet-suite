@@ -519,7 +519,7 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative">
                     Get Started
                 </button>
-                <button className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
+                <button onClick={() => navigate('/schedule-demo')} className="w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg">
                     Schedule a Demo
                     <span className="block text-xs font-normal opacity-80 mt-1">See all tools live</span>
                 </button>

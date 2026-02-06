@@ -17,6 +17,7 @@ import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
 import { NotFoundPage } from './NotFoundPage'; // Import NotFoundPage
 import { ContactPage } from './ContactPage'; // Import ContactPage
+import { ScheduleDemoPage } from './ScheduleDemoPage';
 import JethelperApp from '../jethelper/JethelperApp';
 
 interface MarketingWebsiteProps {
@@ -59,6 +60,8 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <TermsOfService />;
             case '/contact': // NEW ROUTE
                 return <ContactPage />;
+            case '/schedule-demo':
+                return <ScheduleDemoPage navigate={navigate} />;
             default:
                 // Handle 404 Not Found
                 return <NotFoundPage navigate={navigate} />;
