@@ -690,6 +690,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                 </div>
                             </div>
                         </div>
+                        <div className="flex gap-4">
+                            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/10 p-3 rounded-lg h-fit border border-orange-500/30">
+                                <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.25-3.2a2.25 2.25 0 01-.82-3.08l3.72-6.12a2.25 2.25 0 013.08-.82l6.12 3.72a2.25 2.25 0 01.82 3.08l-3.72 6.12a2.25 2.25 0 01-3.08.82l-.87-.53m7.97-2.33L21 12m-4.35 4.35l1.76 1.76M3 21l3.5-3.5" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-white">JetServices <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded ml-2">NEW</span></h4>
+                                <p className="text-gray-400 text-sm">Manage, promote, and schedule your services with AI-powered images and social posting.</p>
+                                <div className="mt-2 flex items-center gap-2 text-xs">
+                                    <span className="text-orange-300">• AI service image generation</span>
+                                    <span className="text-orange-300">• Calendar integration</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -959,11 +974,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               </div>
               
               <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
-              <div className="flex items-baseline justify-center my-8">
+              <div className="inline-block bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-4 animate-pulse">
+                Founders Price - Limited Time
+              </div>
+              <div className="flex items-baseline justify-center mb-2">
+                <span className="text-2xl text-gray-500 line-through mr-3">$349</span>
                 <span className="text-6xl font-extrabold text-white">$149</span>
                 <span className="text-xl text-gray-400 ml-2">/month</span>
               </div>
-              
+              <p className="text-xs text-yellow-300/80 font-medium mb-6">Lock in this introductory rate before it's gone!</p>
+
               <ul className="text-left space-y-4 mb-8 max-w-xs mx-auto text-gray-300">
                 <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
                 <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> Unlimited Usage</li>

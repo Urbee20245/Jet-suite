@@ -32,7 +32,8 @@ import {
     GrowthPlanIcon,
     AdminPanelIcon,
     ProfileIcon,
-    JetProductIcon // Import the new icon
+    JetProductIcon,
+    JetServicesIcon
 } from '../components/icons/ToolIcons';
 import { FaqItem } from '../components/marketing/FaqItem';
 
@@ -143,13 +144,22 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             icon: JetImageIcon,
             iconBg: "bg-rose-600"
         },
-        { 
-            name: "JetProduct", 
-            tagline: "AI Product Mockup Generator", 
-            brief: "Upload a product photo and generate professional, branded mockups for e-commerce and ads.", 
+        {
+            name: "JetProduct",
+            tagline: "AI Product Mockup Generator",
+            brief: "Upload a product photo and generate professional, branded mockups for e-commerce and ads.",
             replaces: "Product Photography & Designer",
             icon: JetProductIcon,
             iconBg: "bg-orange-600"
+        },
+        {
+            name: "JetServices",
+            tagline: "Service Management & Promotion",
+            brief: "Manage your service listings, generate AI images, post to social media, and schedule via calendar—all in one place.",
+            replaces: "Service Marketing Tools ($300/mo)",
+            icon: JetServicesIcon,
+            iconBg: "bg-amber-600",
+            featured: true
         }
     ],
     engage: [
@@ -466,8 +476,11 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
                 </div>
             </div>
             <div className="text-center mt-8">
-                <p className="text-xl text-white font-bold">Your Price: <span className="text-blue-400 text-3xl">$149/mo</span></p>
-                <p className="text-sm text-gray-500">Start your subscription today.</p>
+                <div className="inline-block bg-yellow-500/20 border border-yellow-500/50 rounded-full px-4 py-1 mb-3">
+                  <span className="text-yellow-300 text-sm font-bold">Introductory Founders Price</span>
+                </div>
+                <p className="text-xl text-white font-bold">Your Price: <span className="text-gray-400 line-through text-lg mr-2">$349/mo</span><span className="text-blue-400 text-3xl">$149/mo</span></p>
+                <p className="text-sm text-yellow-300/70 font-medium mt-1">This founders rate won't last long. Lock it in today!</p>
             </div>
         </div>
       </section>

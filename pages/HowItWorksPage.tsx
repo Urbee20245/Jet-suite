@@ -292,6 +292,7 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
                         <li className="flex items-start"><CheckIcon className="w-5 h-5 text-purple-500 mr-2 mt-1"/><span>JetCreate writes optimized posts & emails</span></li>
                         <li className="flex items-start"><CheckIcon className="w-5 h-5 text-purple-500 mr-2 mt-1"/><span>JetImage generates professional visuals</span></li>
                         <li className="flex items-start"><CheckIcon className="w-5 h-5 text-purple-500 mr-2 mt-1"/><span>JetReply drafts perfect review responses</span></li>
+                        <li className="flex items-start"><CheckIcon className="w-5 h-5 text-purple-500 mr-2 mt-1"/><span>JetServices manages and promotes your services with AI images and scheduling</span></li>
                     </ul>
                 </div>
                 <div className="md:w-1/2">
