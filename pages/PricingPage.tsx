@@ -63,6 +63,21 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
           <p className="mt-6 max-w-2xl mx-auto text-lg sm:text-xl text-gray-300">
             Start your subscription today. One plan, all the tools. No hidden fees, no feature gates.
           </p>
+
+          {/* Founders Pricing Banner */}
+          <div className="mt-8 inline-block relative">
+            <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-2 border-yellow-500/50 rounded-2xl px-8 py-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400"></div>
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+                <span className="bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Founders Price</span>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-gray-400 line-through text-2xl">$349/mo</span>
+                  <span className="text-4xl font-extrabold text-white">$149/mo</span>
+                </div>
+                <span className="text-yellow-300 text-sm font-semibold">Lock in this price before it's gone!</span>
+              </div>
+            </div>
+          </div>
           
           {/* Savings Calculator CTA */}
           <div className="mt-8">
@@ -101,7 +116,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
         <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Pricing Card with Checkout */}
           <div className="lg:col-span-2 bg-gradient-to-br from-slate-800 to-brand-dark p-8 rounded-2xl border border-slate-700 shadow-2xl shadow-accent-purple/10 glow-card glow-card-rounded-2xl">
-            <h2 className="text-3xl font-bold text-white">JetSuite Plan</h2>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-3xl font-bold text-white">JetSuite Plan</h2>
+              <span className="bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Founders Pricing</span>
+            </div>
             <p className="mt-2 text-gray-400 font-medium">All tools included, unlimited usage</p>
             <p className="mt-4 text-gray-300">
               Our core plan gives you everything you need to grow your business from foundation to conversion.
@@ -225,10 +243,15 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
               </div>
             </div>
 
-            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700 relative">
-              <div className="text-sm text-gray-400 mb-2">Your Monthly Cost</div>
-              <div className="text-4xl font-bold text-white mb-2">${monthlyTotal}</div>
-              <div className="text-sm text-gray-400">Billed Monthly</div>
+            <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400"></div>
+              <div className="text-sm text-yellow-400 font-semibold mb-2">Introductory Founders Price</div>
+              <div className="flex items-baseline justify-center gap-3">
+                <span className="text-xl text-gray-500 line-through">${basePlan + 200 + (additionalBusinessCount * additionalBusinessCost) + (seats * seatCost)}</span>
+                <span className="text-4xl font-bold text-white">${monthlyTotal}</span>
+              </div>
+              <div className="text-sm text-gray-400 mt-1">Billed Monthly</div>
+              <p className="text-xs text-yellow-300/80 mt-2 font-medium">Regular price will be $349/mo base. Lock in your founders rate today!</p>
             </div>
 
             {/* Checkout Button */}
@@ -242,6 +265,11 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             <p className="mt-4 text-center text-sm text-gray-400">
               Cancel anytime. No long-term contracts.
             </p>
+            <div className="mt-4 text-center">
+              <p className="text-xs text-yellow-400/70 font-medium">
+                This introductory founders price won't last long. Regular price: $349/mo.
+              </p>
+            </div>
           </div>
 
           {/* Calculator and Add-ons */}
