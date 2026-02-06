@@ -724,3 +724,107 @@ export const getTrendingImageStyles = async (): Promise<Array<{ name: string; de
         ];
     }
 };
+
+/**
+ * Generate a compelling service description using AI.
+ */
+export const generateServiceDescription = async (
+    serviceTitle: string,
+    businessName: string,
+    businessType: string,
+    category: string,
+    price: string,
+    priceType: string,
+    duration: string,
+    brandTone: string
+): Promise<string> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `You are an expert service copywriter for local businesses. Write a compelling, conversion-focused service description for the following:
+
+Business: "${businessName}" (${businessType})
+Service Title: "${serviceTitle}"
+Category: ${category}
+${price ? `Price: $${price} (${priceType})` : ''}
+${duration ? `Duration: ${duration}` : ''}
+Brand Tone: ${brandTone}
+
+RULES:
+1. Write 2-4 sentences maximum. Be concise but persuasive.
+2. Highlight the key benefit to the customer.
+3. Include what makes this service special or unique.
+4. Match the brand tone (${brandTone}).
+5. Do NOT use quotation marks around the output.
+6. Do NOT include the service title or price in the description - those are shown separately.
+7. Write in second person ("you" / "your") to speak directly to the customer.
+
+Return ONLY the description text, nothing else.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: injectDateContext(basePrompt),
+        });
+        return (response.text ?? '').trim().replace(/^["']|["']$/g, '');
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
+
+/**
+ * Generate relevant tags for a service listing using AI.
+ */
+export const generateServiceTags = async (
+    serviceTitle: string,
+    serviceDescription: string,
+    businessName: string,
+    businessType: string,
+    category: string
+): Promise<string[]> => {
+    try {
+        const ai = getAiClient();
+        const basePrompt = `You are an SEO and marketing expert for local businesses. Generate relevant tags for this service listing:
+
+Business: "${businessName}" (${businessType})
+Service: "${serviceTitle}"
+Category: ${category}
+${serviceDescription ? `Description: "${serviceDescription}"` : ''}
+
+RULES:
+1. Return exactly 6-8 tags.
+2. Tags should be 1-3 words each, lowercase.
+3. Include a mix of: what the service does, who it's for, key benefits, and related search terms.
+4. Make them useful for search/discovery — think about what a potential customer would search for.
+5. Do NOT include the business name as a tag.
+
+Return as a JSON object with a "tags" array of strings.`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: injectDateContext(basePrompt),
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        tags: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    },
+                    required: ["tags"]
+                }
+            }
+        });
+
+        const parsed = JSON.parse(response.text.trim());
+        return parsed.tags || [];
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            throw new Error("AI features are disabled due to missing API key.");
+        }
+        throw error;
+    }
+};
