@@ -1148,8 +1148,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               aria-label="Get Started">
               Get Started
             </button>
-            <button 
-              onClick={() => window.open("https://tidycal.com/team/jetsuit/jetsuite-demo", "_blank")}
+            <button
+              onClick={() => navigate('/schedule-demo')}
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
               aria-label="Schedule a personalized demo with our team">
               Schedule a Personalized Demo

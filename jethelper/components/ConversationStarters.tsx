@@ -15,7 +15,7 @@ const starters: Starter[] = [
     { text: "Tell me about the Free Tools", type: 'prompt' },
     { text: "Show me the Jetbiz Demo", type: 'link', url: 'https://www.getjetsuite.com/demo/jetbiz' },
     { text: "Show me the Jetviz Demo", type: 'link', url: 'https://www.getjetsuite.com/demo/jetviz' },
-    { text: "Book a Live Demo Session", type: 'link', url: 'https://tidycal.com/team/jetsuit/jetsuite-demo' },
+    { text: "Book a Live Demo Session", type: 'link', url: 'https://www.getjetsuite.com/schedule-demo' },
 ];
 
 const ExternalLinkIcon = () => (
