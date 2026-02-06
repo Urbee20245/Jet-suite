@@ -57,6 +57,7 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
             case '/privacy-policy':
                 return <PrivacyPolicy />;
             case '/terms':
+            case '/terms-of-service':
                 return <TermsOfService />;
             case '/contact': // NEW ROUTE
                 return <ContactPage />;

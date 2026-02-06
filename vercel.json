@@ -11,7 +11,7 @@
       "permanent": true
     },
     {
-      "source": "/terms",
+      "source": "/terms-of-service",
       "destination": "/terms",
       "permanent": true
     },
