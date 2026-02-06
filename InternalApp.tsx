@@ -19,6 +19,7 @@ import { JetLeads } from './tools/JetLeads';
 import { JetEvents } from './tools/JetEvents';
 import { JetAds } from './tools/JetAds';
 import { JetProduct } from './tools/JetProduct';
+import { JetServices } from './tools/JetServices';
 import { GrowthPlan } from './tools/GrowthPlan';
 import { KnowledgeBase } from './tools/KnowledgeBase';
 import { Account } from './tools/Account';
@@ -407,6 +408,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
         return <JetImage tool={{ id: 'jetimage', name: 'JetImage', category: 'create' }} profileData={currentProfileData} />;
       case 'jetproduct':
         return <JetProduct tool={{ id: 'jetproduct', name: 'JetProduct', category: 'create' }} profileData={currentProfileData} />;
+      case 'jetservices':
+        return <JetServices tool={{ id: 'jetservices', name: 'JetServices', category: 'create' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetcontent':
         return <JetContent tool={{ id: 'jetcontent', name: 'JetContent', category: 'create' }} initialProps={null} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetreply':

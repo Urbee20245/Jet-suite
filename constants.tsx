@@ -21,6 +21,7 @@ import {
   AdminPanelIcon,
   PlannerIcon,
   JetProductIcon,
+  JetServicesIcon,
   BusinessIcon,
 } from './components/icons/ToolIcons';
 import { TicketIcon } from './components/SupportIcons';
@@ -47,7 +48,8 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
   jetcontent: { id: 'jetcontent', name: 'JetContent', description: 'Create SEO-friendly blog posts and articles for your website.', icon: JetContentIcon },
   jetimage: { id: 'jetimage', name: 'JetImage', description: 'Generate high-quality images for your marketing materials.', icon: JetImageIcon },
   jetproduct: { id: 'jetproduct', name: 'JetProduct', description: 'Generate professional product mockups and lifestyle shots.', icon: JetProductIcon },
-  
+  jetservices: { id: 'jetservices', name: 'JetServices', description: 'Manage, promote, and schedule your services with AI-powered images and social posting.', icon: JetServicesIcon },
+
   // Engage & Convert Tools
   jetreply: { id: 'jetreply', name: 'JetReply', description: 'Craft professional AI-assisted responses to customer reviews.', icon: JetReplyIcon },
   jettrust: { id: 'jettrust', name: 'JetTrust', description: 'Create embeddable review widgets for your website and social media.', icon: JetTrustIcon },
@@ -75,7 +77,7 @@ export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', '
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
-  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetproduct'] },
+  { name: 'Marketing and Brand Strategy', tools: ['jetcreate', 'jetsocial', 'jetimage', 'jetcontent', 'jetproduct', 'jetservices'] },
   { name: 'Customer Engagement', tools: ['jetreply', 'jettrust', 'jetleads', 'jetevents', 'jetads'] }
 ];
 
