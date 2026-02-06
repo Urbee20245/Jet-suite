@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, SocialConnection } from '../types';
-import { generateImage, generateSocialPosts } from '../services/geminiService';
+import { generateImage, generateSocialPosts, generateServiceDescription as aiGenerateServiceDescription, generateServiceTags as aiGenerateServiceTags } from '../services/geminiService';
 import {
   getServiceListings,
   createServiceListing,
@@ -136,6 +136,8 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
   const [formDuration, setFormDuration] = useState('');
   const [formTags, setFormTags] = useState('');
   const [formSaving, setFormSaving] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [generatingTags, setGeneratingTags] = useState(false);
 
   // Image generation state
   const [selectedService, setSelectedService] = useState<ServiceListing | null>(null);
@@ -377,6 +379,57 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
     setFormPriceType('fixed');
     setFormDuration('');
     setFormTags('');
+  };
+
+  // ========== AI DESCRIPTION & TAGS ==========
+
+  const handleGenerateDescription = async () => {
+    if (!formTitle.trim()) {
+      setError('Please enter a service title first so AI knows what to write about.');
+      return;
+    }
+    setGeneratingDescription(true);
+    setError('');
+    try {
+      const description = await aiGenerateServiceDescription(
+        formTitle,
+        businessName,
+        businessType,
+        formCategory,
+        formPrice,
+        formPriceType,
+        formDuration,
+        brandTone
+      );
+      setFormDescription(description);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate description. Please try again.');
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
+
+  const handleGenerateTags = async () => {
+    if (!formTitle.trim()) {
+      setError('Please enter a service title first so AI can suggest relevant tags.');
+      return;
+    }
+    setGeneratingTags(true);
+    setError('');
+    try {
+      const tags = await aiGenerateServiceTags(
+        formTitle,
+        formDescription,
+        businessName,
+        businessType,
+        formCategory
+      );
+      setFormTags(tags.join(', '));
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate tags. Please try again.');
+    } finally {
+      setGeneratingTags(false);
+    }
   };
 
   // ========== IMAGE UPLOAD & GENERATION ==========
@@ -996,7 +1049,27 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1">Description</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-brand-text">Description</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={generatingDescription || !formTitle.trim()}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent-blue to-accent-purple text-white hover:shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generatingDescription ? (
+                      <>
+                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" /></svg>
+                        AI Write
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
@@ -1046,7 +1119,27 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-1">Tags (comma-separated)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-brand-text">Tags (comma-separated)</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateTags}
+                    disabled={generatingTags || !formTitle.trim()}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent-blue to-accent-purple text-white hover:shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {generatingTags ? (
+                      <>
+                        <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" /></svg>
+                        AI Suggest
+                      </>
+                    )}
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={formTags}
