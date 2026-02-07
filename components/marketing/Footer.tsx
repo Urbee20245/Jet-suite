@@ -28,9 +28,9 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           >
             Privacy Policy
           </a>
-          <a 
-            href={`${baseUrl}/terms`} 
-            onClick={(e) => handleNavigation(e, '/terms')} 
+          <a
+            href={`${baseUrl}/terms-of-service`}
+            onClick={(e) => handleNavigation(e, '/terms-of-service')}
             className="hover:text-white"
             title="Terms of Service"
           >
