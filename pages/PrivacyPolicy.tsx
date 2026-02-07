@@ -1,30 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-export const PrivacyPolicy: React.FC = () => {
+interface PrivacyPolicyProps {
+  embedded?: boolean;
+}
+
+export const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ embedded = false }) => {
+  useEffect(() => {
+    document.title = 'Privacy Policy | JetSuite';
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
-              <span className="text-xl font-bold text-white">JetSuite</span>
-            </div>
-            
-            {/* Back to Home Button */}
-            
+      {/* Standalone Header - hidden when embedded inside MarketingWebsite */}
+      {!embedded && (
+        <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
+                <span className="text-xl font-bold text-white">JetSuite</span>
+              </div>
               <a
                 href="/"
                 className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors text-sm"
               >
                 ← Back to Home
               </a>
-            
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -40,8 +45,9 @@ export const PrivacyPolicy: React.FC = () => {
         {/* Introduction */}
         <section className="mb-8 prose prose-lg max-w-none">
           <p className="text-gray-100">
-            Welcome to JetSuite ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose, 
-            and safeguard your information when you use our digital marketing software-as-a-service platform (the "Service"). 
+            Welcome to JetSuite ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose,
+            and safeguard your information when you use our SaaS platform for marketing automation, content publishing,
+            and analytics (the "Service"). 
             Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, 
             please do not access the Service.
           </p>

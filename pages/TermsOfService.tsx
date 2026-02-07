@@ -1,30 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-export const TermsOfService: React.FC = () => {
+interface TermsOfServiceProps {
+  embedded?: boolean;
+}
+
+export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false }) => {
+  useEffect(() => {
+    document.title = 'Terms of Service | JetSuite';
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
-              <span className="text-xl font-bold text-white">JetSuite</span>
-            </div>
-            
-            {/* Back to Home Button */}
-            
+      {/* Standalone Header - hidden when embedded inside MarketingWebsite */}
+      {!embedded && (
+        <div className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <img src="/Jetsuitewing.png" alt="JetSuite" className="w-8 h-8" />
+                <span className="text-xl font-bold text-white">JetSuite</span>
+              </div>
               <a
                 href="/"
                 className="px-4 py-2 bg-accent-purple hover:bg-accent-purple/80 text-white font-semibold rounded-lg transition-colors text-sm"
               >
                 ← Back to Home
               </a>
-            
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -40,9 +45,9 @@ export const TermsOfService: React.FC = () => {
         {/* Introduction */}
         <section className="mb-8">
           <p className="text-gray-100 mb-4">
-            Welcome to JetSuite. These Terms of Service ("Terms") govern your access to and use of our digital marketing 
-            software-as-a-service platform (the "Service"). By accessing or using the Service, you agree to be bound by 
-            these Terms.
+            Welcome to JetSuite. These Terms of Service ("Terms") govern your access to and use of our SaaS platform
+            for marketing automation, content publishing, and analytics (the "Service"). By accessing or using the Service,
+            you agree to be bound by these Terms.
           </p>
           <p className="text-gray-100 mb-4 bg-yellow-900 border-l-4 border-yellow-500 p-4">
             <strong>IMPORTANT:</strong> Please read these Terms carefully. If you do not agree to these Terms, you may not 
@@ -68,7 +73,7 @@ export const TermsOfService: React.FC = () => {
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-100 mb-4">2. Service Description</h2>
           <p className="text-gray-100 mb-4">
-            JetSuite provides digital marketing tools and services including:
+            JetSuite provides marketing automation, content publishing, and analytics tools and services including:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
             <li>Business analysis and optimization tools</li>
