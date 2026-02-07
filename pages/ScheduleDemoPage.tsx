@@ -371,6 +371,10 @@ const CalendarBookingWidget: React.FC = () => {
 
 export const ScheduleDemoPage: React.FC<ScheduleDemoPageProps> = ({ navigate }) => {
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const benefits = [
         { icon: SparklesIcon, title: 'See AI in Action', desc: 'Watch JetSuite analyze a real business profile live' },
         { icon: ChartBarIcon, title: 'Get Your Growth Score', desc: 'See where your business stands vs competitors' },
@@ -428,10 +432,14 @@ export const ScheduleDemoPage: React.FC<ScheduleDemoPageProps> = ({ navigate }) 
 
                             <div className="flex items-center gap-4 pt-4 border-t border-slate-700">
                                 <div className="flex -space-x-3">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 border-2 border-brand-darker flex items-center justify-center text-white text-xs font-bold">
-                                            {['M', 'S', 'J', 'A'][i]}
-                                        </div>
+                                    {['/GJSCLIENT1.png', '/GJSCLIENT2.png', '/GJSCLIENT3.png', '/GJSCLIENT4.png'].map((src, i) => (
+                                        <img
+                                            key={i}
+                                            src={src}
+                                            alt={`JetSuite Client ${i + 1}`}
+                                            className="w-10 h-10 rounded-full border-2 border-brand-darker object-cover"
+                                            loading="lazy"
+                                        />
                                     ))}
                                 </div>
                                 <div>
