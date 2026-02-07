@@ -11,13 +11,13 @@
       "permanent": true
     },
     {
-      "source": "/terms-of-service",
-      "destination": "/terms",
+      "source": "/terms",
+      "destination": "/terms-of-service",
       "permanent": true
     },
     {
       "source": "/terms.html",
-      "destination": "/terms",
+      "destination": "/terms-of-service",
       "permanent": true
     }
   ],
@@ -25,6 +25,14 @@
     {
       "source": "/api/:path*",
       "destination": "/api/:path*"
+    },
+    {
+      "source": "/terms-of-service",
+      "destination": "/terms.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy.html"
     },
     {
       "source": "/((?!api).*)",
