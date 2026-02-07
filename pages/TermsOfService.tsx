@@ -155,7 +155,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
             <li>Attempt unauthorized access to our systems</li>
             <li>Use the Service for any illegal purpose</li>
             <li>Post false, misleading, or defamatory content</li>
-            <li>Violate third-party platform terms (Facebook, Google, etc.)</li>
+            <li>Violate third-party platform terms (Facebook, Instagram, Google Business, TikTok, etc.)</li>
           </ul>
         </section>
 
@@ -187,31 +187,151 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-100 mb-4">7. Third-Party Services and Integrations</h2>
           <p className="text-gray-100 mb-4">
-            <strong>7.1 Third-Party Platforms:</strong> When you connect third-party accounts (Facebook, Instagram, Google, etc.):
+            <strong>7.1 Supported Platforms:</strong> JetSuite integrates with the following third-party platforms
+            (collectively, "Connected Platforms"):
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
-            <li>You must comply with their terms of service</li>
-            <li>We are not responsible for their actions or policies</li>
-            <li>They may change their APIs or terms at any time</li>
-            <li>Service interruptions may occur due to third-party issues</li>
+            <li><strong>Facebook</strong> (Meta) — Pages, posts, and audience insights</li>
+            <li><strong>Instagram</strong> (Meta) — Content publishing, stories, and engagement analytics</li>
+            <li><strong>Google Business Profile</strong> — Business listings, reviews, and local SEO management</li>
+            <li><strong>TikTok</strong> — Video publishing, content scheduling, and performance analytics</li>
           </ul>
           <p className="text-gray-100 mb-4">
-            <strong>7.2 Your Responsibility:</strong> You are solely responsible for content posted to third-party platforms 
-            through our Service.
+            Additional platforms may be added or removed at our discretion.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>7.2 Social Posting Permissions:</strong> By connecting a Connected Platform account through JetSuite,
+            you grant us permission to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
+            <li>Publish, schedule, edit, and delete posts on your behalf</li>
+            <li>Access your account profile information and page/business data</li>
+            <li>Retrieve engagement metrics, follower counts, and analytics data</li>
+            <li>Read and respond to reviews or comments where supported</li>
+            <li>Store OAuth tokens securely to maintain your connection</li>
+          </ul>
+          <p className="text-gray-100 mb-4">
+            You may revoke these permissions at any time by disconnecting the platform from your JetSuite account or by
+            revoking access directly within the Connected Platform's settings.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>7.3 Platform Terms Compliance:</strong> When you connect third-party accounts:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
+            <li>You must comply with each Connected Platform's terms of service and community guidelines</li>
+            <li>We are not responsible for changes to third-party APIs, policies, or availability</li>
+            <li>Service interruptions may occur due to third-party platform issues beyond our control</li>
+            <li>You represent that you have authority to connect and manage each account</li>
+          </ul>
+          <p className="text-gray-100 mb-4">
+            <strong>7.4 Your Responsibility:</strong> You are solely responsible for all content published to Connected Platforms
+            through our Service, including content that is AI-generated, scheduled, or automated.
           </p>
         </section>
 
-        {/* Section 8: Disclaimers */}
+        {/* Section 7A: Data Processing for Connected Social Accounts */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">8. Disclaimers and Limitations</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">8. Data Processing for Connected Social Accounts</h2>
+          <p className="text-gray-100 mb-4">
+            <strong>8.1 Data We Collect:</strong> When you connect a social media or third-party account, we may collect
+            and process the following data:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
+            <li>Account profile information (name, username, profile image, account ID)</li>
+            <li>Page or business profile details (business name, category, address, phone number)</li>
+            <li>Post and content data (text, images, videos, captions, hashtags, publish dates)</li>
+            <li>Engagement metrics (likes, comments, shares, views, reach, impressions)</li>
+            <li>Follower and audience demographics (aggregate data only)</li>
+            <li>Review content and ratings (where applicable)</li>
+            <li>OAuth access tokens and refresh tokens</li>
+          </ul>
+          <p className="text-gray-100 mb-4">
+            <strong>8.2 How We Use This Data:</strong> Data from Connected Platforms is used to:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
+            <li>Publish and schedule content on your behalf</li>
+            <li>Generate analytics reports and performance dashboards</li>
+            <li>Provide AI-powered content recommendations and optimization suggestions</li>
+            <li>Monitor and manage reviews and customer interactions</li>
+            <li>Improve the accuracy and relevance of our Service</li>
+          </ul>
+          <p className="text-gray-100 mb-4">
+            <strong>8.3 Data Retention:</strong> Data from Connected Platforms is retained for as long as your account
+            is active and the platform remains connected. Upon disconnection or account termination, we will delete
+            the associated platform data within 30 days, except where retention is required by law.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>8.4 Data Sharing:</strong> We do not sell data obtained from Connected Platforms. We may share
+            this data only as necessary to provide the Service (e.g., with cloud infrastructure providers) and as
+            described in our Privacy Policy.
+          </p>
+        </section>
+
+        {/* Section 9: AI Automation Disclaimers */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">9. AI-Powered Automation and Marketing Content</h2>
+          <div className="bg-yellow-900 border-l-4 border-yellow-500 p-4 mb-6">
+            <p className="text-gray-100 mb-4">
+              <strong>IMPORTANT:</strong> JetSuite uses artificial intelligence and machine learning to generate,
+              suggest, and optimize marketing content. By using these features, you acknowledge and agree to the following.
+            </p>
+          </div>
+          <p className="text-gray-100 mb-4">
+            <strong>9.1 Nature of AI Content:</strong> Marketing content generated by JetSuite's AI tools — including
+            but not limited to social media posts, captions, hashtags, ad copy, blog drafts, and review responses — is
+            produced by automated systems and may not always be accurate, appropriate, or suitable for your specific
+            business context.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>9.2 No Professional Advice:</strong> AI-generated marketing content does not constitute professional
+            marketing, legal, financial, or business advice. You should exercise independent judgment before publishing
+            any content.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>9.3 Review Before Publishing:</strong> You are solely responsible for reviewing, editing, and
+            approving all AI-generated content before it is published to any Connected Platform or used in any
+            marketing campaign. JetSuite is not liable for any consequences resulting from publishing AI-generated
+            content without adequate review.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>9.4 Automated Scheduling and Posting:</strong> When you enable automated scheduling or posting
+            features, content may be published to Connected Platforms at predetermined times without additional manual
+            approval. You are responsible for configuring automation settings and ensuring scheduled content meets your
+            standards and complies with applicable platform rules.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>9.5 Accuracy and Compliance:</strong> JetSuite does not guarantee that AI-generated content will:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
+            <li>Be free from factual errors, grammatical mistakes, or unintended meanings</li>
+            <li>Comply with advertising regulations, FTC guidelines, or industry-specific requirements</li>
+            <li>Conform to the terms of service of any Connected Platform</li>
+            <li>Achieve specific marketing outcomes, engagement rates, or business results</li>
+            <li>Be original or free from similarity to other published content</li>
+          </ul>
+          <p className="text-gray-100 mb-4">
+            <strong>9.6 Intellectual Property:</strong> You are responsible for ensuring that AI-generated content
+            does not infringe on third-party intellectual property rights, including trademarks, copyrights, or
+            rights of publicity.
+          </p>
+          <p className="text-gray-100 mb-4">
+            <strong>9.7 Platform-Specific Requirements:</strong> Some Connected Platforms (including Meta, TikTok,
+            and Google) may require disclosure when content is AI-generated. You are solely responsible for
+            complying with any such disclosure requirements.
+          </p>
+        </section>
+
+        {/* Section 10: Disclaimers */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">10. Disclaimers and Limitations</h2>
           <div className="bg-red-900 border-l-4 border-red-500 p-4 mb-6">
             <p className="text-gray-100 mb-4">
-              <strong>8.1 "AS IS" BASIS:</strong> THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES 
+              <strong>10.1 "AS IS" BASIS:</strong> THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES 
               OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
               PARTICULAR PURPOSE, OR NON-INFRINGEMENT.
             </p>
             <p className="text-gray-100 mb-4">
-              <strong>8.2 NO GUARANTEE:</strong> WE DO NOT GUARANTEE THAT:
+              <strong>10.2 NO GUARANTEE:</strong> WE DO NOT GUARANTEE THAT:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-100 mb-4 ml-4">
               <li>The Service will be uninterrupted or error-free</li>
@@ -220,15 +340,15 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
               <li>Results from using the Service will meet your expectations</li>
             </ul>
             <p className="text-gray-100">
-              <strong>8.3 AI-GENERATED CONTENT:</strong> AI-generated content may contain errors, inaccuracies, or 
+              <strong>10.3 AI-GENERATED CONTENT:</strong> AI-generated content may contain errors, inaccuracies, or 
               inappropriate material. You are responsible for reviewing and ensuring all AI-generated content complies with applicable laws and third-party terms.
             </p>
           </div>
         </section>
 
-        {/* Section 9: Limitation of Liability */}
+        {/* Section 11: Limitation of Liability */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">9. Limitation of Liability</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">11. Limitation of Liability</h2>
           <div className="bg-red-900 border-l-4 border-red-500 p-4">
             <p className="text-gray-100 mb-4">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, JETSUITE SHALL NOT BE LIABLE FOR:
@@ -252,9 +372,9 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
           </div>
         </section>
 
-        {/* Section 10: Indemnification */}
+        {/* Section 12: Indemnification */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">10. Indemnification</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">12. Indemnification</h2>
           <p className="text-gray-100 mb-4">
             You agree to indemnify, defend, and hold harmless JetSuite and its officers, directors, employees, and agents from 
             any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:
@@ -268,14 +388,14 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
           </ul>
         </section>
 
-        {/* Section 11: Termination */}
+        {/* Section 13: Termination */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">11. Termination</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">13. Termination</h2>
           <p className="text-gray-100 mb-4">
-            <strong>11.1 By You:</strong> You may terminate your account at any time by canceling your subscription.
+            <strong>13.1 By You:</strong> You may terminate your account at any time by canceling your subscription.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>11.2 By Us:</strong> We may terminate or suspend your account immediately if you:
+            <strong>13.2 By Us:</strong> We may terminate or suspend your account immediately if you:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
             <li>Violate these Terms</li>
@@ -285,7 +405,7 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
             <li>Violate third-party platform terms</li>
           </ul>
           <p className="text-gray-100 mb-4">
-            <strong>11.3 Effect of Termination:</strong> Upon termination:
+            <strong>13.3 Effect of Termination:</strong> Upon termination:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
             <li>Your right to use the Service ceases immediately</li>
@@ -295,9 +415,9 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
           </ul>
         </section>
 
-        {/* Section 12: Changes to Terms */}
+        {/* Section 14: Changes to Terms */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">12. Changes to Terms</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">14. Changes to Terms</h2>
           <p className="text-gray-100 mb-4">
             We may modify these Terms at any time. If we make material changes:
           </p>
@@ -309,15 +429,15 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
           </ul>
         </section>
 
-        {/* Section 13: Governing Law */}
+        {/* Section 15: Governing Law */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">13. Governing Law and Dispute Resolution</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">15. Governing Law and Dispute Resolution</h2>
           <p className="text-gray-100 mb-4">
-            <strong>13.1 Governing Law:</strong> These Terms are governed by the laws of the State of Georgia, United States, 
+            <strong>15.1 Governing Law:</strong> These Terms are governed by the laws of the State of Georgia, United States,
             without regard to conflict of law principles.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>13.2 Arbitration:</strong> Any disputes arising from these Terms or the Service shall be resolved through 
+            <strong>15.2 Arbitration:</strong> Any disputes arising from these Terms or the Service shall be resolved through
             binding arbitration, except:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-100 mb-6 ml-4">
@@ -325,34 +445,34 @@ export const TermsOfService: React.FC<TermsOfServiceProps> = ({ embedded = false
             <li>We may seek injunctive relief in court</li>
           </ul>
           <p className="text-gray-100 mb-4">
-            <strong>13.3 Class Action Waiver:</strong> You agree to resolve disputes on an individual basis and waive any 
+            <strong>15.3 Class Action Waiver:</strong> You agree to resolve disputes on an individual basis and waive any
             right to participate in class actions.
           </p>
         </section>
 
-        {/* Section 14: Miscellaneous */}
+        {/* Section 16: Miscellaneous */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">14. Miscellaneous</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">16. Miscellaneous</h2>
           <p className="text-gray-100 mb-4">
-            <strong>14.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and JetSuite.
+            <strong>16.1 Entire Agreement:</strong> These Terms constitute the entire agreement between you and JetSuite.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>14.2 Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in effect.
+            <strong>16.2 Severability:</strong> If any provision is found unenforceable, the remaining provisions remain in effect.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>14.3 No Waiver:</strong> Our failure to enforce any right does not waive that right.
+            <strong>16.3 No Waiver:</strong> Our failure to enforce any right does not waive that right.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>14.4 Assignment:</strong> You may not assign these Terms. We may assign our rights to any successor or affiliate.
+            <strong>16.4 Assignment:</strong> You may not assign these Terms. We may assign our rights to any successor or affiliate.
           </p>
           <p className="text-gray-100 mb-4">
-            <strong>14.5 Force Majeure:</strong> We are not liable for delays or failures due to circumstances beyond our control.
+            <strong>16.5 Force Majeure:</strong> We are not liable for delays or failures due to circumstances beyond our control.
           </p>
         </section>
 
-        {/* Section 15: Contact */}
+        {/* Section 17: Contact */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-100 mb-4">15. Contact Information</h2>
+          <h2 className="text-2xl font-bold text-gray-100 mb-4">17. Contact Information</h2>
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <p className="text-gray-100 mb-2">
               For questions about these Terms, contact us:
