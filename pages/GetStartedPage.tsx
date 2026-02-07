@@ -90,11 +90,15 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-950 py-12 sm:py-20 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
+          <div className="inline-block bg-yellow-500/10 border border-yellow-500/30 rounded-full px-5 py-2 mb-6">
+            <span className="text-yellow-400 font-bold text-sm sm:text-base">Founders Pricing — Limited Time Only</span>
+          </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-            Start Your Subscription
+            Lock In Your Founders Rate
           </h1>
-          <p className="text-lg sm:text-xl text-gray-400">
-            Complete the form below to proceed to secure checkout.
+          <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+            Get JetSuite at <span className="line-through text-gray-500">$349/mo</span>{' '}
+            <span className="text-white font-bold">$149/mo</span> — before the price goes up for good.
           </p>
         </div>
 
@@ -279,9 +283,15 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
                 </div>
 
                <div className="bg-slate-900/80 rounded-lg p-6 space-y-3 border border-slate-700">
-  <div className="flex justify-between text-gray-300 text-sm">
-    <span>Base Plan (includes 1 business, 1 seat)</span>
-    <span className="font-semibold">${basePlan}/mo</span>
+  <div className="flex justify-between items-center text-gray-300 text-sm">
+    <span className="flex items-center gap-2">
+      Base Plan (includes 1 business, 1 seat)
+      <span className="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-0.5 rounded-full">FOUNDERS</span>
+    </span>
+    <span className="font-semibold flex items-center gap-2">
+      <span className="line-through text-gray-500 text-xs">$349</span>
+      ${basePlan}/mo
+    </span>
   </div>
   
   {additionalBusinessCount > 0 && (
@@ -348,10 +358,10 @@ const total = basePlan + (additionalBusinessCount * additionalBusinessCost) + (s
 
               <div className="mt-6 p-4 bg-green-900/20 border border-green-500/30 rounded-lg text-center">
                 <p className="text-green-400 font-bold text-lg">
-                  ✨ Your subscription starts today.
+                  Founders Price: ${total}/mo — You save $200/mo
                 </p>
                 <p className="text-green-300 text-sm mt-1">
-                  You will be charged ${total}/mo immediately.
+                  Lock in your rate today. Price increases to $349/mo for new members soon.
                 </p>
               </div>
 
