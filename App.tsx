@@ -314,6 +314,7 @@ const CoreApp: React.FC = () => {
       '/billing/success',
       '/billing/locked',
       '/contact',
+      '/privacy',
       '/privacy-policy',
       '/terms',
       '/terms-of-service',

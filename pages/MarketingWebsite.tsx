@@ -54,11 +54,12 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <BillingSuccessPage navigate={navigate} />;
             case '/billing/locked':
                 return <BillingLockedPage navigate={navigate} onLogout={onLogout} />;
+            case '/privacy':
             case '/privacy-policy':
-                return <PrivacyPolicy />;
+                return <PrivacyPolicy embedded />;
             case '/terms':
             case '/terms-of-service':
-                return <TermsOfService />;
+                return <TermsOfService embedded />;
             case '/contact': // NEW ROUTE
                 return <ContactPage />;
             case '/schedule-demo':
