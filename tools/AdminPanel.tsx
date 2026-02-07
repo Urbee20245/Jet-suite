@@ -1732,27 +1732,40 @@ export const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-                        <h4 className="text-sm font-semibold text-blue-800 mb-2">How to find your Cal.com Event ID</h4>
+                        <h4 className="text-sm font-semibold text-blue-800 mb-2">Setup Instructions</h4>
                         <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-                            <li>Go to <a href="https://app.cal.com/event-types" target="_blank" rel="noopener noreferrer" className="underline font-medium">app.cal.com/event-types</a></li>
-                            <li>Click on the event you want to use for demos</li>
-                            <li>Your event URL will look like: <code className="bg-blue-100 px-1 rounded">cal.com/your-username/event-name</code></li>
-                            <li>Enter just the path after cal.com/ — e.g., <code className="bg-blue-100 px-1 rounded">your-username/event-name</code></li>
+                            <li>Go to <a href="https://app.cal.com/settings/developer/api-keys" target="_blank" rel="noopener noreferrer" className="underline font-medium">Cal.com API Keys</a> and create/copy your API key</li>
+                            <li>Go to <a href="https://app.cal.com/event-types" target="_blank" rel="noopener noreferrer" className="underline font-medium">Cal.com Event Types</a> and click on the event you want for demos</li>
+                            <li>Look at the URL — it will look like: <code className="bg-blue-100 px-1 rounded">app.cal.com/event-types/123456</code></li>
+                            <li>The number at the end (e.g., <code className="bg-blue-100 px-1 rounded">123456</code>) is your <strong>Event Type ID</strong></li>
                         </ol>
                     </div>
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com Event ID</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com API Key</label>
+                            <input
+                                type="password"
+                                value={calcomForm.calcom_api_key}
+                                onChange={e => setCalcomForm({ ...calcomForm, calcom_api_key: e.target.value })}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                placeholder="cal_live_xxxxxxxxxxxxxxxx"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Your Cal.com API key — found under Settings → Developer → API Keys
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cal.com Event Type ID</label>
                             <input
                                 type="text"
                                 value={calcomForm.calcom_event_id}
                                 onChange={e => setCalcomForm({ ...calcomForm, calcom_event_id: e.target.value })}
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                placeholder="your-username/jetsuite-demo"
+                                placeholder="123456"
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                                Enter the path from your Cal.com event URL (e.g., <code className="bg-gray-100 px-1 rounded">your-username/30min</code>)
+                                The numeric ID of your event type — found in the URL when editing an event type (e.g., <code className="bg-gray-100 px-1 rounded">app.cal.com/event-types/<strong>123456</strong></code>)
                             </p>
                         </div>
                         <div className="flex items-center gap-4 pt-2">
@@ -1763,16 +1776,6 @@ export const AdminPanel: React.FC = () => {
                             >
                                 {updating ? 'Saving...' : 'Save Cal.com Settings'}
                             </button>
-                            {calcomForm.calcom_event_id && (
-                                <a
-                                    href={`https://app.cal.com/${calcomForm.calcom_event_id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-                                >
-                                    Preview on Cal.com
-                                </a>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -1781,12 +1784,12 @@ export const AdminPanel: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-700 mb-2">Schedule Demo Page</h3>
                     <p className="text-sm text-gray-500 mb-4">
-                        Your Cal.com calendar is embedded on the public Schedule Demo page. Visitors who click "Schedule a Personalized Demo" on the marketing site will be directed to this page.
+                        Your Cal.com availability is shown as a native calendar on the public Schedule Demo page. Visitors who click "Schedule a Personalized Demo" on the marketing site will be directed to this page.
                     </p>
                     <div className="flex items-center gap-4">
-                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${calcomForm.calcom_event_id ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                            <div className={`w-2 h-2 rounded-full ${calcomForm.calcom_event_id ? 'bg-green-500' : 'bg-amber-500'}`}></div>
-                            {calcomForm.calcom_event_id ? 'Cal.com Connected' : 'Not Configured - Fallback form active'}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${calcomForm.calcom_api_key && calcomForm.calcom_event_id ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                            <div className={`w-2 h-2 rounded-full ${calcomForm.calcom_api_key && calcomForm.calcom_event_id ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                            {calcomForm.calcom_api_key && calcomForm.calcom_event_id ? 'Cal.com Connected' : 'Not Configured - Fallback form active'}
                         </div>
                         <a
                             href="/schedule-demo"
