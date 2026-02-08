@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, SocialConnection } from '../types';
 import { generateSocialPosts, generateImage } from '../services/geminiService';
-import { getSocialConnections, createScheduledPost, PLATFORM_INFO } from '../services/socialMediaService';
+import { getSocialConnections, createScheduledPost, verifyConnectionsOnLogin, PLATFORM_INFO } from '../services/socialMediaService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon } from '../components/icons/MiniIcons';
@@ -273,7 +273,8 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
   const loadConnections = async () => {
     try {
       setConnectionsLoading(true);
-      const data = await getSocialConnections(userId);
+      // Verify and auto-refresh expired tokens on load
+      const data = await verifyConnectionsOnLogin(userId);
       setConnections(data);
     } catch (err) {
       console.error('Error loading connections:', err);

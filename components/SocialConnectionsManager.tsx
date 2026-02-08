@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSocialConnections, addSocialConnection, removeSocialConnection } from '../services/socialMediaService';
+import { getSocialConnections, addSocialConnection, removeSocialConnection, refreshConnectionToken } from '../services/socialMediaService';
 import type { SocialConnection, SocialPlatform } from '../types';
 import { Loader } from './Loader';
 
@@ -109,6 +109,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform>('google_business');
   const [username, setUsername] = useState('');
   const [adding, setAdding] = useState(false);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadConnections();
@@ -127,6 +128,25 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     }
   };
 
+  const handleRefreshToken = async (connection: SocialConnection) => {
+    setRefreshingId(connection.id);
+    setError('');
+
+    try {
+      const result = await refreshConnectionToken(connection.id);
+      if (result.success) {
+        await loadConnections();
+        if (onConnectionsChange) onConnectionsChange();
+      } else if (result.needs_reconnect) {
+        setError(`${platformNames[connection.platform]} needs to be reconnected. Please disconnect and connect again.`);
+      }
+    } catch (err) {
+      setError('Failed to refresh connection');
+    } finally {
+      setRefreshingId(null);
+    }
+  };
+
   const handleConnectOAuth = (platform: SocialPlatform) => {
     setConnectingPlatform(platform);
     setError('');
@@ -134,6 +154,11 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     // Use mapped path (e.g. google_business -> google, instagram -> facebook)
     const authPath = platformAuthPaths[platform] || platform;
     window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}`;
+  };
+
+  const handleReconnect = (platform: SocialPlatform) => {
+    // Initiate OAuth flow to reconnect - the callback will upsert the connection
+    handleConnectOAuth(platform);
   };
 
   const handleConnect = (platform: SocialPlatform) => {
@@ -186,6 +211,35 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     }
   };
 
+  const getConnectionStatusBadge = (connection: SocialConnection) => {
+    const status = connection.connection_status;
+
+    if (status === 'expired') {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+          Expired
+        </span>
+      );
+    }
+
+    if (status === 'expiring_soon') {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          Expiring Soon
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+        Connected
+      </span>
+    );
+  };
+
   const connectedPlatforms = connections.map(c => c.platform);
   const availableToConnect = availablePlatforms.filter(p => !connectedPlatforms.includes(p));
 
@@ -230,34 +284,69 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
             {connections.map((connection) => {
               const Icon = platformIcons[connection.platform];
               const colorClass = platformColors[connection.platform];
-              
+              const isExpired = connection.connection_status === 'expired';
+              const isExpiring = connection.connection_status === 'expiring_soon';
+              const isRefreshing = refreshingId === connection.id;
+
               return (
                 <div
                   key={connection.id}
-                  className="flex items-center justify-between p-3 bg-brand-light rounded-lg border border-brand-border"
+                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                    isExpired
+                      ? 'bg-red-50 border-red-200'
+                      : isExpiring
+                      ? 'bg-amber-50 border-amber-200'
+                      : 'bg-brand-light border-brand-border'
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
                     <div>
-                      <p className="font-semibold text-brand-text">
-                        {platformNames[connection.platform]}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-brand-text">
+                          {platformNames[connection.platform]}
+                        </p>
+                        {getConnectionStatusBadge(connection)}
+                      </div>
                       <p className="text-sm text-brand-text-muted">
                         {connection.platform_username}
                       </p>
                       {connection.token_expires_at && (
-                        <p className="text-xs text-brand-text-muted mt-1">
-                          Expires: {new Date(connection.token_expires_at).toLocaleDateString()}
+                        <p className="text-xs text-brand-text-muted mt-0.5">
+                          {isExpired
+                            ? `Expired ${new Date(connection.token_expires_at).toLocaleDateString()}`
+                            : `Expires: ${new Date(connection.token_expires_at).toLocaleDateString()}`}
                         </p>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRemoveConnection(connection.id)}
-                    className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
-                  >
-                    Disconnect
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Show Refresh button for expiring/expired connections with refresh tokens */}
+                    {(isExpired || isExpiring) && connection.has_refresh_token && (
+                      <button
+                        onClick={() => handleRefreshToken(connection)}
+                        disabled={isRefreshing}
+                        className="text-sm font-semibold text-accent-blue hover:text-accent-blue/80 transition disabled:opacity-50"
+                      >
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                      </button>
+                    )}
+                    {/* Show Reconnect button for expired connections without refresh tokens */}
+                    {isExpired && !connection.has_refresh_token && (
+                      <button
+                        onClick={() => handleReconnect(connection.platform)}
+                        className="text-sm font-semibold text-accent-purple hover:text-accent-purple/80 transition"
+                      >
+                        Reconnect
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleRemoveConnection(connection.id)}
+                      className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -296,7 +385,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
                     </div>
                   </div>
                   <span className="text-sm font-semibold text-accent-blue">
-                    {isConnecting ? 'Connecting...' : 'Connect →'}
+                    {isConnecting ? 'Connecting...' : 'Connect'}
                   </span>
                 </button>
               );
@@ -307,18 +396,26 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
 
       {availableToConnect.length === 0 && (
         <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800 font-semibold">🎉 All platforms connected!</p>
+          <p className="text-green-800 font-semibold">All platforms connected!</p>
           <p className="text-sm text-green-700 mt-1">
             You've connected all available social media platforms.
           </p>
         </div>
       )}
 
-      {/* Coming Soon Notice */}
+      {/* Persistence Info */}
+      {connections.length > 0 && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+          <p className="font-semibold mb-1">Your connections are persistent</p>
+          <p>Your social accounts stay connected even after you log out. Tokens are securely stored and auto-refreshed when possible.</p>
+        </div>
+      )}
+
+      {/* Secure OAuth Notice for new users */}
       {connections.length === 0 && (
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-          <p className="font-semibold mb-1">🔒 Secure OAuth Authentication</p>
-          <p>Your credentials are never stored. We use official OAuth to connect your accounts securely.</p>
+          <p className="font-semibold mb-1">Secure OAuth Authentication</p>
+          <p>Your credentials are never stored. We use official OAuth to connect your accounts securely. Connections persist across sessions.</p>
         </div>
       )}
 

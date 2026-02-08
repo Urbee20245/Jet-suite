@@ -143,6 +143,59 @@ export async function removeSocialConnection(connectionId: string): Promise<void
   }
 }
 
+/**
+ * Refresh an expired or expiring token for a social connection
+ */
+export async function refreshConnectionToken(connectionId: string): Promise<{ success: boolean; needs_reconnect?: boolean }> {
+  try {
+    const response = await fetch('/api/social/refresh-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ connectionId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        needs_reconnect: data.needs_reconnect || false,
+      };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Refresh token error:', error);
+    return { success: false, needs_reconnect: true };
+  }
+}
+
+/**
+ * Verify and refresh all connections for a user on login.
+ * Attempts to auto-refresh any expired tokens that have refresh tokens.
+ */
+export async function verifyConnectionsOnLogin(userId: string): Promise<SocialConnection[]> {
+  const connections = await getSocialConnections(userId);
+
+  const refreshPromises = connections
+    .filter(conn => conn.connection_status === 'expired' && conn.has_refresh_token)
+    .map(async (conn) => {
+      try {
+        await refreshConnectionToken(conn.id);
+      } catch (err) {
+        console.error(`Failed to refresh ${conn.platform} token:`, err);
+      }
+    });
+
+  if (refreshPromises.length > 0) {
+    await Promise.allSettled(refreshPromises);
+    // Re-fetch connections after refresh attempts
+    return await getSocialConnections(userId);
+  }
+
+  return connections;
+}
+
 // ============================================================================
 // SCHEDULED POSTS API
 // ============================================================================
