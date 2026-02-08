@@ -50,6 +50,7 @@ export default async function handler(
             status: task.status || 'to_do',
             created_at: task.createdAt || new Date().toISOString(),
             completed_at: task.completionDate || null,
+            scheduled_date: task.scheduledDate || null,
           }));
           
           result = await supabase.from('growth_plan_tasks').insert(tasksToInsert);

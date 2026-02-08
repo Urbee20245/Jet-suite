@@ -27,6 +27,7 @@ export interface GrowthPlanTask {
   status: 'to_do' | 'in_progress' | 'completed';
   createdAt: string;
   completionDate?: string;
+  scheduledDate?: string; // YYYY-MM-DD for calendar assignment
 }
 
 export interface AuditIssue {

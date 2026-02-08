@@ -309,25 +309,41 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       console.error('[InternalApp] Cannot update task status: No business selected');
       return;
     }
-    
-    const updatedTasks = tasks.map(task => 
+
+    const updatedTasks = tasks.map(task =>
       task.id === taskId
-        ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined } 
+        ? { ...task, status: newStatus, completionDate: newStatus === 'completed' ? new Date().toISOString() : undefined }
         : task
     );
-    
+
     setTasks(updatedTasks);
-    
+
     try {
       await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
       console.log('✅ [InternalApp] Task status synced to Supabase:', taskId, newStatus);
-      
+
       if (newStatus === 'completed') {
         setShowConfetti(true);
-        toast.success('🎉 Task completed! Great progress!');
+        toast.success('Task completed! Great progress!');
       }
     } catch (error) {
       console.error('❌ [InternalApp] Failed to sync task status:', error);
+    }
+  };
+
+  const handleTaskScheduleDate = async (taskId: string, scheduledDate: string | null) => {
+    if (!activeBusinessId) return;
+
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, scheduledDate: scheduledDate || undefined } : task
+    );
+
+    setTasks(updatedTasks);
+
+    try {
+      await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+    } catch (error) {
+      console.error('❌ [InternalApp] Failed to sync task schedule date:', error);
     }
   };
 
@@ -425,7 +441,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'growthplan':
         return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'planner':
-        return <Planner userId={userId} growthPlanTasks={tasks} />;
+        return <Planner userId={userId} growthPlanTasks={tasks} onTaskScheduleDate={handleTaskScheduleDate} onTaskStatusChange={handleTaskStatusChange} />;
       case 'growthscore':
         return <GrowthScoreHistory growthScore={calculateGrowthScore()} profileData={currentProfileData} />;
       case 'knowledgebase':

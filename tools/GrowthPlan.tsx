@@ -127,9 +127,6 @@ const CompletedTaskCard: React.FC<{ task: GrowthPlanTask; onStatusChange: (id: s
 
 export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActiveTool, onTaskStatusChange, growthScore, userId, activeBusinessId, profileData, onPlanSaved }) => {
   const [showCompleted, setShowCompleted] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isRetrieving, setIsRetrieving] = useState(false);
-  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     const autoLoadTasks = async () => {
@@ -157,50 +154,29 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
   const pendingTasksCount = jetbizTasks.length + jetvizTasks.length + otherTasks.length;
   const completionPercentage = tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0;
 
-  const handleRemoveTask = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
-    setStatusMessage('Task removed from list. Click Save Plan to finalize.');
-  };
-
-  const handleClearCompleted = () => {
-    if (window.confirm('Warning: This will permanently remove all completed tasks from your history. Are you sure?')) {
-      setTasks(tasks.filter(t => t.status !== 'completed'));
-      setStatusMessage('Completed tasks cleared. Click Save Plan to finalize.');
-    }
-  };
-  
-  const handleManualSave = async () => {
-    if (!userId || !activeBusinessId) return;
-    setIsSaving(true);
-    try {
-        await syncToSupabase(userId, activeBusinessId, 'tasks', tasks);
-        setStatusMessage('✅ Growth Plan saved successfully!');
-        if (onPlanSaved) onPlanSaved(tasks);
-    } catch (error) {
-        setStatusMessage('❌ Failed to save plan.');
-    } finally {
-        setIsSaving(false);
-        setTimeout(() => setStatusMessage(''), 4000);
-    }
-  };
-
-  const handleRetrieveTasks = async () => {
-    if (!userId || !activeBusinessId) return;
-    setIsRetrieving(true);
-    try {
-      const data = await loadFromSupabase(userId, activeBusinessId, 'tasks');
-      if (data && Array.isArray(data)) {
-        setTasks(data);
-        setStatusMessage('✅ Successfully retrieved your tasks.');
-        if (onPlanSaved) onPlanSaved(data);
-      } else {
-        setStatusMessage('ℹ️ No saved tasks found.');
+  const handleRemoveTask = async (taskId: string) => {
+    const updatedTasks = tasks.filter(t => t.id !== taskId);
+    setTasks(updatedTasks);
+    if (userId && activeBusinessId) {
+      try {
+        await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+      } catch (error) {
+        console.error('❌ [GrowthPlan] Failed to sync after task removal:', error);
       }
-    } catch (error) {
-      setStatusMessage('❌ Failed to retrieve tasks.');
-    } finally {
-      setIsRetrieving(false);
-      setTimeout(() => setStatusMessage(''), 4000);
+    }
+  };
+
+  const handleClearCompleted = async () => {
+    if (window.confirm('Warning: This will permanently remove all completed tasks from your history. Are you sure?')) {
+      const updatedTasks = tasks.filter(t => t.status !== 'completed');
+      setTasks(updatedTasks);
+      if (userId && activeBusinessId) {
+        try {
+          await syncToSupabase(userId, activeBusinessId, 'tasks', updatedTasks);
+        } catch (error) {
+          console.error('❌ [GrowthPlan] Failed to sync after clearing completed:', error);
+        }
+      }
     }
   };
 
@@ -224,31 +200,10 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
             </div>
 
             <div className="bg-brand-light/50 p-5 rounded-xl border border-brand-border flex flex-col gap-3">
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-bold text-brand-text mb-2">Step 1: Save plan changes</h4>
-                    <button
-                        onClick={handleManualSave}
-                        disabled={isSaving || isRetrieving}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center gap-2"
-                    >
-                        {isSaving ? 'Saving...' : '💾 Save Plan Changes'}
-                    </button>
-                  </div>
-                  
-                  <button
-                      onClick={handleRetrieveTasks}
-                      disabled={isSaving || isRetrieving}
-                      className="w-full text-accent-purple hover:text-accent-pink font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                  >
-                      {isRetrieving ? 'Retrieving...' : <><ArrowPathIcon className="w-4 h-4" /> Retrieve Tasks</>}
-                  </button>
-                </div>
-
-                <div className="flex items-start gap-2 pt-2 border-t border-brand-border">
+                <div className="flex items-start gap-2">
                     <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
                     <p className="text-sm text-brand-text-muted leading-snug">
-                        {statusMessage || 'Save your changes to persist them across sessions.'}
+                        Changes are saved automatically when you update task status. Use the Planner to assign tasks to specific days.
                     </p>
                 </div>
             </div>
