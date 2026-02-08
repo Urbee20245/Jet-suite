@@ -52,6 +52,7 @@ export default async function handler(
           status: task.status,
           createdAt: task.created_at,
           completionDate: task.completed_at,
+          scheduledDate: task.scheduled_date || null,
         }));
         console.log(`[Sync Load] Successfully loaded ${result.length} tasks.`);
         break;
