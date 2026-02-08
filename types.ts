@@ -356,6 +356,8 @@ export type SocialPlatform = 'facebook' | 'instagram' | 'twitter' | 'linkedin' |
 
 export type PostStatus = 'scheduled' | 'posting' | 'posted' | 'failed' | 'draft' | 'cancelled';
 
+export type ConnectionStatus = 'active' | 'expiring_soon' | 'expired';
+
 export interface SocialConnection {
   id: string;
   user_id: string;
@@ -371,6 +373,8 @@ export interface SocialConnection {
   last_synced_at?: string;
   created_at: string;
   updated_at: string;
+  connection_status?: ConnectionStatus;
+  has_refresh_token?: boolean;
 }
 
 export interface PlatformTarget {

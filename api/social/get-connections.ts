@@ -24,7 +24,7 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing or invalid userId parameter' });
     }
 
-    // Get social connections for user
+    // Get social connections for user (include ALL connections, even inactive for reconnect)
     const { data, error } = await supabase
       .from('social_connections')
       .select('*')
@@ -36,7 +36,31 @@ export default async function handler(
       throw error;
     }
 
-    return res.status(200).json({ connections: data || [] });
+    // Enrich connections with health status
+    const now = new Date();
+    const connections = (data || []).map((conn: any) => {
+      let connection_status: 'active' | 'expiring_soon' | 'expired' = 'active';
+
+      if (conn.token_expires_at) {
+        const expiresAt = new Date(conn.token_expires_at);
+        const hoursUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+        if (hoursUntilExpiry <= 0) {
+          connection_status = 'expired';
+        } else if (hoursUntilExpiry <= 72) {
+          // Warn 3 days before expiry
+          connection_status = 'expiring_soon';
+        }
+      }
+
+      return {
+        ...conn,
+        connection_status,
+        has_refresh_token: !!conn.refresh_token,
+      };
+    });
+
+    return res.status(200).json({ connections });
   } catch (error: any) {
     console.error('Get social connections error:', error);
     return res.status(500).json({
