@@ -139,93 +139,62 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
-      onClick={(e) => {
-        // Close when clicking the backdrop (outside the modal)
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-4xl my-auto max-h-[90vh] flex flex-col border border-slate-700 shadow-2xl overflow-hidden relative">
-        {/* Animated Background Glow */}
-        <div className="absolute -right-20 -top-20 bg-purple-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
-        <div className="absolute -left-20 -bottom-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
-
-        <div className="relative z-20 flex flex-col h-full min-h-0">
-
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div className="bg-gradient-to-br from-purple-900 via-slate-900 to-purple-900 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col border-2 border-purple-600 shadow-2xl">
+        
         {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-purple-700/30 flex items-center justify-between bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900">
+        <div className="flex-shrink-0 p-4 border-b border-purple-700/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V9h7V2.99c3.87.87 6.99 4.17 7 7.99h-7v2.01z"/>
-                </svg>
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-purple-900">
-                <div className="absolute inset-0 animate-ping bg-green-400 rounded-full"></div>
-              </div>
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <SparklesIcon className="w-5 h-5 text-white" />
             </div>
             <div>
               <h2 className="text-white font-bold text-lg">Chat with Boris</h2>
-              <p className="text-purple-200 text-xs">Your AI Growth Coach</p>
+              <p className="text-purple-300 text-xs">Your AI Growth Coach</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all hover:scale-110 border border-white/20"
-            title="Close chat"
+            className="w-10 h-10 rounded-full bg-purple-800/50 hover:bg-purple-700/50 flex items-center justify-center transition-colors"
           >
             <XMarkIcon className="w-6 h-6 text-white" />
           </button>
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-slate-900/50 to-slate-950/50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map(message => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {message.role === 'boris' && (
-                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
-                  </svg>
-                </div>
-              )}
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-lg ${
+                className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                   message.role === 'user'
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-tr-none'
-                    : 'bg-gradient-to-r from-purple-900/80 to-purple-800/80 text-white border border-purple-700/30 rounded-tl-none'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-800/40 text-white border border-purple-600/30'
                 }`}
               >
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                {message.role === 'boris' && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <SparklesIcon className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="text-xs font-semibold text-purple-300">Boris</span>
+                  </div>
+                )}
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
               </div>
-              {message.role === 'user' && (
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-sm font-bold">U</span>
-                </div>
-              )}
             </div>
           ))}
 
           {isLoading && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
-                </svg>
-              </div>
-              <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/80 border border-purple-700/30 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg">
+            <div className="flex justify-start">
+              <div className="bg-purple-800/40 border border-purple-600/30 rounded-2xl px-4 py-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                  <span className="text-xs text-purple-300 ml-2">Boris is thinking...</span>
                 </div>
               </div>
             </div>
@@ -235,8 +204,8 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
         </div>
 
         {/* Input Area */}
-        <div className="flex-shrink-0 p-4 border-t border-slate-700/50 bg-slate-900/80">
-          <div className="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3 border border-slate-700">
+        <div className="flex-shrink-0 p-4 border-t border-purple-700/30 bg-purple-900/50">
+          <div className="relative">
             <input
               ref={inputRef}
               type="text"
@@ -244,27 +213,26 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
               placeholder="Ask Boris anything..."
-              className="flex-1 bg-transparent text-white placeholder-gray-400 text-sm outline-none"
+              className="w-full bg-purple-950/50 text-white placeholder-purple-400 rounded-full px-6 py-3 pr-12 border border-purple-600/30 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
             />
             <button
               onClick={() => handleSendMessage(inputValue)}
               disabled={!inputValue.trim() || isLoading}
-              className="w-10 h-10 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg flex items-center justify-center transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-all"
             >
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              <PaperAirplaneIcon className="w-4 h-4 text-white" />
             </button>
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs">
-            <span className="text-gray-500">Boris can make mistakes. Check important info.</span>
+          <div className="flex justify-between items-center mt-2">
+            <p className="text-xs text-purple-400">
+              Boris can make mistakes. Check important info.
+            </p>
             {remainingQuestions !== null && (
-              <span className="text-purple-400 font-medium">
+              <p className="text-xs text-purple-300 font-semibold">
                 Questions today: {dailyLimit - remainingQuestions} / {dailyLimit}
-              </span>
+              </p>
             )}
           </div>
-        </div>
         </div>
       </div>
     </div>
