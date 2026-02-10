@@ -98,17 +98,38 @@ const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10114215/OFFIC
 const COVER_IMAGE_URL = "/gjscover.jpg"; // New absolute URL
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
-  const videoRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
   const [starsAnimated, setStarsAnimated] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showVideo, setShowVideo] = useState(false); // NEW STATE for video playback
 
-  
+
   // Handle video placeholder click
   const handleVideoClick = () => {
     setShowVideo(true);
   };
+
+  // Handle video playback with volume control
+  useEffect(() => {
+    if (showVideo && videoRef.current) {
+      const video = videoRef.current;
+
+      // Set volume to 80%
+      video.volume = 0.8;
+
+      // Play video with proper promise handling for cross-browser compatibility
+      const playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("Video playback failed:", error);
+          // If autoplay is prevented, user interaction will trigger play
+        });
+      }
+    }
+  }, [showVideo]);
 
   // Animation for stars in testimonials
   useEffect(() => {
@@ -347,7 +368,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             {/* Right Column: Video */}
             <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
                 <div
-                  ref={videoRef}
+                  ref={videoContainerRef}
                   onClick={!showVideo ? handleVideoClick : undefined}
                   className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border-2 border-slate-700/50 shadow-2xl shadow-blue-900/20 overflow-hidden aspect-video group relative cursor-pointer hover:border-blue-500/50 transition-all duration-500"
                   role="button"
@@ -360,13 +381,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
                     {showVideo ? (
                         <video
-                            src={VIDEO_URL}
+                            ref={videoRef}
                             controls
                             autoPlay
                             loop
-                            muted
+                            playsInline
+                            preload="metadata"
                             className="absolute inset-0 w-full h-full object-cover rounded-xl z-20"
-                        />
+                        >
+                            <source src={VIDEO_URL} type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
                     ) : (
                         <>
                             {/* Video Cover Image */}
