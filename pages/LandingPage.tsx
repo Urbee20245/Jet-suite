@@ -94,7 +94,7 @@ const testimonials = [
     }
 ];
 
-const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10114446/JET-SUITE-OFFICIAL-COMMERCIAL.mp4";
+const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10114215/OFFICIAL-COMMERCIAL-1020.mp4";
 const COVER_IMAGE_URL = "/gjscover.jpg"; // New absolute URL
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
@@ -223,6 +223,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
                       Get More Customers.
                   </span>
+                  <br className="hidden md:block"/>
+                  <span className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
+                      Your AI platform for business Growth.
+                  </span>
               </h1>
               
               <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
@@ -238,15 +242,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   >
                       Get Started
                   </button>
-                  <button 
+                  <button
                     onClick={handleVideoClick}
                     className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
-                    aria-label="Watch 2 minute demo video"
+                    aria-label="See how it works"
                   >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
-                      Watch 2-Min Demo
+                      See how it works
                   </button>
               </div>
               
@@ -342,46 +346,70 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
             {/* Right Column: Video */}
             <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
-                <div 
+                <div
                   ref={videoRef}
                   onClick={!showVideo ? handleVideoClick : undefined}
-                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden aspect-video group relative"
+                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border-2 border-slate-700/50 shadow-2xl shadow-blue-900/20 overflow-hidden aspect-video group relative cursor-pointer hover:border-blue-500/50 transition-all duration-500"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
                   aria-label="Play demo video: See how JetSuite works"
                 >
+                    {/* Ambient glow effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-teal-500/20 to-blue-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+
                     {showVideo ? (
-                        <video 
-                            src={VIDEO_URL} 
-                            controls 
-                            autoPlay 
-                            loop 
-                            muted 
-                            className="w-full h-full object-cover"
+                        <video
+                            src={VIDEO_URL}
+                            controls
+                            autoPlay
+                            loop
+                            muted
+                            className="w-full h-full object-cover rounded-xl"
                         />
                     ) : (
                         <>
                             {/* Video Cover Image */}
-                            <img 
-                                src={COVER_IMAGE_URL} 
-                                alt="JetSuite Demo Video Cover" 
-                                className="absolute inset-0 w-full h-full object-cover"
+                            <img
+                                src={COVER_IMAGE_URL}
+                                alt="JetSuite Demo Video Cover"
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
-                            
-                            {/* Dark Overlay for contrast */}
-                            <div className="absolute inset-0 bg-black/40"></div> 
 
-                            {/* Play Button */}
+                            {/* Gradient Overlay for depth */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+
+                            {/* Animated border shine effect */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent animate-shimmer"></div>
+                            </div>
+
+                            {/* Play Button with enhanced styling */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-24 h-24 rounded-full bg-white/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300 relative z-10">
-                                    <div className="w-0 h-0 border-t-[16px] border-b-[16px] border-l-[24px] border-transparent border-l-blue-600 ml-2"></div>
+                                <div className="relative">
+                                    {/* Pulsing glow ring */}
+                                    <div className="absolute inset-0 w-28 h-28 rounded-full bg-blue-500/30 blur-2xl animate-pulse"></div>
+
+                                    {/* Main play button */}
+                                    <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-white to-gray-100 flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:shadow-blue-500/50 transition-all duration-300 z-10">
+                                        {/* Inner glow */}
+                                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-50 to-white"></div>
+
+                                        {/* Play icon */}
+                                        <div className="relative w-0 h-0 border-t-[18px] border-b-[18px] border-l-[26px] border-transparent border-l-blue-600 ml-2 drop-shadow-lg"></div>
+                                    </div>
+
+                                    {/* Outer ring animation */}
+                                    <div className="absolute inset-0 w-24 h-24 rounded-full border-2 border-white/30 group-hover:scale-125 transition-transform duration-500"></div>
                                 </div>
                             </div>
-                            
-                            {/* Video Stats Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white py-2 px-6 rounded-full text-sm font-medium border border-white/20 group-hover:bg-black/80 transition-colors z-10">
-                                See how it works in 2 minutes
+
+                            {/* Enhanced Video Stats Overlay */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-md text-white py-3 px-8 rounded-full text-sm font-semibold border border-slate-600/50 group-hover:border-blue-400/50 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 z-10">
+                                <span className="flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                                    See how it works
+                                </span>
                             </div>
                         </>
                     )}
