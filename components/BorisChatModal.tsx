@@ -139,14 +139,22 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
+      onClick={(e) => {
+        // Close when clicking the backdrop (outside the modal)
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col border border-slate-700 shadow-2xl overflow-hidden relative">
         {/* Animated Background Glow */}
-        <div className="absolute -right-20 -top-20 bg-purple-500/20 w-64 h-64 blur-3xl rounded-full"></div>
-        <div className="absolute -left-20 -bottom-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full"></div>
+        <div className="absolute -right-20 -top-20 bg-purple-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
+        <div className="absolute -left-20 -bottom-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col h-full">
-        
+        <div className="relative z-20 flex flex-col h-full">
+
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-purple-700/30 flex items-center justify-between bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900">
           <div className="flex items-center gap-3">
@@ -167,7 +175,8 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-purple-800/50 hover:bg-purple-700/50 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all hover:scale-110 border border-white/20"
+            title="Close chat"
           >
             <XMarkIcon className="w-6 h-6 text-white" />
           </button>
