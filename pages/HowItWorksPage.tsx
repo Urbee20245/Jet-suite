@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import {
-    MagnifyingGlassIcon,
-    ClipboardDocumentCheckIcon,
-    PaintBrushIcon,
+import { 
+    MagnifyingGlassIcon, 
+    ClipboardDocumentCheckIcon, 
+    PaintBrushIcon, 
     ChartBarIcon,
     ArrowRightIcon,
     XMarkIcon,
     CheckIcon,
     CalendarIcon,
     ClockIcon,
-    ExclamationTriangleIcon,
-    ChatBubbleLeftRightIcon
+    ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { 
     JetBizIcon, 
@@ -375,197 +374,7 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
         </div>
       </section>
 
-      {/* 4. BORIS AI SHOWCASE */}
-      <section className="section-animate py-24 px-4 bg-[#0B1121] border-t border-slate-800">
-        <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-                <span className="text-purple-500 font-bold uppercase tracking-wider text-sm">AI Growth Coach</span>
-                <h2 className="text-3xl md:text-5xl font-bold text-white mt-2 mb-4">Meet Boris, Your 24/7 Marketing Assistant</h2>
-                <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-                    Get instant answers about your marketing, tools, and what to do next. Boris learns your business and guides you every step of the way.
-                </p>
-            </div>
-
-            {/* Boris Chat Showcase - Two Column Layout */}
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-                {/* LEFT: Boris Chat Interface */}
-                <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 overflow-hidden shadow-2xl relative">
-                    {/* Animated Background Glow */}
-                    <div className="absolute -right-20 -top-20 bg-purple-500/20 w-64 h-64 blur-3xl rounded-full"></div>
-
-                    <div className="relative z-10">
-                        {/* Chat Header */}
-                        <div className="bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 p-4 border-b border-purple-700/50">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center ai-thinking shadow-lg">
-                                        <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                            <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V9h7V2.99c3.87.87 6.99 4.17 7 7.99h-7v2.01z"/>
-                                        </svg>
-                                    </div>
-                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-purple-900">
-                                        <div className="absolute inset-0 animate-ping bg-green-400 rounded-full"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-lg">Chat with Boris</h3>
-                                    <p className="text-purple-200 text-xs">Your AI Growth Coach</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Chat Messages Container */}
-                        <div className="p-6 space-y-4 min-h-[400px] bg-gradient-to-b from-slate-900/50 to-slate-950/50">
-                            {/* Boris Initial Message */}
-                            <div className="flex gap-3 animate-fade-in-up">
-                                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
-                                    </svg>
-                                </div>
-                                <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/80 rounded-2xl rounded-tl-none p-4 max-w-[85%] border border-purple-700/30 shadow-lg">
-                                    <p className="text-white text-sm leading-relaxed">
-                                        Hi there! I'm here to help. Ask me anything about your growth strategy, JetSuite tools, or what you should focus on next!
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* User Question */}
-                            <div className="flex gap-3 justify-end animate-fade-in-up delay-200">
-                                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl rounded-tr-none p-4 max-w-[85%] shadow-lg">
-                                    <p className="text-white text-sm leading-relaxed font-medium">
-                                        What is a business citation?
-                                    </p>
-                                </div>
-                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <span className="text-white text-sm font-bold">U</span>
-                                </div>
-                            </div>
-
-                            {/* Boris Typing Indicator */}
-                            <div className="flex gap-3 animate-fade-in-up delay-300">
-                                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
-                                    </svg>
-                                </div>
-                                <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/80 rounded-2xl rounded-tl-none p-4 max-w-[85%] border border-purple-700/30 shadow-lg">
-                                    {/* AI Thinking Animation */}
-                                    <div className="typing-wave flex items-center gap-2 mb-3">
-                                        <div className="h-2 w-2 rounded-full bg-purple-400"></div>
-                                        <div className="h-2 w-2 rounded-full bg-purple-400"></div>
-                                        <div className="h-2 w-2 rounded-full bg-purple-400"></div>
-                                        <span className="text-xs text-purple-300 ml-2">Boris is thinking...</span>
-                                    </div>
-
-                                    {/* Boris Response with typing effect */}
-                                    <div className="typing-demo">
-                                        <p className="text-white text-sm leading-relaxed">
-                                            A business citation is simply a mention of your business name, address, and phone number (NAP) online. These mentions, even without a link, help search engines verify your business's legitimacy and improve local search rankings. Let's focus on building those citations to boost Custom Websites Plus!
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Chat Input Footer */}
-                        <div className="p-4 bg-slate-900/80 border-t border-slate-700/50">
-                            <div className="flex items-center gap-3 bg-slate-800/50 rounded-xl p-3 border border-slate-700">
-                                <input
-                                    type="text"
-                                    placeholder="Ask Boris anything..."
-                                    className="flex-1 bg-transparent text-gray-400 text-sm outline-none"
-                                    disabled
-                                />
-                                <button className="w-10 h-10 bg-purple-600 hover:bg-purple-500 rounded-lg flex items-center justify-center transition-colors">
-                                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div className="flex items-center justify-between mt-2 text-xs">
-                                <span className="text-gray-500">Boris can make mistakes. Check important info.</span>
-                                <span className="text-purple-400 font-medium">Questions today: 2 / 5</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* RIGHT: Boris Features */}
-                <div>
-                    <h3 className="text-2xl font-bold text-white mb-6">Your Personal Marketing Expert</h3>
-                    <div className="space-y-6">
-                        <div className="flex gap-4">
-                            <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/10 p-3 rounded-xl h-fit border border-purple-500/30">
-                                <ChatBubbleLeftRightIcon className="w-6 h-6 text-purple-400"/>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white mb-2">Instant Answers</h4>
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    Ask Boris anything about your tools, strategy, or next steps. Get clear, actionable answers in seconds.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 p-3 rounded-xl h-fit border border-blue-500/30">
-                                <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white mb-2">Smart Recommendations</h4>
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    Boris analyzes your business data and suggests exactly what to prioritize for maximum impact.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="bg-gradient-to-br from-teal-500/20 to-teal-600/10 p-3 rounded-xl h-fit border border-teal-500/30">
-                                <ClockIcon className="w-6 h-6 text-teal-400"/>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white mb-2">Available 24/7</h4>
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    Marketing questions don't wait for business hours. Boris is always ready to help, day or night.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="bg-gradient-to-br from-pink-500/20 to-pink-600/10 p-3 rounded-xl h-fit border border-pink-500/30">
-                                <svg className="w-6 h-6 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-white mb-2">Context-Aware</h4>
-                                <p className="text-gray-400 text-sm leading-relaxed">
-                                    Boris knows your business name, growth score, completed audits, and pending tasks for personalized guidance.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Call to Action */}
-                    <div className="mt-8 p-6 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-xl border border-purple-700/30">
-                        <p className="text-purple-200 text-sm mb-3">
-                            <strong className="text-white">5 free questions per day</strong> for every JetSuite subscriber. Start chatting with Boris today.
-                        </p>
-                        <button
-                            onClick={() => navigate('/get-started')}
-                            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg shadow-purple-600/25"
-                        >
-                            Try Boris Free
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </section>
-
-      {/* 5. REAL BUSINESS STORY */}
+      {/* 4. REAL BUSINESS STORY */}
       <section className="py-24 px-4 bg-slate-900 border-t border-slate-800">
           <div className="max-w-5xl mx-auto">
               <div className="text-center mb-12">
@@ -602,7 +411,7 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
           </div>
       </section>
 
-      {/* 6. FINAL CTA */}
+      {/* 5. FINAL CTA */}
       <section className="py-24 px-4 text-center bg-brand-darker">
           <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Ready to start your Phase 1?</h2>
           <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">

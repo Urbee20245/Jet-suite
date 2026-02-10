@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { BorisChatModal } from '../components/BorisChatModal';
+import React from 'react';
+import { BorisChat } from '../components/BorisChat';
 import type { ProfileData, GrowthPlanTask } from '../types';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
@@ -13,7 +13,6 @@ interface AskBorisPageProps {
   onNavigate: (toolId: string) => void;
   onReplyToReviews: () => void;
   onTaskStatusChange: (taskId: string, status: 'completed') => void;
-  onClose?: () => void;
 }
 
 export const AskBorisPage: React.FC<AskBorisPageProps> = ({
@@ -24,10 +23,9 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = ({
   newReviewsCount,
   onNavigate,
   onReplyToReviews,
-  onTaskStatusChange,
-  onClose
+  onTaskStatusChange
 }) => {
-
+  
   // Build context for Boris
   const completedAudits: string[] = [];
   if (profileData.jetbizAnalysis) completedAudits.push('JetBiz');
@@ -35,7 +33,7 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = ({
 
   const pendingTasks = growthPlanTasks.filter(t => t.status !== 'completed');
   const completedTasks = growthPlanTasks.filter(t => t.status === 'completed');
-
+  
   // Simple Growth Score calculation for context (actual score is calculated in InternalApp)
   const calculateGrowthScore = () => {
     let score = 0;
@@ -56,25 +54,19 @@ export const AskBorisPage: React.FC<AskBorisPageProps> = ({
     newReviews: newReviewsCount
   };
 
-  const handleClose = () => {
-    if (onClose) {
-      onClose();
-    } else {
-      // Navigate back to home if no onClose handler
-      onNavigate('home');
-    }
-  };
-
   return (
-    <BorisChatModal
-      context={context}
-      onClose={handleClose}
-      onNavigateToTool={(toolId) => {
-        const tool = ALL_TOOLS[toolId];
-        if (tool) onNavigate(tool.id);
-      }}
-      onTaskComplete={(taskId) => onTaskStatusChange(taskId, 'completed')}
-      urgentTasks={pendingTasks.filter(t => t.priority === 'High').slice(0, 3)}
-    />
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-hidden">
+        <BorisChat 
+          context={context}
+          onNavigateToTool={(toolId) => {
+            const tool = ALL_TOOLS[toolId];
+            if (tool) onNavigate(tool.id);
+          }}
+          showHeader={true}
+          onTaskComplete={(taskId) => onTaskStatusChange(taskId, 'completed')}
+        />
+      </div>
+    </div>
   );
 };
