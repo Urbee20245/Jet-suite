@@ -365,7 +365,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             autoPlay
                             loop
                             muted
-                            className="w-full h-full object-cover rounded-xl"
+                            className="absolute inset-0 w-full h-full object-cover rounded-xl z-20"
                         />
                     ) : (
                         <>
