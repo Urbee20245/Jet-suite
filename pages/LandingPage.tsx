@@ -94,7 +94,7 @@ const testimonials = [
     }
 ];
 
-const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10114215/OFFICIAL-COMMERCIAL-1020.mp4";
+const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10124106/JetSuiteforbusinessgrowth.mp4";
 const COVER_IMAGE_URL = "/gjscover.jpg"; // New absolute URL
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
