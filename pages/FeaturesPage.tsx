@@ -297,7 +297,13 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
         <div className="mt-16 relative h-48 md:h-64 max-w-6xl mx-auto opacity-30 mask-image-b-0 pointer-events-none">
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 transform rotate-6 scale-110">
                  {[...Array(8)].map((_, i) => (
-                     <div key={i} className="bg-slate-800 border border-slate-700 rounded-lg h-32 md:h-48 w-full"></div>
+                     <div key={i} className="bg-slate-800 border border-slate-700 rounded-lg h-32 md:h-48 w-full overflow-hidden">
+                         <img
+                             src={`/feature/${i + 1}.png`}
+                             alt={`JetSuite feature ${i + 1}`}
+                             className="w-full h-full object-cover"
+                         />
+                     </div>
                  ))}
              </div>
              <div className="absolute inset-0 bg-gradient-to-t from-brand-darker via-transparent to-transparent"></div>
