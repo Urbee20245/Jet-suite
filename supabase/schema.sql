@@ -1,4 +1,72 @@
 -- ============================================================================
+-- BORIS AI USAGE TRACKING
+-- Purpose: Track daily question limits for Boris AI (5 questions per day per user)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS boris_usage (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL, -- Tracks usage by date (YYYY-MM-DD)
+  question_count INTEGER DEFAULT 0, -- Number of questions asked on this date
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+  -- Ensure one record per user per day
+  UNIQUE(user_id, date)
+);
+
+-- Create indexes for faster lookups
+CREATE INDEX IF NOT EXISTS idx_boris_usage_user_id ON boris_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_boris_usage_date ON boris_usage(date);
+CREATE INDEX IF NOT EXISTS idx_boris_usage_user_date ON boris_usage(user_id, date);
+
+-- Create updated_at trigger for boris_usage
+CREATE OR REPLACE FUNCTION update_boris_usage_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_boris_usage_updated_at ON boris_usage;
+CREATE TRIGGER update_boris_usage_updated_at
+  BEFORE UPDATE ON boris_usage
+  FOR EACH ROW
+  EXECUTE FUNCTION update_boris_usage_updated_at();
+
+-- RLS for boris_usage
+ALTER TABLE boris_usage ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can view their own usage
+CREATE POLICY "Users can view own boris usage"
+  ON boris_usage FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Policy: Users can insert their own usage records
+CREATE POLICY "Users can insert own boris usage"
+  ON boris_usage FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Users can update their own usage records
+CREATE POLICY "Users can update own boris usage"
+  ON boris_usage FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Service role full access (for API backend)
+CREATE POLICY "Service role has full access to boris_usage"
+  ON boris_usage FOR ALL
+  USING (auth.role() = 'service_role');
+
+-- Grant permissions
+GRANT SELECT, INSERT, UPDATE ON boris_usage TO authenticated;
+GRANT ALL ON boris_usage TO service_role;
+
+COMMENT ON TABLE boris_usage IS 'Tracks Boris AI daily question limits (5 per day per user)';
+COMMENT ON COLUMN boris_usage.date IS 'Date in YYYY-MM-DD format for daily reset';
+COMMENT ON COLUMN boris_usage.question_count IS 'Number of questions asked on this date';
+
+-- ============================================================================
 -- JETTRUST REVIEW PAGES SYSTEM
 -- Added: January 2026
 -- Purpose: Enable public review collection pages and email review requests
