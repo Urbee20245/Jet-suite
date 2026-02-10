@@ -200,12 +200,19 @@ export const BorisChat: React.FC<BorisChatProps> = ({
           <div className="flex items-center justify-between max-w-4xl mx-auto">
             {/* Boris Avatar & Title */}
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                <SparklesIcon className="w-5 h-5 text-white" />
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                  </svg>
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-purple-900">
+                  <div className="absolute inset-0 animate-ping bg-green-400 rounded-full"></div>
+                </div>
               </div>
               <div>
-                <h2 className="text-white font-bold text-lg">Boris</h2>
-                <p className="text-purple-300 text-xs">Your Growth Coach</p>
+                <h2 className="text-white font-bold text-lg">Chat with Boris</h2>
+                <p className="text-purple-200 text-xs">Your AI Growth Coach</p>
               </div>
             </div>
 
@@ -231,10 +238,12 @@ export const BorisChat: React.FC<BorisChatProps> = ({
           {/* Daily Greeting Message */}
           {messages.length > 0 && (
             <div className="flex justify-start">
-              <div className="max-w-[85%] bg-purple-800/40 border border-purple-600/30 rounded-2xl px-6 py-4">
+              <div className="max-w-[85%] bg-gradient-to-r from-purple-900/80 to-purple-800/80 border border-purple-700/30 rounded-2xl rounded-tl-none px-6 py-4 shadow-lg">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                    <SparklesIcon className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                    </svg>
                   </div>
                   <span className="text-sm font-semibold text-purple-300">Boris</span>
                 </div>
@@ -294,36 +303,46 @@ export const BorisChat: React.FC<BorisChatProps> = ({
           {messages.slice(1).map(message => (
             <div
               key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
+              {message.role === 'boris' && (
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                  </svg>
+                </div>
+              )}
               <div
-                className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-lg ${
                   message.role === 'user'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-purple-800/40 text-white border border-purple-600/30'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-tr-none'
+                    : 'bg-gradient-to-r from-purple-900/80 to-purple-800/80 text-white border border-purple-700/30 rounded-tl-none'
                 }`}
               >
-                {message.role === 'boris' && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                      <SparklesIcon className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-xs font-semibold text-purple-300">Boris</span>
-                  </div>
-                )}
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
               </div>
+              {message.role === 'user' && (
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-sm font-bold">U</span>
+                </div>
+              )}
             </div>
           ))}
 
           {/* Loading indicator */}
           {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-purple-800/40 border border-purple-600/30 rounded-2xl px-4 py-3">
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L2 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+                </svg>
+              </div>
+              <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/80 border border-purple-700/30 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  <span className="text-xs text-purple-300 ml-2">Boris is thinking...</span>
                 </div>
               </div>
             </div>
