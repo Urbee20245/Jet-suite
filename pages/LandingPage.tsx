@@ -399,6 +399,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                                 src={COVER_IMAGE_URL}
                                 alt="JetSuite Demo Video Cover"
                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                loading="eager"
                             />
 
                             {/* Gradient Overlay for depth */}

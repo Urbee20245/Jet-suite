@@ -54,6 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
           src="/Jetsuitewing.png"
           alt="JetSuite"
           className="h-8 w-auto"
+          loading="eager"
         />
 
         <div className="relative ml-4">
