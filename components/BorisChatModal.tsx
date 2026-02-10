@@ -140,7 +140,7 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         // Close when clicking the backdrop (outside the modal)
         if (e.target === e.currentTarget) {
@@ -148,12 +148,12 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
         }
       }}
     >
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col border border-slate-700 shadow-2xl overflow-hidden relative">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl w-full max-w-4xl my-auto max-h-[90vh] flex flex-col border border-slate-700 shadow-2xl overflow-hidden relative">
         {/* Animated Background Glow */}
         <div className="absolute -right-20 -top-20 bg-purple-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
         <div className="absolute -left-20 -bottom-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full pointer-events-none"></div>
 
-        <div className="relative z-20 flex flex-col h-full">
+        <div className="relative z-20 flex flex-col h-full min-h-0">
 
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-purple-700/30 flex items-center justify-between bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900">
