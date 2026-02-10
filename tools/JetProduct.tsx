@@ -200,6 +200,10 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof MOCKUP_STYLES>('product');
   const [selectedStyle, setSelectedStyle] = useState<Style | null>(null);
   
+  // CREATIVE VISION MODE
+  const [useCustomVision, setUseCustomVision] = useState(false);
+  const [customVision, setCustomVision] = useState('');
+
   // TEXT OVERLAYS
   const [productName, setProductName] = useState('');
   const [headline, setHeadline] = useState('');
@@ -306,24 +310,45 @@ export const JetProduct: React.FC<JetProductProps> = ({ tool, profileData }) => 
       setError('Please upload a product or business image first.');
       return;
     }
-    if (!prompt) {
+    if (!useCustomVision && !prompt) {
       setError('Please select a mockup style.');
       return;
     }
-    
+    if (useCustomVision && !customVision.trim()) {
+      setError('Please describe your creative vision.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     setGeneratedImageUrl(null);
-    
+
     try {
       const brandDna = profileData.brandDnaProfile;
       const brandColors = brandDna?.visual_identity?.primary_colors?.join(', ') || 'professional business colors';
       const tone = brandDna?.brand_tone?.primary_tone || 'professional';
-      
-      let finalPrompt = `Generate a high-quality, professional product mockup. 
-Product context: ${prompt}. 
-Brand DNA: Use colors ${brandColors} and a ${tone} tone. 
+
+      let finalPrompt: string;
+
+      if (useCustomVision) {
+        finalPrompt = `CREATIVE PRODUCT VISUALIZATION:
+Take the product shown in the uploaded image and place it naturally into the following scene:
+
+"${customVision.trim()}"
+
+CRITICAL REQUIREMENTS:
+- The uploaded product image IS the product. Preserve its exact appearance, shape, colors, branding, and details.
+- Seamlessly integrate the product into the described scene with realistic lighting, shadows, reflections, and scale.
+- The product must be the focal point and hero of the image.
+- Make the scene photorealistic and commercially polished.
+- Brand DNA: Use colors ${brandColors} and a ${tone} tone where appropriate for the environment.
+- Professional commercial photography quality. Magazine-worthy composition.`;
+      } else {
+        finalPrompt = `Generate a high-quality, professional product mockup.
+Product context: ${prompt}.
+Brand DNA: Use colors ${brandColors} and a ${tone} tone.
 Focus on photorealism and commercial quality.`;
+      }
 
       if (productName || headline || price) {
         finalPrompt += '\n\nTEXT OVERLAYS TO INCLUDE:';
@@ -389,7 +414,8 @@ Focus on photorealism and commercial quality.`;
         <HowToUse toolName={tool.name} onDismiss={() => setShowHowTo(false)}>
             <ul className="list-disc pl-5 space-y-1 mt-2">
                 <li>Upload your product or business image.</li>
-                <li>Select a professional mockup style from 28 categories.</li>
+                <li>Choose a preset mockup style OR describe your own creative vision.</li>
+                <li>Creative Vision lets you describe any scene — e.g. "A man smiling wearing these Sunglasses at a beach."</li>
                 <li>Optionally add text overlays (product name, headline, price).</li>
                 <li>Generate AI-powered, branded mockups instantly.</li>
                 <li>Download unlimited times after generation.</li>
@@ -431,52 +457,109 @@ Focus on photorealism and commercial quality.`;
             {/* Right: Style Selection */}
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-brand-text mb-2">2. Select Mockup Style</label>
-                
-                {/* Category Tabs */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {(Object.keys(MOCKUP_STYLES) as Array<keyof typeof MOCKUP_STYLES>).map(category => (
-                        <button
-                            type="button"
-                            key={category}
-                            onClick={() => {
-                                setSelectedCategory(category);
-                                setSelectedStyle(null);
-                                setPrompt('');
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                selectedCategory === category
-                                    ? 'bg-accent-purple text-white shadow'
-                                    : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
-                            }`}
-                        >
-                            <span className="mr-1">{CATEGORY_LABELS[category].icon}</span>
-                            {CATEGORY_LABELS[category].label}
-                        </button>
-                    ))}
+                <label className="block text-sm font-medium text-brand-text mb-2">2. Choose Your Style</label>
+
+                {/* Mode Toggle */}
+                <div className="flex rounded-lg border border-brand-border overflow-hidden mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomVision(false);
+                      setCustomVision('');
+                      if (!selectedStyle) setPrompt('');
+                    }}
+                    className={`flex-1 px-4 py-2.5 text-sm font-medium transition-all ${
+                      !useCustomVision
+                        ? 'bg-accent-purple text-white shadow-inner'
+                        : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
+                    }`}
+                  >
+                    Preset Styles
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomVision(true);
+                      setSelectedStyle(null);
+                      setPrompt('');
+                    }}
+                    className={`flex-1 px-4 py-2.5 text-sm font-medium transition-all ${
+                      useCustomVision
+                        ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white shadow-inner'
+                        : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
+                    }`}
+                  >
+                    Your Creative Vision
+                  </button>
                 </div>
-                
-                {/* Style Options */}
-                <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
-                    {MOCKUP_STYLES[selectedCategory].map(style => (
-                        <button 
-                            type="button" 
-                            key={style.name} 
-                            onClick={() => {
-                                setSelectedStyle(style);
-                                setPrompt(style.prompt);
-                            }} 
-                            className={`p-3 rounded-lg border-2 text-left transition-all ${
-                                selectedStyle?.name === style.name
-                                    ? 'bg-accent-purple/10 border-accent-purple' 
-                                    : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
-                            }`}
-                        >
-                            <p className="text-sm font-bold text-brand-text">{style.name}</p>
-                            <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.prompt.substring(0, 80)}...</p>
-                        </button>
-                    ))}
-                </div>
+
+                {useCustomVision ? (
+                  /* Custom Vision Input */
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border border-accent-purple/20 rounded-lg">
+                      <p className="text-xs text-brand-text-muted">
+                        Describe the scene you want your product placed in. The AI will use your uploaded product image and incorporate it into your vision.
+                      </p>
+                    </div>
+                    <textarea
+                      value={customVision}
+                      onChange={(e) => setCustomVision(e.target.value)}
+                      placeholder={'e.g. "A man smiling wearing these Sunglasses at a beach during golden hour"\n\ne.g. "A woman holding this Coffee Mug in a cozy cafe with warm lighting"\n\ne.g. "This Watch on a man\'s wrist with a city skyline in the background"'}
+                      rows={5}
+                      className="w-full bg-brand-light border border-brand-border rounded-lg px-4 py-3 text-sm text-brand-text placeholder:text-brand-text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent-purple/40 focus:border-accent-purple resize-none"
+                    />
+                    <p className="text-[10px] text-brand-text-muted text-right">
+                      {customVision.length > 0 ? `${customVision.length} characters` : 'Describe your creative vision above'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Category Tabs */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {(Object.keys(MOCKUP_STYLES) as Array<keyof typeof MOCKUP_STYLES>).map(category => (
+                            <button
+                                type="button"
+                                key={category}
+                                onClick={() => {
+                                    setSelectedCategory(category);
+                                    setSelectedStyle(null);
+                                    setPrompt('');
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                    selectedCategory === category
+                                        ? 'bg-accent-purple text-white shadow'
+                                        : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
+                                }`}
+                            >
+                                <span className="mr-1">{CATEGORY_LABELS[category].icon}</span>
+                                {CATEGORY_LABELS[category].label}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Style Options */}
+                    <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto pr-2">
+                        {MOCKUP_STYLES[selectedCategory].map(style => (
+                            <button
+                                type="button"
+                                key={style.name}
+                                onClick={() => {
+                                    setSelectedStyle(style);
+                                    setPrompt(style.prompt);
+                                }}
+                                className={`p-3 rounded-lg border-2 text-left transition-all ${
+                                    selectedStyle?.name === style.name
+                                        ? 'bg-accent-purple/10 border-accent-purple'
+                                        : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
+                                }`}
+                            >
+                                <p className="text-sm font-bold text-brand-text">{style.name}</p>
+                                <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.prompt.substring(0, 80)}...</p>
+                            </button>
+                        ))}
+                    </div>
+                  </>
+                )}
               </div>
               
               {/* Text Overlays */}
@@ -569,7 +652,7 @@ Focus on photorealism and commercial quality.`;
           
           <button 
             type="submit" 
-            disabled={loading || !inputImage || !prompt || creditsUsed >= creditsLimit || loadingCredits} 
+            disabled={loading || !inputImage || (!useCustomVision && !prompt) || (useCustomVision && !customVision.trim()) || creditsUsed >= creditsLimit || loadingCredits}
             className="w-full mt-6 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg flex items-center justify-center gap-2"
           >
             {loading ? (
