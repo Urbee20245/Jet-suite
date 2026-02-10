@@ -211,14 +211,20 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   const buildChatContext = (): BorisContext => {
+    // Build completed audits array
+    const completedAudits: string[] = [];
+    if (profileData?.business?.audits?.jetbiz?.completed || profileData?.business?.audits?.jetBiz?.completed) {
+      completedAudits.push('JetBiz');
+    }
+    if (profileData?.business?.audits?.jetviz?.completed || profileData?.business?.audits?.jetViz?.completed) {
+      completedAudits.push('JetViz');
+    }
+
     return {
       businessName: profileData?.business?.business_name || '',
       industry: profileData?.business?.industry || '',
       currentStage: borisState?.stage || 'business_details',
-      completedAudits: {
-        jetBiz: !!(profileData?.business?.audits?.jetbiz?.completed || profileData?.business?.audits?.jetBiz?.completed),
-        jetViz: !!(profileData?.business?.audits?.jetviz?.completed || profileData?.business?.audits?.jetViz?.completed)
-      },
+      completedAudits,
       pendingTasks: growthPlanTasks.filter(t => t.status !== 'completed'),
       recentActivity: profileData?.recentActivity || []
     };
