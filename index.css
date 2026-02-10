@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Optimizations */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overscroll-behavior-y: none;
+    touch-action: pan-y;
+  }
+
+  /* Better touch targets for mobile */
+  @media (max-width: 768px) {
+    button, a, input, select, textarea {
+      min-height: 44px;
+    }
+  }
+
+  /* Prevent zoom on input focus for iOS */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+}
+
 @property --glow-angle {
   syntax: '<angle>';
   initial-value: 0deg;

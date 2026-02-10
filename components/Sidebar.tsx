@@ -181,6 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           src="/Jetsuitewing.png"
           alt="JetSuite"
           className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0"
+          loading="eager"
         />
         <h1 className="hidden md:block ml-2 text-2xl font-bold text-gray-100">
             JetSuite

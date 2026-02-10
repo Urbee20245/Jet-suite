@@ -67,16 +67,17 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
           <a
             href={`${baseUrl}/`}
             onClick={(e) => handleNavigation(e, '/')}
-            className="flex items-center gap-3"
+            className="flex items-center gap-2 sm:gap-3 min-w-0"
           >
             <img
               src="/Jetsuitewing.png"
               alt="JetSuite Logo"
-              className="w-10 h-10"
+              className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+              loading="eager"
             />
-            <div className="leading-tight">
-              <div className="text-xl font-bold text-white">JetSuite</div>
-              <div className="text-xs text-gray-400 -mt-1">
+            <div className="leading-tight min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-white">JetSuite</div>
+              <div className="text-xs text-gray-400 -mt-1 hidden xs:block">
                 by Jet Automations
               </div>
             </div>
@@ -184,8 +185,9 @@ export const Header: React.FC<HeaderProps> = ({ navigate }) => {
           </div>
 
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-white p-2 -mr-2 active:bg-slate-800 rounded-lg transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
