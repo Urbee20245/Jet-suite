@@ -94,8 +94,8 @@ const testimonials = [
     }
 ];
 
-const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26125639/Local-Business-optimization-Keyword-Research-Website-Analysis-Social-Poster-Customer-Engagement-Keyword-Analysis-MORE.mp4";
-const COVER_IMAGE_URL = "https://medicarefor65.s3.amazonaws.com/2026/01/26165442/Jetcover.png"; // New absolute URL
+const VIDEO_URL = "https://medicarefor65.s3.amazonaws.com/2026/02/10114446/JET-SUITE-OFFICIAL-COMMERCIAL.mp4";
+const COVER_IMAGE_URL = "/gjscover.jpg"; // New absolute URL
 
 export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   const videoRef = useRef<HTMLDivElement>(null);
