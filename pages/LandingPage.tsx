@@ -246,7 +246,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   </span>
                   <br/>
                   <span className="text-2xl sm:text-3xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
-                      Your AI platform for business Growth.
+                      The all-in-one AI growth engine for modern businesses.
                   </span>
               </h1>
               
