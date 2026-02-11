@@ -21,10 +21,35 @@ export const ContactPage: React.FC = () => {
     setSubmitStatus(null);
 
     try {
-      // TODO: Implement actual form submission to your backend/email service
-      // For now, we simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1500)); 
-      
+      // Send email to support@getjetsuite.com
+      const emailBody = `
+New Contact Form Submission
+
+From: ${formData.name} (${formData.email})
+Phone: ${formData.phone || 'Not provided'}
+Subject: ${formData.subject}
+
+Message:
+${formData.message}
+      `.trim();
+
+      const response = await fetch('/api/email/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 'Support@getjetsuite.com',
+          subject: `Contact Form: ${formData.subject} - ${formData.name}`,
+          text: emailBody,
+          from: formData.email,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
       setSubmitStatus('success');
       setFormData({
         name: '',
@@ -34,6 +59,7 @@ export const ContactPage: React.FC = () => {
         message: ''
       });
     } catch (error) {
+      console.error('Error submitting contact form:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
