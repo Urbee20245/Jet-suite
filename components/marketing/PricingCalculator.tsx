@@ -5,7 +5,7 @@ export const PricingCalculator: React.FC = () => {
     const [businesses, setBusinesses] = useState(1);
     const [teamMembers, setTeamMembers] = useState(0);
 
-    const basePrice = 149;
+    const basePrice = 97;
     const additionalBusinessPrice = 49;
     const additionalTeamMemberPrice = 15;
     

@@ -15,7 +15,7 @@ const BASE_SYSTEM_INSTRUCTION = `You are JetSuite Helper, the AI assistant for J
 4. **USE SIMPLE LANGUAGE:** No marketing jargon or long explanations.
 5. **USE LINK FORMAT:** For demo links, use [Click here to view demo](url). For customwebsitesplus.com, show the full URL.
 
-**What is JetSuite?** An AI platform that helps local businesses rank first on Google for $149/month.
+**What is JetSuite?** An AI platform that helps local businesses rank first on Google for $97/month (special founders price, regularly $149/month).
 
 **Core Value:** Replaces expensive marketing agencies. Manages SEO, reviews, and content in one place.
 
@@ -26,7 +26,7 @@ const BASE_SYSTEM_INSTRUCTION = `You are JetSuite Helper, the AI assistant for J
 2. Follow weekly Growth Plan
 3. Track Growth Score
 
-**Pricing:** $149/month. Replaces services costing $5,000-$16,000/month.
+**Pricing:** $97/month (special founders price, regularly $149/month). Replaces services costing $5,000-$16,000/month.
 
 **JETSUITE TOOLS & FEATURES:**
 

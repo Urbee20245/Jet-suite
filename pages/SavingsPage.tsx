@@ -53,7 +53,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
   };
 
   const monthlyTraditionalCost = calculateSavings();
-  const jetSuiteCost = 149;
+  const jetSuiteCost = 97;
   const monthlySavings = monthlyTraditionalCost - jetSuiteCost;
   const annualSavings = monthlySavings * 12;
   const roi = monthlyTraditionalCost > 0 ? Math.round((monthlySavings / jetSuiteCost) * 100) : 0;
@@ -171,7 +171,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                   <p className="text-4xl font-extrabold text-white">
                     ${jetSuiteCost}<span className="text-lg">/mo</span>
                   </p>
-                  <p className="text-xs text-white/60 mt-2">All 12+ tools included</p>
+                  <p className="text-xs text-white/60 mt-2">Special founders price (regularly $149). All 12+ tools included</p>
                 </div>
 
                 <div className="h-px bg-white/30"></div>
@@ -272,7 +272,7 @@ export const SavingsPage: React.FC<SavingsPageProps> = ({ navigate }) => {
                       $11,100 - $35,200/mo
                     </td>
                     <td className="px-6 py-4 text-center text-accent-purple text-2xl">
-                      $149/mo
+                      $97/mo
                     </td>
                   </tr>
                 </tbody>
