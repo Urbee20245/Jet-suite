@@ -34,7 +34,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
   const [seats, setSeats] = useState(0);  // 0 additional seats (1 included in base)
 
   // Calculate pricing
-  const basePlan = 149;
+  const basePlan = 97;
   const additionalBusinessCost = 49;
   const seatCost = 15;
   
@@ -69,12 +69,12 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             <div className="bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 border-2 border-yellow-500/50 rounded-2xl px-8 py-4 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400"></div>
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
-                <span className="bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Founders Price</span>
+                <span className="bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Special Founders Price</span>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-gray-400 line-through text-2xl">$349/mo</span>
-                  <span className="text-4xl font-extrabold text-white">$149/mo</span>
+                  <span className="text-gray-400 line-through text-2xl">$149/mo</span>
+                  <span className="text-4xl font-extrabold text-white">$97/mo</span>
                 </div>
-                <span className="text-yellow-300 text-sm font-semibold">Lock in this price before it's gone!</span>
+                <span className="text-yellow-300 text-sm font-semibold">Lock in this special price before it's gone!</span>
               </div>
             </div>
           </div>
@@ -245,13 +245,13 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
 
             <div className="text-center mt-6 mb-6 p-6 bg-brand-darker rounded-xl border border-slate-700 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400"></div>
-              <div className="text-sm text-yellow-400 font-semibold mb-2">Introductory Founders Price</div>
+              <div className="text-sm text-yellow-400 font-semibold mb-2">Special Founders Price</div>
               <div className="flex items-baseline justify-center gap-3">
-                <span className="text-xl text-gray-500 line-through">${basePlan + 200 + (additionalBusinessCount * additionalBusinessCost) + (seats * seatCost)}</span>
+                <span className="text-xl text-gray-500 line-through">${basePlan + 52 + (additionalBusinessCount * additionalBusinessCost) + (seats * seatCost)}</span>
                 <span className="text-4xl font-bold text-white">${monthlyTotal}</span>
               </div>
               <div className="text-sm text-gray-400 mt-1">Billed Monthly</div>
-              <p className="text-xs text-yellow-300/80 mt-2 font-medium">Regular price will be $349/mo base. Lock in your founders rate today!</p>
+              <p className="text-xs text-yellow-300/80 mt-2 font-medium">Regular price is $149/mo base. Lock in your special founders rate today!</p>
             </div>
 
             {/* Checkout Button */}
@@ -267,7 +267,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ navigate }) => {
             </p>
             <div className="mt-4 text-center">
               <p className="text-xs text-yellow-400/70 font-medium">
-                This introductory founders price won't last long. Regular price: $349/mo.
+                This special founders price won't last long. Regular price: $149/mo.
               </p>
             </div>
           </div>

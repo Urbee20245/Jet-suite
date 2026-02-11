@@ -87,8 +87,7 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
       { category: 'general', q: "Do I need to install anything?", a: "No. JetSuite is 100% cloud-based. You can access it from any web browser on your computer, tablet, or phone." },
       { category: 'general', q: "Does it work for businesses outside the US?", a: "Currently, our local SEO data sources are optimized for US-based businesses. However, many tools (website audit, content creation) work globally. We recommend it primarily for US businesses at this time." },
 
-      // Pricing
-      { category: 'pricing', q: "How much does JetSuite cost?", a: "We offer one simple plan: $149/month. This includes full access to all 20+ tools, unlimited AI content generation, and support. No hidden fees." },
+      { category: 'pricing', q: "How much does JetSuite cost?", a: "We offer one simple plan: $97/month (special founders price, regularly $149/month). This includes full access to all 20+ tools, unlimited AI content generation, and support. No hidden fees." },
       { category: 'pricing', q: "When will I be charged?", a: "You'll be charged immediately when you subscribe. Your subscription renews monthly at the same rate." },
       { category: 'pricing', q: "Are there setup fees?", a: "None. You can set up your account in about 2 minutes completely free." },
       { category: 'pricing', q: "Do I have to sign a contract?", a: "No. JetSuite is a month-to-month service. You can cancel at any time without penalty." },
@@ -132,7 +131,7 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
       { category: 'support', q: "Can I request a new feature?", a: "Yes! We love user feedback. You can submit feature requests directly from your dashboard." },
 
       // Billing
-      { category: 'billing', q: "How does billing work?", a: "You are billed $149 automatically each month on the anniversary of your signup date." },
+      { category: 'billing', q: "How does billing work?", a: "You are billed $97 automatically each month on the anniversary of your signup date (special founders price, regularly $149/month)." },
       { category: 'billing', q: "Can I cancel anytime?", a: "Yes. You can cancel with two clicks in your dashboard settings. Your access will continue until the end of your current billing period." },
       { category: 'billing', q: "Do you offer annual plans?", a: "Yes. You can pay annually and get 2 months free (pay for 10 months, get 12). Contact support to switch to annual billing." },
       { category: 'billing', q: "What happens if my payment fails?", a: "We'll retry the payment a few times over the next week. If it continues to fail, your account will be paused until payment is updated." },
@@ -230,8 +229,8 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
               <div className="grid md:grid-cols-3 gap-6">
                   <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
                       <h3 className="font-bold text-white mb-2">How much does it cost?</h3>
-                      <p className="text-blue-400 font-bold text-xl mb-2">$149/month</p>
-                      <p className="text-gray-400 text-sm">Includes everything. No hidden fees or tiered upgrades.</p>
+                      <p className="text-blue-400 font-bold text-xl mb-2">$97/month</p>
+                      <p className="text-gray-400 text-sm">Special founders price (regularly $149). Includes everything. No hidden fees or tiered upgrades.</p>
                   </div>
                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
                       <h3 className="font-bold text-white mb-2">How long until I see results?</h3>

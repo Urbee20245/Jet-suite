@@ -482,10 +482,10 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             </div>
             <div className="text-center mt-8">
                 <div className="inline-block bg-yellow-500/20 border border-yellow-500/50 rounded-full px-4 py-1 mb-3">
-                  <span className="text-yellow-300 text-sm font-bold">Introductory Founders Price</span>
+                  <span className="text-yellow-300 text-sm font-bold">Special Founders Price</span>
                 </div>
-                <p className="text-xl text-white font-bold">Your Price: <span className="text-gray-400 line-through text-lg mr-2">$349/mo</span><span className="text-blue-400 text-3xl">$149/mo</span></p>
-                <p className="text-sm text-yellow-300/70 font-medium mt-1">This founders rate won't last long. Lock it in today!</p>
+                <p className="text-xl text-white font-bold">Your Price: <span className="text-gray-400 line-through text-lg mr-2">$149/mo</span><span className="text-blue-400 text-3xl">$97/mo</span></p>
+                <p className="text-sm text-yellow-300/70 font-medium mt-1">This special founders rate won't last long. Lock it in today!</p>
             </div>
         </div>
       </section>

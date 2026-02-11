@@ -1029,14 +1029,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               <h3 className="text-2xl font-bold text-white mb-2">Complete Platform</h3>
               <div className="inline-block bg-yellow-500 text-black text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider mb-4 animate-pulse">
-                Founders Price - Limited Time
+                Special Founders Price - Limited Time
               </div>
               <div className="flex items-baseline justify-center mb-2">
-                <span className="text-2xl text-gray-500 line-through mr-3">$349</span>
-                <span className="text-6xl font-extrabold text-white">$149</span>
+                <span className="text-2xl text-gray-500 line-through mr-3">$149</span>
+                <span className="text-6xl font-extrabold text-white">$97</span>
                 <span className="text-xl text-gray-400 ml-2">/month</span>
               </div>
-              <p className="text-xs text-yellow-300/80 font-medium mb-6">Lock in this introductory rate before it's gone!</p>
+              <p className="text-xs text-yellow-300/80 font-medium mb-6">Lock in this special rate before it's gone!</p>
 
               <ul className="text-left space-y-4 mb-8 max-w-xs mx-auto text-gray-300">
                 <li className="flex items-center"><CheckCircleIcon className="w-5 h-5 text-teal-400 mr-3 shrink-0"/> All 20+ Tools Included</li>
