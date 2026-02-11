@@ -45,6 +45,7 @@ const CoreApp: React.FC = () => {
       try {
         window.history.pushState({}, '', path);
         setCurrentPath(path);
+        window.scrollTo(0, 0); // Scroll to top on navigation
       } catch (e) {
         console.warn('Could not navigate:', e);
       }
@@ -155,7 +156,10 @@ const CoreApp: React.FC = () => {
   // Sync currentPath with browser forward/back buttons
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const onLocationChange = () => setCurrentPath(window.location.pathname);
+    const onLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+      window.scrollTo(0, 0); // Scroll to top on back/forward navigation
+    };
     window.addEventListener('popstate', onLocationChange);
     return () => window.removeEventListener('popstate', onLocationChange);
   }, []);
