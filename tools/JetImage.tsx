@@ -330,24 +330,13 @@ VISUAL REQUIREMENTS:
     document.body.removeChild(a);
   };
   
-  const handleRejectAndRegenerate = async () => {
-    if (loading || loadingYoutube) return;
-    
-    // Clear the generated image
+  const handleCreateAnotherImage = () => {
+    // Clear the generated image to start fresh
     setGeneratedImageUrl(null);
-    
-    // Re-run the generation based on the active tab
-    if (activeTab === 'standard') {
-      // Re-submit the standard form
-      const form = document.querySelector('form');
-      if (form) {
-        const event = new Event('submit', { cancelable: true, bubbles: true });
-        form.dispatchEvent(event);
-      }
-    } else if (activeTab === 'youtube') {
-      // Re-run the YouTube generation
-      await handleYoutubeGenerate();
-    }
+    setError('');
+
+    // Scroll to the top of the form so user can see the input fields
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const nextResetDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
@@ -723,12 +712,11 @@ VISUAL REQUIREMENTS:
               Download Image
             </button>
             <button
-              onClick={handleRejectAndRegenerate}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg disabled:opacity-50"
+              onClick={handleCreateAnotherImage}
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
             >
-              <TrashIcon className="w-5 h-5" />
-              Reject & Regenerate
+              <SparklesIcon className="w-5 h-5" />
+              Create Another Image
             </button>
           </div>
         </div>
