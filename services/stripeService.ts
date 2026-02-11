@@ -10,6 +10,7 @@ interface CreateCheckoutSessionParams {
   seatCount?: number;
   additionalBusinessCount?: number;
   workspaceId?: string;
+  referralId?: string; // Rewardful referral ID
 }
 
 interface CreateCheckoutSessionResponse {
@@ -31,6 +32,11 @@ export async function createCheckoutSession(
   params: CreateCheckoutSessionParams
 ): Promise<CreateCheckoutSessionResponse> {
   try {
+    // Get Rewardful referral ID if available
+    const referralId = params.referralId ||
+      (typeof window !== 'undefined' && (window as any).Rewardful?.referral) ||
+      undefined;
+
     const response = await fetch('/api/stripe/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -42,6 +48,7 @@ export async function createCheckoutSession(
         seatCount: params.seatCount || 0,
         additionalBusinessCount: params.additionalBusinessCount || 0,
         workspaceId: params.workspaceId,
+        referralId: referralId,
       }),
     });
 

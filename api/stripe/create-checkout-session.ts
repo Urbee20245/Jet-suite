@@ -31,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       isFounder = true,
       isNewUser = false, // NEW: Flag indicating if user is unauthenticated
       metadata = {},
+      referralId, // Rewardful referral ID
     } = req.body;
 
     if (!email) {
@@ -103,6 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         user_id: userId || 'unauthenticated', // Pass user ID or placeholder
         is_new_user: String(isNewUser), // NEW
         email: email, // Always include email
+        rewardful_referral: referralId || '', // Rewardful affiliate tracking
       },
       subscription_data: {
         // TRIAL PERIOD REMOVED
@@ -118,6 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           pricing_tier: isFounder ? 'founder' : 'standard',
           is_new_user: String(isNewUser), // NEW
           email: email, // Always include email
+          rewardful_referral: referralId || '', // Rewardful affiliate tracking
         },
       },
       success_url: `${process.env.APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
