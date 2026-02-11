@@ -238,14 +238,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
               </div>
               
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
                   Get Found First on Google.
                   <br className="hidden md:block"/>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
                       Get More Customers.
                   </span>
                   <br className="hidden md:block"/>
-                  <span className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
+                  <span className="text-2xl sm:text-3xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
                       Your AI platform for business Growth.
                   </span>
               </h1>
@@ -271,7 +271,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
-                      See how it works
+                      <span className="hidden sm:inline">See how it works</span>
                   </button>
               </div>
               
@@ -431,7 +431,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             </div>
 
                             {/* Enhanced Video Stats Overlay */}
-                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-md text-white py-3 px-8 rounded-full text-sm font-semibold border border-slate-600/50 group-hover:border-blue-400/50 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 z-10">
+                            <div className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-md text-white py-3 px-8 rounded-full text-sm font-semibold border border-slate-600/50 group-hover:border-blue-400/50 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 z-10">
                                 <span className="flex items-center gap-2">
                                     <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
                                     See how it works
