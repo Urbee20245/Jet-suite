@@ -244,7 +244,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
                       Get More Customers.
                   </span>
-                  <br className="hidden md:block"/>
+                  <br/>
                   <span className="text-2xl sm:text-3xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
                       Your AI platform for business Growth.
                   </span>
@@ -271,7 +271,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z"/>
                       </svg>
-                      <span className="hidden sm:inline">See how it works</span>
+                      See how it works
                   </button>
               </div>
               
