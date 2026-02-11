@@ -55,7 +55,7 @@ const FaqItem = ({ question, answer }: { question: string, answer: string }) => 
 export const AffiliateProgramPage: React.FC<AffiliateProgramPageProps> = ({ navigate }) => {
   const handleJoinClick = () => {
     // Open Rewardful signup - this will be the Rewardful link
-    window.open('https://jetsuiteai.getrewardful.com/signup', '_blank');
+    window.open('https://jetsuite.getrewardful.com/signup', '_blank');
   };
 
   return (
