@@ -19,7 +19,7 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           <img src="/Jetsuitewing.png" alt="JetSuite Logo" className="w-8 h-8" />
           <span className="text-xl font-bold text-white">JetSuite</span>
         </div>
-        <div className="mt-4 flex justify-center items-center space-x-6 text-gray-400">
+        <div className="mt-4 flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-gray-400">
           <a
             href={`${baseUrl}/privacy`}
             onClick={(e) => handleNavigation(e, '/privacy')}
@@ -36,17 +36,25 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
           >
             Terms of Service
           </a>
-          <a 
-            href={`${baseUrl}/contact`} 
-            onClick={(e) => handleNavigation(e, '/contact')} 
+          <a
+            href={`${baseUrl}/contact`}
+            onClick={(e) => handleNavigation(e, '/contact')}
             className="hover:text-white"
             title="Contact Us"
           >
             Contact
           </a>
-          <a 
-            href={`${baseUrl}/login`} 
-            onClick={(e) => handleNavigation(e, '/login')} 
+          <a
+            href={`${baseUrl}/affiliate-program`}
+            onClick={(e) => handleNavigation(e, '/affiliate-program')}
+            className="hover:text-white"
+            title="Affiliate Program"
+          >
+            Affiliate Program
+          </a>
+          <a
+            href={`${baseUrl}/login`}
+            onClick={(e) => handleNavigation(e, '/login')}
             className="hover:text-white"
             title="Login"
           >

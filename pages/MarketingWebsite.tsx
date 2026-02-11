@@ -18,6 +18,8 @@ import { TermsOfService } from './TermsOfService';
 import { NotFoundPage } from './NotFoundPage'; // Import NotFoundPage
 import { ContactPage } from './ContactPage'; // Import ContactPage
 import { ScheduleDemoPage } from './ScheduleDemoPage';
+import { AffiliateProgramPage } from './AffiliateProgramPage';
+import { AffiliateThankYouPage } from './AffiliateThankYouPage';
 import JethelperApp from '../jethelper/JethelperApp';
 
 interface MarketingWebsiteProps {
@@ -64,6 +66,10 @@ export const MarketingWebsite: React.FC<MarketingWebsiteProps> = ({ currentPath,
                 return <ContactPage />;
             case '/schedule-demo':
                 return <ScheduleDemoPage navigate={navigate} />;
+            case '/affiliate-program':
+                return <AffiliateProgramPage navigate={navigate} />;
+            case '/affiliate/thank-you':
+                return <AffiliateThankYouPage navigate={navigate} />;
             default:
                 // Handle 404 Not Found
                 return <NotFoundPage navigate={navigate} />;
