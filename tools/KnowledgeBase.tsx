@@ -31,6 +31,8 @@ const KB_SECTIONS = [
       { id: 'create-publish/jetsocial', title: 'JetSocial: Social Media' },
       { id: 'create-publish/jetcontent', title: 'JetContent: Blog Posts' },
       { id: 'create-publish/jetimage', title: 'JetImage: Visuals' },
+      { id: 'create-publish/jetproduct', title: 'JetProduct: Product Mockups' },
+      { id: 'create-publish/jetservices', title: 'JetServices: Service Management' },
     ],
   },
   {
@@ -98,18 +100,26 @@ interface KnowledgeBaseProps {
 export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ initialArticleId, setActiveTool }) => {
   const [activeArticleId, setActiveArticleId] = useState(initialArticleId || 'getting-started/how-jetsuite-works');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
 
   useEffect(() => {
     if(initialArticleId) {
         setActiveArticleId(initialArticleId);
+        // Find which tab this article belongs to and set active tab
+        const sectionIndex = KB_SECTIONS.findIndex(section =>
+          section.articles.some(article => article.id === initialArticleId)
+        );
+        if (sectionIndex !== -1) {
+          setActiveTabIndex(sectionIndex);
+        }
     }
   }, [initialArticleId]);
 
   const activeArticle = KNOWLEDGE_BASE_ARTICLES[activeArticleId] || KNOWLEDGE_BASE_ARTICLES['getting-started/how-jetsuite-works'];
-  
+
   const filteredArticles = searchTerm
     ? Object.entries(KNOWLEDGE_BASE_ARTICLES)
-        .filter(([id, article]) => 
+        .filter(([id, article]) =>
             article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             article.what.toLowerCase().includes(searchTerm.toLowerCase()) ||
             article.why.toLowerCase().includes(searchTerm.toLowerCase())
@@ -117,8 +127,19 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ initialArticleId, 
         .map(([id, article]) => ({ id, title: article.title }))
     : [];
 
+  const handleArticleClick = (articleId: string) => {
+    setActiveArticleId(articleId);
+    // Find which tab this article belongs to and set active tab
+    const sectionIndex = KB_SECTIONS.findIndex(section =>
+      section.articles.some(article => article.id === articleId)
+    );
+    if (sectionIndex !== -1) {
+      setActiveTabIndex(sectionIndex);
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold text-brand-text">JetSuite Knowledge Base</h1>
         <p className="text-lg text-brand-text-muted mt-1">Learn how to grow your business — step by step.</p>
@@ -139,7 +160,7 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ initialArticleId, 
                     <button
                         key={id}
                         onClick={() => {
-                            setActiveArticleId(id);
+                            handleArticleClick(id);
                             setSearchTerm('');
                         }}
                         className="block w-full text-left px-4 py-2 hover:bg-brand-light"
@@ -154,32 +175,53 @@ export const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ initialArticleId, 
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {/* Left Navigation */}
-        <aside className="md:col-span-1">
-          <nav className="space-y-4">
-            {KB_SECTIONS.map(section => (
-              <div key={section.name}>
-                <h3 className="font-bold text-brand-text mb-2">{section.name}</h3>
-                <ul className="space-y-1">
-                  {section.articles.map(article => (
-                    <li key={article.id}>
-                      <button
-                        onClick={() => setActiveArticleId(article.id)}
-                        className={`w-full text-left text-sm py-1 px-2 rounded-md transition-colors ${activeArticleId === article.id ? 'bg-accent-purple/10 text-accent-purple font-semibold' : 'text-brand-text-muted hover:bg-brand-light'}`}
-                      >
-                        {article.title}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </nav>
+      {/* Tab Navigation */}
+      <div className="border-b border-brand-border">
+        <nav className="flex flex-wrap gap-2 -mb-px">
+          {KB_SECTIONS.map((section, index) => (
+            <button
+              key={section.name}
+              onClick={() => setActiveTabIndex(index)}
+              className={`px-6 py-3 text-sm font-semibold rounded-t-lg transition-all ${
+                activeTabIndex === index
+                  ? 'bg-brand-card text-accent-purple border-b-2 border-accent-purple'
+                  : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
+              }`}
+            >
+              {section.name}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Article List for Active Tab */}
+        <aside className="lg:col-span-1">
+          <div className="bg-brand-card p-4 rounded-xl shadow-sm sticky top-4">
+            <h3 className="font-bold text-brand-text mb-3 text-sm uppercase tracking-wide">
+              {KB_SECTIONS[activeTabIndex].name}
+            </h3>
+            <ul className="space-y-2">
+              {KB_SECTIONS[activeTabIndex].articles.map(article => (
+                <li key={article.id}>
+                  <button
+                    onClick={() => setActiveArticleId(article.id)}
+                    className={`w-full text-left text-sm py-2 px-3 rounded-lg transition-all ${
+                      activeArticleId === article.id
+                        ? 'bg-accent-purple/10 text-accent-purple font-semibold shadow-sm'
+                        : 'text-brand-text-muted hover:bg-brand-light hover:text-brand-text'
+                    }`}
+                  >
+                    {article.title}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </aside>
 
         {/* Main Content */}
-        <main className="md:col-span-3 bg-brand-card p-8 rounded-2xl shadow-lg">
+        <main className="lg:col-span-4 bg-brand-card p-8 rounded-2xl shadow-lg">
           <ArticleView article={activeArticle} setActiveTool={setActiveTool} />
         </main>
       </div>
