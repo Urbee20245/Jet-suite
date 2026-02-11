@@ -7,7 +7,19 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ navigate }) => {
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
     e.preventDefault();
-    navigate(path);
+
+    // Check if we're already on the target page
+    const currentPath = window.location.pathname;
+    const normalizedCurrent = currentPath.replace(/\/$/, '') || '/';
+    const normalizedTarget = path.replace(/\/$/, '') || '/';
+
+    if (normalizedCurrent === normalizedTarget) {
+      // Already on this page, just scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Navigate to the new page (which will also scroll to top)
+      navigate(path);
+    }
   };
 
   const baseUrl = "https://getjetsuite.com";
