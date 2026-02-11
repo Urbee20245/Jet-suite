@@ -1158,21 +1158,41 @@ export const AdminPanel: React.FC = () => {
             </div>
         );
       case 'revenue':
+        // Calculate real revenue metrics
+        const activeUsers = users.filter(u => u.billing.subscription_status === 'active');
+        const baseMRR = activeUsers.length * 97; // Founder pricing base
+        const businessAddonMRR = users.reduce((acc, u) => {
+          if (u.billing.subscription_status === 'active') {
+            const extraBusinesses = Math.max(0, (u.billing.business_count || 0) - 1);
+            return acc + (extraBusinesses * 49);
+          }
+          return acc;
+        }, 0);
+        const seatMRR = users.reduce((acc, u) => {
+          if (u.billing.subscription_status === 'active') {
+            const extraSeats = Math.max(0, (u.billing.seat_count || 0) - 1);
+            return acc + (extraSeats * 15);
+          }
+          return acc;
+        }, 0);
+        const totalMRR = baseMRR + businessAddonMRR + seatMRR;
+        const ARR = totalMRR * 12;
+
         return (
             <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">Revenue Metrics (Mock Data)</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <h2 className="text-2xl font-bold text-gray-900">Revenue Metrics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-700">Monthly Recurring Revenue (MRR)</h3>
-                        <p className="text-4xl font-bold text-green-600 mt-2">$1,249</p>
+                        <p className="text-4xl font-bold text-green-600 mt-2">${totalMRR.toLocaleString()}</p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Base: ${baseMRR} | Businesses: ${businessAddonMRR} | Seats: ${seatMRR}
+                        </p>
                     </div>
                     <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-700">Annual Run Rate (ARR)</h3>
-                        <p className="text-4xl font-bold text-green-600 mt-2">$14,988</p>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-700">Churn Rate (Last 30 Days)</h3>
-                        <p className="text-4xl font-bold text-red-600 mt-2">2.5%</p>
+                        <p className="text-4xl font-bold text-green-600 mt-2">${ARR.toLocaleString()}</p>
+                        <p className="text-sm text-gray-500 mt-2">Based on {activeUsers.length} active subscriptions</p>
                     </div>
                 </div>
             </div>
