@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircleIcon, CurrencyDollarIcon, ClockIcon, ChartBarIcon, UserGroupIcon, SparklesIcon } from '../components/icons/MiniIcons';
 
 interface AffiliateProgramPageProps {
@@ -53,6 +53,11 @@ const FaqItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 export const AffiliateProgramPage: React.FC<AffiliateProgramPageProps> = ({ navigate }) => {
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleJoinClick = () => {
     // Open Rewardful signup - this will be the Rewardful link
     window.open('https://jetsuite.getrewardful.com/signup', '_blank');
