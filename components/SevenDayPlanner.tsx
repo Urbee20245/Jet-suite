@@ -13,6 +13,7 @@ import { SharePostModal } from './SharePostModal';
 interface SevenDayPlannerProps {
   userId: string;
   connections: SocialConnection[];
+  connectionsLoading?: boolean;
   onNeedConnections: () => void;
 }
 
@@ -33,6 +34,7 @@ const isPendingStatus = (status: PostStatus): boolean => {
 export const SevenDayPlanner: React.FC<SevenDayPlannerProps> = ({
   userId,
   connections,
+  connectionsLoading = false,
   onNeedConnections,
 }) => {
   const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([]);
@@ -110,6 +112,17 @@ export const SevenDayPlanner: React.FC<SevenDayPlannerProps> = ({
     }, 0);
   };
 
+  // Show loader while connections are being fetched
+  if (connectionsLoading) {
+    return (
+      <div className="bg-brand-card p-8 rounded-xl shadow-lg text-center">
+        <Loader />
+        <p className="text-brand-text-muted mt-4">Loading your connected accounts...</p>
+      </div>
+    );
+  }
+
+  // After loading, if no connections exist, show connect prompt
   if (connections.length === 0) {
     return (
       <div className="bg-brand-card p-8 rounded-xl shadow-lg text-center">

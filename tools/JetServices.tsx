@@ -1736,6 +1736,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               <SevenDayPlanner
                 userId={userId}
                 connections={connections}
+                connectionsLoading={connectionsLoading}
                 onNeedConnections={() => setViewMode('connections')}
               />
             </div>
