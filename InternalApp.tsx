@@ -439,7 +439,7 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
       case 'jetads':
         return <JetAds tool={{ id: 'jetads', name: 'JetAds', category: 'engage' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'growthplan':
-        return <GrowthPlan tasks={tasks} setTasks={setTasks} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
+        return <GrowthPlan tasks={tasks} setTasks={setTasks} profileData={currentProfileData} setActiveTool={handleSetActiveTool} onTaskStatusChange={handleTaskStatusChange} growthScore={calculateGrowthScore()} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'planner':
         return <Planner userId={userId} growthPlanTasks={tasks} onTaskScheduleDate={handleTaskScheduleDate} onTaskStatusChange={handleTaskStatusChange} />;
       case 'growthscore':

@@ -152,20 +152,20 @@ export const Boris: React.FC<BorisProps> = ({
       completedItems = ['✓ Business Details', '✓ JetBiz Audit', '✓ JetViz Audit', '✓ All Growth Plan Tasks'];
       
       const toolsWithProgress = EXECUTION_TOOLS.map(toolId => {
-        const tool = ALL_TOOLS.find(t => t.id === toolId);
-        if (!tool) return null;
+        const foundTool = ALL_TOOLS[toolId];
+        if (!foundTool) return null;
         const usage = profileData?.toolUsage?.[toolId] || 0;
-        return { ...tool, usage };
-      }).filter(Boolean);
-      
-      const leastUsedTools = toolsWithProgress.sort((a, b) => a!.usage - b!.usage).slice(0, 3);
-      
+        return { ...(foundTool as any), usage };
+      }).filter((t: any) => t !== null);
+
+      const leastUsedTools = toolsWithProgress.sort((a: any, b: any) => a.usage - b.usage).slice(0, 3);
+
       message = `Outstanding work! You've completed everything in your Growth Plan.\n\nNow it's time to stay sharp. Here are some tools you haven't used lately:`;
-      todaysTasks = leastUsedTools.map(tool => ({
-        id: tool!.id,
-        title: tool!.name,
-        description: tool!.description,
-        sourceModule: tool!.id,
+      todaysTasks = leastUsedTools.map((tool: any) => ({
+        id: tool.id,
+        title: tool.name,
+        description: tool.description,
+        sourceModule: tool.id,
         status: 'pending'
       }));
     }
@@ -211,16 +211,22 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   const buildChatContext = (): BorisContext => {
+    const completedAuditsArray: string[] = [];
+    if (profileData?.business?.audits?.jetbiz?.completed || (profileData?.business?.audits as any)?.jetBiz?.completed) {
+      completedAuditsArray.push('JetBiz');
+    }
+    if (profileData?.business?.audits?.jetviz?.completed || (profileData?.business?.audits as any)?.jetViz?.completed) {
+      completedAuditsArray.push('JetViz');
+    }
+
     return {
+      userName: profileData?.user?.name || 'there',
       businessName: profileData?.business?.business_name || '',
-      industry: profileData?.business?.industry || '',
-      currentStage: borisState?.stage || 'business_details',
-      completedAudits: {
-        jetBiz: !!(profileData?.business?.audits?.jetbiz?.completed || profileData?.business?.audits?.jetBiz?.completed),
-        jetViz: !!(profileData?.business?.audits?.jetviz?.completed || profileData?.business?.audits?.jetViz?.completed)
-      },
-      pendingTasks: growthPlanTasks.filter(t => t.status !== 'completed'),
-      recentActivity: profileData?.recentActivity || []
+      growthScore: profileData?.growthScore || 0,
+      pendingTasks: growthPlanTasks.filter((t: any) => t.status !== 'completed').length,
+      completedAudits: completedAuditsArray,
+      urgentTasks: growthPlanTasks.filter((t: any) => t.status === 'in_progress').slice(0, 3),
+      newReviews: 0
     };
   };
 
