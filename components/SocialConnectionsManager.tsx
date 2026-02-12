@@ -118,7 +118,9 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
   const loadConnections = async () => {
     try {
       setLoading(true);
+      console.log('[SocialConnectionsManager] Loading connections for userId:', userId);
       const data = await getSocialConnections(userId);
+      console.log('[SocialConnectionsManager] Loaded connections:', data);
       setConnections(data);
     } catch (err) {
       console.error('Error loading connections:', err);

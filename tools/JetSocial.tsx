@@ -221,15 +221,8 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
   const [composingLogo, setComposingLogo] = useState(false);
   const [logoError, setLogoError] = useState('');
   
-  // Get userId from localStorage
-  const [userId, setUserId] = useState<string>('');
-  
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('jetsuite_userId');
-    if (storedUserId) {
-      setUserId(storedUserId);
-    }
-  }, []);
+  // Get userId directly from profileData (more reliable than localStorage)
+  const userId = profileData.user.id;
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('generate');

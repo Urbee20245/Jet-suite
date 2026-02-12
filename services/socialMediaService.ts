@@ -67,8 +67,9 @@ export const PLATFORM_INFO: Record<SocialPlatform, {
  */
 export async function getSocialConnections(userId: string): Promise<SocialConnection[]> {
   try {
+    console.log('[getSocialConnections] Fetching for userId:', userId);
     const response = await fetch(`/api/social/get-connections?userId=${userId}`);
-    
+
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
       console.error('Get connections: Server returned HTML instead of JSON');
@@ -76,11 +77,12 @@ export async function getSocialConnections(userId: string): Promise<SocialConnec
     }
 
     if (!response.ok) {
-      console.error('Failed to fetch social connections');
+      console.error('Failed to fetch social connections, status:', response.status);
       return [];
     }
 
     const data = await response.json();
+    console.log('[getSocialConnections] Received data:', data);
     return data.connections || [];
   } catch (error: any) {
     console.error('Get connections error:', error);
