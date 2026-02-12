@@ -153,7 +153,12 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
 
     // Use mapped path (e.g. google_business -> google, instagram -> facebook)
     const authPath = platformAuthPaths[platform] || platform;
-    window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}`;
+
+    // Capture the current URL to redirect back after OAuth
+    const currentUrl = window.location.pathname + window.location.search;
+    const redirectUrl = encodeURIComponent(currentUrl);
+
+    window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}&redirectUrl=${redirectUrl}`;
   };
 
   const handleReconnect = (platform: SocialPlatform) => {

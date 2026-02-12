@@ -35,7 +35,7 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    const { userId } = req.query;
+    const { userId, redirectUrl } = req.query;
 
     if (!userId || typeof userId !== 'string') {
       return res.status(400).json({ error: 'User ID is required' });
@@ -48,6 +48,10 @@ export default async function handler(
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
+    // Store redirect URL in metadata so we can redirect back after OAuth
+    const redirectUrlStr = Array.isArray(redirectUrl) ? redirectUrl[0] : redirectUrl;
+    const metadata = redirectUrlStr ? { redirect_url: redirectUrlStr } : null;
+
     const { error: insertError } = await supabase
       .from('oauth_states')
       .insert({
@@ -55,6 +59,7 @@ export default async function handler(
         user_id: userId,
         platform: 'google_business',
         expires_at: expiresAt.toISOString(),
+        metadata,
       });
 
     if (insertError) {
