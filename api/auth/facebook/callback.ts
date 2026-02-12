@@ -251,11 +251,14 @@ export default async function handler(
     };
 
     // Save Facebook connection (upsert: update if exists, insert if not)
+    // Check for ANY existing connection (active or inactive) to reactivate it
     const { data: existingFBConnection } = await supabase
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'facebook')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (existingFBConnection) {
@@ -291,11 +294,14 @@ export default async function handler(
         is_active: true,
       };
 
+      // Check for ANY existing Instagram connection (active or inactive) to reactivate it
       const { data: existingIGConnection } = await supabase
         .from('social_connections')
         .select('id')
         .eq('user_id', userId)
         .eq('platform', 'instagram')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (existingIGConnection) {

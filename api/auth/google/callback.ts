@@ -241,11 +241,14 @@ export default async function handler(
     };
 
     // Save or update connection
+    // Check for ANY existing connection (active or inactive) to reactivate it
     const { data: existingConnection } = await supabase
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'google_business')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (existingConnection) {
