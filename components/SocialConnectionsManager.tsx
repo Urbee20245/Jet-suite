@@ -115,6 +115,22 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     loadConnections();
   }, [userId]);
 
+  // Reload connections when OAuth callback returns with success
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get('success');
+      if (success && (success.includes('connected') || success === 'true')) {
+        console.log('[SocialConnectionsManager] OAuth success detected, reloading connections');
+        loadConnections();
+
+        // Optional: Clean up URL after loading
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    }
+  }, []);
+
   const loadConnections = async () => {
     try {
       setLoading(true);

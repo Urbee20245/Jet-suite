@@ -212,12 +212,13 @@ export async function getScheduledPosts(
   endDate?: string
 ): Promise<ScheduledPost[]> {
   try {
+    console.log('[getScheduledPosts] Fetching posts for userId:', userId, 'date range:', startDate, '-', endDate);
     const params = new URLSearchParams({ userId });
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
 
     const response = await fetch(`/api/social/get-posts?${params}`);
-    
+
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
       console.error('Get posts: Server returned HTML instead of JSON');
@@ -225,11 +226,12 @@ export async function getScheduledPosts(
     }
 
     if (!response.ok) {
-      console.error('Failed to fetch scheduled posts');
+      console.error('Failed to fetch scheduled posts, status:', response.status);
       return [];
     }
 
     const data = await response.json();
+    console.log('[getScheduledPosts] Received', data.posts?.length || 0, 'posts:', data.posts);
     return data.posts || [];
   } catch (error: any) {
     console.error('Get posts error:', error);
@@ -246,6 +248,7 @@ export async function createScheduledPost(
   postData: Omit<ScheduledPost, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'posted_at'>
 ): Promise<ScheduledPost> {
   try {
+    console.log('[createScheduledPost] Creating post for userId:', userId, 'data:', postData);
     const response = await fetch('/api/social/create-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -257,10 +260,12 @@ export async function createScheduledPost(
 
     if (!response.ok) {
       const error = await response.json();
+      console.error('[createScheduledPost] Failed:', error);
       throw new Error(error.message || 'Failed to create post');
     }
 
     const data = await response.json();
+    console.log('[createScheduledPost] Created post successfully:', data.post);
     return data.post;
   } catch (error: any) {
     console.error('Create post error:', error);
