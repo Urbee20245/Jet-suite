@@ -293,15 +293,17 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
               const isExpiring = connection.connection_status === 'expiring_soon';
               const isRefreshing = refreshingId === connection.id;
 
+              const isActiveConnection = !isExpired && !isExpiring;
+
               return (
                 <div
                   key={connection.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                  className={`group flex items-center justify-between p-3 rounded-lg border transition-all ${
                     isExpired
                       ? 'bg-red-50 border-red-200'
                       : isExpiring
                       ? 'bg-amber-50 border-amber-200'
-                      : 'bg-brand-light border-brand-border'
+                      : 'bg-brand-light border-brand-border hover:border-green-300'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -326,31 +328,51 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Show Refresh button for expiring/expired connections with refresh tokens */}
-                    {(isExpired || isExpiring) && connection.has_refresh_token && (
-                      <button
-                        onClick={() => handleRefreshToken(connection)}
-                        disabled={isRefreshing}
-                        className="text-sm font-semibold text-accent-blue hover:text-accent-blue/80 transition disabled:opacity-50"
-                      >
-                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                      </button>
+                    {/* For active connections: show Connected status, reveal Disconnect on hover */}
+                    {isActiveConnection ? (
+                      <>
+                        <div className="group-hover:hidden flex items-center gap-1.5 text-sm font-semibold text-green-600">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Connected
+                        </div>
+                        <button
+                          onClick={() => handleRemoveConnection(connection.id)}
+                          className="hidden group-hover:block text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                        >
+                          Disconnect
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {/* Show Refresh button for expiring/expired connections with refresh tokens */}
+                        {(isExpired || isExpiring) && connection.has_refresh_token && (
+                          <button
+                            onClick={() => handleRefreshToken(connection)}
+                            disabled={isRefreshing}
+                            className="text-sm font-semibold text-accent-blue hover:text-accent-blue/80 transition disabled:opacity-50"
+                          >
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                          </button>
+                        )}
+                        {/* Show Reconnect button for expired connections without refresh tokens */}
+                        {isExpired && !connection.has_refresh_token && (
+                          <button
+                            onClick={() => handleReconnect(connection.platform)}
+                            className="text-sm font-semibold text-accent-purple hover:text-accent-purple/80 transition"
+                          >
+                            Reconnect
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleRemoveConnection(connection.id)}
+                          className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                        >
+                          Disconnect
+                        </button>
+                      </>
                     )}
-                    {/* Show Reconnect button for expired connections without refresh tokens */}
-                    {isExpired && !connection.has_refresh_token && (
-                      <button
-                        onClick={() => handleReconnect(connection.platform)}
-                        className="text-sm font-semibold text-accent-purple hover:text-accent-purple/80 transition"
-                      >
-                        Reconnect
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleRemoveConnection(connection.id)}
-                      className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
-                    >
-                      Disconnect
-                    </button>
                   </div>
                 </div>
               );
