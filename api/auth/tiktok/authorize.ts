@@ -54,7 +54,7 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    const { userId } = req.query;
+    const { userId, redirectUrl } = req.query;
 
     if (!userId || typeof userId !== 'string') {
       return res.status(400).json({ error: 'User ID is required' });
@@ -62,7 +62,7 @@ export default async function handler(
 
     // Generate CSRF protection state token
     const state = generateStateToken();
-    
+
     // Generate PKCE code verifier and challenge
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -71,6 +71,15 @@ export default async function handler(
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
+    // Store redirect URL and code_verifier in metadata
+    const redirectUrlStr = Array.isArray(redirectUrl) ? redirectUrl[0] : redirectUrl;
+    const metadata: Record<string, string> = {
+      code_verifier: codeVerifier, // Store for callback
+    };
+    if (redirectUrlStr) {
+      metadata.redirect_url = redirectUrlStr;
+    }
+
     const { error: insertError } = await supabase
       .from('oauth_states')
       .insert({
@@ -78,9 +87,7 @@ export default async function handler(
         user_id: userId,
         platform: 'tiktok',
         expires_at: expiresAt.toISOString(),
-        metadata: {
-          code_verifier: codeVerifier, // Store for callback
-        },
+        metadata,
       });
 
     if (insertError) {

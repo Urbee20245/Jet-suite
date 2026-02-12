@@ -142,12 +142,16 @@ export default async function handler(
       );
     }
 
+    // Get redirect URL from state metadata (default to /business-details if not provided)
+    const redirectUrl = stateData.metadata?.redirect_url || '/business-details';
+    const redirectPath = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
+
     // Check if state has expired
     if (new Date(stateData.expires_at) < new Date()) {
       await supabase.from('oauth_states').delete().eq('state', stateStr);
       console.error('State expired');
       return res.redirect(
-        `${APP_URL}/business-details?error=state_expired`
+        `${APP_URL}${redirectPath}?error=state_expired`
       );
     }
 
@@ -157,7 +161,7 @@ export default async function handler(
     if (!codeVerifier) {
       console.error('Missing code_verifier');
       return res.redirect(
-        `${APP_URL}/business-details?error=missing_code_verifier`
+        `${APP_URL}${redirectPath}?error=missing_code_verifier`
       );
     }
 
@@ -228,14 +232,17 @@ export default async function handler(
     await supabase.from('oauth_states').delete().eq('state', stateStr);
     console.log('Connection saved successfully!');
 
-    // Redirect back to app with success
+    // Redirect back to the original page with success
+    const separator = redirectPath.includes('?') ? '&' : '?';
     res.redirect(
-      `${APP_URL}/business-details?success=tiktok_connected`
+      `${APP_URL}${redirectPath}${separator}success=tiktok_connected`
     );
   } catch (error) {
     console.error('TikTok callback error:', error);
+    // Try to get redirect URL from state if possible, otherwise use default
+    const redirectPath = '/business-details';
     res.redirect(
-      `${APP_URL}/business-details?error=connection_failed&details=${encodeURIComponent(String(error))}`
+      `${APP_URL}${redirectPath}?error=connection_failed&details=${encodeURIComponent(String(error))}`
     );
   }
 }
