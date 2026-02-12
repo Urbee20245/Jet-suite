@@ -251,11 +251,14 @@ export default async function handler(
     };
 
     // Save Facebook connection (upsert: update if exists, insert if not)
+    // Check for ANY existing connection (active or inactive) to reactivate it
     const { data: existingFBConnection } = await supabase
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'facebook')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (existingFBConnection) {
@@ -291,11 +294,14 @@ export default async function handler(
         is_active: true,
       };
 
+      // Check for ANY existing Instagram connection (active or inactive) to reactivate it
       const { data: existingIGConnection } = await supabase
         .from('social_connections')
         .select('id')
         .eq('user_id', userId)
         .eq('platform', 'instagram')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (existingIGConnection) {
@@ -319,7 +325,6 @@ export default async function handler(
     console.log('Connection(s) saved successfully!');
 
     // Redirect back to the original page with success
-    const redirectPath = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
     const separator = redirectPath.includes('?') ? '&' : '?';
     res.redirect(
       `${APP_URL}${redirectPath}${separator}success=facebook_connected`
