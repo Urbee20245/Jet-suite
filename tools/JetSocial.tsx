@@ -263,6 +263,18 @@ export const JetSocial: React.FC<JetSocialProps> = ({ tool, profileData, setActi
     }
   }, [userId]);
 
+  // Reload connections when OAuth callback returns with success
+  useEffect(() => {
+    if (typeof window !== 'undefined' && userId) {
+      const params = new URLSearchParams(window.location.search);
+      const success = params.get('success');
+      if (success && (success.includes('connected') || success === 'true')) {
+        console.log('[JetSocial] OAuth success detected, reloading connections');
+        loadConnections();
+      }
+    }
+  }, []);
+
   const loadConnections = async () => {
     try {
       setConnectionsLoading(true);
