@@ -68,6 +68,10 @@ CREATE INDEX IF NOT EXISTS idx_social_connections_active
 -- RLS: Enable but allow service role full access
 ALTER TABLE public.social_connections ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (safe to run multiple times)
+DROP POLICY IF EXISTS "Users can view own social connections" ON public.social_connections;
+DROP POLICY IF EXISTS "Users can update own social connections" ON public.social_connections;
+
 -- Policy: Users can read their own connections (for client-side access if needed)
 CREATE POLICY "Users can view own social connections"
   ON public.social_connections
