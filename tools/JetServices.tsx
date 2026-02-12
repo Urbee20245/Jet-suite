@@ -109,12 +109,8 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
   const brandColors = profileData.brandDnaProfile?.visual_identity?.primary_colors || [];
   const brandTone = profileData.brandDnaProfile?.brand_tone?.primary_tone || 'Professional';
 
-  // User ID
-  const [userId, setUserId] = useState<string>('');
-  useEffect(() => {
-    const storedUserId = localStorage.getItem('jetsuite_userId');
-    if (storedUserId) setUserId(storedUserId);
-  }, []);
+  // Get userId directly from profileData (more reliable than localStorage)
+  const userId = profileData.user.id;
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('services');
