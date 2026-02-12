@@ -311,7 +311,7 @@ export const AdminPanel: React.FC = () => {
         if (result.success) {
             setTickets(result.data || []);
         } else {
-            console.error('Error fetching all tickets:', result.error);
+            console.error('Error fetching all tickets:', (result as any).error);
         }
     } catch (error) {
         console.error('Error fetching all tickets:', error);

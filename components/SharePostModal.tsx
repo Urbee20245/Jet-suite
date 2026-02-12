@@ -38,7 +38,7 @@ export const SharePostModal: React.FC<SharePostModalProps> = ({
 
   // Defensive: coerce props to strings (DB may return non-string types)
   const safePostText = typeof postText === 'string' ? postText : String(postText ?? '');
-  const safeHashtags = typeof hashtags === 'string' ? hashtags : Array.isArray(hashtags) ? hashtags.join(' ') : String(hashtags ?? '');
+  const safeHashtags = typeof hashtags === 'string' ? hashtags : Array.isArray(hashtags) ? (hashtags as string[]).join(' ') : String(hashtags ?? '');
   const fullText = [safePostText, safeHashtags].filter(Boolean).join('\n\n').trim();
 
   // --- Native share sheet (preferred) ---

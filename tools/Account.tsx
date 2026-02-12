@@ -33,7 +33,7 @@ const TeamMemberCard: React.FC<{ member: TeamMember; onRemove: (id: string) => v
             </div>
             <p className="text-sm text-brand-text-muted">{member.title || 'No title specified'}</p>
             <p className="text-xs text-brand-text-muted">{member.email}</p>
-            {member.phone && <p className="text-xs text-brand-text-muted">📱 {member.phone}</p>}
+            {(member as any).phone && <p className="text-xs text-brand-text-muted">📱 {(member as any).phone}</p>}
         </div>
         <div className="flex items-center gap-4">
             {member.status === 'Pending Invite' && <span className="text-xs font-bold text-yellow-600">Pending Invite</span>}
@@ -175,8 +175,8 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     const handleManageSubscription = async () => {
         try {
             setIsOpeningPortal(true);
-            const portalUrl = await createPortalSession(userId);
-            window.location.href = portalUrl;
+            const portalResponse = await createPortalSession(userId);
+            window.location.href = portalResponse.url;
         } catch (error) {
             alert('Failed to open billing portal');
         } finally {
