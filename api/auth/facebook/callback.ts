@@ -319,7 +319,6 @@ export default async function handler(
     console.log('Connection(s) saved successfully!');
 
     // Redirect back to the original page with success
-    const redirectPath = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
     const separator = redirectPath.includes('?') ? '&' : '?';
     res.redirect(
       `${APP_URL}${redirectPath}${separator}success=facebook_connected`
