@@ -47,6 +47,12 @@ CREATE INDEX IF NOT EXISTS idx_scheduled_posts_user_date_status
 -- =========================
 ALTER TABLE public.scheduled_posts ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (safe to run multiple times)
+DROP POLICY IF EXISTS "Users can view own scheduled posts" ON public.scheduled_posts;
+DROP POLICY IF EXISTS "Users can create scheduled posts" ON public.scheduled_posts;
+DROP POLICY IF EXISTS "Users can update own scheduled posts" ON public.scheduled_posts;
+DROP POLICY IF EXISTS "Users can delete own scheduled posts" ON public.scheduled_posts;
+
 -- Policy: Users can view their own posts
 CREATE POLICY "Users can view own scheduled posts"
   ON public.scheduled_posts
