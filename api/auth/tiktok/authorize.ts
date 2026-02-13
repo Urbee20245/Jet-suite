@@ -54,10 +54,14 @@ export default async function handler(
   res: VercelResponse
 ) {
   try {
-    const { userId, redirectUrl } = req.query;
+    const { userId, businessId, redirectUrl } = req.query;
 
     if (!userId || typeof userId !== 'string') {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (!businessId || typeof businessId !== 'string') {
+      return res.status(400).json({ error: 'Business ID is required' });
     }
 
     // Generate CSRF protection state token
@@ -85,6 +89,7 @@ export default async function handler(
       .insert({
         state,
         user_id: userId,
+        business_id: businessId,
         platform: 'tiktok',
         expires_at: expiresAt.toISOString(),
         metadata,

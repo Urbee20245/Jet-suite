@@ -5,6 +5,7 @@ import type { SocialConnection } from '../types';
 
 interface SocialAccountsStepProps {
   userId: string;
+  businessId: string;
   onContinue: () => void;
   onSkip: () => void;
 }
@@ -71,6 +72,7 @@ const platformColors: { [key: string]: string } = {
 
 export const SocialAccountsStep: React.FC<SocialAccountsStepProps> = ({
   userId,
+  businessId,
   onContinue,
   onSkip,
 }) => {
@@ -79,12 +81,12 @@ export const SocialAccountsStep: React.FC<SocialAccountsStepProps> = ({
 
   useEffect(() => {
     loadConnections();
-  }, [userId]);
+  }, [userId, businessId]);
 
   const loadConnections = async () => {
     try {
       setLoading(true);
-      const data = await getSocialConnections(userId);
+      const data = await getSocialConnections(userId, businessId);
       setConnections(data);
     } catch (err) {
       console.error('Error loading connections:', err);
@@ -191,6 +193,7 @@ export const SocialAccountsStep: React.FC<SocialAccountsStepProps> = ({
       {/* Social Connections Manager */}
       <SocialConnectionsManager
         userId={userId}
+        businessId={businessId}
         onConnectionsChange={loadConnections}
       />
 

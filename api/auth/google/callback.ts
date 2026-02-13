@@ -180,7 +180,16 @@ export default async function handler(
     }
 
     const userId = stateData.user_id;
-    console.log('Valid state for user:', userId);
+    const businessId = stateData.business_id;
+
+    if (!businessId) {
+      console.error('Missing business_id in OAuth state');
+      return res.redirect(
+        `${APP_URL}${redirectPath}?error=missing_business_id`
+      );
+    }
+
+    console.log('Valid state for user:', userId, 'business:', businessId);
 
     // Exchange code for access token
     console.log('Exchanging code for access token...');
@@ -225,6 +234,7 @@ export default async function handler(
     // Prepare connection data
     const connectionData = {
       user_id: userId,
+      business_id: businessId,
       platform: 'google_business',
       access_token: encrypt(tokens.access_token),
       refresh_token: tokens.refresh_token ? encrypt(tokens.refresh_token) : null,
@@ -246,6 +256,7 @@ export default async function handler(
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('platform', 'google_business')
       .order('created_at', { ascending: false })
       .limit(1)

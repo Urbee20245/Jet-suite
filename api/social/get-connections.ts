@@ -17,18 +17,23 @@ export default async function handler(
   }
 
   try {
-    const { userId } = req.query;
+    const { userId, businessId } = req.query;
 
     // Validate required fields
     if (!userId || typeof userId !== 'string') {
       return res.status(400).json({ error: 'Missing or invalid userId parameter' });
     }
 
-    // Get social connections for user (include ALL connections, even inactive for reconnect)
+    if (!businessId || typeof businessId !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid businessId parameter' });
+    }
+
+    // Get social connections for user and business (include ALL connections, even inactive for reconnect)
     const { data, error } = await supabase
       .from('social_connections')
       .select('*')
       .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 

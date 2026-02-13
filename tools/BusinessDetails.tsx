@@ -945,7 +945,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
             </div>
         </StepCard>
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
-            <SocialAccountsStep userId={profileData.user.id} onContinue={() => {}} onSkip={() => {}} />
+            <SocialAccountsStep userId={profileData.user.id} businessId={profileData.business.id} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
         {allStepsComplete && !isLocked && (
             <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} isProcessing={isLocking} />

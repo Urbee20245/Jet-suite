@@ -362,6 +362,7 @@ export type ConnectionStatus = 'active' | 'expiring_soon' | 'expired';
 export interface SocialConnection {
   id: string;
   user_id: string;
+  business_id: string; // REQUIRED: Associates connection with specific business
   platform: SocialPlatform;
   access_token?: string;
   refresh_token?: string;

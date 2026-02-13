@@ -62,13 +62,14 @@ export const PLATFORM_INFO: Record<SocialPlatform, {
 // ============================================================================
 
 /**
- * Get all social connections for current user
+ * Get all social connections for current user and business
  * @param userId - MUST be the Supabase Auth UUID (not email)
+ * @param businessId - MUST be the business UUID
  */
-export async function getSocialConnections(userId: string): Promise<SocialConnection[]> {
+export async function getSocialConnections(userId: string, businessId: string): Promise<SocialConnection[]> {
   try {
-    console.log('[getSocialConnections] Fetching for userId:', userId);
-    const response = await fetch(`/api/social/get-connections?userId=${userId}`);
+    console.log('[getSocialConnections] Fetching for userId:', userId, 'businessId:', businessId);
+    const response = await fetch(`/api/social/get-connections?userId=${userId}&businessId=${businessId}`);
 
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
@@ -176,8 +177,8 @@ export async function refreshConnectionToken(connectionId: string): Promise<{ su
  * Verify and refresh all connections for a user on login.
  * Attempts to auto-refresh any expired tokens that have refresh tokens.
  */
-export async function verifyConnectionsOnLogin(userId: string): Promise<SocialConnection[]> {
-  const connections = await getSocialConnections(userId);
+export async function verifyConnectionsOnLogin(userId: string, businessId: string): Promise<SocialConnection[]> {
+  const connections = await getSocialConnections(userId, businessId);
 
   const refreshPromises = connections
     .filter(conn => conn.connection_status === 'expired' && conn.has_refresh_token)
@@ -192,7 +193,7 @@ export async function verifyConnectionsOnLogin(userId: string): Promise<SocialCo
   if (refreshPromises.length > 0) {
     await Promise.allSettled(refreshPromises);
     // Re-fetch connections after refresh attempts
-    return await getSocialConnections(userId);
+    return await getSocialConnections(userId, businessId);
   }
 
   return connections;
