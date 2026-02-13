@@ -111,7 +111,6 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
 
   // Get userId directly from profileData (more reliable than localStorage)
   const userId = profileData.user.id;
-  const businessId = profileData.business.id;
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('services');
