@@ -5,6 +5,7 @@ import { Loader } from './Loader';
 
 interface SocialConnectionsManagerProps {
   userId: string;
+  businessId: string; // REQUIRED: Associates connections with specific business
   onConnectionsChange?: () => void;
 }
 
@@ -99,6 +100,7 @@ const availablePlatforms: SocialPlatform[] = [
 
 export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> = ({
   userId,
+  businessId,
   onConnectionsChange,
 }) => {
   const [connections, setConnections] = useState<SocialConnection[]>([]);
@@ -113,7 +115,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
 
   useEffect(() => {
     loadConnections();
-  }, [userId]);
+  }, [userId, businessId]);
 
   // Reload connections when OAuth callback returns with success
   useEffect(() => {
@@ -134,8 +136,8 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
   const loadConnections = async () => {
     try {
       setLoading(true);
-      console.log('[SocialConnectionsManager] Loading connections for userId:', userId);
-      const data = await getSocialConnections(userId);
+      console.log('[SocialConnectionsManager] Loading connections for userId:', userId, 'businessId:', businessId);
+      const data = await getSocialConnections(userId, businessId);
       console.log('[SocialConnectionsManager] Loaded connections:', data);
       setConnections(data);
     } catch (err) {
@@ -176,7 +178,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     const currentUrl = window.location.pathname + window.location.search;
     const redirectUrl = encodeURIComponent(currentUrl);
 
-    window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}&redirectUrl=${redirectUrl}`;
+    window.location.href = `/api/auth/${authPath}/authorize?userId=${userId}&businessId=${businessId}&redirectUrl=${redirectUrl}`;
   };
 
   const handleReconnect = (platform: SocialPlatform) => {

@@ -188,7 +188,16 @@ export default async function handler(
     }
 
     const userId = stateData.user_id;
-    console.log('Valid state for user:', userId);
+    const businessId = stateData.business_id;
+
+    if (!businessId) {
+      console.error('Missing business_id in OAuth state');
+      return res.redirect(
+        `${APP_URL}${redirectPath}?error=missing_business_id`
+      );
+    }
+
+    console.log('Valid state for user:', userId, 'business:', businessId);
 
     // Exchange code for access token
     console.log('Exchanging code for access token...');
@@ -236,6 +245,7 @@ export default async function handler(
     // Prepare Facebook connection data
     const fbConnectionData = {
       user_id: userId,
+      business_id: businessId,
       platform: 'facebook',
       access_token: encrypt(longLivedTokens.access_token),
       token_expires_at: expiresAt.toISOString(),
@@ -256,6 +266,7 @@ export default async function handler(
       .from('social_connections')
       .select('id')
       .eq('user_id', userId)
+      .eq('business_id', businessId)
       .eq('platform', 'facebook')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -280,6 +291,7 @@ export default async function handler(
 
       const igConnectionData = {
         user_id: userId,
+        business_id: businessId,
         platform: 'instagram',
         access_token: encrypt(pageWithInstagram.access_token),
         token_expires_at: expiresAt.toISOString(),
@@ -299,6 +311,7 @@ export default async function handler(
         .from('social_connections')
         .select('id')
         .eq('user_id', userId)
+        .eq('business_id', businessId)
         .eq('platform', 'instagram')
         .order('created_at', { ascending: false })
         .limit(1)

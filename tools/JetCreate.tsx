@@ -176,7 +176,7 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
         if (profileData.user.id) {
             const loadConnections = async () => {
                 try {
-                    const userConnections = await getSocialConnections(profileData.user.id);
+                    const userConnections = await getSocialConnections(profileData.user.id, profileData.business.id);
                     setConnections(userConnections);
                 } catch (e) {
                     console.error("Failed to load social connections", e);
@@ -184,7 +184,7 @@ export const JetCreate: React.FC<JetCreateProps> = ({ tool, profileData, setActi
             };
             loadConnections();
         }
-    }, [profileData.user.id]);
+    }, [profileData.user.id, profileData.business.id]);
 
     // Generate campaign images using Business DNA
     const generateBrandedImage = async (basePrompt: string, aspectRatio: "1:1" | "16:9" | "4:3"): Promise<string> => {

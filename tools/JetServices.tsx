@@ -111,6 +111,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
 
   // Get userId directly from profileData (more reliable than localStorage)
   const userId = profileData.user.id;
+  const businessId = profileData.business.id;
 
   // View mode
   const [viewMode, setViewMode] = useState<ViewMode>('services');
@@ -219,7 +220,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
   const loadConnections = async () => {
     try {
       setConnectionsLoading(true);
-      const data = await getSocialConnections(userId);
+      const data = await getSocialConnections(userId, businessId);
       setConnections(data);
     } catch (err) {
       console.error('[JetServices] Error loading connections:', err);
@@ -1748,6 +1749,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
       {viewMode === 'connections' && userId && (
         <SocialConnectionsManager
           userId={userId}
+          businessId={businessId}
           onConnectionsChange={loadConnections}
         />
       )}
