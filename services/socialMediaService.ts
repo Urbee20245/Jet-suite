@@ -174,6 +174,88 @@ export async function refreshConnectionToken(connectionId: string): Promise<{ su
 }
 
 /**
+ * Get a valid Google Business Profile token, automatically refreshing if needed.
+ *
+ * This function:
+ * 1. Checks if the token expires within 5 minutes
+ * 2. Automatically refreshes the token if it's about to expire
+ * 3. Returns the connection with a valid token
+ *
+ * @param userId - The user's Supabase Auth UUID
+ * @param businessId - The business UUID
+ * @returns The Google Business connection with a valid token, or null if unavailable
+ * @throws Error if token refresh fails and user needs to reconnect
+ */
+export async function getValidGoogleToken(
+  userId: string,
+  businessId: string
+): Promise<SocialConnection | null> {
+  try {
+    // Get all connections
+    const connections = await getSocialConnections(userId, businessId);
+
+    // Find Google Business connection
+    const googleConnection = connections.find(
+      conn => conn.platform === 'google_business' && conn.is_active
+    );
+
+    if (!googleConnection) {
+      console.warn('No Google Business connection found');
+      return null;
+    }
+
+    // Check if token exists
+    if (!googleConnection.token_expires_at) {
+      console.warn('Google Business connection has no expiration date');
+      return googleConnection;
+    }
+
+    // Calculate time until expiration
+    const expiresAt = new Date(googleConnection.token_expires_at);
+    const now = new Date();
+    const minutesUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60);
+
+    // If token expires within 5 minutes, refresh it
+    if (minutesUntilExpiry < 5) {
+      console.log('Google token expires in', minutesUntilExpiry.toFixed(1), 'minutes. Refreshing...');
+
+      if (!googleConnection.has_refresh_token) {
+        throw new Error('No refresh token available. Please reconnect your Google Business Profile.');
+      }
+
+      const result = await refreshConnectionToken(googleConnection.id);
+
+      if (!result.success) {
+        if (result.needs_reconnect) {
+          throw new Error('Token refresh failed. Please reconnect your Google Business Profile.');
+        }
+        throw new Error('Failed to refresh Google token');
+      }
+
+      // Re-fetch the connection to get the updated token
+      const updatedConnections = await getSocialConnections(userId, businessId);
+      const updatedConnection = updatedConnections.find(
+        conn => conn.id === googleConnection.id
+      );
+
+      if (!updatedConnection) {
+        throw new Error('Failed to retrieve updated Google connection');
+      }
+
+      console.log('Google token refreshed successfully');
+      return updatedConnection;
+    }
+
+    // Token is still valid
+    console.log('Google token is valid for', minutesUntilExpiry.toFixed(1), 'more minutes');
+    return googleConnection;
+  } catch (error) {
+    console.error('getValidGoogleToken error:', error);
+    throw error;
+  }
+}
+
+/**
  * Verify and refresh all connections for a user on login.
  * Attempts to auto-refresh any expired tokens that have refresh tokens.
  */
