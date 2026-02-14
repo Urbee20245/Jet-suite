@@ -6,6 +6,7 @@ import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronD
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { SocialAccountsStep } from '../components/SocialAccountsStep';
+import { WebsiteConnectionsManager } from '../components/WebsiteConnectionsManager';
 import { HintTooltip } from '../components/HintTooltip';
 
 // --- Types ---
@@ -834,7 +835,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
     step1: "This information powers all JetSuite AI tools. Your business name, website, and category help us provide accurate, personalized recommendations across every module.",
     step2: "Your Business DNA is the source of truth for all AI-generated content. It ensures brand consistency in posts, images, ads, and replies by capturing your unique tone, colors, and style.",
     step3: "Connecting your GBP unlocks local SEO audits in JetBiz, auto-fetches reviews for JetReply, and improves your Growth Score accuracy. Essential for local visibility.",
-    step4: "Link your social accounts to schedule posts, auto-reply to messages, and manage all your social presence from one place. Optional but highly recommended."
+    step4: "Link your social accounts to schedule posts, auto-reply to messages, and manage all your social presence from one place. Optional but highly recommended.",
+    websites: "Connect your WordPress, Squarespace, or Wix website to automatically publish blog posts from JetSuite tools. Your credentials are encrypted and stored securely."
   };
 
   return (
@@ -947,6 +949,44 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
         <StepCard number={4} title="Connect Social Accounts" badge="Optional" badgeColor="bg-purple-100 text-purple-800" isComplete={step4Completed} isLocked={!step3Completed || isLocked} defaultOpen={step3Completed && !step4Completed} onLockedClick={handleLockedClick} hint={hints.step4}>
             <SocialAccountsStep userId={profileData.user.id} businessId={profileData.business.id} onContinue={() => {}} onSkip={() => {}} />
         </StepCard>
+
+        {/* Connect Websites Section */}
+        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 border-purple-400 transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
+            {isLocked && (
+                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-xl"></div>
+            )}
+            <div className="p-6 sm:p-8 relative z-20">
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-white bg-purple-500">
+                        🌐
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-bold text-brand-text flex items-center gap-2">
+                            <span>Connect Websites</span>
+                            {hints.websites && (
+                                <HintTooltip content={hints.websites}>
+                                    <InfoIcon className="w-5 h-5" />
+                                </HintTooltip>
+                            )}
+                        </h2>
+                        <span className="inline-block mt-1 text-xs font-semibold px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                            Optional
+                        </span>
+                    </div>
+                </div>
+                <p className="text-brand-text-muted mb-6">
+                    Connect your WordPress, Squarespace, or Wix website to automatically publish blog posts from JetSuite tools.
+                </p>
+                <WebsiteConnectionsManager
+                    userId={profileData.user.id}
+                    businessId={profileData.business.id}
+                    onConnectionsChange={() => {
+                        console.log('[BusinessDetails] Website connections changed');
+                    }}
+                />
+            </div>
+        </div>
+
         {allStepsComplete && !isLocked && (
             <LockInCard onLock={handleLockProfile} isDirty={isDirty} onSave={handleSaveInfo} isSaving={isSavingInfo} isProcessing={isLocking} />
         )}

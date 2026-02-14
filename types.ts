@@ -426,3 +426,39 @@ export interface YoutubeThumbnailRequest {
   brandColors: string[];
   targetEmotion: string;
 }
+
+// Website Connections Types
+export type WebsitePlatform = 'wordpress' | 'squarespace' | 'wix';
+
+export type WebsiteConnectionStatus = 'active' | 'inactive';
+
+export interface WebsiteConnection {
+  id: string;
+  user_id: string;
+  business_id: string;
+  platform: WebsitePlatform;
+  website_url: string;
+  site_name: string;
+  wordpress_username?: string;
+  is_active: boolean;
+  last_verified_at?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WordPressConnectionRequest {
+  user_id: string;
+  business_id: string;
+  website_url: string;
+  username: string;
+  app_password: string;
+}
+
+export interface WordPressConnectionResponse {
+  success: boolean;
+  connection_id: string;
+  site_name: string;
+  site_url: string;
+  categories?: number;
+}
