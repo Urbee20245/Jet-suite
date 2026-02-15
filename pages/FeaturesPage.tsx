@@ -128,13 +128,14 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
             icon: JetSocialIcon,
             iconBg: "bg-purple-600"
         },
-        { 
-            name: "JetContent", 
-            tagline: "SEO-Optimized Blog Articles", 
-            brief: "Writes long-form content for your website, optimized for your target local keywords.", 
-            replaces: "Content Writers ($0.20/word)",
+        {
+            name: "JetContent",
+            tagline: "WordPress Publishing & Content Creation",
+            brief: "AI-powered content creator that publishes blog posts, articles, and press releases directly to WordPress. Includes scheduling, featured image generation, and full SEO optimization.",
+            replaces: "Content Writers + CMS ($500/mo)",
             icon: JetContentIcon,
-            iconBg: "bg-fuchsia-600"
+            iconBg: "bg-fuchsia-600",
+            featured: true
         },
         { 
             name: "JetImage", 
@@ -351,6 +352,202 @@ export const FeaturesPage: React.FC<FeaturesPageProps> = ({ navigate }) => {
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {tools.create.map((tool, i) => <ToolCard key={i} tool={tool} onClick={() => {}} />)}
+              </div>
+          </div>
+      </section>
+
+      {/* 4.5 JETCONTENT + WORDPRESS DEEP DIVE */}
+      <section className="py-24 px-4 bg-gradient-to-b from-slate-900 to-brand-darker border-t border-slate-800">
+          <div className="max-w-7xl mx-auto">
+              <div className="mb-12 text-center">
+                  <span className="text-indigo-400 font-bold uppercase tracking-wider text-sm">Spotlight Feature</span>
+                  <h2 className="text-3xl font-bold text-white mt-2">JetContent + WordPress Integration</h2>
+                  <p className="text-gray-400 mt-2 max-w-2xl mx-auto">Create SEO-optimized content and publish directly to your WordPress website—all in one place.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+                  {/* Left: Feature Breakdown */}
+                  <div className="space-y-6">
+                      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                              <svg className="w-6 h-6 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M12.158 12.786l-2.698 7.84c.806.236 1.657.365 2.54.365 1.047 0 2.051-.18 2.986-.51-.024-.037-.046-.078-.065-.123l-2.763-7.572zm-5.54-3.03l3.202 8.768L4.736 8.285c.583-.09 1.109-.132 1.109-.132.523-.062.463-.833-.06-.804 0 0-1.571.123-2.585.123-.951 0-2.553-.123-2.553-.123-.523-.03-.583.773-.06.804 0 0 .492.042 1.012.132l1.502 4.116-2.109 6.326L.255 7.413c.583-.09 1.109-.132 1.109-.132.523-.062.463-.833-.06-.804 0 0-1.571.123-2.585.123l-.515-.01C1.295 3.073 4.389.869 8 .869c2.706 0 5.168 1.041 7.013 2.746-.045-.003-.088-.01-.134-.01-.951 0-1.624.827-1.624 1.715 0 .797.462 1.471.951 2.269.37.644.805 1.471.805 2.667 0 .826-.316 1.785-.734 3.12l-.962 3.212-3.491-10.384zM12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm10-10c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10 10-4.477 10-10z"/>
+                              </svg>
+                              Connect Multiple WordPress Sites
+                          </h3>
+                          <p className="text-gray-400 text-sm">Add unlimited WordPress websites. Manage credentials securely and publish to any connected site.</p>
+                      </div>
+
+                      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                              <CheckCircleIcon className="w-6 h-6 text-green-400"/>
+                              Three Content Types
+                          </h3>
+                          <ul className="space-y-3 text-sm text-gray-400">
+                              <li className="flex items-start gap-3">
+                                  <div className="w-6 h-6 bg-blue-500/20 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <span className="text-xs font-bold text-blue-400">1</span>
+                                  </div>
+                                  <div>
+                                      <strong className="text-white">Blog Posts</strong> - Quick, SEO-optimized posts for regular updates
+                                  </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                  <div className="w-6 h-6 bg-purple-500/20 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <span className="text-xs font-bold text-purple-400">2</span>
+                                  </div>
+                                  <div>
+                                      <strong className="text-white">Articles</strong> - Long-form content with research, key takeaways, and references
+                                  </div>
+                              </li>
+                              <li className="flex items-start gap-3">
+                                  <div className="w-6 h-6 bg-emerald-500/20 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <span className="text-xs font-bold text-emerald-400">3</span>
+                                  </div>
+                                  <div>
+                                      <strong className="text-white">Press Releases</strong> - Media-ready announcements with structured formatting
+                                  </div>
+                              </li>
+                          </ul>
+                      </div>
+
+                      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                              <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              AI-Powered Features
+                          </h3>
+                          <ul className="space-y-2 text-sm text-gray-400">
+                              <li className="flex items-center gap-2">
+                                  <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                  Auto-generate featured images
+                              </li>
+                              <li className="flex items-center gap-2">
+                                  <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                  SEO meta descriptions & keywords
+                              </li>
+                              <li className="flex items-center gap-2">
+                                  <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                  Schedule posts with timezone support
+                              </li>
+                              <li className="flex items-center gap-2">
+                                  <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                  Automatic keyword optimization
+                              </li>
+                              <li className="flex items-center gap-2">
+                                  <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                  Category & tag suggestions
+                              </li>
+                          </ul>
+                      </div>
+                  </div>
+
+                  {/* Right: Visual Demo */}
+                  <div className="relative">
+                      <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
+                          <div className="absolute -right-20 -top-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full"></div>
+
+                          <div className="relative z-10 space-y-4">
+                              {/* Header */}
+                              <div className="flex items-center justify-between mb-6">
+                                  <h4 className="text-white font-bold">Publishing Dashboard</h4>
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                      <span className="text-xs text-green-400">Connected</span>
+                                  </div>
+                              </div>
+
+                              {/* Content Preview Card */}
+                              <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30">
+                                  <div className="flex items-start gap-3 mb-3">
+                                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex-shrink-0"></div>
+                                      <div className="flex-1 min-w-0">
+                                          <h5 className="text-white font-medium text-sm truncate">10 Ways to Improve Your Local SEO</h5>
+                                          <p className="text-xs text-gray-400 mt-1">Blog Post • 847 words</p>
+                                      </div>
+                                  </div>
+                                  <div className="flex items-center justify-between text-xs">
+                                      <span className="text-gray-500">mysite.com/blog</span>
+                                      <span className="bg-green-500/20 text-green-300 px-2 py-1 rounded">Published</span>
+                                  </div>
+                              </div>
+
+                              {/* Stats Grid */}
+                              <div className="grid grid-cols-3 gap-3">
+                                  <div className="bg-slate-950/50 p-3 rounded-lg text-center">
+                                      <div className="text-lg font-bold text-white">24</div>
+                                      <div className="text-xs text-gray-400">Published</div>
+                                  </div>
+                                  <div className="bg-slate-950/50 p-3 rounded-lg text-center">
+                                      <div className="text-lg font-bold text-white">7</div>
+                                      <div className="text-xs text-gray-400">Scheduled</div>
+                                  </div>
+                                  <div className="bg-slate-950/50 p-3 rounded-lg text-center">
+                                      <div className="text-lg font-bold text-white">3</div>
+                                      <div className="text-xs text-gray-400">Draft</div>
+                                  </div>
+                              </div>
+
+                              {/* Workflow Steps */}
+                              <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 p-4 rounded-xl border border-indigo-500/20 mt-6">
+                                  <h5 className="text-white font-bold mb-3 text-sm">Publishing Workflow:</h5>
+                                  <div className="space-y-2">
+                                      <div className="flex items-center gap-2 text-xs text-gray-300">
+                                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                                          <span>AI writes content</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-300">
+                                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                                          <span>Generate featured image</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-300">
+                                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">✓</div>
+                                          <span>Optimize for SEO</span>
+                                      </div>
+                                      <div className="flex items-center gap-2 text-xs text-gray-300">
+                                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold animate-pulse">→</div>
+                                          <span>Publish to WordPress</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              {/* Key Benefits Banner */}
+              <div className="bg-gradient-to-r from-indigo-900/30 via-purple-900/30 to-indigo-900/30 rounded-2xl border border-indigo-500/30 p-8">
+                  <h3 className="text-2xl font-bold text-white text-center mb-8">Why JetContent + WordPress?</h3>
+                  <div className="grid md:grid-cols-3 gap-6">
+                      <div className="text-center">
+                          <div className="w-12 h-12 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                          </div>
+                          <h4 className="font-bold text-white mb-2">Save 10+ Hours/Week</h4>
+                          <p className="text-sm text-gray-400">No more copying between tools. Create and publish in one place.</p>
+                      </div>
+                      <div className="text-center">
+                          <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                          </div>
+                          <h4 className="font-bold text-white mb-2">100% SEO Optimized</h4>
+                          <p className="text-sm text-gray-400">Every post includes meta descriptions, keywords, and proper formatting.</p>
+                      </div>
+                      <div className="text-center">
+                          <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                              </svg>
+                          </div>
+                          <h4 className="font-bold text-white mb-2">Publish 3x More Content</h4>
+                          <p className="text-sm text-gray-400">AI speed means more content, more keywords, more traffic.</p>
+                      </div>
+                  </div>
               </div>
           </div>
       </section>
