@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Tool, ProfileData, KeywordData } from '../types';
+import type { Tool, ProfileData, KeywordData, WebsiteConnection, BlogPublication } from '../types';
 import { generateLocalContent, suggestBlogTitles } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { ResultDisplay } from '../components/ResultDisplay';
@@ -7,6 +7,8 @@ import { HowToUse } from '../components/HowToUse';
 import { InformationCircleIcon, SparklesIcon, CheckCircleIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
+import { getWebsiteConnections } from '../services/websiteService';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 interface JetContentProps {
   tool: Tool;
@@ -25,11 +27,149 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
   const [error, setError] = useState('');
   const [showHowTo, setShowHowTo] = useState(true);
 
+  // Featured Image State
+  const [showImagePrompt, setShowImagePrompt] = useState(false);
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [featuredImage, setFeaturedImage] = useState('');
+  const [generatingImage, setGeneratingImage] = useState(false);
+
+  // Scheduling State
+  const [showScheduling, setShowScheduling] = useState(false);
+  const [websiteConnections, setWebsiteConnections] = useState<WebsiteConnection[]>([]);
+  const [selectedWebsite, setSelectedWebsite] = useState('');
+  const [publishDate, setPublishDate] = useState('');
+  const [publishTime, setPublishTime] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+  const [success, setSuccess] = useState('');
+
   useEffect(() => {
     if (initialProps?.keyword?.keyword) {
       setTopic(initialProps.keyword.keyword);
     }
   }, [initialProps]);
+
+  useEffect(() => {
+    loadWebsiteConnections();
+  }, []);
+
+  const loadWebsiteConnections = async () => {
+    try {
+      const connections = await getWebsiteConnections(profileData.user.id, profileData.business.id);
+      setWebsiteConnections(connections.filter(c => c.is_active));
+    } catch (err) {
+      console.error('Error loading website connections:', err);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!imagePrompt.trim()) {
+      setError('Please describe the image you want to generate');
+      return;
+    }
+
+    try {
+      setGeneratingImage(true);
+      setError('');
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-featured-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt: imagePrompt,
+          provider: 'stability',
+          aspect_ratio: '16:9',
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate image');
+      }
+
+      const data = await response.json();
+      setFeaturedImage(data.image_url);
+      setShowImagePrompt(false);
+      setSuccess('Featured image generated successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Error generating image:', err);
+      setError(err.message || 'Failed to generate image. Please try again.');
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
+  const handleSchedulePost = async () => {
+    if (!selectedWebsite) {
+      setError('Please select a website to publish to');
+      return;
+    }
+    if (!publishDate) {
+      setError('Please select a publish date');
+      return;
+    }
+    if (!publishTime) {
+      setError('Please select a publish time');
+      return;
+    }
+
+    try {
+      setScheduling(true);
+      setError('');
+
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
+      // Combine date and time
+      const scheduledPublishAt = new Date(`${publishDate}T${publishTime}`).toISOString();
+
+      // Extract excerpt from first paragraph of content
+      const excerpt = result.split('\n\n')[1]?.substring(0, 200) || '';
+
+      const blogPost: Partial<BlogPublication> = {
+        user_id: profileData.user.id,
+        business_id: profileData.business.id,
+        website_connection_id: selectedWebsite,
+        title: topic,
+        content: result,
+        excerpt,
+        featured_image_url: featuredImage || undefined,
+        featured_image_prompt: imagePrompt || undefined,
+        scheduled_publish_at: scheduledPublishAt,
+        status: 'scheduled',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+
+      const { data, error: insertError } = await supabase
+        .from('blog_publications')
+        .insert([blogPost])
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
+      setSuccess(`Blog post scheduled for ${new Date(scheduledPublishAt).toLocaleString()}!`);
+      setShowScheduling(false);
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err: any) {
+      console.error('Error scheduling post:', err);
+      setError(err.message || 'Failed to schedule post. Please try again.');
+    } finally {
+      setScheduling(false);
+    }
+  };
 
   if (!businessType) {
     return (
@@ -197,7 +337,169 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       {result && (
           <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <ResultDisplay markdownText={result} />
-              
+
+              {/* Success Message */}
+              {success && (
+                <div className="mt-4 bg-green-100 text-green-800 p-3 rounded-lg text-sm font-semibold">
+                  {success}
+                </div>
+              )}
+
+              {/* Featured Image Section */}
+              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
+                <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
+                  <SparklesIcon className="w-5 h-5 text-accent-purple" />
+                  Featured Image
+                </h3>
+
+                {featuredImage ? (
+                  <div>
+                    <img
+                      src={featuredImage}
+                      alt="Featured"
+                      className="w-full rounded-lg border border-brand-border mb-3"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setFeaturedImage('');
+                          setImagePrompt('');
+                          setShowImagePrompt(true);
+                        }}
+                        className="flex-1 bg-brand-light text-brand-text px-4 py-2 rounded-lg font-semibold hover:bg-brand-border transition"
+                      >
+                        Regenerate
+                      </button>
+                      <button
+                        onClick={() => setFeaturedImage('')}
+                        className="px-4 py-2 text-red-500 hover:text-red-700 font-semibold transition"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : showImagePrompt ? (
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={imagePrompt}
+                      onChange={(e) => setImagePrompt(e.target.value)}
+                      placeholder="Describe the image you want (e.g., 'modern coffee shop interior with natural lighting')"
+                      className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleGenerateImage}
+                        disabled={generatingImage}
+                        className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50"
+                      >
+                        {generatingImage ? 'Generating...' : 'Generate Image'}
+                      </button>
+                      <button
+                        onClick={() => setShowImagePrompt(false)}
+                        className="px-4 py-2 text-brand-text-muted hover:text-brand-text font-semibold transition"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowImagePrompt(true)}
+                    className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-purple text-brand-text px-4 py-3 rounded-lg font-semibold transition"
+                  >
+                    + Generate Featured Image
+                  </button>
+                )}
+              </div>
+
+              {/* Scheduling Section */}
+              {websiteConnections.length > 0 && (
+                <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
+                  <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
+                    📅 Schedule Blog Post
+                  </h3>
+
+                  {!showScheduling ? (
+                    <button
+                      onClick={() => setShowScheduling(true)}
+                      className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-blue text-brand-text px-4 py-3 rounded-lg font-semibold transition"
+                    >
+                      + Schedule to Connected Website
+                    </button>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-brand-text mb-2">
+                          Publish To
+                        </label>
+                        <select
+                          value={selectedWebsite}
+                          onChange={(e) => setSelectedWebsite(e.target.value)}
+                          className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                        >
+                          <option value="">Select a website...</option>
+                          {websiteConnections.map((conn) => (
+                            <option key={conn.id} value={conn.id}>
+                              {conn.site_name} ({conn.platform})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-brand-text mb-2">
+                            Publish Date
+                          </label>
+                          <input
+                            type="date"
+                            value={publishDate}
+                            onChange={(e) => setPublishDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-brand-text mb-2">
+                            Publish Time
+                          </label>
+                          <input
+                            type="time"
+                            value={publishTime}
+                            onChange={(e) => setPublishTime(e.target.value)}
+                            className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSchedulePost}
+                          disabled={scheduling}
+                          className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50"
+                        >
+                          {scheduling ? 'Scheduling...' : 'Schedule Post'}
+                        </button>
+                        <button
+                          onClick={() => setShowScheduling(false)}
+                          className="px-4 py-2 text-brand-text-muted hover:text-brand-text font-semibold transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {websiteConnections.length === 0 && (
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                  <p className="font-semibold mb-1">💡 Connect a Website to Schedule Posts</p>
+                  <p>Go to Business Details → Connect Websites to set up WordPress, Squarespace, or Wix publishing.</p>
+                </div>
+              )}
+
               <div className="mt-6 flex justify-center">
                   <button
                     onClick={() => {

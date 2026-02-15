@@ -462,3 +462,38 @@ export interface WordPressConnectionResponse {
   site_url: string;
   categories?: number;
 }
+
+// Blog Publications Types
+export type BlogPublicationStatus = 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed';
+
+export interface BlogPublication {
+  id: string;
+  user_id: string;
+  business_id: string;
+  website_connection_id: string;
+  title: string;
+  content: string;
+  excerpt?: string;
+  featured_image_url?: string;
+  featured_image_prompt?: string;
+  scheduled_publish_at?: string;
+  status: BlogPublicationStatus;
+  timezone: string;
+  wordpress_post_id?: string;
+  error_message?: string;
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeaturedImageGenerationRequest {
+  prompt: string;
+  provider: 'stability';
+  aspect_ratio: '16:9';
+}
+
+export interface FeaturedImageGenerationResponse {
+  success: boolean;
+  image_url: string;
+  prompt: string;
+}
