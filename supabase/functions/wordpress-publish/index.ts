@@ -49,6 +49,16 @@ interface WordPressPostData {
 }
 
 /**
+ * Optimization result from optimize-blog-keywords function
+ */
+interface OptimizationResult {
+  keywords: string[];
+  tags: string[];
+  meta_description: string;
+  slug: string;
+}
+
+/**
  * WordPress API response for created post
  */
 interface WordPressPostResponse {
@@ -57,6 +67,160 @@ interface WordPressPostResponse {
   title: { rendered: string };
   status: string;
   date: string;
+}
+
+/**
+ * Call optimize-blog-keywords function to get SEO optimization
+ */
+async function optimizeBlogContent(
+  title: string,
+  content: string,
+  excerpt?: string
+): Promise<OptimizationResult | null> {
+  console.log('Calling optimize-blog-keywords function...');
+
+  try {
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/optimize-blog-keywords`;
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({ title, content, excerpt }),
+    });
+
+    if (!response.ok) {
+      console.error('Optimization failed:', response.status);
+      return null;
+    }
+
+    const result = await response.json();
+    console.log('Optimization successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Error calling optimize-blog-keywords:', error);
+    return null;
+  }
+}
+
+/**
+ * Get or create WordPress category by name
+ * Returns the category ID
+ */
+async function getOrCreateCategory(
+  siteUrl: string,
+  username: string,
+  appPassword: string,
+  categoryName: string
+): Promise<number | null> {
+  console.log(`Getting or creating category: ${categoryName}`);
+
+  const credentials = btoa(`${username}:${appPassword}`);
+  const apiUrl = `${siteUrl}/wp-json/wp/v2/categories`;
+
+  try {
+    // First, search for existing category
+    const searchUrl = `${apiUrl}?search=${encodeURIComponent(categoryName)}`;
+    const searchResponse = await fetch(searchUrl, {
+      headers: { 'Authorization': `Basic ${credentials}` },
+    });
+
+    if (searchResponse.ok) {
+      const categories = await searchResponse.json();
+      const exactMatch = categories.find(
+        (cat: any) => cat.name.toLowerCase() === categoryName.toLowerCase()
+      );
+
+      if (exactMatch) {
+        console.log(`Category found: ${exactMatch.name} (ID: ${exactMatch.id})`);
+        return exactMatch.id;
+      }
+    }
+
+    // Category doesn't exist, create it
+    console.log(`Creating new category: ${categoryName}`);
+    const createResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: categoryName }),
+    });
+
+    if (!createResponse.ok) {
+      console.error('Failed to create category:', await createResponse.text());
+      return null;
+    }
+
+    const newCategory = await createResponse.json();
+    console.log(`Category created: ${newCategory.name} (ID: ${newCategory.id})`);
+    return newCategory.id;
+  } catch (error) {
+    console.error('Error with category:', error);
+    return null;
+  }
+}
+
+/**
+ * Get or create WordPress tag by name
+ * Returns the tag ID
+ */
+async function getOrCreateTag(
+  siteUrl: string,
+  username: string,
+  appPassword: string,
+  tagName: string
+): Promise<number | null> {
+  console.log(`Getting or creating tag: ${tagName}`);
+
+  const credentials = btoa(`${username}:${appPassword}`);
+  const apiUrl = `${siteUrl}/wp-json/wp/v2/tags`;
+
+  try {
+    // First, search for existing tag
+    const searchUrl = `${apiUrl}?search=${encodeURIComponent(tagName)}`;
+    const searchResponse = await fetch(searchUrl, {
+      headers: { 'Authorization': `Basic ${credentials}` },
+    });
+
+    if (searchResponse.ok) {
+      const tags = await searchResponse.json();
+      const exactMatch = tags.find(
+        (tag: any) => tag.name.toLowerCase() === tagName.toLowerCase()
+      );
+
+      if (exactMatch) {
+        console.log(`Tag found: ${exactMatch.name} (ID: ${exactMatch.id})`);
+        return exactMatch.id;
+      }
+    }
+
+    // Tag doesn't exist, create it
+    console.log(`Creating new tag: ${tagName}`);
+    const createResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: tagName }),
+    });
+
+    if (!createResponse.ok) {
+      console.error('Failed to create tag:', await createResponse.text());
+      return null;
+    }
+
+    const newTag = await createResponse.json();
+    console.log(`Tag created: ${newTag.name} (ID: ${newTag.id})`);
+    return newTag.id;
+  } catch (error) {
+    console.error('Error with tag:', error);
+    return null;
+  }
 }
 
 /**
@@ -252,6 +416,43 @@ serve(async (req: Request) => {
 
     console.log('Connection found:', connection.website_url);
 
+    // Optimize blog content if not already optimized
+    let optimization: OptimizationResult | null = null;
+    if (!publication.auto_optimized) {
+      console.log('Optimizing blog content with AI...');
+      optimization = await optimizeBlogContent(
+        publication.title,
+        publication.content,
+        publication.excerpt
+      );
+
+      // Save optimization results to database
+      if (optimization) {
+        await supabase
+          .from('blog_publications')
+          .update({
+            optimized_keywords: optimization.keywords,
+            optimized_tags: optimization.tags,
+            auto_optimized: true,
+            meta_description: optimization.meta_description,
+            slug: optimization.slug,
+          })
+          .eq('id', publication_id);
+
+        console.log('Optimization saved to database');
+      }
+    } else {
+      console.log('Post already optimized, using existing data');
+      if (publication.optimized_keywords && publication.optimized_tags) {
+        optimization = {
+          keywords: publication.optimized_keywords,
+          tags: publication.optimized_tags,
+          meta_description: publication.meta_description || '',
+          slug: publication.slug || '',
+        };
+      }
+    }
+
     // Upload featured image if provided
     let featuredMediaId: number | null = null;
     if (publication.featured_image_url) {
@@ -264,20 +465,58 @@ serve(async (req: Request) => {
       );
     }
 
+    // Process categories and tags from optimization
+    const categoryIds: number[] = [];
+    const tagIds: number[] = [];
+
+    if (optimization) {
+      // Create/get categories from keywords
+      console.log('Processing categories from keywords...');
+      for (const keyword of optimization.keywords.slice(0, 3)) {
+        // Use first 3 keywords as categories
+        const categoryId = await getOrCreateCategory(
+          connection.website_url,
+          connection.wordpress_username!,
+          connection.wordpress_app_password!,
+          keyword
+        );
+        if (categoryId) {
+          categoryIds.push(categoryId);
+        }
+      }
+
+      // Create/get tags from optimization
+      console.log('Processing tags...');
+      for (const tag of optimization.tags) {
+        const tagId = await getOrCreateTag(
+          connection.website_url,
+          connection.wordpress_username!,
+          connection.wordpress_app_password!,
+          tag
+        );
+        if (tagId) {
+          tagIds.push(tagId);
+        }
+      }
+    }
+
     // Prepare post data for WordPress API
     const postData: WordPressPostData = {
       title: publication.title,
       content: publication.content,
-      excerpt: publication.excerpt || undefined,
+      excerpt: publication.excerpt || (optimization?.meta_description) || undefined,
       status: 'publish', // Publish immediately
-      slug: publication.slug || undefined,
+      slug: optimization?.slug || publication.slug || undefined,
       featured_media: featuredMediaId || undefined,
+      meta_description: optimization?.meta_description || publication.meta_description || undefined,
     };
 
-    // Add categories if provided
-    if (publication.categories && publication.categories.length > 0) {
-      // If categories are provided as category IDs (numbers)
-      const categoryIds = publication.categories
+    // Add categories (from optimization or existing publication data)
+    if (categoryIds.length > 0) {
+      postData.categories = categoryIds;
+    } else if (publication.categories && publication.categories.length > 0) {
+      // Fallback to existing categories if provided as IDs
+      const existingCategoryIds = publication.categories
         .map((cat: any) => {
           if (typeof cat === 'number') return cat;
           if (typeof cat === 'string' && !isNaN(Number(cat))) return Number(cat);
@@ -285,16 +524,17 @@ serve(async (req: Request) => {
         })
         .filter((id: number | null) => id !== null) as number[];
 
-      if (categoryIds.length > 0) {
-        postData.categories = categoryIds;
+      if (existingCategoryIds.length > 0) {
+        postData.categories = existingCategoryIds;
       }
     }
 
-    // Add tags if provided
-    if (publication.tags && publication.tags.length > 0) {
-      // For tags, WordPress expects tag IDs
-      // If you have tag names instead, you'd need to look them up first
-      const tagIds = publication.tags
+    // Add tags (from optimization or existing publication data)
+    if (tagIds.length > 0) {
+      postData.tags = tagIds;
+    } else if (publication.tags && publication.tags.length > 0) {
+      // Fallback to existing tags if provided as IDs
+      const existingTagIds = publication.tags
         .map((tag: any) => {
           if (typeof tag === 'number') return tag;
           if (typeof tag === 'string' && !isNaN(Number(tag))) return Number(tag);
@@ -302,8 +542,8 @@ serve(async (req: Request) => {
         })
         .filter((id: number | null) => id !== null) as number[];
 
-      if (tagIds.length > 0) {
-        postData.tags = tagIds;
+      if (existingTagIds.length > 0) {
+        postData.tags = existingTagIds;
       }
     }
 
