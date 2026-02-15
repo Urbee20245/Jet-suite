@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, KeywordData, WebsiteConnection, BlogPublication } from '../types';
-import { generateLocalContent, suggestBlogTitles } from '../services/geminiService';
+import { generateLocalContent, suggestBlogTitles, generateImage } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { ResultDisplay } from '../components/ResultDisplay';
 import { HowToUse } from '../components/HowToUse';
@@ -126,31 +126,8 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       setGeneratingImage(true);
       setError('');
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL not configured');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/generate-featured-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({
-          prompt: imagePrompt,
-          provider: 'stability',
-          aspect_ratio: '16:9',
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to generate image');
-      }
-
-      const data = await response.json();
-      setFeaturedImage(data.image_url);
+      const base64Image = await generateImage(imagePrompt, '2K', '16:9');
+      setFeaturedImage(`data:image/png;base64,${base64Image}`);
       setShowImagePrompt(false);
       setSuccess('Featured image generated successfully!');
       setTimeout(() => setSuccess(''), 3000);
