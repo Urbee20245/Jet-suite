@@ -1,8 +1,8 @@
 import type { Tool } from './types';
-import { 
-  JetBizIcon, 
-  JetVizIcon, 
-  JetSocialIcon, 
+import {
+  JetBizIcon,
+  JetVizIcon,
+  JetSocialIcon,
   JetReplyIcon,
   JetLeadsIcon,
   JetContentIcon,
@@ -23,6 +23,7 @@ import {
   JetProductIcon,
   JetServicesIcon,
   BusinessIcon,
+  ConnectionsIcon,
 } from './components/icons/ToolIcons';
 import { TicketIcon } from './components/SupportIcons';
 
@@ -32,6 +33,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
   
   // Profile Tools
   businessdetails: { id: 'businessdetails', name: 'Business Details', description: 'Manage your core business information.', icon: BusinessIcon },
+  connections: { id: 'connections', name: 'Connections', description: 'Connect your social media accounts and websites.', icon: ConnectionsIcon },
   planner: { id: 'planner', name: 'Planner', description: 'View all your scheduled posts and tasks in a calendar.', icon: PlannerIcon },
   growthscore: { id: 'growthscore', name: 'Growth Score', description: 'Track your online presence score and history.', icon: GrowthScoreIcon },
   account: { id: 'account', name: 'Account', description: 'Manage your plan, businesses, and team.', icon: AccountIcon },
@@ -73,7 +75,7 @@ export const ALL_TOOLS: { [key: string]: Tool } = {
 export const TOOLS: Tool[] = Object.values(ALL_TOOLS);
 
 // --- SIDEBAR NAVIGATION STRUCTURE ---
-export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'planner', 'growthplan', 'growthscore'];
+export const SIDEBAR_STATIC_TOP_TOOLS = ['home', 'businessdetails', 'connections', 'planner', 'growthplan', 'growthscore'];
 
 export const SIDEBAR_COLLAPSIBLE_CATEGORIES = [
   { name: 'Business Foundation', tools: ['jetbiz', 'jetviz', 'jetkeywords', 'jetcompete'] },
