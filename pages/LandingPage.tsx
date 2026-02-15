@@ -196,189 +196,200 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
   return (
     <div className="bg-brand-darker text-gray-300 overflow-x-hidden font-sans">
       
-      {/* 1. HERO SECTION - ENHANCED */}
-      <section className="relative pt-20 pb-24 sm:pt-32 sm:pb-32 px-4 overflow-hidden section-animate">
+      {/* 1. HERO SECTION - ENHANCED PREMIUM */}
+      <section className="relative pt-24 pb-28 sm:pt-36 sm:pb-40 px-4 overflow-hidden section-animate">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-[0.02] bg-grid-pattern"></div>
-        
-        {/* Background Gradients */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] -z-10 opacity-50 animate-pulse-subtle"></div>
-        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-teal-500/10 rounded-full blur-[120px] -z-10 opacity-30"></div>
+        <div className="absolute inset-0 opacity-[0.015] bg-grid-pattern"></div>
+
+        {/* Enhanced Background Gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-blue-600/15 rounded-full blur-[140px] -z-10 opacity-60 animate-pulse-subtle"></div>
+        <div className="absolute bottom-0 right-0 w-[900px] h-[700px] bg-teal-500/8 rounded-full blur-[150px] -z-10 opacity-40"></div>
+        <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-purple-600/5 rounded-full blur-[120px] -z-10 opacity-30"></div>
 
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-12">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-16 lg:gap-20">
             {/* Left Column: Text Content */}
-            <div className="lg:w-1/2 w-full text-left">
-              {/* Compact Trust Badge with Shield */}
-              <div className="relative inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/40 border border-slate-700/50 text-slate-300 text-sm font-medium mb-8 group overflow-hidden">
-                
+            <div className="lg:w-1/2 w-full text-left space-y-8">
+              {/* Premium Trust Badge with Shield */}
+              <div className="relative inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900/60 border border-slate-700/70 text-slate-200 text-sm font-semibold mb-2 group overflow-hidden backdrop-blur-sm shadow-lg shadow-slate-900/50">
+
                 {/* Subtle Animated Background */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-900/10 via-transparent to-teal-900/10 animate-gradient-background"></div>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-transparent to-teal-900/20 animate-gradient-background"></div>
                 </div>
-                
-                {/* Shield Icon with Tiny Glow */}
+
+                {/* Shield Icon with Glow */}
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-blue-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <svg className="relative w-3.5 h-3.5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute -inset-1.5 bg-blue-500/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <svg className="relative w-4 h-4 text-blue-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
                   </svg>
                 </div>
-                
-                {/* Text */}
-                <span className="relative">
-                  Trusted by <span className="font-semibold text-white">360+</span> local businesses
+
+                {/* Text with better spacing */}
+                <span className="relative tracking-wide">
+                  Trusted by <span className="font-bold text-white">360+</span> local businesses
                 </span>
-                
+
                 {/* Live Indicator Dot */}
-                <div className="relative ml-1">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-60"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                <div className="relative ml-0.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
                   </span>
                 </div>
               </div>
-              
-              <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-7xl font-extrabold text-white tracking-tight leading-tight mb-8">
+
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.1] drop-shadow-2xl">
                   Get Found First on Google.
                   <br className="hidden md:block"/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-300 to-teal-400 drop-shadow-none">
                       Get More Customers.
                   </span>
                   <br/>
-                  <span className="text-2xl sm:text-3xl md:text-5xl lg:text-5xl text-gray-400 font-semibold">
+                  <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-400 font-bold leading-snug block mt-4">
                       The all-in-one AI growth engine for modern businesses.
                   </span>
               </h1>
-              
-              <p className="mt-6 max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed">
+
+              <p className="max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed font-medium">
                   Start your subscription today.
                   JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
               </p>
               
-              <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center">
-                  <button 
-                    onClick={() => navigate('/get-started')} 
-                    className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 relative"
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-stretch sm:items-center">
+                  <button
+                    onClick={() => navigate('/get-started')}
+                    className="group relative w-full sm:w-auto bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white font-bold py-5 px-10 rounded-2xl transition-all duration-500 text-lg shadow-2xl shadow-blue-600/30 hover:shadow-blue-500/50 hover:scale-[1.02] overflow-hidden"
                     aria-label="Get Started"
                   >
-                      Get Started
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                      <span className="relative flex items-center justify-center gap-2">
+                        Get Started
+                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                      </span>
                   </button>
                   <button
                     onClick={handleVideoClick}
-                    className="glow-card glow-card-rounded-xl w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700"
+                    className="group w-full sm:w-auto flex items-center justify-center gap-3 bg-slate-800/80 hover:bg-slate-700/90 text-white font-bold py-5 px-10 rounded-2xl transition-all duration-500 text-lg border-2 border-slate-700/80 hover:border-slate-600 shadow-xl shadow-slate-900/30 hover:shadow-slate-800/50 backdrop-blur-sm hover:scale-[1.02]"
                     aria-label="See how it works"
                   >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
+                      <div className="relative flex items-center justify-center w-5 h-5">
+                        <div className="absolute inset-0 bg-blue-500/30 rounded-full group-hover:scale-150 transition-transform duration-500 blur-sm"></div>
+                        <svg className="relative w-5 h-5 group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
                       See how it works
                   </button>
               </div>
-              
-              {/* Trial Disclosure */}
-              <p className="text-sm text-gray-500 mt-4">
-                Cancel anytime. No long-term contracts.
+
+              {/* Premium Trial Disclosure */}
+              <p className="text-sm text-gray-500 font-medium tracking-wide">
+                <span className="inline-flex items-center gap-2">
+                  <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Cancel anytime • No long-term contracts
+                </span>
               </p>
 
-              {/* Trust Badges */}
-              <div className="mt-12 flex flex-wrap items-center gap-6 text-sm text-gray-500">
-                <span>Featured in:</span>
-                <div className="flex items-center gap-4 opacity-70">
-                  <span className="font-semibold text-gray-400">Forbes</span>
-                  <span className="text-gray-500">•</span>
-                  <span className="font-semibold text-gray-400">TechCrunch</span>
-                  <span className="text-gray-500">•</span>
-                  <span className="font-semibold text-gray-400">Entrepreneur</span>
+              {/* Premium Trust Badges */}
+              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 pt-4 border-t border-slate-800/50">
+                <span className="font-semibold text-gray-400">Featured on:</span>
+                <div className="flex items-center gap-5 opacity-80 hover:opacity-100 transition-opacity">
+                  <span className="font-bold text-gray-300 text-base tracking-wide">Capterra</span>
                 </div>
               </div>
 
-              {/* NEW: Client Avatar Trust Bar */}
-              <div className="mt-10 pt-8 border-t border-slate-800/50 w-full">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex -space-x-3 flex-shrink-0">
-                      {/* Client Avatars - Using your 5 images */}
+              {/* Premium Client Avatar Trust Bar */}
+              <div className="pt-10 mt-6 border-t border-slate-800/60 w-full">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8">
+                  <div className="flex items-center gap-5">
+                    <div className="flex -space-x-4 flex-shrink-0">
+                      {/* Premium Client Avatars - Using your 5 images */}
                       {[
                         '/GJSCLIENT1.png',
-                        '/GJSCLIENT2.png', 
+                        '/GJSCLIENT2.png',
                         '/GJSCLIENT3.png',
                         '/GJSCLIENT4.png',
                         '/GJSCLIENT5.png'
                       ].map((avatar, index) => (
-                        <img 
+                        <img
                           key={index}
                           src={avatar}
                           alt={`Jet Suite Client ${index + 1}`}
-                          className="w-12 h-12 rounded-full border-3 border-slate-900 shadow-lg object-cover hover:scale-110 transition-transform duration-300"
+                          className="w-14 h-14 rounded-full border-4 border-slate-900 shadow-2xl object-cover hover:scale-110 hover:z-20 transition-all duration-300 ring-2 ring-slate-800/50"
                           loading="lazy"
                           style={{
-                            zIndex: 5 - index // Ensures proper stacking
+                            zIndex: 5 - index
                           }}
                         />
                       ))}
                     </div>
                     <div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 mb-1">
                         {[1,2,3,4,5].map((i) => (
-                          <svg 
-                            key={i} 
-                            className="w-4 h-4 fill-yellow-400 text-yellow-400" 
+                          <svg
+                            key={i}
+                            className="w-5 h-5 fill-yellow-400 text-yellow-400 drop-shadow-lg"
                             viewBox="0 0 24 24"
                             fill="currentColor"
                           >
                             <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                           </svg>
                         ))}
-                        <span className="ml-2 text-sm font-bold text-white">5.0</span>
+                        <span className="ml-2 text-base font-bold text-white drop-shadow">5.0</span>
                       </div>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Rated <span className="font-semibold text-white">5.0/5.0</span> by local businesses
+                      <p className="text-sm text-gray-400 font-medium">
+                        Rated <span className="font-bold text-white">5.0/5.0</span> by local businesses
                       </p>
                     </div>
                   </div>
-                  <div className="hidden sm:block h-10 w-px bg-slate-700"></div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center border border-blue-500/30">
-                      <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="hidden sm:block h-12 w-px bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/30 to-blue-600/20 flex items-center justify-center border border-blue-500/40 shadow-lg shadow-blue-500/20">
+                      <svg className="w-6 h-6 text-blue-400 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
                       </svg>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-white">100%</div>
-                      <div className="text-sm text-gray-400">Client Satisfaction</div>
+                      <div className="text-2xl font-bold text-white drop-shadow">100%</div>
+                      <div className="text-sm text-gray-400 font-medium">Client Satisfaction</div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Industry Breakdown */}
-                <div className="mt-6 flex flex-wrap items-center gap-3 text-xs">
-                  <span className="text-gray-500">Trusted across industries:</span>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded-full border border-blue-700/30">Plumbing</span>
-                    <span className="px-3 py-1 bg-teal-900/30 text-teal-300 rounded-full border border-teal-700/30">Healthcare</span>
-                    <span className="px-3 py-1 bg-purple-900/30 text-purple-300 rounded-full border border-purple-700/30">Retail</span>
-                    <span className="px-3 py-1 bg-amber-900/30 text-amber-300 rounded-full border border-amber-700/30">Legal</span>
-                    <span className="px-3 py-1 bg-pink-900/30 text-pink-300 rounded-full border border-pink-700/30">Fitness</span>
-                    <span className="px-3 py-1 bg-indigo-900/30 text-indigo-300 rounded-full border border-indigo-700/30">Home Based</span>
+
+                {/* Premium Industry Breakdown */}
+                <div className="mt-8 flex flex-wrap items-center gap-3 text-xs">
+                  <span className="text-gray-400 font-semibold">Trusted across industries:</span>
+                  <div className="flex flex-wrap gap-2.5">
+                    <span className="px-4 py-1.5 bg-blue-900/40 text-blue-300 rounded-full border border-blue-700/40 font-semibold hover:bg-blue-900/60 hover:border-blue-600/60 transition-all duration-300 shadow-lg shadow-blue-900/20">Plumbing</span>
+                    <span className="px-4 py-1.5 bg-teal-900/40 text-teal-300 rounded-full border border-teal-700/40 font-semibold hover:bg-teal-900/60 hover:border-teal-600/60 transition-all duration-300 shadow-lg shadow-teal-900/20">Healthcare</span>
+                    <span className="px-4 py-1.5 bg-purple-900/40 text-purple-300 rounded-full border border-purple-700/40 font-semibold hover:bg-purple-900/60 hover:border-purple-600/60 transition-all duration-300 shadow-lg shadow-purple-900/20">Retail</span>
+                    <span className="px-4 py-1.5 bg-amber-900/40 text-amber-300 rounded-full border border-amber-700/40 font-semibold hover:bg-amber-900/60 hover:border-amber-600/60 transition-all duration-300 shadow-lg shadow-amber-900/20">Legal</span>
+                    <span className="px-4 py-1.5 bg-pink-900/40 text-pink-300 rounded-full border border-pink-700/40 font-semibold hover:bg-pink-900/60 hover:border-pink-600/60 transition-all duration-300 shadow-lg shadow-pink-900/20">Fitness</span>
+                    <span className="px-4 py-1.5 bg-indigo-900/40 text-indigo-300 rounded-full border border-indigo-700/40 font-semibold hover:bg-indigo-900/60 hover:border-indigo-600/60 transition-all duration-300 shadow-lg shadow-indigo-900/20">Home Based</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Video */}
-            <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0">
+            {/* Right Column: Premium Video */}
+            <div className="lg:w-1/2 w-full max-w-2xl mx-auto lg:mx-0 space-y-6">
                 <div
                   ref={videoContainerRef}
                   onClick={!showVideo ? handleVideoClick : undefined}
-                  className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border-2 border-slate-700/50 shadow-2xl shadow-blue-900/20 overflow-hidden aspect-video group relative cursor-pointer hover:border-blue-500/50 transition-all duration-500"
+                  className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border-2 border-slate-700/60 shadow-2xl shadow-blue-900/30 overflow-hidden aspect-video group cursor-pointer hover:border-blue-500/60 transition-all duration-700 hover:shadow-blue-900/50"
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && handleVideoClick()}
                   aria-label="Play demo video: See how JetSuite works"
                 >
-                    {/* Ambient glow effect */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-teal-500/20 to-blue-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                    {/* Enhanced Ambient glow effect */}
+                    <div className="absolute -inset-2 bg-gradient-to-r from-blue-600/25 via-teal-500/25 to-purple-600/25 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10"></div>
 
                     {showVideo ? (
                         <video
@@ -388,7 +399,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             loop
                             playsInline
                             preload="metadata"
-                            className="absolute inset-0 w-full h-full object-cover rounded-xl z-20"
+                            className="absolute inset-0 w-full h-full object-cover rounded-2xl z-20"
                         >
                             <source src={VIDEO_URL} type="video/mp4" />
                             Your browser does not support the video tag.
@@ -399,49 +410,54 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             <img
                                 src={COVER_IMAGE_URL}
                                 alt="JetSuite Demo Video Cover"
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                                 loading="eager"
                             />
 
-                            {/* Gradient Overlay for depth */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+                            {/* Enhanced Gradient Overlay for depth */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent group-hover:from-black/70 transition-all duration-700"></div>
 
                             {/* Animated border shine effect */}
-                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/10 to-transparent animate-shimmer"></div>
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/15 to-transparent animate-shimmer"></div>
                             </div>
 
-                            {/* Play Button with enhanced styling */}
+                            {/* Premium Play Button */}
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="relative">
-                                    {/* Pulsing glow ring */}
-                                    <div className="absolute inset-0 w-28 h-28 rounded-full bg-blue-500/30 blur-2xl animate-pulse"></div>
+                                    {/* Enhanced Pulsing glow rings */}
+                                    <div className="absolute inset-0 w-32 h-32 rounded-full bg-blue-500/40 blur-3xl animate-pulse"></div>
+                                    <div className="absolute inset-0 w-32 h-32 rounded-full bg-teal-500/30 blur-2xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
 
-                                    {/* Main play button */}
-                                    <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-white to-gray-100 flex items-center justify-center shadow-2xl group-hover:scale-110 group-hover:shadow-blue-500/50 transition-all duration-300 z-10">
-                                        {/* Inner glow */}
-                                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-50 to-white"></div>
+                                    {/* Premium play button */}
+                                    <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-white via-gray-50 to-gray-100 flex items-center justify-center shadow-2xl group-hover:scale-115 group-hover:shadow-blue-500/60 transition-all duration-500 z-10 ring-4 ring-white/10">
+                                        {/* Inner premium glow */}
+                                        <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-50 via-white to-gray-50"></div>
 
                                         {/* Play icon */}
-                                        <div className="relative w-0 h-0 border-t-[18px] border-b-[18px] border-l-[26px] border-transparent border-l-blue-600 ml-2 drop-shadow-lg"></div>
+                                        <div className="relative w-0 h-0 border-t-[20px] border-b-[20px] border-l-[28px] border-transparent border-l-blue-600 ml-2.5 drop-shadow-2xl filter group-hover:border-l-blue-500 transition-colors duration-300"></div>
                                     </div>
 
-                                    {/* Outer ring animation */}
-                                    <div className="absolute inset-0 w-24 h-24 rounded-full border-2 border-white/30 group-hover:scale-125 transition-transform duration-500"></div>
+                                    {/* Outer ring animations */}
+                                    <div className="absolute inset-0 w-28 h-28 rounded-full border-2 border-white/40 group-hover:scale-[1.3] transition-transform duration-700"></div>
+                                    <div className="absolute inset-0 w-28 h-28 rounded-full border border-white/20 group-hover:scale-[1.5] transition-transform duration-1000"></div>
                                 </div>
                             </div>
 
-                            {/* Enhanced Video Stats Overlay */}
-                            <div className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-900/90 via-slate-800/90 to-slate-900/90 backdrop-blur-md text-white py-3 px-8 rounded-full text-sm font-semibold border border-slate-600/50 group-hover:border-blue-400/50 group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 z-10">
-                                <span className="flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                            {/* Premium Video Stats Overlay */}
+                            <div className="hidden sm:flex absolute bottom-8 left-1/2 -translate-x-1/2 bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 backdrop-blur-lg text-white py-4 px-10 rounded-full text-sm font-bold border-2 border-slate-600/60 group-hover:border-blue-400/60 group-hover:shadow-2xl group-hover:shadow-blue-500/30 transition-all duration-500 z-10">
+                                <span className="flex items-center gap-3">
+                                    <span className="relative flex h-2.5 w-2.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 shadow-lg shadow-blue-500/50"></span>
+                                    </span>
                                     See how it works
                                 </span>
                             </div>
                         </>
                     )}
                 </div>
-                <p className="text-center text-gray-500 text-sm mt-4">See how JetSuite works for businesses like yours</p>
+                <p className="text-center text-gray-400 text-sm font-medium tracking-wide">See how JetSuite works for businesses like yours</p>
             </div>
           </div>
         </div>
