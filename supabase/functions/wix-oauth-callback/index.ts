@@ -44,6 +44,11 @@ const WIX_CLIENT_SECRET = Deno.env.get('WIX_CLIENT_SECRET')!;
 const WIX_REDIRECT_URI = Deno.env.get('WIX_REDIRECT_URI')!;
 const APP_URL = Deno.env.get('APP_URL') || 'https://www.getjetsuite.com';
 
+// System user ID for unclaimed Wix dashboard installations
+// This is a placeholder user for connections created via Wix dashboard before user authentication
+// Users can claim these connections later by logging in
+const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000001';
+
 // Wix API endpoints
 const WIX_TOKEN_URL = 'https://www.wix.com/oauth/access';
 const WIX_API_BASE = 'https://www.wixapis.com';
@@ -193,40 +198,70 @@ serve(async (req: Request) => {
     console.log('Code received:', code.substring(0, 20) + '...');
     console.log('State:', state);
 
-    // Verify state token (CSRF protection)
-    const { data: stateData, error: stateError } = await supabase
-      .from('oauth_states')
-      .select('*')
-      .eq('state', state)
-      .eq('platform', 'wix')
-      .single();
+    // Check if state is in special Wix dashboard format: wix_instance_{instanceId}_{random}
+    let stateData: any = null;
+    let userId: string | null = null;
+    let businessId: string | null = null;
+    let instanceId: string | null = null;
+    let redirectPath = '/blog-settings';
 
-    if (stateError || !stateData) {
-      console.error('Invalid OAuth state:', stateError);
-      return redirectResponse(
-        `${APP_URL}/blog-settings?error=invalid_state`,
-        origin
-      );
+    if (state.startsWith('wix_instance_')) {
+      // Parse instanceId from state for Wix dashboard OAuth flow
+      const parts = state.split('_');
+      if (parts.length >= 3) {
+        instanceId = parts.slice(2, -1).join('_'); // Extract instanceId (everything between wix_instance_ and last segment)
+        console.log('Wix dashboard OAuth flow detected, instanceId:', instanceId);
+
+        // For Wix dashboard flow, we'll create a connection without user_id
+        // The connection will be linked when user claims it later
+        // For now, we'll use a placeholder or skip user_id requirement
+        // Note: This is a simplified flow - in production, consider requiring user authentication first
+      }
+    } else {
+      // Standard OAuth flow - verify state token (CSRF protection)
+      const { data: stateDbData, error: stateError } = await supabase
+        .from('oauth_states')
+        .select('*')
+        .eq('state', state)
+        .eq('platform', 'wix')
+        .single();
+
+      if (stateError || !stateDbData) {
+        console.error('Invalid OAuth state:', stateError);
+        return redirectResponse(
+          `${APP_URL}/blog-settings?error=invalid_state`,
+          origin
+        );
+      }
+
+      stateData = stateDbData;
+
+      // Get redirect URL from state metadata
+      const redirectUrl = stateData.metadata?.redirect_url || '/blog-settings';
+      redirectPath = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
+
+      // Check if state has expired (10 minutes)
+      if (new Date(stateData.expires_at) < new Date()) {
+        await supabase.from('oauth_states').delete().eq('state', state);
+        console.error('State expired');
+        return redirectResponse(
+          `${APP_URL}${redirectPath}?error=state_expired`,
+          origin
+        );
+      }
+
+      userId = stateData.user_id;
+      businessId = stateData.business_id;
+      instanceId = stateData.metadata?.instance_id || null;
     }
 
-    // Get redirect URL from state metadata
-    const redirectUrl = stateData.metadata?.redirect_url || '/blog-settings';
-    const redirectPath = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`;
-
-    // Check if state has expired (10 minutes)
-    if (new Date(stateData.expires_at) < new Date()) {
-      await supabase.from('oauth_states').delete().eq('state', state);
-      console.error('State expired');
-      return redirectResponse(
-        `${APP_URL}${redirectPath}?error=state_expired`,
-        origin
-      );
+    if (userId) {
+      console.log('Valid state for user:', userId);
+    } else {
+      console.log('Valid state for Wix dashboard flow (instanceId:', instanceId, ')');
+      // Use system user for unclaimed Wix installations
+      userId = SYSTEM_USER_ID;
     }
-
-    const userId = stateData.user_id;
-    const businessId = stateData.business_id;
-
-    console.log('Valid state for user:', userId);
 
     // Exchange code for access token
     let tokens: WixTokenResponse;
@@ -262,8 +297,8 @@ serve(async (req: Request) => {
     const encryptedRefreshToken = await encrypt(tokens.refresh_token);
 
     // Prepare connection data
-    const connectionData = {
-      user_id: userId,
+    const connectionData: any = {
+      user_id: userId!, // Will use SYSTEM_USER_ID for unclaimed Wix installations
       business_id: businessId || null,
       platform: 'wix',
       website_url: siteInfo.site.url,
@@ -276,19 +311,38 @@ serve(async (req: Request) => {
       metadata: {
         site_id: siteInfo.site.siteId,
         description: siteInfo.site.description,
+        instance_id: instanceId || null, // Store Wix app instanceId if available
       },
       is_active: true,
       last_verified_at: new Date().toISOString(),
     };
 
     // Check for existing connection
-    const { data: existingConnection } = await supabase
-      .from('website_connections')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('platform', 'wix')
-      .eq('website_url', siteInfo.site.url)
-      .maybeSingle();
+    // For Wix dashboard flow, match by instanceId in metadata if available
+    let existingConnection;
+    if (instanceId) {
+      // Find connection by instanceId for Wix dashboard flow
+      const { data: connections } = await supabase
+        .from('website_connections')
+        .select('id, metadata')
+        .eq('platform', 'wix');
+
+      existingConnection = connections?.find((conn: any) =>
+        conn.metadata?.instance_id === instanceId
+      );
+    }
+
+    // If no instanceId match, try matching by user_id and website_url (standard flow)
+    if (!existingConnection && userId && userId !== SYSTEM_USER_ID) {
+      const { data } = await supabase
+        .from('website_connections')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('platform', 'wix')
+        .eq('website_url', siteInfo.site.url)
+        .maybeSingle();
+      existingConnection = data;
+    }
 
     if (existingConnection) {
       console.log('Updating existing Wix connection');
@@ -303,16 +357,25 @@ serve(async (req: Request) => {
         .insert(connectionData);
     }
 
-    // Clean up state
-    await supabase.from('oauth_states').delete().eq('state', state);
+    // Clean up state (only if we used database state)
+    if (stateData) {
+      await supabase.from('oauth_states').delete().eq('state', state);
+    }
     console.log('Connection saved successfully!');
 
-    // Redirect back to the app with success
-    const separator = redirectPath.includes('?') ? '&' : '?';
-    return redirectResponse(
-      `${APP_URL}${redirectPath}${separator}success=wix_connected`,
-      origin
-    );
+    // Redirect back to the appropriate location
+    if (instanceId && userId === SYSTEM_USER_ID) {
+      // For Wix dashboard flow, redirect back to the dashboard
+      const dashboardUrl = `${SUPABASE_URL}/functions/v1/wix-dashboard?instanceId=${instanceId}&success=true`;
+      return redirectResponse(dashboardUrl, origin);
+    } else {
+      // Standard flow: redirect to app
+      const separator = redirectPath.includes('?') ? '&' : '?';
+      return redirectResponse(
+        `${APP_URL}${redirectPath}${separator}success=wix_connected`,
+        origin
+      );
+    }
   } catch (error) {
     console.error('Wix callback error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
