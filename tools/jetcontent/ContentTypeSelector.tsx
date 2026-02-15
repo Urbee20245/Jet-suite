@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentTextIcon, NewspaperIcon, SpeakerphoneIcon } from '@heroicons/react/24/outline';
+import { DocumentTextIcon, NewspaperIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
 
 interface ContentTypeSelectorProps {
   onSelect: (type: 'blog_post' | 'article' | 'press_release') => void;
@@ -128,7 +128,7 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
 
           {/* Icon container with gradient */}
           <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-            <SpeakerphoneIcon className="w-8 h-8 text-white" />
+            <MegaphoneIcon className="w-8 h-8 text-white" />
           </div>
 
           {/* Content */}
