@@ -12,16 +12,17 @@ import {
     BoltIcon,
     ChatBubbleLeftRightIcon
 } from '../components/icons/MiniIcons';
-import { 
-    JetVizIcon, 
-    JetBizIcon, 
-    JetKeywordsIcon, 
-    JetCreateIcon, 
-    JetImageIcon, 
-    JetReplyIcon, 
-    JetTrustIcon, 
+import {
+    JetVizIcon,
+    JetBizIcon,
+    JetKeywordsIcon,
+    JetCreateIcon,
+    JetImageIcon,
+    JetReplyIcon,
+    JetTrustIcon,
     GrowthPlanIcon,
-    GrowthScoreIcon
+    GrowthScoreIcon,
+    JetContentIcon
 } from '../components/icons/ToolIcons';
 
 interface LandingPageProps {
