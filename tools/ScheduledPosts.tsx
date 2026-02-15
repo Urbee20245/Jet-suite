@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, BlogPublication, WebsiteConnection } from '../types';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, SparklesIcon } from '../components/icons/MiniIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { getWebsiteConnections } from '../services/websiteService';
 
@@ -228,14 +228,23 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
                 {filteredPosts.map((post) => (
                   <tr key={post.id} className="hover:bg-brand-light/40 transition-colors duration-150 group">
                     <td className="px-4 py-3.5">
-                      <div>
-                        <p className="font-semibold text-brand-text text-sm">{post.title}</p>
+                      <div className="flex items-center gap-3">
                         {post.featured_image_url && (
-                          <span className="inline-flex items-center gap-1 text-xs text-accent-purple mt-0.5">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
-                            Has featured image
-                          </span>
+                          <img
+                            src={post.featured_image_url}
+                            alt={post.title}
+                            className="w-16 h-10 object-cover rounded border border-brand-border/50 shrink-0"
+                          />
                         )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-brand-text text-sm truncate">{post.title}</p>
+                          {post.auto_optimized && (
+                            <span className="inline-flex items-center gap-1 text-xs text-accent-blue mt-0.5">
+                              <SparklesIcon className="w-3 h-3" />
+                              SEO Optimized
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
