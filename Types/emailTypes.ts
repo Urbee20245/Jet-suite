@@ -261,3 +261,33 @@ export interface SMSStatsResponse {
   this_month_sent: number;
   delivery_rate: number;
 }
+
+// =====================================================
+// ADMIN INBOX
+// =====================================================
+
+export interface AdminInboxMessage {
+  id: string;
+  from_email: string;
+  from_name: string | null;
+  to_email: string;
+  subject: string | null;
+  html_body: string | null;
+  text_body: string | null;
+  received_at: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface AdminInboxListResponse {
+  success: boolean;
+  messages?: AdminInboxMessage[];
+  total?: number;
+  error?: string;
+}
+
+export interface AdminInboxDeleteResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}

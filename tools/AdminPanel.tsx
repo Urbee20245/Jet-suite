@@ -11,7 +11,7 @@ import {
   CheckIcon,
   XMarkIcon
 } from '../components/icons/MiniIcons';
-import type { EmailSettings, SMSSettings, UpdateEmailSettingsRequest, UpdateSMSSettingsRequest } from '../Types/emailTypes';
+import type { EmailSettings, SMSSettings, UpdateEmailSettingsRequest, UpdateSMSSettingsRequest, AdminInboxMessage } from '../Types/emailTypes';
 import supportService from '../services/supportService'; // For support tab
 
 interface AdminProfileData {
@@ -35,7 +35,7 @@ interface AdminProfileData {
   isProfileActive: boolean;
 }
 
-type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms' | 'settings';
+type TabType = 'overview' | 'businesses' | 'users' | 'support' | 'revenue' | 'announcements' | 'email' | 'sms' | 'inbox' | 'settings';
 
 export const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -121,6 +121,11 @@ export const AdminPanel: React.FC = () => {
   const [calcomForm, setCalcomForm] = useState({ calcom_api_key: '', calcom_event_id: '' });
   const [calcomLoaded, setCalcomLoaded] = useState(false);
 
+  // Inbox state
+  const [inboxMessages, setInboxMessages] = useState<AdminInboxMessage[]>([]);
+  const [selectedMessage, setSelectedMessage] = useState<AdminInboxMessage | null>(null);
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+
   useEffect(() => {
     const loadTabData = () => {
       switch (activeTab) {
@@ -144,6 +149,9 @@ export const AdminPanel: React.FC = () => {
           break;
         case 'announcements':
           loadAnnouncements();
+          break;
+        case 'inbox':
+          loadInboxMessages();
           break;
         case 'settings':
           loadCalcomSettings();
@@ -279,6 +287,67 @@ export const AdminPanel: React.FC = () => {
       console.error('Error loading Cal.com settings:', error);
     }
     setLoading(false);
+  };
+
+  const loadInboxMessages = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/inbox', {
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error loading inbox messages:', errorData.error);
+        showMessage('error', 'Failed to load inbox messages');
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.messages) {
+        setInboxMessages(data.messages);
+      }
+    } catch (error: any) {
+      console.error('Error loading inbox messages:', error);
+      showMessage('error', 'Failed to load inbox messages due to network error');
+    }
+    setLoading(false);
+  };
+
+  const deleteInboxMessage = async (messageId: string) => {
+    if (!confirm('Are you sure you want to delete this email?')) {
+      return;
+    }
+
+    setDeletingMessageId(messageId);
+    try {
+      const response = await fetch(`/api/admin/inbox?id=${messageId}`, {
+        method: 'DELETE',
+        headers: { 'x-user-email': 'theivsightcompany@gmail.com' }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        showMessage('error', errorData.error || 'Failed to delete email');
+        setDeletingMessageId(null);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        showMessage('success', 'Email deleted successfully');
+        // Remove from local state
+        setInboxMessages(prev => prev.filter(msg => msg.id !== messageId));
+        if (selectedMessage?.id === messageId) {
+          setSelectedMessage(null);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error deleting email:', error);
+      showMessage('error', 'Failed to delete email due to network error');
+    }
+    setDeletingMessageId(null);
   };
 
   const saveCalcomSettings = async () => {
@@ -1734,6 +1803,143 @@ export const AdminPanel: React.FC = () => {
                 </div>
             </div>
         );
+      case 'inbox':
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-900">Support Inbox</h2>
+                    <button
+                        onClick={() => loadInboxMessages()}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                        <EnvelopeIcon className="w-5 h-5" />
+                        Refresh
+                    </button>
+                </div>
+
+                <div className="bg-white rounded-lg shadow border border-gray-200">
+                    <div className="p-4 border-b border-gray-200">
+                        <p className="text-sm text-gray-600">
+                            Emails sent to <span className="font-semibold">support@getjetsuite.com</span> ({inboxMessages.length} messages)
+                        </p>
+                    </div>
+
+                    {inboxMessages.length === 0 ? (
+                        <div className="p-8 text-center">
+                            <EnvelopeIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-500">No messages in inbox</p>
+                            <p className="text-sm text-gray-400 mt-2">Configure Resend webhook to receive emails</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-200">
+                            {inboxMessages.map(message => (
+                                <div
+                                    key={message.id}
+                                    className="p-4 hover:bg-gray-50 cursor-pointer"
+                                    onClick={() => setSelectedMessage(message)}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-semibold text-gray-900">
+                                                    {message.from_name || message.from_email}
+                                                </h3>
+                                                {!message.read && (
+                                                    <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                                                        New
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-sm text-gray-600">{message.from_email}</p>
+                                            <p className="text-sm font-medium text-gray-900 mt-1">
+                                                {message.subject || '(No subject)'}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {new Date(message.received_at).toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteInboxMessage(message.id);
+                                            }}
+                                            disabled={deletingMessageId === message.id}
+                                            className="ml-4 text-red-600 hover:text-red-800 disabled:opacity-50"
+                                        >
+                                            {deletingMessageId === message.id ? 'Deleting...' : 'Delete'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Email Detail Modal */}
+                {selectedMessage && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                            <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-semibold text-gray-900">
+                                            {selectedMessage.subject || '(No subject)'}
+                                        </h3>
+                                        <div className="mt-2 space-y-1">
+                                            <p className="text-sm text-gray-600">
+                                                <span className="font-medium">From:</span> {selectedMessage.from_name || selectedMessage.from_email} &lt;{selectedMessage.from_email}&gt;
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                <span className="font-medium">To:</span> {selectedMessage.to_email}
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                <span className="font-medium">Date:</span> {new Date(selectedMessage.received_at).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedMessage(null)}
+                                        className="text-gray-400 hover:text-gray-600"
+                                    >
+                                        <XMarkIcon className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                {selectedMessage.html_body ? (
+                                    <div
+                                        className="prose max-w-none"
+                                        dangerouslySetInnerHTML={{ __html: selectedMessage.html_body }}
+                                    />
+                                ) : (
+                                    <div className="whitespace-pre-wrap text-gray-900">
+                                        {selectedMessage.text_body || '(No content)'}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-4 flex justify-end gap-2">
+                                <button
+                                    onClick={() => {
+                                        deleteInboxMessage(selectedMessage.id);
+                                        setSelectedMessage(null);
+                                    }}
+                                    disabled={deletingMessageId === selectedMessage.id}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                                >
+                                    {deletingMessageId === selectedMessage.id ? 'Deleting...' : 'Delete Email'}
+                                </button>
+                                <button
+                                    onClick={() => setSelectedMessage(null)}
+                                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
       case 'settings':
         return (
             <div className="space-y-6">
@@ -1837,7 +2043,7 @@ export const AdminPanel: React.FC = () => {
       )}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {(['overview', 'businesses', 'users', 'support', 'revenue', 'announcements', 'email', 'sms', 'settings'] as TabType[]).map(tab => (
+          {(['overview', 'businesses', 'users', 'support', 'revenue', 'announcements', 'email', 'sms', 'inbox', 'settings'] as TabType[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
