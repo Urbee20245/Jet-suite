@@ -10,6 +10,7 @@ import type {
   WordPressConnectionRequest,
   WordPressConnectionResponse,
 } from '../types';
+import { getSupabaseClient } from '../integrations/supabase/client';
 
 // Platform metadata for UI
 export const WEBSITE_PLATFORM_INFO: Record<WebsitePlatform, {
@@ -51,22 +52,27 @@ export async function getWebsiteConnections(
 ): Promise<WebsiteConnection[]> {
   try {
     console.log('[getWebsiteConnections] Fetching for userId:', userId, 'businessId:', businessId);
-    const response = await fetch(`/api/websites/get-connections?userId=${userId}&businessId=${businessId}`);
 
-    const contentType = response.headers.get('content-type');
-    if (!contentType?.includes('application/json')) {
-      console.error('Get website connections: Server returned HTML instead of JSON');
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      console.error('Supabase client not available');
       return [];
     }
 
-    if (!response.ok) {
-      console.error('Failed to fetch website connections, status:', response.status);
+    const { data, error } = await supabase
+      .from('website_connections')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching website connections:', error);
       return [];
     }
 
-    const data = await response.json();
     console.log('[getWebsiteConnections] Received data:', data);
-    return data.connections || [];
+    return data || [];
   } catch (error: any) {
     console.error('Get website connections error:', error);
     return [];
@@ -117,14 +123,19 @@ export async function connectWordPress(
 export async function disconnectWebsite(connectionId: string): Promise<void> {
   try {
     console.log('[disconnectWebsite] Disconnecting website:', connectionId);
-    const response = await fetch('/api/websites/disconnect', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ connectionId }),
-    });
 
-    if (!response.ok) {
-      const error = await response.json();
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+
+    const { error } = await supabase
+      .from('website_connections')
+      .delete()
+      .eq('id', connectionId);
+
+    if (error) {
+      console.error('Error disconnecting website:', error);
       throw new Error(error.message || 'Failed to disconnect website');
     }
 

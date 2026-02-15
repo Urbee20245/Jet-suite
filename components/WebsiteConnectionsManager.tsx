@@ -284,19 +284,43 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
         <div className="space-y-3">
           {/* WordPress Connection */}
           {!showWordPressForm ? (
-            <button
-              onClick={() => setShowWordPressForm(true)}
-              className="w-full flex items-center justify-between p-3 bg-white hover:bg-gray-50 rounded-lg border border-brand-border transition"
-            >
-              <div className="flex items-center gap-3">
-                <WordPressIcon className="w-5 h-5 text-[#21759b]" />
-                <div className="text-left">
-                  <span className="font-semibold text-brand-text">WordPress</span>
-                  <p className="text-xs text-brand-text-muted">Connect with Application Password</p>
-                </div>
-              </div>
-              <span className="text-sm font-semibold text-accent-blue">Connect</span>
-            </button>
+            (() => {
+              const wpConnection = connections.find(c => c.platform === 'wordpress');
+              const isConnected = !!wpConnection;
+
+              return (
+                <button
+                  onClick={() => !isConnected && setShowWordPressForm(true)}
+                  disabled={isConnected}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${
+                    isConnected
+                      ? 'bg-green-50 border-green-300 cursor-default'
+                      : 'bg-white hover:bg-gray-50 border-brand-border'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <WordPressIcon className="w-5 h-5 text-[#21759b]" />
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-brand-text">WordPress</span>
+                        {isConnected && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                            Connected
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-brand-text-muted">
+                        {isConnected ? wpConnection.site_name : 'Connect with Application Password'}
+                      </p>
+                    </div>
+                  </div>
+                  {!isConnected && (
+                    <span className="text-sm font-semibold text-accent-blue">Connect</span>
+                  )}
+                </button>
+              );
+            })()
           ) : (
             <div className="bg-white p-4 rounded-lg border border-brand-border">
               <div className="flex items-center justify-between mb-4">
