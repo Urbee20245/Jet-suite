@@ -65,11 +65,12 @@ export const PLATFORM_INFO: Record<SocialPlatform, {
  * Get all social connections for current user and business
  * @param userId - MUST be the Supabase Auth UUID (not email)
  * @param businessId - MUST be the business UUID
+ * @param autoRefresh - If true, automatically refresh tokens that are expiring within 10 minutes (default: true)
  */
-export async function getSocialConnections(userId: string, businessId: string): Promise<SocialConnection[]> {
+export async function getSocialConnections(userId: string, businessId: string, autoRefresh: boolean = true): Promise<SocialConnection[]> {
   try {
-    console.log('[getSocialConnections] Fetching for userId:', userId, 'businessId:', businessId);
-    const response = await fetch(`/api/social/get-connections?userId=${userId}&businessId=${businessId}`);
+    console.log('[getSocialConnections] Fetching for userId:', userId, 'businessId:', businessId, 'autoRefresh:', autoRefresh);
+    const response = await fetch(`/api/social/get-connections?userId=${userId}&businessId=${businessId}&autoRefresh=${autoRefresh}`);
 
     const contentType = response.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
