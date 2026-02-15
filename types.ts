@@ -474,6 +474,7 @@ export interface BlogPublication {
   title: string;
   content: string;
   excerpt?: string;
+  slug?: string;
   featured_image_url?: string;
   featured_image_prompt?: string;
   scheduled_publish_at?: string;
@@ -484,6 +485,11 @@ export interface BlogPublication {
   published_at?: string;
   created_at: string;
   updated_at: string;
+  // SEO Optimization fields
+  optimized_keywords?: string[];
+  optimized_tags?: string[];
+  meta_description?: string;
+  auto_optimized?: boolean;
 }
 
 export interface FeaturedImageGenerationRequest {
