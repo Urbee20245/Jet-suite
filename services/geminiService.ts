@@ -828,3 +828,171 @@ Return as a JSON object with a "tags" array of strings.`;
         throw error;
     }
 };
+
+/**
+ * Generate in-depth article content for thought leadership
+ */
+export const generateArticleContent = async (
+    profileData: ProfileData,
+    formData: {
+        title: string;
+        articleType: string;
+        depthLevel: string;
+        mainSections: string[];
+        includeExecutiveSummary: boolean;
+        includeStatistics: boolean;
+        includeExpertPerspectives: boolean;
+        includeReferences: boolean;
+        includeKeyTakeaways: boolean;
+        targetPublication: string;
+    }
+) => {
+    try {
+        const ai = getAiClient();
+        const wordCount = formData.depthLevel === 'comprehensive' ? '2,500-3,000' : '1,500-2,000';
+
+        const basePrompt = `You are an expert industry analyst and thought leader.
+
+BUSINESS CONTEXT:
+- Business: ${profileData.business.business_name}
+- Industry: ${profileData.business.industry}
+- Location: ${profileData.business.location}
+
+TASK: Create an authoritative, in-depth article
+
+TITLE: ${formData.title}
+TYPE: ${formData.articleType}
+DEPTH: ${formData.depthLevel} (${wordCount} words)
+MAIN SECTIONS: ${formData.mainSections.join(', ')}
+TARGET PUBLICATION: ${formData.targetPublication}
+
+INCLUDE:
+${formData.includeExecutiveSummary ? '- Executive Summary (200 words at the beginning)' : ''}
+${formData.includeStatistics ? '- Relevant statistics and data with citations' : ''}
+${formData.includeExpertPerspectives ? '- Multiple expert perspectives and industry insights' : ''}
+${formData.includeReferences ? '- Numbered references/citations in a References section at the end' : ''}
+${formData.includeKeyTakeaways ? '- Key Takeaways section with 5-7 bullet points' : ''}
+
+REQUIREMENTS:
+1. Start with an H1 headline that's compelling and authoritative
+2. Use H2 for main sections and H3 for subsections
+3. Write in a professional, executive-level tone
+4. Include data, statistics, and industry trends where appropriate
+5. Demonstrate deep industry knowledge and expertise
+6. Use proper citations for any statistics or claims
+7. Make it actionable and valuable for industry professionals
+8. Target word count: ${wordCount}
+
+Format the entire response in markdown.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+        });
+
+        return response.text ?? '';
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            return "AI features are disabled due to missing API key.";
+        }
+        throw error;
+    }
+};
+
+/**
+ * Generate AP Style press release
+ */
+export const generatePressRelease = async (
+    profileData: ProfileData,
+    formData: {
+        newsType: string;
+        headline: string;
+        keyDetails: {
+            what: string;
+            when: string;
+            where: string;
+            why: string;
+            who: string;
+        };
+        quote: string;
+        quoteName: string;
+        quoteTitle: string;
+        supportingDetails: string[];
+        boilerplate: string;
+        mediaContact: {
+            name: string;
+            email: string;
+            phone: string;
+        };
+    }
+) => {
+    try {
+        const ai = getAiClient();
+
+        const basePrompt = `You are an expert PR professional writing in strict AP Style.
+
+BUSINESS: ${profileData.business.business_name}
+LOCATION: ${profileData.business.location || 'Local Area'}
+
+ANNOUNCEMENT TYPE: ${formData.newsType}
+HEADLINE: ${formData.headline}
+
+KEY DETAILS (5 W's):
+- What: ${formData.keyDetails.what}
+- When: ${formData.keyDetails.when}
+- Where: ${formData.keyDetails.where}
+- Why: ${formData.keyDetails.why}
+- Who: ${formData.keyDetails.who}
+
+QUOTE: "${formData.quote}" - ${formData.quoteName}, ${formData.quoteTitle}
+
+SUPPORTING DETAILS: ${formData.supportingDetails.filter(d => d).join(', ')}
+
+BOILERPLATE: ${formData.boilerplate}
+
+MEDIA CONTACT:
+- Name: ${formData.mediaContact.name}
+- Email: ${formData.mediaContact.email}
+- Phone: ${formData.mediaContact.phone}
+
+AP STYLE REQUIREMENTS (CRITICAL):
+1. HEADLINE: Active voice, present tense, no articles (a/an/the), capitalize first word and proper nouns only
+2. DATELINE: Format as "CITY, State Abbrev. (Full Date) --" (e.g., "ATLANTA, Ga. (Feb. 15, 2026) --")
+3. LEAD PARAGRAPH: Answer ALL 5 W's in first 25-35 words, inverted pyramid style
+4. VOICE: Third person only - absolutely no "we", "our", "I" - refer to company by name
+5. LENGTH: 300-500 words STRICT - not one word more
+6. PARAGRAPHS: 2-3 sentences maximum per paragraph
+7. ATTRIBUTION: Use "said" for quotes (not "stated", "commented", "expressed")
+8. DATES: Spell out months (Feb. 15, 2026, not 2/15/26)
+9. NUMBERS: Spell out one through nine, use numerals for 10+
+10. END MARK: End with "###" centered on its own line
+11. FORMAT STRUCTURE:
+    - Dateline + Lead (5 W's)
+    - Supporting paragraph(s)
+    - Quote paragraph
+    - Additional details
+    - Boilerplate (About [Company])
+    - Media Contact section
+    - ###
+
+TONE: Professional, newsworthy, factual. NOT promotional or sales-y. Write like a journalist would.
+
+Format in markdown with proper structure.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+        });
+
+        return response.text ?? '';
+    } catch (error) {
+        if (error instanceof Error && error.message === "AI_KEY_MISSING") {
+            return "AI features are disabled due to missing API key.";
+        }
+        throw error;
+    }
+};
