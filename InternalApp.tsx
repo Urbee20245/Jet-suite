@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Welcome } from './tools/Welcome';
 import { BusinessDetails } from './tools/BusinessDetails';
+import { Connections } from './tools/Connections';
 import { JetBiz } from './tools/JetBiz';
 import { JetViz } from './tools/JetViz';
 import { JetKeywords } from './tools/JetKeywords';
@@ -408,6 +409,8 @@ const InternalApp: React.FC<InternalAppProps> = ({ onLogout, userEmail, userId }
     switch (activeTool?.id) {
       case 'businessdetails':
         return <BusinessDetails isAdmin={isAdmin} profileData={currentProfileData} onUpdate={setCurrentProfileData} setActiveTool={handleSetActiveTool} onBusinessUpdated={() => loadData(false)} />;
+      case 'connections':
+        return <Connections tool={{ id: 'connections', name: 'Connections', category: 'profile' }} profileData={currentProfileData} setActiveTool={handleSetActiveTool} />;
       case 'jetbiz':
         return <JetBiz tool={{ id: 'jetbiz', name: 'JetBiz', category: 'analyze' }} addTasksToGrowthPlan={addTasksToGrowthPlan} onSaveAnalysis={(report) => handleSaveAnalysis(report, 'jetbiz')} profileData={currentProfileData} setActiveTool={handleSetActiveTool} growthPlanTasks={tasks} onTaskStatusChange={handleTaskStatusChange} userId={userId} activeBusinessId={activeBusinessId} />;
       case 'jetviz':

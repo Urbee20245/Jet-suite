@@ -425,23 +425,51 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
             </div>
           </div>
 
-          {/* Wix - Coming Soon */}
-          <div className="relative">
-            <div className="w-full flex items-center justify-between p-4 bg-brand-light/60 rounded-xl border border-brand-border/50 opacity-50 cursor-not-allowed">
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center shrink-0">
-                  <WixIcon className="w-5 h-5 text-[#0c6efc]" />
+          {/* Wix */}
+          {(() => {
+            const wixConnection = connections.find(c => c.platform === 'wix');
+            const isConnected = !!wixConnection;
+
+            return (
+              <button
+                onClick={() => {
+                  if (!isConnected) {
+                    setError('Wix OAuth integration is being finalized. Please check back soon or contact support for early access.');
+                    setTimeout(() => setError(''), 5000);
+                  }
+                }}
+                disabled={isConnected}
+                className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+                  isConnected
+                    ? 'bg-green-50/50 border-green-200 cursor-default shadow-sm'
+                    : 'bg-white hover:bg-brand-light/50 border-brand-border shadow-sm hover:shadow-md hover:border-accent-purple/30'
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center shrink-0">
+                    <WixIcon className="w-5 h-5 text-[#0c6efc]" />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-brand-text text-sm">Wix</span>
+                      {isConnected && (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                          Connected
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-brand-text-muted mt-0.5">
+                      {isConnected ? wixConnection.site_name : 'Connect with OAuth'}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <span className="font-semibold text-brand-text text-sm">Wix</span>
-                  <p className="text-xs text-brand-text-muted">OAuth flow coming soon</p>
-                </div>
-              </div>
-              <span className="text-xs font-medium text-brand-text-muted bg-brand-border/50 px-2.5 py-1 rounded-full">
-                Coming Soon
-              </span>
-            </div>
-          </div>
+                {!isConnected && (
+                  <span className="text-xs font-bold text-accent-purple bg-accent-purple/8 px-3 py-1.5 rounded-lg">Connect</span>
+                )}
+              </button>
+            );
+          })()}
         </div>
       </div>
 

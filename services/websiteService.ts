@@ -35,7 +35,7 @@ export const WEBSITE_PLATFORM_INFO: Record<WebsitePlatform, {
     id: 'wix',
     name: 'Wix',
     color: '#0c6efc',
-    available: false, // Coming soon
+    available: true,
   },
 };
 
