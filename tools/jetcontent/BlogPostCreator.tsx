@@ -196,7 +196,8 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
       setSuccess(`Blog post scheduled for ${new Date(scheduledPublishAt).toLocaleString()}!`);
       setShowScheduling(false);
-      setTimeout(() => setSuccess(''), 5000);
+      // Keep success message visible longer to allow user to create another post
+      setTimeout(() => setSuccess(''), 10000);
     } catch (err: any) {
       console.error('Error scheduling post:', err);
       setError(err.message || 'Failed to schedule post. Please try again.');
@@ -233,11 +234,42 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
       const analysis = await generateLocalContent(businessType, topic, location, brandStyle);
       setResult(analysis);
+
+      // Auto-generate SEO optimization after content is created
+      setTimeout(() => {
+        handleOptimizeSEO();
+      }, 500);
+
+      // Auto-generate featured image from blog content
+      setTimeout(() => {
+        autoGenerateFeaturedImage(analysis);
+      }, 1000);
     } catch (err) {
       setError('Failed to generate content. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const autoGenerateFeaturedImage = async (content: string) => {
+    try {
+      // Extract a description from the first paragraph of the blog post
+      const firstParagraph = content.split('\n\n').find(p => p.trim().length > 50) || '';
+      const autoPrompt = `Professional blog featured image for: ${topic}. ${firstParagraph.substring(0, 200)}`;
+
+      setImagePrompt(autoPrompt);
+      setGeneratingImage(true);
+
+      const base64Image = await generateImage(autoPrompt, '2K', '16:9');
+      setFeaturedImage(`data:image/png;base64,${base64Image}`);
+      setShowImagePrompt(false);
+    } catch (err: any) {
+      console.error('Error auto-generating image:', err);
+      // Don't show error to user, just make the generate button available
+      setShowImagePrompt(false);
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
@@ -355,18 +387,48 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
           {/* Success Message */}
           {success && (
-            <div className="mt-5 bg-green-50 text-green-700 px-4 py-3 rounded-xl text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
-              <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-              <span>{success}</span>
+            <div className="mt-5 space-y-3">
+              <div className="bg-green-50 text-green-700 px-4 py-3 rounded-xl text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
+                <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                <span className="flex-1">{success}</span>
+              </div>
+              {success.includes('scheduled') && (
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => {
+                      // Reset the form to create a new post
+                      setTopic('');
+                      setResult('');
+                      setFeaturedImage('');
+                      setImagePrompt('');
+                      setOptimization(null);
+                      setShowOptimization(false);
+                      setShowScheduling(false);
+                      setShowImagePrompt(false);
+                      setSuccess('');
+                      setSuggestedTitles([]);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="bg-gradient-to-r from-accent-blue to-accent-purple text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:shadow-lg hover:shadow-accent-purple/20 transition-all duration-200 active:scale-[0.99]"
+                  >
+                    + Create Another Blog Post
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* SEO Optimization Section */}
           <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
-            <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
-              <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
-              SEO Optimization
-            </h3>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-brand-text text-sm flex items-center gap-2">
+                <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
+                SEO Optimization
+              </h3>
+              {!optimization && !optimizing && (
+                <span className="text-xs text-accent-blue/70 font-medium">Auto-generated</span>
+              )}
+            </div>
 
             {!optimization ? (
               <button
@@ -487,31 +549,49 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
           {/* Featured Image Section */}
           <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
-            <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
-              <SparklesIcon className="w-4.5 h-4.5 text-accent-purple" />
-              Featured Image
-            </h3>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-brand-text text-sm flex items-center gap-2">
+                <SparklesIcon className="w-4.5 h-4.5 text-accent-purple" />
+                Featured Image
+              </h3>
+              {!featuredImage && !showImagePrompt && !generatingImage && (
+                <span className="text-xs text-accent-purple/70 font-medium">Auto-generated</span>
+              )}
+            </div>
 
             {featuredImage ? (
               <div>
-                <img
-                  src={featuredImage}
-                  alt="Featured"
-                  className="w-full rounded-xl border border-brand-border/50 mb-4 shadow-sm"
-                />
-                <div className="flex gap-2">
+                <div className="relative group">
+                  <img
+                    src={featuredImage}
+                    alt="Featured"
+                    className="w-full max-w-2xl mx-auto h-48 object-cover rounded-xl border border-brand-border/50 shadow-sm"
+                  />
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span className="bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      Preview (16:9 ratio)
+                    </span>
+                  </div>
+                </div>
+                {imagePrompt && (
+                  <p className="text-xs text-brand-text-muted mt-3 mb-4 italic">
+                    Generated from: "{imagePrompt.substring(0, 100)}{imagePrompt.length > 100 ? '...' : ''}"
+                  </p>
+                )}
+                <div className="flex gap-2 mt-4">
                   <button
                     onClick={() => {
-                      setFeaturedImage('');
-                      setImagePrompt('');
                       setShowImagePrompt(true);
                     }}
                     className="flex-1 bg-brand-light text-brand-text px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-border transition-all duration-200"
                   >
-                    Regenerate
+                    Customize Image
                   </button>
                   <button
-                    onClick={() => setFeaturedImage('')}
+                    onClick={() => {
+                      setFeaturedImage('');
+                      setImagePrompt('');
+                    }}
                     className="px-4 py-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold text-sm rounded-lg transition-all duration-200"
                   >
                     Remove
