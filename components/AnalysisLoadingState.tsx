@@ -31,23 +31,23 @@ export const AnalysisLoadingState: React.FC<AnalysisLoadingStateProps> = ({
   }, [durationEstimateSeconds]);
 
   return (
-    <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg mt-6 text-center">
+    <div className="bg-brand-card p-8 sm:p-10 rounded-xl shadow-lg mt-6 text-center border border-brand-border/50">
       <Loader />
-      <h3 className="text-xl font-bold text-brand-text mt-4 flex items-center justify-center gap-2">
-        <SparklesIcon className="w-6 h-6 text-accent-purple animate-pulse" />
+      <h3 className="text-xl font-bold text-brand-text mt-4 flex items-center justify-center gap-2.5 tracking-tight">
+        <SparklesIcon className="w-5 h-5 text-accent-purple animate-pulse" />
         {title}
       </h3>
-      <p className="text-brand-text-muted mt-2">{message}</p>
-      
-      <div className="w-full max-w-md mx-auto my-6">
-        <div className="relative pt-1">
-          <div className="overflow-hidden h-2 mb-2 text-xs flex rounded bg-accent-purple/20">
-            <div 
-              style={{ width: `${progress}%` }} 
-              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-accent-blue to-accent-purple transition-all duration-500 ease-out"
+      <p className="text-brand-text-muted mt-2 text-sm leading-relaxed">{message}</p>
+
+      <div className="w-full max-w-md mx-auto mt-8 mb-4">
+        <div className="relative">
+          <div className="overflow-hidden h-2 rounded-full bg-accent-purple/10">
+            <div
+              style={{ width: `${progress}%` }}
+              className="h-full rounded-full bg-gradient-to-r from-accent-blue to-accent-purple transition-all duration-700 ease-out"
             ></div>
           </div>
-          <p className="text-xs text-brand-text-muted text-right">
+          <p className="text-xs text-brand-text-muted mt-3">
             {Math.round(progress)}% Complete • This can take up to 5 minutes.
           </p>
         </div>

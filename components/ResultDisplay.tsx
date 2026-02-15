@@ -37,9 +37,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ markdownText }) =>
   if (!markdownText) return null;
 
   return (
-    <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-      <h3 className="text-2xl font-bold mb-4 text-brand-text">Analysis Result</h3>
-      <div className="prose max-w-none text-brand-text-muted">
+    <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border/50">
+      <h3 className="text-2xl font-bold mb-5 text-brand-text tracking-tight">Analysis Result</h3>
+      <div className="prose max-w-none text-brand-text-muted leading-relaxed">
          <SimpleMarkdown text={markdownText} />
       </div>
     </div>

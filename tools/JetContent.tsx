@@ -211,15 +211,17 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
   if (!businessType) {
     return (
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+      <div className="bg-brand-card p-8 sm:p-10 rounded-xl shadow-lg border border-brand-border/50 text-center">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-accent-blue/10 flex items-center justify-center">
+          <InformationCircleIcon className="w-7 h-7 text-accent-blue" />
+        </div>
+        <h2 className="text-xl font-bold text-brand-text mt-5 tracking-tight">Set Your Business Category</h2>
+        <p className="text-sm text-brand-text-muted my-4 max-w-sm mx-auto leading-relaxed">
           Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant content.
         </p>
         <button
           onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+          className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.98] text-sm"
         >
           Go to Business Details
         </button>
@@ -275,47 +277,47 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
         </HowToUse>
       )}
       
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border/50">
+        <p className="text-sm text-brand-text-muted mb-7 leading-relaxed">{tool.description}</p>
 
         {/* Title Brainstorming Section */}
-        <div className="mb-8 p-6 bg-accent-blue/5 rounded-xl border border-accent-blue/20">
+        <div className="mb-8 p-6 bg-accent-blue/5 rounded-xl border border-accent-blue/15">
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <h3 className="font-bold text-brand-text flex items-center gap-2">
-                        <SparklesIcon className="w-5 h-5 text-accent-blue" />
+                    <h3 className="font-bold text-brand-text text-sm flex items-center gap-2">
+                        <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
                         Brainstorm SEO Blog Titles
                     </h3>
-                    <p className="text-xs text-brand-text-muted mt-1">Get custom ideas based on your Business DNA and local area.</p>
+                    <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">Get custom ideas based on your Business DNA and local area.</p>
                 </div>
                 <button
                     type="button"
                     onClick={handleSuggestTitles}
                     disabled={suggestingTitles}
-                    className="bg-white border border-accent-blue text-accent-blue hover:bg-accent-blue hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+                    className="bg-white border border-accent-blue/30 text-accent-blue hover:bg-accent-blue hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 disabled:opacity-50 shadow-sm hover:shadow-md"
                 >
                     {suggestingTitles ? 'Thinking...' : 'Suggest Titles'}
                 </button>
             </div>
 
             {suggestedTitles.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-5">
                     {suggestedTitles.map((title, i) => (
                         <button
                             key={i}
                             type="button"
                             onClick={() => setTopic(title)}
-                            className={`text-left p-3 rounded-lg border text-sm transition-all flex justify-between items-center group ${
-                                topic === title 
-                                    ? 'bg-accent-blue border-accent-blue text-white' 
-                                    : 'bg-white border-brand-border text-brand-text hover:border-accent-blue'
+                            className={`text-left p-3.5 rounded-xl border text-sm transition-all duration-200 flex justify-between items-center group ${
+                                topic === title
+                                    ? 'bg-accent-blue border-accent-blue text-white shadow-md shadow-accent-blue/20'
+                                    : 'bg-white border-brand-border text-brand-text hover:border-accent-blue/40 hover:shadow-sm'
                             }`}
                         >
-                            <span className="line-clamp-2">{title}</span>
+                            <span className="line-clamp-2 leading-relaxed">{title}</span>
                             {topic === title ? (
-                                <CheckCircleIcon className="w-4 h-4 shrink-0" />
+                                <CheckCircleIcon className="w-4 h-4 shrink-0 ml-2" />
                             ) : (
-                                <ArrowRightIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                <ArrowRightIcon className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shrink-0 ml-2" />
                             )}
                         </button>
                     ))}
@@ -324,40 +326,45 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 gap-6 mb-6">
+          <div className="grid grid-cols-1 gap-5 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
-                    <label className="block text-xs font-bold text-brand-text-muted uppercase mb-2 ml-1">Business Category</label>
-                    <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text font-semibold flex items-center">
+                    <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2 ml-0.5">Business Category</label>
+                    <div className="bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-sm text-brand-text font-semibold flex items-center">
                         {businessType}
                     </div>
                 </div>
                 <div className="flex-1">
-                    <label className="block text-xs font-bold text-brand-text-muted uppercase mb-2 ml-1">Target Location</label>
-                    <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text font-semibold flex items-center">
+                    <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2 ml-0.5">Target Location</label>
+                    <div className="bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-sm text-brand-text font-semibold flex items-center">
                         {profileData.business.location || profileData.googleBusiness.address || 'Local Area'}
                     </div>
                 </div>
             </div>
-            
+
             <div>
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-2 ml-1">Article Topic or Title</label>
+                <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2 ml-0.5">Article Topic or Title</label>
                 <input
                   type="text"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="Select a suggestion above or enter your own topic..."
-                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition font-medium"
+                  className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm placeholder-brand-text-muted/50 focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all duration-200 outline-none font-medium"
                 />
             </div>
           </div>
-          
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          
+
+          {error && (
+            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm border border-red-200/60 flex items-start gap-2.5">
+              <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+              <span>{error}</span>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading || !topic}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg"
+            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] text-base"
           >
             {loading ? 'Writing SEO-Optimized Article...' : 'Generate Blog Post'}
           </button>
@@ -378,15 +385,16 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
               {/* Success Message */}
               {success && (
-                <div className="mt-4 bg-green-100 text-green-800 p-3 rounded-lg text-sm font-semibold">
-                  {success}
+                <div className="mt-5 bg-green-50 text-green-700 px-4 py-3 rounded-xl text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
+                  <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  <span>{success}</span>
                 </div>
               )}
 
               {/* SEO Optimization Section */}
-              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
-                <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
-                  <SparklesIcon className="w-5 h-5 text-accent-blue" />
+              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
+                <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
+                  <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
                   SEO Optimization
                 </h3>
 
@@ -394,22 +402,22 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                   <button
                     onClick={handleOptimizeSEO}
                     disabled={optimizing}
-                    className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-blue text-brand-text px-4 py-3 rounded-lg font-semibold transition disabled:opacity-50"
+                    className="w-full bg-white border-2 border-dashed border-brand-border/60 hover:border-accent-blue/40 text-brand-text px-4 py-4 rounded-xl font-semibold text-sm transition-all duration-200 disabled:opacity-50 hover:shadow-sm"
                   >
-                    {optimizing ? 'Optimizing with AI...' : '✨ Optimize Keywords & SEO'}
+                    {optimizing ? 'Optimizing with AI...' : 'Optimize Keywords & SEO'}
                   </button>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {/* Keywords */}
                     <div>
-                      <label className="block text-sm font-medium text-brand-text mb-2">
+                      <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2.5">
                         SEO Keywords (for categories)
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {optimization.keywords.map((keyword, idx) => (
                           <span
                             key={idx}
-                            className="bg-accent-blue/10 text-accent-blue px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                            className="bg-accent-blue/8 text-accent-blue px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border border-accent-blue/15 transition-all duration-200 hover:bg-accent-blue/12"
                           >
                             {keyword}
                             <button
@@ -417,7 +425,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                                 const newKeywords = optimization.keywords.filter((_, i) => i !== idx);
                                 setOptimization({ ...optimization, keywords: newKeywords });
                               }}
-                              className="hover:text-accent-blue/70"
+                              className="hover:text-accent-blue/70 text-accent-blue/50 transition-colors"
                             >
                               ×
                             </button>
@@ -428,14 +436,14 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
                     {/* Tags */}
                     <div>
-                      <label className="block text-sm font-medium text-brand-text mb-2">
+                      <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2.5">
                         Tags
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {optimization.tags.map((tag, idx) => (
                           <span
                             key={idx}
-                            className="bg-accent-purple/10 text-accent-purple px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                            className="bg-accent-purple/8 text-accent-purple px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border border-accent-purple/15 transition-all duration-200 hover:bg-accent-purple/12"
                           >
                             {tag}
                             <button
@@ -443,7 +451,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                                 const newTags = optimization.tags.filter((_, i) => i !== idx);
                                 setOptimization({ ...optimization, tags: newTags });
                               }}
-                              className="hover:text-accent-purple/70"
+                              className="hover:text-accent-purple/70 text-accent-purple/50 transition-colors"
                             >
                               ×
                             </button>
@@ -454,7 +462,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
                     {/* Meta Description */}
                     <div>
-                      <label className="block text-sm font-medium text-brand-text mb-2">
+                      <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
                         Meta Description ({optimization.meta_description.length}/160 chars)
                       </label>
                       <textarea
@@ -463,7 +471,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                           const value = e.target.value.substring(0, 160);
                           setOptimization({ ...optimization, meta_description: value });
                         }}
-                        className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text text-sm"
+                        className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all duration-200 outline-none"
                         rows={2}
                         maxLength={160}
                       />
@@ -471,7 +479,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
                     {/* Slug */}
                     <div>
-                      <label className="block text-sm font-medium text-brand-text mb-2">
+                      <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
                         URL Slug
                       </label>
                       <input
@@ -481,24 +489,24 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                           const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
                           setOptimization({ ...optimization, slug: value });
                         }}
-                        className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text font-mono text-sm"
+                        className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text font-mono text-sm focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all duration-200 outline-none"
                       />
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 pt-1">
                       <button
                         onClick={handleOptimizeSEO}
                         disabled={optimizing}
-                        className="flex-1 bg-brand-light text-brand-text px-4 py-2 rounded-lg font-semibold hover:bg-brand-border transition disabled:opacity-50"
+                        className="flex-1 bg-brand-light text-brand-text px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-border transition-all duration-200 disabled:opacity-50"
                       >
-                        {optimizing ? 'Re-optimizing...' : '↻ Re-optimize'}
+                        {optimizing ? 'Re-optimizing...' : 'Re-optimize'}
                       </button>
                       <button
                         onClick={() => {
                           setOptimization(null);
                           setShowOptimization(false);
                         }}
-                        className="px-4 py-2 text-red-500 hover:text-red-700 font-semibold transition"
+                        className="px-4 py-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold text-sm rounded-lg transition-all duration-200"
                       >
                         Clear
                       </button>
@@ -508,9 +516,9 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
               </div>
 
               {/* Featured Image Section */}
-              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
-                <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
-                  <SparklesIcon className="w-5 h-5 text-accent-purple" />
+              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
+                <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
+                  <SparklesIcon className="w-4.5 h-4.5 text-accent-purple" />
                   Featured Image
                 </h3>
 
@@ -519,7 +527,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                     <img
                       src={featuredImage}
                       alt="Featured"
-                      className="w-full rounded-lg border border-brand-border mb-3"
+                      className="w-full rounded-xl border border-brand-border/50 mb-4 shadow-sm"
                     />
                     <div className="flex gap-2">
                       <button
@@ -528,13 +536,13 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                           setImagePrompt('');
                           setShowImagePrompt(true);
                         }}
-                        className="flex-1 bg-brand-light text-brand-text px-4 py-2 rounded-lg font-semibold hover:bg-brand-border transition"
+                        className="flex-1 bg-brand-light text-brand-text px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-brand-border transition-all duration-200"
                       >
                         Regenerate
                       </button>
                       <button
                         onClick={() => setFeaturedImage('')}
-                        className="px-4 py-2 text-red-500 hover:text-red-700 font-semibold transition"
+                        className="px-4 py-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 font-semibold text-sm rounded-lg transition-all duration-200"
                       >
                         Remove
                       </button>
@@ -547,19 +555,19 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
                       placeholder="Describe the image you want (e.g., 'modern coffee shop interior with natural lighting')"
-                      className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                      className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm placeholder-brand-text-muted/50 focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple/50 transition-all duration-200 outline-none"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handleGenerateImage}
                         disabled={generatingImage}
-                        className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50"
+                        className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2.5 rounded-lg font-bold text-sm hover:shadow-lg hover:shadow-accent-purple/20 transition-all duration-200 disabled:opacity-50 active:scale-[0.99]"
                       >
                         {generatingImage ? 'Generating...' : 'Generate Image'}
                       </button>
                       <button
                         onClick={() => setShowImagePrompt(false)}
-                        className="px-4 py-2 text-brand-text-muted hover:text-brand-text font-semibold transition"
+                        className="px-4 py-2.5 text-brand-text-muted hover:text-brand-text hover:bg-brand-light font-semibold text-sm rounded-lg transition-all duration-200"
                       >
                         Cancel
                       </button>
@@ -568,7 +576,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                 ) : (
                   <button
                     onClick={() => setShowImagePrompt(true)}
-                    className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-purple text-brand-text px-4 py-3 rounded-lg font-semibold transition"
+                    className="w-full bg-white border-2 border-dashed border-brand-border/60 hover:border-accent-purple/40 text-brand-text px-4 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-sm"
                   >
                     + Generate Featured Image
                   </button>
@@ -577,28 +585,29 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
               {/* Scheduling Section */}
               {websiteConnections.length > 0 && (
-                <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
-                  <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
-                    📅 Schedule Blog Post
+                <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
+                  <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
+                    <svg className="w-4.5 h-4.5 text-accent-blue" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                    Schedule Blog Post
                   </h3>
 
                   {!showScheduling ? (
                     <button
                       onClick={() => setShowScheduling(true)}
-                      className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-blue text-brand-text px-4 py-3 rounded-lg font-semibold transition"
+                      className="w-full bg-white border-2 border-dashed border-brand-border/60 hover:border-accent-blue/40 text-brand-text px-4 py-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:shadow-sm"
                     >
                       + Schedule to Connected Website
                     </button>
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-brand-text mb-2">
+                        <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
                           Publish To
                         </label>
                         <select
                           value={selectedWebsite}
                           onChange={(e) => setSelectedWebsite(e.target.value)}
-                          className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                          className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                         >
                           <option value="">Select a website...</option>
                           {websiteConnections.map((conn) => (
@@ -611,7 +620,7 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-brand-text mb-2">
+                          <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
                             Publish Date
                           </label>
                           <input
@@ -619,33 +628,33 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                             value={publishDate}
                             onChange={(e) => setPublishDate(e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                            className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-brand-text mb-2">
+                          <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-2">
                             Publish Time
                           </label>
                           <input
                             type="time"
                             value={publishTime}
                             onChange={(e) => setPublishTime(e.target.value)}
-                            className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text"
+                            className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-3 text-brand-text text-sm focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                           />
                         </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 pt-1">
                         <button
                           onClick={handleSchedulePost}
                           disabled={scheduling}
-                          className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50"
+                          className="flex-1 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2.5 rounded-lg font-bold text-sm hover:shadow-lg hover:shadow-accent-purple/20 transition-all duration-200 disabled:opacity-50 active:scale-[0.99]"
                         >
                           {scheduling ? 'Scheduling...' : 'Schedule Post'}
                         </button>
                         <button
                           onClick={() => setShowScheduling(false)}
-                          className="px-4 py-2 text-brand-text-muted hover:text-brand-text font-semibold transition"
+                          className="px-4 py-2.5 text-brand-text-muted hover:text-brand-text hover:bg-brand-light font-semibold text-sm rounded-lg transition-all duration-200"
                         >
                           Cancel
                         </button>
@@ -656,19 +665,19 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
               )}
 
               {websiteConnections.length === 0 && (
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                  <p className="font-semibold mb-1">💡 Connect a Website to Schedule Posts</p>
-                  <p>Go to Business Details → Connect Websites to set up WordPress, Squarespace, or Wix publishing.</p>
+                <div className="mt-6 bg-accent-blue/5 border border-accent-blue/15 rounded-xl px-5 py-4 text-sm">
+                  <p className="font-bold text-xs text-accent-blue">Connect a Website to Schedule Posts</p>
+                  <p className="text-xs text-accent-blue/70 mt-1 leading-relaxed">Go to Business Details → Connect Websites to set up WordPress, Squarespace, or Wix publishing.</p>
                 </div>
               )}
 
-              <div className="mt-6 flex justify-center">
+              <div className="mt-8 flex justify-center">
                   <button
                     onClick={() => {
                         navigator.clipboard.writeText(result);
                         alert('Article copied to clipboard!');
                     }}
-                    className="bg-slate-800 text-white px-6 py-2 rounded-lg font-bold hover:bg-slate-700 transition-colors"
+                    className="bg-brand-text text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-brand-text/90 transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98]"
                   >
                       Copy Entire Article
                   </button>
