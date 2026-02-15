@@ -31,6 +31,8 @@ export default defineConfig(({ mode }) => {
             manualChunks: undefined,
           }
         }
-      }
+      },
+      // PWA: Copy service worker and related files to build output
+      publicDir: 'public'
     };
 });
