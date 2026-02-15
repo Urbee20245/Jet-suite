@@ -407,24 +407,6 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
             </div>
           )}
 
-          {/* Squarespace - Coming Soon */}
-          <div className="relative">
-            <div className="w-full flex items-center justify-between p-4 bg-brand-light/60 rounded-xl border border-brand-border/50 opacity-50 cursor-not-allowed">
-              <div className="flex items-center gap-3.5">
-                <div className="w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center shrink-0">
-                  <SquarespaceIcon className="w-5 h-5 text-[#000000]" />
-                </div>
-                <div className="text-left">
-                  <span className="font-semibold text-brand-text text-sm">Squarespace</span>
-                  <p className="text-xs text-brand-text-muted">OAuth flow coming soon</p>
-                </div>
-              </div>
-              <span className="text-xs font-medium text-brand-text-muted bg-brand-border/50 px-2.5 py-1 rounded-full">
-                Coming Soon
-              </span>
-            </div>
-          </div>
-
           {/* Wix */}
           {(() => {
             const wixConnection = connections.find(c => c.platform === 'wix');
@@ -470,6 +452,24 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
               </button>
             );
           })()}
+
+          {/* Squarespace - Coming Soon */}
+          <div className="relative">
+            <div className="w-full flex items-center justify-between p-4 bg-brand-light/60 rounded-xl border border-brand-border/50 opacity-50 cursor-not-allowed">
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center shrink-0">
+                  <SquarespaceIcon className="w-5 h-5 text-[#000000]" />
+                </div>
+                <div className="text-left">
+                  <span className="font-semibold text-brand-text text-sm">Squarespace</span>
+                  <p className="text-xs text-brand-text-muted">OAuth flow coming soon</p>
+                </div>
+              </div>
+              <span className="text-xs font-medium text-brand-text-muted bg-brand-border/50 px-2.5 py-1 rounded-full">
+                Coming Soon
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 

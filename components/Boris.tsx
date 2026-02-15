@@ -6,6 +6,37 @@ import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
 import { manuallyStartTour } from '../components/ProductTour';
 
+interface TypingTextProps {
+  text: string;
+  speed?: number;
+  onComplete?: () => void;
+}
+
+const TypingText: React.FC<TypingTextProps> = ({ text, speed = 20, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    } else if (onComplete && currentIndex === text.length) {
+      onComplete();
+    }
+  }, [currentIndex, text, speed, onComplete]);
+
+  useEffect(() => {
+    // Reset when text changes
+    setDisplayedText('');
+    setCurrentIndex(0);
+  }, [text]);
+
+  return <span>{displayedText}</span>;
+};
+
 interface BorisProps {
   userFirstName: string;
   profileData: any;
@@ -315,7 +346,7 @@ export const Boris: React.FC<BorisProps> = ({
 
         {/* Greeting & Content Section */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 animate-[popIn_0.4s_ease-out]">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border border-purple-200 shadow-sm">
               <span className="text-purple-700 font-bold text-sm">
                 {getGreeting().charAt(0)}
@@ -333,10 +364,12 @@ export const Boris: React.FC<BorisProps> = ({
             <div className="space-y-6">
               <div className="bg-white/90 backdrop-blur-sm rounded-xl p-5 border border-slate-200 shadow-sm">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 animate-pulse"></div>
                   <span className="text-sm font-semibold text-purple-700">Progress Update</span>
                 </div>
-                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{borisState.messageIntro}</p>
+                <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                  <TypingText text={borisState.messageIntro} speed={20} />
+                </p>
               </div>
 
               {/* Today's Tasks Section */}
