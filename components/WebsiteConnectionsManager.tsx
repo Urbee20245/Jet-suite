@@ -168,16 +168,16 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
   const getStatusBadge = (connection: WebsiteConnection) => {
     if (connection.is_active) {
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200/60">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
           Active
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-        <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-200/60">
+        <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
         Inactive
       </span>
     );
@@ -185,9 +185,9 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
 
   if (loading) {
     return (
-      <div className="text-center p-8">
+      <div className="text-center py-10">
         <Loader />
-        <p className="text-sm text-brand-text-muted mt-2">Loading website connections...</p>
+        <p className="text-sm text-brand-text-muted mt-3">Loading website connections...</p>
       </div>
     );
   }
@@ -196,23 +196,25 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
     <div>
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded-lg mb-4 text-sm">
-          {error}
+        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm border border-red-200/60 flex items-start gap-2.5">
+          <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+          <span>{error}</span>
         </div>
       )}
 
       {/* Success Message */}
       {success && (
-        <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
-          {success}
+        <div className="bg-green-50 text-green-700 px-4 py-3 rounded-xl mb-5 text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
+          <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+          <span>{success}</span>
         </div>
       )}
 
       {/* Connected Websites */}
       {connections.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold text-brand-text mb-3">Connected Websites</h3>
-          <div className="space-y-2">
+        <div className="mb-7">
+          <h3 className="text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-3 ml-0.5">Connected Websites</h3>
+          <div className="space-y-3">
             {connections.map((connection) => {
               const Icon = platformIcons[connection.platform];
               const colorClass = platformColors[connection.platform];
@@ -220,32 +222,34 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
               return (
                 <div
                   key={connection.id}
-                  className="group flex items-center justify-between p-3 rounded-lg border bg-brand-light border-brand-border hover:border-green-300 transition-all"
+                  className="group flex items-center justify-between p-4 rounded-xl border bg-white border-brand-border shadow-sm hover:shadow-md hover:border-green-300/70 transition-all duration-200"
                 >
-                  <div className="flex items-center gap-3">
-                    {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center shrink-0">
+                      {Icon && <Icon className={`w-5 h-5 ${colorClass}`} />}
+                    </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-brand-text">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold text-brand-text text-sm">
                           {connection.site_name}
                         </p>
                         {getStatusBadge(connection)}
-                        <span className="inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                        <span className="inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-accent-blue/8 text-accent-blue font-medium">
                           {WEBSITE_PLATFORM_INFO[connection.platform].name}
                         </span>
                       </div>
-                      <p className="text-sm text-brand-text-muted">
+                      <p className="text-xs text-brand-text-muted mt-0.5">
                         {connection.website_url}
                       </p>
                       {connection.last_verified_at && (
-                        <p className="text-xs text-brand-text-muted mt-0.5">
+                        <p className="text-xs text-brand-text-muted/70 mt-0.5">
                           Last verified: {new Date(connection.last_verified_at).toLocaleDateString()}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="group-hover:hidden flex items-center gap-1.5 text-sm font-semibold text-green-600">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="group-hover:hidden flex items-center gap-1.5 text-xs font-semibold text-green-600">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
@@ -253,7 +257,7 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                     </div>
                     <button
                       onClick={() => handleDisconnect(connection)}
-                      className="hidden group-hover:block text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                      className="hidden group-hover:inline-flex items-center text-xs font-semibold text-red-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all duration-200"
                     >
                       Disconnect
                     </button>
@@ -267,17 +271,20 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
 
       {/* Empty State */}
       {connections.length === 0 && !showWordPressForm && (
-        <div className="text-center p-6 bg-gray-50 border border-gray-200 rounded-lg mb-6">
-          <p className="text-gray-600 font-medium">No websites connected yet</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Connect your first website above to start auto-publishing blog posts!
+        <div className="text-center py-8 px-6 bg-brand-light/50 border-2 border-dashed border-brand-border/50 rounded-xl mb-6">
+          <div className="w-10 h-10 mx-auto rounded-xl bg-brand-light flex items-center justify-center mb-3">
+            <svg className="w-5 h-5 text-brand-text-muted/50" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" /></svg>
+          </div>
+          <p className="text-brand-text font-medium text-sm">No websites connected yet</p>
+          <p className="text-xs text-brand-text-muted mt-1 leading-relaxed">
+            Connect your first website below to start auto-publishing blog posts!
           </p>
         </div>
       )}
 
       {/* Connect Platforms */}
       <div>
-        <h3 className="text-sm font-semibold text-brand-text mb-3">
+        <h3 className="text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-3 ml-0.5">
           {connections.length > 0 ? 'Connect More Websites' : 'Connect Your Website'}
         </h3>
 
@@ -292,41 +299,45 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                 <button
                   onClick={() => !isConnected && setShowWordPressForm(true)}
                   disabled={isConnected}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${
+                  className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
                     isConnected
-                      ? 'bg-green-50 border-green-300 cursor-default'
-                      : 'bg-white hover:bg-gray-50 border-brand-border'
+                      ? 'bg-green-50/50 border-green-200 cursor-default shadow-sm'
+                      : 'bg-white hover:bg-brand-light/50 border-brand-border shadow-sm hover:shadow-md hover:border-accent-blue/30'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <WordPressIcon className="w-5 h-5 text-[#21759b]" />
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-brand-light flex items-center justify-center shrink-0">
+                      <WordPressIcon className="w-5 h-5 text-[#21759b]" />
+                    </div>
                     <div className="text-left">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-brand-text">WordPress</span>
+                        <span className="font-semibold text-brand-text text-sm">WordPress</span>
                         {isConnected && (
-                          <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200/60">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                             Connected
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-brand-text-muted">
+                      <p className="text-xs text-brand-text-muted mt-0.5">
                         {isConnected ? wpConnection.site_name : 'Connect with Application Password'}
                       </p>
                     </div>
                   </div>
                   {!isConnected && (
-                    <span className="text-sm font-semibold text-accent-blue">Connect</span>
+                    <span className="text-xs font-bold text-accent-blue bg-accent-blue/8 px-3 py-1.5 rounded-lg">Connect</span>
                   )}
                 </button>
               );
             })()
           ) : (
-            <div className="bg-white p-4 rounded-lg border border-brand-border">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <WordPressIcon className="w-5 h-5 text-[#21759b]" />
-                  <h4 className="font-semibold text-brand-text">Connect WordPress</h4>
+            <div className="bg-white p-5 rounded-xl border border-brand-border shadow-md">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-brand-light flex items-center justify-center">
+                    <WordPressIcon className="w-4.5 h-4.5 text-[#21759b]" />
+                  </div>
+                  <h4 className="font-bold text-brand-text text-sm">Connect WordPress</h4>
                 </div>
                 <button
                   onClick={() => {
@@ -336,15 +347,15 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                     setWpAppPassword('');
                     setError('');
                   }}
-                  className="text-sm text-brand-text-muted hover:text-brand-text"
+                  className="text-xs font-medium text-brand-text-muted hover:text-brand-text px-2.5 py-1.5 rounded-lg hover:bg-brand-light transition-all duration-200"
                 >
                   Cancel
                 </button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-brand-text mb-1">
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
                     Website URL
                   </label>
                   <input
@@ -352,12 +363,12 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                     value={wpWebsiteUrl}
                     onChange={(e) => setWpWebsiteUrl(e.target.value)}
                     placeholder="https://myblog.com"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text text-sm"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-2.5 text-brand-text text-sm placeholder-brand-text-muted/50 focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-brand-text mb-1">
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
                     Username
                   </label>
                   <input
@@ -365,12 +376,12 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                     value={wpUsername}
                     onChange={(e) => setWpUsername(e.target.value)}
                     placeholder="admin"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text text-sm"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-2.5 text-brand-text text-sm placeholder-brand-text-muted/50 focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-brand-text mb-1">
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-1.5">
                     Application Password
                   </label>
                   <input
@@ -378,9 +389,9 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                     value={wpAppPassword}
                     onChange={(e) => setWpAppPassword(e.target.value)}
                     placeholder="xxxx xxxx xxxx xxxx"
-                    className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text text-sm font-mono"
+                    className="w-full bg-brand-light border border-brand-border rounded-lg px-3.5 py-2.5 text-brand-text text-sm font-mono placeholder-brand-text-muted/50 focus:ring-2 focus:ring-accent-blue/30 focus:border-accent-blue/50 transition-all duration-200 outline-none"
                   />
-                  <p className="text-xs text-brand-text-muted mt-1">
+                  <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed">
                     Generate an Application Password in WordPress → Users → Your Profile
                   </p>
                 </div>
@@ -388,7 +399,7 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
                 <button
                   onClick={handleConnectWordPress}
                   disabled={connecting}
-                  className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-4 rounded-lg transition hover:shadow-lg disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2.5 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-accent-purple/20 disabled:opacity-50 active:scale-[0.99] mt-1"
                 >
                   {connecting ? 'Connecting...' : 'Connect WordPress'}
                 </button>
@@ -398,15 +409,17 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
 
           {/* Squarespace - Coming Soon */}
           <div className="relative">
-            <div className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-lg border border-gray-300 opacity-60 cursor-not-allowed">
-              <div className="flex items-center gap-3">
-                <SquarespaceIcon className="w-5 h-5 text-[#000000]" />
+            <div className="w-full flex items-center justify-between p-4 bg-brand-light/60 rounded-xl border border-brand-border/50 opacity-50 cursor-not-allowed">
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center shrink-0">
+                  <SquarespaceIcon className="w-5 h-5 text-[#000000]" />
+                </div>
                 <div className="text-left">
-                  <span className="font-semibold text-brand-text">Squarespace</span>
+                  <span className="font-semibold text-brand-text text-sm">Squarespace</span>
                   <p className="text-xs text-brand-text-muted">OAuth flow coming soon</p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+              <span className="text-xs font-medium text-brand-text-muted bg-brand-border/50 px-2.5 py-1 rounded-full">
                 Coming Soon
               </span>
             </div>
@@ -414,15 +427,17 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
 
           {/* Wix - Coming Soon */}
           <div className="relative">
-            <div className="w-full flex items-center justify-between p-3 bg-gray-100 rounded-lg border border-gray-300 opacity-60 cursor-not-allowed">
-              <div className="flex items-center gap-3">
-                <WixIcon className="w-5 h-5 text-[#0c6efc]" />
+            <div className="w-full flex items-center justify-between p-4 bg-brand-light/60 rounded-xl border border-brand-border/50 opacity-50 cursor-not-allowed">
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-lg bg-white/80 flex items-center justify-center shrink-0">
+                  <WixIcon className="w-5 h-5 text-[#0c6efc]" />
+                </div>
                 <div className="text-left">
-                  <span className="font-semibold text-brand-text">Wix</span>
+                  <span className="font-semibold text-brand-text text-sm">Wix</span>
                   <p className="text-xs text-brand-text-muted">OAuth flow coming soon</p>
                 </div>
               </div>
-              <span className="text-xs font-semibold text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+              <span className="text-xs font-medium text-brand-text-muted bg-brand-border/50 px-2.5 py-1 rounded-full">
                 Coming Soon
               </span>
             </div>
@@ -432,9 +447,9 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
 
       {/* Help Info */}
       {connections.length === 0 && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-          <p className="font-semibold mb-1">Auto-Publish Blog Posts</p>
-          <p>Connect your website to automatically publish blog posts from JetSuite tools. Your credentials are encrypted and stored securely.</p>
+        <div className="mt-5 px-4 py-3.5 bg-accent-blue/5 border border-accent-blue/15 rounded-xl text-sm text-accent-blue/80">
+          <p className="font-bold text-xs text-accent-blue">Auto-Publish Blog Posts</p>
+          <p className="mt-1 text-xs leading-relaxed">Connect your website to automatically publish blog posts from JetSuite tools. Your credentials are encrypted and stored securely.</p>
         </div>
       )}
     </div>

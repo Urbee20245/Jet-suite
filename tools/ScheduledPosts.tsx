@@ -125,18 +125,19 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
   };
 
   const getStatusBadge = (status: string) => {
-    const badges: Record<string, { bg: string; text: string }> = {
-      draft: { bg: 'bg-gray-100', text: 'text-gray-700' },
-      scheduled: { bg: 'bg-blue-100', text: 'text-blue-700' },
-      publishing: { bg: 'bg-yellow-100', text: 'text-yellow-700' },
-      published: { bg: 'bg-green-100', text: 'text-green-700' },
-      failed: { bg: 'bg-red-100', text: 'text-red-700' },
+    const badges: Record<string, { bg: string; text: string; dot: string; border: string }> = {
+      draft: { bg: 'bg-gray-50', text: 'text-gray-600', dot: 'bg-gray-400', border: 'border-gray-200/60' },
+      scheduled: { bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500', border: 'border-blue-200/60' },
+      publishing: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500 animate-pulse', border: 'border-amber-200/60' },
+      published: { bg: 'bg-green-50', text: 'text-green-700', dot: 'bg-green-500', border: 'border-green-200/60' },
+      failed: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500', border: 'border-red-200/60' },
     };
 
     const badge = badges[status] || badges.draft;
 
     return (
-      <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>
+      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
@@ -147,9 +148,9 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="bg-brand-card p-8 rounded-xl shadow-lg text-center">
+        <div className="bg-brand-card p-10 rounded-xl shadow-lg border border-brand-border/50 text-center">
           <Loader />
-          <p className="text-brand-text-muted mt-4">Loading scheduled posts...</p>
+          <p className="text-sm text-brand-text-muted mt-3">Loading scheduled posts...</p>
         </div>
       </div>
     );
@@ -157,23 +158,23 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border/50">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-brand-text">Scheduled Blog Posts</h2>
-            <p className="text-brand-text-muted mt-1">Manage your scheduled and published blog posts</p>
+            <h2 className="text-2xl font-bold text-brand-text tracking-tight">Scheduled Blog Posts</h2>
+            <p className="text-sm text-brand-text-muted mt-1.5">Manage your scheduled and published blog posts</p>
           </div>
 
           {/* Filter Buttons */}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 bg-brand-light p-1 rounded-xl">
             {(['all', 'scheduled', 'published', 'failed'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-lg text-sm font-semibold transition ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                   filter === f
-                    ? 'bg-accent-blue text-white'
-                    : 'bg-brand-light text-brand-text-muted hover:bg-brand-border'
+                    ? 'bg-white text-brand-text shadow-sm'
+                    : 'text-brand-text-muted hover:text-brand-text'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -184,69 +185,76 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
 
         {/* Success Message */}
         {success && (
-          <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
-            {success}
+          <div className="bg-green-50 text-green-700 px-4 py-3 rounded-xl mb-5 text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
+            <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+            <span>{success}</span>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 text-red-800 p-3 rounded-lg mb-4 text-sm">
-            {error}
+          <div className="bg-red-50 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm border border-red-200/60 flex items-start gap-2.5">
+            <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+            <span>{error}</span>
           </div>
         )}
 
         {/* Posts Table */}
         {filteredPosts.length === 0 ? (
-          <div className="text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
-            <InformationCircleIcon className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-            <p className="text-gray-600 font-medium">
+          <div className="text-center py-12 px-6 bg-brand-light/50 rounded-xl border-2 border-dashed border-brand-border/50">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-light flex items-center justify-center mb-3">
+              <InformationCircleIcon className="w-6 h-6 text-brand-text-muted/40" />
+            </div>
+            <p className="text-brand-text font-medium text-sm">
               {filter === 'all' ? 'No scheduled posts yet' : `No ${filter} posts`}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed max-w-sm mx-auto">
               Create blog posts in JetContent and schedule them to your connected websites
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-xl border border-brand-border/50">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-brand-border">
-                  <th className="text-left p-3 text-sm font-bold text-brand-text-muted">Title</th>
-                  <th className="text-left p-3 text-sm font-bold text-brand-text-muted">Platform</th>
-                  <th className="text-left p-3 text-sm font-bold text-brand-text-muted">Scheduled Date</th>
-                  <th className="text-left p-3 text-sm font-bold text-brand-text-muted">Status</th>
-                  <th className="text-left p-3 text-sm font-bold text-brand-text-muted">Actions</th>
+                <tr className="bg-brand-light/50 border-b border-brand-border/50">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Title</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Platform</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Scheduled Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-brand-border/40">
                 {filteredPosts.map((post) => (
-                  <tr key={post.id} className="border-b border-brand-border hover:bg-brand-light transition">
-                    <td className="p-3">
+                  <tr key={post.id} className="hover:bg-brand-light/40 transition-colors duration-150 group">
+                    <td className="px-4 py-3.5">
                       <div>
-                        <p className="font-semibold text-brand-text">{post.title}</p>
+                        <p className="font-semibold text-brand-text text-sm">{post.title}</p>
                         {post.featured_image_url && (
-                          <span className="text-xs text-accent-purple">📷 Has featured image</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-accent-purple mt-0.5">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                            Has featured image
+                          </span>
                         )}
                       </div>
                     </td>
-                    <td className="p-3">
+                    <td className="px-4 py-3.5">
                       <p className="text-sm text-brand-text">{getWebsiteName(post.website_connection_id)}</p>
                     </td>
-                    <td className="p-3">
-                      <p className="text-sm text-brand-text">
+                    <td className="px-4 py-3.5">
+                      <p className="text-sm text-brand-text-muted">
                         {post.scheduled_publish_at
                           ? new Date(post.scheduled_publish_at).toLocaleString()
                           : 'Not scheduled'}
                       </p>
                     </td>
-                    <td className="p-3">{getStatusBadge(post.status)}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
+                    <td className="px-4 py-3.5">{getStatusBadge(post.status)}</td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-1">
                         {post.status === 'scheduled' && (
                           <button
                             onClick={() => handlePublishNow(post.id)}
-                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 transition"
+                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 px-2.5 py-1.5 rounded-lg hover:bg-accent-blue/5 transition-all duration-200"
                           >
                             Publish Now
                           </button>
@@ -256,14 +264,14 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
                             href={`${websiteConnections.find(c => c.id === post.website_connection_id)?.website_url}/?p=${post.wordpress_post_id}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 transition"
+                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 px-2.5 py-1.5 rounded-lg hover:bg-accent-blue/5 transition-all duration-200"
                           >
                             View
                           </a>
                         )}
                         <button
                           onClick={() => handleDelete(post.id)}
-                          className="text-xs font-semibold text-red-500 hover:text-red-700 transition"
+                          className="text-xs font-semibold text-red-500 hover:text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-all duration-200"
                         >
                           Delete
                         </button>

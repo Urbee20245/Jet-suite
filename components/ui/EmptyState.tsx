@@ -14,10 +14,12 @@ interface EmptyStateProps {
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ icon: Icon, title, description, action }) => {
   return (
-    <div className="text-center py-12 bg-brand-card rounded-xl shadow-lg border-2 border-dashed border-brand-border">
-      <Icon className="w-16 h-16 text-brand-text-muted mx-auto opacity-50" />
-      <h3 className="text-xl font-semibold text-brand-text mt-4">{title}</h3>
-      <p className="text-brand-text-muted mt-2 max-w-md mx-auto">{description}</p>
+    <div className="text-center py-14 px-6 bg-brand-card rounded-xl shadow-sm border-2 border-dashed border-brand-border/60">
+      <div className="w-16 h-16 mx-auto rounded-2xl bg-brand-light flex items-center justify-center mb-1">
+        <Icon className="w-9 h-9 text-brand-text-muted opacity-40" />
+      </div>
+      <h3 className="text-lg font-semibold text-brand-text mt-4">{title}</h3>
+      <p className="text-sm text-brand-text-muted mt-2 max-w-sm mx-auto leading-relaxed">{description}</p>
       {action && (
         <div className="mt-6">
           <Button onClick={action.onClick} variant="primary" size="md">

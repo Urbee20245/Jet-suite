@@ -8,11 +8,11 @@ interface SectionTitleProps {
 
 export const SectionTitle: React.FC<SectionTitleProps> = ({ children, subtitle, action }) => {
   return (
-    <div className="mb-6 flex justify-between items-start">
+    <div className="mb-6 flex justify-between items-center">
       <div>
-        <h2 className="text-2xl font-bold text-brand-text">{children}</h2>
+        <h2 className="text-2xl font-bold text-brand-text tracking-tight">{children}</h2>
         {subtitle && (
-          <p className="text-sm text-brand-text-muted mt-1">{subtitle}</p>
+          <p className="text-sm text-brand-text-muted mt-1.5 leading-relaxed">{subtitle}</p>
         )}
       </div>
       {action && (
