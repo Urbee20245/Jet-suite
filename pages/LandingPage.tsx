@@ -863,7 +863,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
                 <div>
                     <span className="text-indigo-400 font-bold uppercase tracking-wider text-sm">Content Publishing</span>
-                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Publish Directly to Your WordPress Site</h3>
+                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Publish Directly to Your Blog</h3>
                     <div className="space-y-6">
                         <div className="flex gap-4">
                             <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/10 p-3 rounded-lg h-fit border border-indigo-500/30">
@@ -871,11 +871,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                             </div>
                             <div>
                                 <h4 className="font-bold text-white">JetContent ⭐</h4>
-                                <p className="text-gray-400 text-sm">AI-powered content creator with direct WordPress publishing. Create blog posts, articles, and press releases—all optimized for SEO.</p>
+                                <p className="text-gray-400 text-sm">AI-powered content creator with direct publishing to your blog. Integrates with WordPress, Squarespace, and Wix. Create blog posts, articles, and press releases—all optimized for SEO.</p>
                                 <div className="mt-3 space-y-2">
                                     <div className="flex items-center gap-2 text-xs">
                                         <CheckCircleIcon className="w-4 h-4 text-green-400"/>
-                                        <span className="text-indigo-300">Connect multiple WordPress sites</span>
+                                        <span className="text-indigo-300">Connect multiple blog sites</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs">
                                         <CheckCircleIcon className="w-4 h-4 text-green-400"/>
