@@ -133,6 +133,49 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     }
   }, []);
 
+  // Auto-refresh expired/expiring tokens on mount and periodically
+  useEffect(() => {
+    const autoRefreshTokens = async () => {
+      if (connections.length === 0) return;
+
+      const now = new Date();
+      const connectionsToRefresh = connections.filter(conn => {
+        if (!conn.has_refresh_token || !conn.token_expires_at) return false;
+
+        const expiresAt = new Date(conn.token_expires_at);
+        const minutesUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60);
+
+        // Auto-refresh if expired or expires within 10 minutes
+        return minutesUntilExpiry < 10;
+      });
+
+      if (connectionsToRefresh.length > 0) {
+        console.log(`[Auto-refresh] Refreshing ${connectionsToRefresh.length} expiring token(s)...`);
+
+        for (const conn of connectionsToRefresh) {
+          try {
+            await refreshConnectionToken(conn.id);
+            console.log(`[Auto-refresh] Successfully refreshed ${conn.platform} token`);
+          } catch (err) {
+            console.error(`[Auto-refresh] Failed to refresh ${conn.platform} token:`, err);
+          }
+        }
+
+        // Reload connections after all refresh attempts
+        await loadConnections();
+        if (onConnectionsChange) onConnectionsChange();
+      }
+    };
+
+    // Run on mount
+    autoRefreshTokens();
+
+    // Check every 5 minutes for tokens that need refreshing
+    const interval = setInterval(autoRefreshTokens, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [connections, onConnectionsChange]);
+
   const loadConnections = async () => {
     try {
       setLoading(true);
