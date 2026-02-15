@@ -298,13 +298,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
 
               {/* Premium Trust Badges */}
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 pt-4 border-t border-slate-800/50">
-                <span className="font-semibold text-gray-400">Featured in:</span>
+                <span className="font-semibold text-gray-400">Featured on:</span>
                 <div className="flex items-center gap-5 opacity-80 hover:opacity-100 transition-opacity">
-                  <span className="font-bold text-gray-300 text-base tracking-wide">Forbes</span>
-                  <span className="text-slate-600">•</span>
-                  <span className="font-bold text-gray-300 text-base tracking-wide">TechCrunch</span>
-                  <span className="text-slate-600">•</span>
-                  <span className="font-bold text-gray-300 text-base tracking-wide">Entrepreneur</span>
+                  <span className="font-bold text-gray-300 text-base tracking-wide">Capterra</span>
                 </div>
               </div>
 
