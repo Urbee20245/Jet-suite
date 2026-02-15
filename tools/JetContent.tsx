@@ -42,6 +42,16 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
   const [scheduling, setScheduling] = useState(false);
   const [success, setSuccess] = useState('');
 
+  // SEO Optimization State
+  const [showOptimization, setShowOptimization] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimization, setOptimization] = useState<{
+    keywords: string[];
+    tags: string[];
+    meta_description: string;
+    slug: string;
+  } | null>(null);
+
   useEffect(() => {
     if (initialProps?.keyword?.keyword) {
       setTopic(initialProps.keyword.keyword);
@@ -58,6 +68,51 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       setWebsiteConnections(connections.filter(c => c.is_active));
     } catch (err) {
       console.error('Error loading website connections:', err);
+    }
+  };
+
+  const handleOptimizeSEO = async () => {
+    try {
+      setOptimizing(true);
+      setError('');
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL not configured');
+      }
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/optimize-blog-keywords`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          title: topic,
+          content: result,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to optimize for SEO');
+      }
+
+      const data = await response.json();
+      setOptimization({
+        keywords: data.keywords,
+        tags: data.tags,
+        meta_description: data.meta_description,
+        slug: data.slug,
+      });
+      setShowOptimization(true);
+      setSuccess('SEO optimization complete!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Error optimizing SEO:', err);
+      setError(err.message || 'Failed to optimize for SEO. Please try again.');
+    } finally {
+      setOptimizing(false);
     }
   };
 
@@ -148,6 +203,12 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
         scheduled_publish_at: scheduledPublishAt,
         status: 'scheduled',
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        // Include optimization data if available
+        optimized_keywords: optimization?.keywords || undefined,
+        optimized_tags: optimization?.tags || undefined,
+        meta_description: optimization?.meta_description || undefined,
+        slug: optimization?.slug || undefined,
+        auto_optimized: optimization ? true : false,
       };
 
       const { data, error: insertError } = await supabase
@@ -344,6 +405,130 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                   {success}
                 </div>
               )}
+
+              {/* SEO Optimization Section */}
+              <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
+                <h3 className="font-bold text-brand-text mb-4 flex items-center gap-2">
+                  <SparklesIcon className="w-5 h-5 text-accent-blue" />
+                  SEO Optimization
+                </h3>
+
+                {!optimization ? (
+                  <button
+                    onClick={handleOptimizeSEO}
+                    disabled={optimizing}
+                    className="w-full bg-white border-2 border-dashed border-brand-border hover:border-accent-blue text-brand-text px-4 py-3 rounded-lg font-semibold transition disabled:opacity-50"
+                  >
+                    {optimizing ? 'Optimizing with AI...' : '✨ Optimize Keywords & SEO'}
+                  </button>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Keywords */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-text mb-2">
+                        SEO Keywords (for categories)
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {optimization.keywords.map((keyword, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-accent-blue/10 text-accent-blue px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                          >
+                            {keyword}
+                            <button
+                              onClick={() => {
+                                const newKeywords = optimization.keywords.filter((_, i) => i !== idx);
+                                setOptimization({ ...optimization, keywords: newKeywords });
+                              }}
+                              className="hover:text-accent-blue/70"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-text mb-2">
+                        Tags
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {optimization.tags.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="bg-accent-purple/10 text-accent-purple px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2"
+                          >
+                            {tag}
+                            <button
+                              onClick={() => {
+                                const newTags = optimization.tags.filter((_, i) => i !== idx);
+                                setOptimization({ ...optimization, tags: newTags });
+                              }}
+                              className="hover:text-accent-purple/70"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Meta Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-text mb-2">
+                        Meta Description ({optimization.meta_description.length}/160 chars)
+                      </label>
+                      <textarea
+                        value={optimization.meta_description}
+                        onChange={(e) => {
+                          const value = e.target.value.substring(0, 160);
+                          setOptimization({ ...optimization, meta_description: value });
+                        }}
+                        className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text text-sm"
+                        rows={2}
+                        maxLength={160}
+                      />
+                    </div>
+
+                    {/* Slug */}
+                    <div>
+                      <label className="block text-sm font-medium text-brand-text mb-2">
+                        URL Slug
+                      </label>
+                      <input
+                        type="text"
+                        value={optimization.slug}
+                        onChange={(e) => {
+                          const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+                          setOptimization({ ...optimization, slug: value });
+                        }}
+                        className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text font-mono text-sm"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={handleOptimizeSEO}
+                        disabled={optimizing}
+                        className="flex-1 bg-brand-light text-brand-text px-4 py-2 rounded-lg font-semibold hover:bg-brand-border transition disabled:opacity-50"
+                      >
+                        {optimizing ? 'Re-optimizing...' : '↻ Re-optimize'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setOptimization(null);
+                          setShowOptimization(false);
+                        }}
+                        className="px-4 py-2 text-red-500 hover:text-red-700 font-semibold transition"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Featured Image Section */}
               <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border">
