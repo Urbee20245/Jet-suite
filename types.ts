@@ -490,6 +490,21 @@ export interface BlogPublication {
   optimized_tags?: string[];
   meta_description?: string;
   auto_optimized?: boolean;
+  // Content type fields
+  content_type?: 'blog_post' | 'article' | 'press_release';
+  // Article-specific fields
+  article_type?: string;
+  depth_level?: string;
+  executive_summary?: string;
+  key_takeaways?: any;
+  references?: any;
+  estimated_read_time?: string;
+  // Press release-specific fields
+  news_type?: string;
+  dateline?: string;
+  media_contact?: any;
+  boilerplate?: string;
+  is_media_ready?: boolean;
 }
 
 export interface FeaturedImageGenerationRequest {
