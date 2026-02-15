@@ -763,6 +763,156 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
             </div>
             
+            {/* JetContent Publishing - NEW SECTION */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="glow-card glow-card-rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 rounded-2xl border border-slate-700 relative overflow-hidden">
+                    <div className="absolute -left-20 -top-20 bg-indigo-500/20 w-64 h-64 blur-3xl rounded-full"></div>
+
+                    {/* WordPress Connection Visual */}
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="relative">
+                                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12.158 12.786l-2.698 7.84c.806.236 1.657.365 2.54.365 1.047 0 2.051-.18 2.986-.51-.024-.037-.046-.078-.065-.123l-2.763-7.572zm-5.54-3.03l3.202 8.768L4.736 8.285c.583-.09 1.109-.132 1.109-.132.523-.062.463-.833-.06-.804 0 0-1.571.123-2.585.123-.951 0-2.553-.123-2.553-.123-.523-.03-.583.773-.06.804 0 0 .492.042 1.012.132l1.502 4.116-2.109 6.326L.255 7.413c.583-.09 1.109-.132 1.109-.132.523-.062.463-.833-.06-.804 0 0-1.571.123-2.585.123l-.515-.01C1.295 3.073 4.389.869 8 .869c2.706 0 5.168 1.041 7.013 2.746-.045-.003-.088-.01-.134-.01-.951 0-1.624.827-1.624 1.715 0 .797.462 1.471.951 2.269.37.644.805 1.471.805 2.667 0 .826-.316 1.785-.734 3.12l-.962 3.212-3.491-10.384zM12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm10-10c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10 10-4.477 10-10z"/>
+                                    </svg>
+                                </div>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900">
+                                    <div className="absolute inset-0 animate-ping bg-green-400 rounded-full"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 className="text-white font-bold">WordPress Connected</h4>
+                                <p className="text-xs text-indigo-300">Ready to publish</p>
+                            </div>
+                        </div>
+
+                        {/* Content Type Cards */}
+                        <div className="space-y-3 mb-6">
+                            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h5 className="text-white font-medium text-sm">Blog Posts</h5>
+                                            <p className="text-xs text-gray-400">SEO-optimized articles</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">Auto-publish</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h5 className="text-white font-medium text-sm">Long-Form Articles</h5>
+                                            <p className="text-xs text-gray-400">In-depth content with research</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">Auto-publish</span>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 hover:border-indigo-400 transition-colors">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h5 className="text-white font-medium text-sm">Press Releases</h5>
+                                            <p className="text-xs text-gray-400">Media-ready announcements</p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">Auto-publish</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Publishing Stats */}
+                        <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 p-4 rounded-xl border border-indigo-500/20">
+                            <div className="grid grid-cols-3 gap-3 text-center">
+                                <div>
+                                    <div className="text-xl font-bold text-white">847</div>
+                                    <div className="text-xs text-indigo-300">Published</div>
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-white">24/7</div>
+                                    <div className="text-xs text-indigo-300">Scheduling</div>
+                                </div>
+                                <div>
+                                    <div className="text-xl font-bold text-white">100%</div>
+                                    <div className="text-xs text-indigo-300">SEO Ready</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <span className="text-indigo-400 font-bold uppercase tracking-wider text-sm">Content Publishing</span>
+                    <h3 className="text-3xl font-bold text-white mt-2 mb-6">Publish Directly to Your WordPress Site</h3>
+                    <div className="space-y-6">
+                        <div className="flex gap-4">
+                            <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/10 p-3 rounded-lg h-fit border border-indigo-500/30">
+                                <JetContentIcon className="w-6 h-6 text-indigo-400"/>
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-white">JetContent ⭐</h4>
+                                <p className="text-gray-400 text-sm">AI-powered content creator with direct WordPress publishing. Create blog posts, articles, and press releases—all optimized for SEO.</p>
+                                <div className="mt-3 space-y-2">
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                        <span className="text-indigo-300">Connect multiple WordPress sites</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                        <span className="text-indigo-300">Schedule posts with timezone support</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                        <span className="text-indigo-300">Auto-generate featured images with AI</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs">
+                                        <CheckCircleIcon className="w-4 h-4 text-green-400"/>
+                                        <span className="text-indigo-300">SEO meta descriptions & keywords</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                            <h5 className="text-white font-bold mb-3">Three Content Types:</h5>
+                            <ul className="space-y-2 text-sm text-gray-300">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-blue-400 font-bold">1.</span>
+                                    <span><strong className="text-white">Blog Posts</strong> - Perfect for regular updates, tips, and customer stories</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-purple-400 font-bold">2.</span>
+                                    <span><strong className="text-white">Articles</strong> - In-depth guides with research, takeaways, and references</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-emerald-400 font-bold">3.</span>
+                                    <span><strong className="text-white">Press Releases</strong> - Media-ready announcements for news and events</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Engagement Tools - ENHANCED with your animations */}
             <div className="grid md:grid-cols-2 gap-12 items-center">
                 <div>
