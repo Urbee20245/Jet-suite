@@ -25,6 +25,57 @@
     <!-- Rewardful Affiliate Tracking - JavaScript (Browser) Integration -->
     <script>(function(w,r){w._rwq=r;w[r]=w[r]||function(){(w[r].q=w[r].q||[]).push(arguments)}})(window,'rewardful');</script>
     <script async src='https://r.wdfl.co/rw.js' data-rewardful='5d7239'></script>
+
+    <!-- Cache Recovery Script -->
+    <script>
+      // Handle module loading errors by clearing cache and reloading
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('Loading failed'))) {
+          console.error('[Recovery] Module loading error detected, clearing caches...');
+
+          // Clear all caches
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              return Promise.all(names.map(function(name) {
+                console.log('[Recovery] Deleting cache:', name);
+                return caches.delete(name);
+              }));
+            }).then(function() {
+              console.log('[Recovery] All caches cleared, reloading...');
+
+              // Unregister service workers
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  return Promise.all(registrations.map(function(registration) {
+                    console.log('[Recovery] Unregistering service worker');
+                    return registration.unregister();
+                  }));
+                }).then(function() {
+                  // Set flag to prevent infinite loops
+                  const recoveryAttempts = parseInt(sessionStorage.getItem('cacheRecoveryAttempts') || '0');
+                  if (recoveryAttempts < 2) {
+                    sessionStorage.setItem('cacheRecoveryAttempts', String(recoveryAttempts + 1));
+                    window.location.reload(true);
+                  } else {
+                    console.error('[Recovery] Multiple recovery attempts failed. Please manually clear your browser cache.');
+                    alert('Unable to load the application. Please clear your browser cache and try again.');
+                  }
+                });
+              } else {
+                window.location.reload(true);
+              }
+            }).catch(function(err) {
+              console.error('[Recovery] Error clearing caches:', err);
+            });
+          }
+        }
+      }, true);
+
+      // Reset recovery attempts on successful load
+      window.addEventListener('load', function() {
+        sessionStorage.removeItem('cacheRecoveryAttempts');
+      });
+    </script>
   </head>
   <body class="bg-brand-darker">
     <div id="root">

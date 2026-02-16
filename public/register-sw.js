@@ -1,10 +1,26 @@
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Clear old caches on load to fix loading issues
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        // Delete old cache versions
+        cacheNames.forEach(cacheName => {
+          if (cacheName.includes('jet-suite') && !cacheName.includes('v2')) {
+            console.log('[PWA] Clearing old cache:', cacheName);
+            caches.delete(cacheName);
+          }
+        });
+      });
+    }
+
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
         console.log('[PWA] Service Worker registered successfully:', registration.scope);
+
+        // Force update check on load
+        registration.update();
 
         // Check for updates periodically
         setInterval(() => {
@@ -21,11 +37,9 @@ if ('serviceWorker' in navigator) {
               // New service worker is ready
               console.log('[PWA] New version available, please refresh');
 
-              // Optionally show a notification to the user
-              if (window.confirm('New version available! Reload to update?')) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
-              }
+              // Automatically reload to apply updates
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
             }
           });
         });
@@ -36,7 +50,8 @@ if ('serviceWorker' in navigator) {
 
     // Handle controller change (new service worker activated)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[PWA] New Service Worker activated');
+      console.log('[PWA] New Service Worker activated, reloading page');
+      window.location.reload();
     });
   });
 }
