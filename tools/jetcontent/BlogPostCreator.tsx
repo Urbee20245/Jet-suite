@@ -549,6 +549,53 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
                 Schedule them across the month for consistent content.
               </p>
 
+              {/* AI Generate Topics Button */}
+              <div className="mb-6 p-4 bg-white rounded-lg border border-accent-purple/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <SparklesIcon className="w-4 h-4 text-accent-purple" />
+                      <h4 className="font-semibold text-brand-text text-sm">AI Topic Generator</h4>
+                    </div>
+                    <p className="text-xs text-brand-text-muted">
+                      Let AI suggest SEO-optimized blog topics tailored to your business
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setSuggestingTitles(true);
+                      setError('');
+                      try {
+                        const titles = await suggestBlogTitles(profileData);
+                        // Replace empty topics with AI suggestions
+                        const newTopics = [...batchTopics];
+                        let filledCount = 0;
+                        for (let i = 0; i < newTopics.length && filledCount < titles.length; i++) {
+                          if (!newTopics[i].trim()) {
+                            newTopics[i] = titles[filledCount];
+                            filledCount++;
+                          }
+                        }
+                        // If we have more suggestions than empty slots, add them
+                        for (let i = filledCount; i < titles.length && newTopics.length < 10; i++) {
+                          newTopics.push(titles[i]);
+                        }
+                        setBatchTopics(newTopics);
+                      } catch (err) {
+                        setError('Failed to generate topics. Please try again.');
+                      } finally {
+                        setSuggestingTitles(false);
+                      }
+                    }}
+                    disabled={suggestingTitles}
+                    className="px-4 py-2 bg-gradient-to-r from-accent-purple to-accent-blue text-white rounded-lg font-semibold text-xs hover:shadow-md transition-all duration-200 disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <SparklesIcon className="w-3.5 h-3.5" />
+                    {suggestingTitles ? 'Generating...' : 'Generate Topics'}
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-4 mb-6">
                 {batchTopics.map((topic, index) => (
                   <div key={index} className="flex gap-2">
