@@ -8,7 +8,7 @@ import { Loader } from '../components/Loader';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 
-type TabType = 'profile' | 'billing' | 'business' | 'team' | 'security';
+type TabType = 'profile' | 'billing' | 'business' | 'team' | 'security' | 'partner';
 
 interface AccountProps {
     plan: { name: string, profileLimit: number };
@@ -261,6 +261,14 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     >
                         Account Security
                     </TabButton>
+                    <div className="pt-2 mt-2 border-t border-brand-border">
+                        <TabButton
+                            active={activeTab === 'partner'}
+                            onClick={() => setActiveTab('partner')}
+                        >
+                            Partner Program
+                        </TabButton>
+                    </div>
                 </div>
             </div>
 
@@ -515,6 +523,115 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             <p className="text-xs text-center text-brand-text-muted">
                                 You'll be redirected to the login page
                             </p>
+                        </div>
+                    </ContentSection>
+                )}
+
+                {/* Partner Program Tab */}
+                {activeTab === 'partner' && (
+                    <ContentSection
+                        title="JetSuite Partner Program"
+                        description="Earn rewards by referring businesses to JetSuite"
+                    >
+                        <div className="space-y-6">
+                            {/* Hero Section */}
+                            <div className="text-center py-6 bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-pink/10 rounded-lg border border-accent-purple/20">
+                                <h3 className="text-2xl font-semibold text-brand-text mb-3">
+                                    Become a JetSuite Partner
+                                </h3>
+                                <p className="text-brand-text-muted max-w-2xl mx-auto leading-relaxed">
+                                    Join our affiliate program and earn generous commissions by referring businesses to JetSuite.
+                                    Help others grow their business while earning rewards for every successful referral.
+                                </p>
+                            </div>
+
+                            {/* Benefits Section */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-accent-blue to-accent-purple rounded-lg flex items-center justify-center mb-3">
+                                        <span className="text-white font-bold text-lg">💰</span>
+                                    </div>
+                                    <h4 className="font-semibold text-brand-text mb-2">Earn Commission</h4>
+                                    <p className="text-sm text-brand-text-muted">
+                                        Receive competitive commissions for every qualified referral that signs up
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-accent-purple to-accent-pink rounded-lg flex items-center justify-center mb-3">
+                                        <span className="text-white font-bold text-lg">📊</span>
+                                    </div>
+                                    <h4 className="font-semibold text-brand-text mb-2">Track Performance</h4>
+                                    <p className="text-sm text-brand-text-muted">
+                                        Access real-time analytics and monitor your referral success
+                                    </p>
+                                </div>
+                                <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-accent-pink to-accent-cyan rounded-lg flex items-center justify-center mb-3">
+                                        <span className="text-white font-bold text-lg">🎁</span>
+                                    </div>
+                                    <h4 className="font-semibold text-brand-text mb-2">Exclusive Resources</h4>
+                                    <p className="text-sm text-brand-text-muted">
+                                        Get marketing materials and dedicated partner support
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* How It Works */}
+                            <div className="space-y-4">
+                                <h4 className="font-semibold text-brand-text">How It Works</h4>
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-gradient-to-br from-accent-blue to-accent-purple rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                            1
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-brand-text">Sign Up for the Program</p>
+                                            <p className="text-xs text-brand-text-muted mt-0.5">Join our partner program and get your unique referral link</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-gradient-to-br from-accent-purple to-accent-pink rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                            2
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-brand-text">Share Your Link</p>
+                                            <p className="text-xs text-brand-text-muted mt-0.5">Promote JetSuite to your network using your referral link</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-6 h-6 bg-gradient-to-br from-accent-pink to-accent-cyan rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                            3
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-brand-text">Earn Rewards</p>
+                                            <p className="text-xs text-brand-text-muted mt-0.5">Get paid when your referrals become paying customers</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CTA Section */}
+                            <div className="pt-6 border-t border-brand-border">
+                                <div className="bg-gradient-to-r from-accent-blue to-accent-purple p-6 rounded-lg text-center">
+                                    <h4 className="text-lg font-semibold text-white mb-2">
+                                        Ready to Get Started?
+                                    </h4>
+                                    <p className="text-white/90 text-sm mb-4">
+                                        Join hundreds of partners who are earning with JetSuite
+                                    </p>
+                                    <a
+                                        href="https://jetsuiteaffiliates.getrewardful.com/signup"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block bg-white text-accent-purple font-semibold text-sm py-3 px-8 rounded-md hover:shadow-lg transition-shadow"
+                                    >
+                                        Join Partner Program
+                                    </a>
+                                </div>
+                                <p className="text-xs text-center text-brand-text-muted mt-4">
+                                    Have questions? Contact us at <a href="mailto:partners@jetsuite.com" className="text-accent-purple hover:underline">partners@jetsuite.com</a>
+                                </p>
+                            </div>
                         </div>
                     </ContentSection>
                 )}
