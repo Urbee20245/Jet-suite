@@ -606,9 +606,87 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     Become a JetSuite Partner
                                 </h3>
                                 <p className="text-sm md:text-base text-brand-text-muted max-w-2xl mx-auto leading-relaxed">
-                                    Join our affiliate program and earn generous commissions by referring businesses to JetSuite.
-                                    Help others grow their business while earning rewards for every successful referral.
+                                    Earn <span className="font-bold text-brand-text">20% recurring commission</span> for every customer you refer.
+                                    Help local businesses grow while building your own passive income stream.
                                 </p>
+                            </div>
+
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+                                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                                    <div className="text-2xl md:text-3xl font-bold text-brand-text mb-1">20%</div>
+                                    <div className="text-xs text-brand-text-muted">Recurring Commission</div>
+                                </div>
+                                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                                    <div className="text-2xl md:text-3xl font-bold text-brand-text mb-1">90 Days</div>
+                                    <div className="text-xs text-brand-text-muted">Cookie Duration</div>
+                                </div>
+                                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                                    <div className="text-2xl md:text-3xl font-bold text-brand-text mb-1">$232.80</div>
+                                    <div className="text-xs text-brand-text-muted">Per Customer (12 mo.)</div>
+                                </div>
+                            </div>
+
+                            {/* Earnings Potential */}
+                            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 p-4 md:p-5 rounded-lg border border-accent-purple/20">
+                                <h4 className="font-semibold text-brand-text mb-3 text-sm md:text-base">Your Earning Potential</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="text-center p-3 bg-white rounded-md">
+                                        <div className="text-lg md:text-xl font-bold text-accent-purple">$19.40</div>
+                                        <div className="text-xs text-brand-text-muted mt-1">per month/customer</div>
+                                    </div>
+                                    <div className="text-center p-3 bg-white rounded-md">
+                                        <div className="text-lg md:text-xl font-bold text-accent-purple">$2,328</div>
+                                        <div className="text-xs text-brand-text-muted mt-1">10 referrals/year</div>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-brand-text-muted mt-3 text-center">
+                                    Based on founder's pricing at $97/month
+                                </p>
+                            </div>
+
+                            {/* Program Details */}
+                            <div className="bg-white p-4 md:p-5 rounded-lg border border-brand-border">
+                                <h4 className="font-semibold text-brand-text mb-3 text-sm md:text-base">Program Details</h4>
+                                <div className="space-y-3 text-xs md:text-sm">
+                                    <div className="flex justify-between py-2 border-b border-brand-border">
+                                        <span className="text-brand-text-muted">Commission Rate:</span>
+                                        <span className="font-medium text-brand-text">20% recurring</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-brand-border">
+                                        <span className="text-brand-text-muted">Commission Duration:</span>
+                                        <span className="font-medium text-brand-text">12 monthly payments</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-brand-border">
+                                        <span className="text-brand-text-muted">Cookie Duration:</span>
+                                        <span className="font-medium text-brand-text">90 days</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-brand-border">
+                                        <span className="text-brand-text-muted">Attribution Model:</span>
+                                        <span className="font-medium text-brand-text">Last click</span>
+                                    </div>
+                                    <div className="flex justify-between py-2 border-b border-brand-border">
+                                        <span className="text-brand-text-muted">Payout Timing:</span>
+                                        <span className="font-medium text-brand-text">30 days after payment</span>
+                                    </div>
+                                    <div className="flex justify-between py-2">
+                                        <span className="text-brand-text-muted">Minimum Payout:</span>
+                                        <span className="font-medium text-brand-text">$100 via PayPal</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Important Note */}
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4">
+                                <div className="flex items-start gap-2">
+                                    <span className="text-lg">ℹ️</span>
+                                    <div>
+                                        <h5 className="font-semibold text-brand-text text-xs md:text-sm mb-1">Important Note</h5>
+                                        <p className="text-xs text-brand-text-muted leading-relaxed">
+                                            You cannot become an affiliate for your own subscription. Affiliates must refer new customers to JetSuite. All payouts are processed through PayPal.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Benefits Section */}
@@ -617,27 +695,27 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     <div className="w-10 h-10 bg-gradient-to-br from-accent-blue to-accent-purple rounded-lg flex items-center justify-center mb-3">
                                         <span className="text-white font-bold text-lg">💰</span>
                                     </div>
-                                    <h4 className="font-semibold text-brand-text mb-2">Earn Commission</h4>
-                                    <p className="text-sm text-brand-text-muted">
-                                        Receive competitive commissions for every qualified referral that signs up
+                                    <h4 className="font-semibold text-brand-text mb-2 text-sm">High Conversion</h4>
+                                    <p className="text-xs text-brand-text-muted">
+                                        JetSuite saves businesses thousands monthly with a compelling value proposition
                                     </p>
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
                                     <div className="w-10 h-10 bg-gradient-to-br from-accent-purple to-accent-pink rounded-lg flex items-center justify-center mb-3">
                                         <span className="text-white font-bold text-lg">📊</span>
                                     </div>
-                                    <h4 className="font-semibold text-brand-text mb-2">Track Performance</h4>
-                                    <p className="text-sm text-brand-text-muted">
-                                        Access real-time analytics and monitor your referral success
+                                    <h4 className="font-semibold text-brand-text mb-2 text-sm">Real-Time Tracking</h4>
+                                    <p className="text-xs text-brand-text-muted">
+                                        Track clicks, signups, commissions, and payments in your Rewardful dashboard
                                     </p>
                                 </div>
                                 <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
                                     <div className="w-10 h-10 bg-gradient-to-br from-accent-pink to-accent-cyan rounded-lg flex items-center justify-center mb-3">
                                         <span className="text-white font-bold text-lg">🎁</span>
                                     </div>
-                                    <h4 className="font-semibold text-brand-text mb-2">Exclusive Resources</h4>
-                                    <p className="text-sm text-brand-text-muted">
-                                        Get marketing materials and dedicated partner support
+                                    <h4 className="font-semibold text-brand-text mb-2 text-sm">Marketing Support</h4>
+                                    <p className="text-xs text-brand-text-muted">
+                                        Access banners, social graphics, email templates, and promotional materials
                                     </p>
                                 </div>
                             </div>
@@ -676,14 +754,45 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                 </div>
                             </div>
 
+                            {/* Perfect For */}
+                            <div className="bg-white p-4 md:p-5 rounded-lg border border-brand-border">
+                                <h4 className="font-semibold text-brand-text mb-3 text-sm md:text-base">Perfect For</h4>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 text-xs">
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Marketing Agencies</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Business Consultants</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Content Creators</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Web Developers</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">SEO Experts</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Business Coaches</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Influencers</div>
+                                    </div>
+                                    <div className="p-2 bg-gray-50 rounded text-center">
+                                        <div className="font-medium text-brand-text">Entrepreneurs</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* CTA Section */}
                             <div className="pt-4 md:pt-6 border-t border-brand-border">
                                 <div className="bg-gradient-to-r from-accent-blue to-accent-purple p-5 md:p-6 rounded-lg text-center">
                                     <h4 className="text-base md:text-lg font-semibold text-white mb-2">
-                                        Ready to Get Started?
+                                        Ready to Start Earning?
                                     </h4>
                                     <p className="text-white/90 text-sm mb-4">
-                                        Join hundreds of partners who are earning with JetSuite
+                                        Join hundreds of partners earning recurring income by helping local businesses grow
                                     </p>
                                     <a
                                         href="https://jetsuiteaffiliates.getrewardful.com/signup"
@@ -691,8 +800,11 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         rel="noopener noreferrer"
                                         className="inline-block w-full sm:w-auto bg-white text-accent-purple font-semibold text-sm py-3.5 px-8 rounded-md hover:shadow-lg transition-shadow touch-manipulation"
                                     >
-                                        Join Partner Program
+                                        Join the Affiliate Program
                                     </a>
+                                    <p className="mt-3 text-xs text-white/80">
+                                        Free to join • No approval required • Start earning immediately
+                                    </p>
                                 </div>
                                 <p className="text-xs text-center text-brand-text-muted mt-4 px-2">
                                     Have questions? Contact us at <a href="mailto:partners@jetsuite.com" className="text-accent-purple hover:underline">partners@jetsuite.com</a>
