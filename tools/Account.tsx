@@ -17,29 +17,41 @@ interface AccountProps {
     setActiveTool: (tool: Tool | null) => void;
 }
 
-const AccountSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <h2 className="text-xl font-bold text-brand-text mb-6">{title}</h2>
-        {children}
+const AccountSection: React.FC<{ title: string; description?: string; children: React.ReactNode }> = ({ title, description, children }) => (
+    <div className="bg-brand-card rounded-lg border border-brand-border overflow-hidden">
+        <div className="px-6 py-4 border-b border-brand-border">
+            <h2 className="text-lg font-semibold text-brand-text">{title}</h2>
+            {description && <p className="text-sm text-brand-text-muted mt-1">{description}</p>}
+        </div>
+        <div className="p-6">
+            {children}
+        </div>
     </div>
 );
 
 const TeamMemberCard: React.FC<{ member: TeamMember; onRemove: (id: string) => void }> = ({ member, onRemove }) => (
-    <div className="bg-brand-light p-4 rounded-lg border border-brand-border flex items-center justify-between">
-        <div>
-            <div className="flex items-center gap-2">
-                <h4 className="font-bold text-brand-text">{member.firstName} {member.lastName}</h4>
-                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${member.role === 'Owner' ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700'}`}>{member.role}</span>
-            </div>
-            <p className="text-sm text-brand-text-muted">{member.title || 'No title specified'}</p>
-            <p className="text-xs text-brand-text-muted">{member.email}</p>
-            {(member as any).phone && <p className="text-xs text-brand-text-muted">📱 {(member as any).phone}</p>}
-        </div>
+    <div className="flex items-center justify-between py-4 border-b border-brand-border last:border-b-0">
         <div className="flex items-center gap-4">
-            {member.status === 'Pending Invite' && <span className="text-xs font-bold text-yellow-600">Pending Invite</span>}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-white font-semibold">
+                {member.firstName[0]}{member.lastName[0]}
+            </div>
+            <div>
+                <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-brand-text">{member.firstName} {member.lastName}</h4>
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded ${member.role === 'Owner' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{member.role}</span>
+                    {member.status === 'Pending Invite' && <span className="text-xs font-medium text-yellow-600">Pending</span>}
+                </div>
+                <p className="text-sm text-brand-text-muted mt-0.5">{member.email}</p>
+            </div>
+        </div>
+        <div className="flex items-center gap-2">
             {member.role !== 'Owner' && (
-                <button onClick={() => onRemove(member.id)} title="Remove team member">
-                    <TrashIcon className="w-5 h-5 text-red-400 hover:text-red-600" />
+                <button
+                    onClick={() => onRemove(member.id)}
+                    title="Remove team member"
+                    className="p-2 hover:bg-red-50 rounded transition-colors"
+                >
+                    <TrashIcon className="w-4 h-4 text-gray-400 hover:text-red-600" />
                 </button>
             )}
         </div>
@@ -193,69 +205,69 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-5 max-w-5xl">
             {/* Profile Information */}
-            <AccountSection title="Profile Information">
-                <form onSubmit={handleProfileSave} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AccountSection title="My Profile" description="Manage your personal information and preferences">
+                <form onSubmit={handleProfileSave} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm font-medium text-brand-text mb-1">First Name</label>
-                            <input 
-                                type="text" 
-                                name="firstName" 
-                                value={formState.firstName} 
-                                onChange={handleFormChange} 
-                                className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" 
+                            <label className="block text-sm font-medium text-brand-text mb-2">First Name</label>
+                            <input
+                                type="text"
+                                name="firstName"
+                                value={formState.firstName}
+                                onChange={handleFormChange}
+                                className="w-full bg-white border border-brand-border rounded-md px-3 py-2 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-brand-text mb-1">Last Name</label>
-                            <input 
-                                type="text" 
-                                name="lastName" 
-                                value={formState.lastName} 
-                                onChange={handleFormChange} 
-                                className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" 
+                            <label className="block text-sm font-medium text-brand-text mb-2">Last Name</label>
+                            <input
+                                type="text"
+                                name="lastName"
+                                value={formState.lastName}
+                                onChange={handleFormChange}
+                                className="w-full bg-white border border-brand-border rounded-md px-3 py-2 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                             />
                         </div>
                     </div>
-                    
+
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Email</label>
-                        <input 
-                            type="email" 
-                            value={profileData.user.email} 
-                            disabled 
-                            className="w-full bg-brand-light border border-brand-border rounded-lg p-2 opacity-70 cursor-not-allowed" 
+                        <label className="block text-sm font-medium text-brand-text mb-2">Email Address</label>
+                        <input
+                            type="email"
+                            value={profileData.user.email}
+                            disabled
+                            className="w-full bg-gray-50 border border-brand-border rounded-md px-3 py-2 text-sm text-brand-text-muted cursor-not-allowed"
                         />
-                        <p className="text-xs text-brand-text-muted mt-1">Email cannot be changed here. Contact support if needed.</p>
+                        <p className="text-xs text-brand-text-muted mt-1.5">Your email address cannot be changed. Contact support if needed.</p>
                     </div>
-                    
+
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">
+                        <label className="block text-sm font-medium text-brand-text mb-2">
                             Phone Number
-                            <span className="text-xs text-brand-text-muted ml-2">(Optional - for admin SMS notifications)</span>
+                            <span className="text-xs font-normal text-brand-text-muted ml-2">(Optional)</span>
                         </label>
-                        <input 
-                            type="tel" 
-                            name="phone" 
-                            value={formState.phone} 
+                        <input
+                            type="tel"
+                            name="phone"
+                            value={formState.phone}
                             onChange={handleFormChange}
-                            placeholder="e.g., +1 (555) 123-4567 or 555-123-4567"
-                            className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition" 
+                            placeholder="+1 (555) 123-4567"
+                            className="w-full bg-white border border-brand-border rounded-md px-3 py-2 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                         />
-                        <p className="text-xs text-brand-text-muted mt-1">
-                            📱 We'll use this to send you occasional SMS updates. Standard message rates may apply.
+                        <p className="text-xs text-brand-text-muted mt-1.5">
+                            For SMS notifications and account recovery
                         </p>
                     </div>
-                    
+
                     <div>
-                        <label className="block text-sm font-medium text-brand-text mb-1">Role</label>
-                        <select 
-                            name="role" 
-                            value={formState.role} 
-                            onChange={handleFormChange} 
-                            className="w-full bg-brand-light border border-brand-border rounded-lg p-2 text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                        <label className="block text-sm font-medium text-brand-text mb-2">Role</label>
+                        <select
+                            name="role"
+                            value={formState.role}
+                            onChange={handleFormChange}
+                            className="w-full bg-white border border-brand-border rounded-md px-3 py-2 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
                         >
                             <option value="Owner">Owner</option>
                             <option value="Manager">Manager</option>
@@ -263,12 +275,12 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             <option value="Marketing Director">Marketing Director</option>
                         </select>
                     </div>
-                    
+
                     {isDirty && (
-                        <div className="flex justify-end pt-2">
-                            <button 
-                                type="submit" 
-                                className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg hover:shadow-lg transition-all"
+                        <div className="flex justify-end pt-3 border-t border-brand-border">
+                            <button
+                                type="submit"
+                                className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-medium text-sm py-2.5 px-6 rounded-md hover:opacity-90 transition-opacity"
                             >
                                 Save Changes
                             </button>
@@ -278,123 +290,148 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
             </AccountSection>
 
             {/* Plan & Billing */}
-            <AccountSection title="Plan & Billing">
+            <AccountSection title="Subscription & Billing" description="Manage your subscription plan and billing details">
                 {isLoadingBilling ? (
-                    <Loader />
+                    <div className="flex justify-center py-8">
+                        <Loader />
+                    </div>
                 ) : (
-                    <div className="space-y-4">
-                        <div className="bg-brand-light p-4 rounded-lg border border-brand-border">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-bold text-brand-text">Current Plan</h3>
-                                <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${getSubscriptionStatusColor(billingAccount?.subscription_status)}`}>
-                                    {getSubscriptionStatusLabel(billingAccount?.subscription_status)}
-                                </span>
-                            </div>
-                            
-                            {billingAccount ? (
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-brand-text-muted">Subscription:</span>
-                                        <span className="font-semibold text-brand-text">JetSuite Complete</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-brand-text-muted">Renews:</span>
-                                        <span className="font-semibold text-brand-text">
-                                            {billingAccount.current_period_end ? new Date(billingAccount.current_period_end).toLocaleDateString() : 'N/A'}
+                    <div className="space-y-5">
+                        {billingAccount ? (
+                            <>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between pb-3 border-b border-brand-border">
+                                        <div>
+                                            <p className="text-sm font-medium text-brand-text">Current Plan</p>
+                                            <p className="text-lg font-semibold text-brand-text mt-0.5">JetSuite Complete</p>
+                                        </div>
+                                        <span className={`px-3 py-1 text-xs font-medium rounded-full ${getSubscriptionStatusColor(billingAccount?.subscription_status)}`}>
+                                            {getSubscriptionStatusLabel(billingAccount?.subscription_status)}
                                         </span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-brand-text-muted">Business Profiles:</span>
-                                        <span className="font-semibold text-brand-text">{billingAccount.business_count || 1} (Used: {actualBusinessCount})</span>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Renewal Date</p>
+                                            <p className="text-sm font-medium text-brand-text">
+                                                {billingAccount.current_period_end ? new Date(billingAccount.current_period_end).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Business Profiles</p>
+                                            <p className="text-sm font-medium text-brand-text">
+                                                {actualBusinessCount} of {billingAccount.business_count || 1} used
+                                            </p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Team Seats</p>
+                                            <p className="text-sm font-medium text-brand-text">
+                                                {actualSeatCount} of {billingAccount.seat_count || 1} used
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-brand-text-muted">Team Seats:</span>
-                                        <span className="font-semibold text-brand-text">{billingAccount.seat_count || 1} (Used: {actualSeatCount})</span>
-                                    </div>
+
                                     {billingAccount.cancel_at_period_end && (
-                                        <div className="text-xs text-yellow-600 font-semibold pt-2 border-t border-brand-border">
-                                            ⚠️ Subscription is set to cancel at the end of the current period.
+                                        <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                            <InformationCircleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                            <p className="text-sm text-yellow-800">
+                                                Your subscription will be canceled at the end of the current billing period.
+                                            </p>
                                         </div>
                                     )}
                                 </div>
-                            ) : (
-                                <p className="text-sm text-brand-text-muted">No active subscription found. <button onClick={() => setActiveTool(ALL_TOOLS['pricing'])} className="text-accent-purple hover:underline font-semibold">View Pricing Plans</button></p>
-                            )}
-                        </div>
 
-                        <button
-                            onClick={handleManageSubscription}
-                            disabled={isOpeningPortal || !billingAccount?.stripe_customer_id}
-                            className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-opacity shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                            {isOpeningPortal ? (
-                                <>
-                                    <Loader />
-                                    <span>Opening Portal...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <CreditCardIcon className="w-5 h-5" />
-                                    <span>Manage Subscription</span>
-                                </>
-                            )}
-                        </button>
-                        <p className="text-xs text-center text-brand-text-muted">
-                            Cancel anytime. No refunds.
-                        </p>
+                                <div className="pt-3 border-t border-brand-border">
+                                    <button
+                                        onClick={handleManageSubscription}
+                                        disabled={isOpeningPortal || !billingAccount?.stripe_customer_id}
+                                        className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-medium text-sm py-2.5 px-4 rounded-md transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {isOpeningPortal ? (
+                                            <>
+                                                <Loader />
+                                                <span>Opening Portal...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <CreditCardIcon className="w-5 h-5" />
+                                                <span>Manage Subscription</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <p className="text-xs text-center text-brand-text-muted mt-2">
+                                        Update payment method, view invoices, or cancel subscription
+                                    </p>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-4">
+                                <p className="text-sm text-brand-text-muted mb-3">No active subscription found</p>
+                                <button
+                                    onClick={() => setActiveTool(ALL_TOOLS['pricing'])}
+                                    className="text-accent-purple hover:underline font-medium text-sm"
+                                >
+                                    View Pricing Plans
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </AccountSection>
 
-            {/* Business & Team Management */}
-            <AccountSection title="Business & Team Management">
+            {/* Business Profiles */}
+            <AccountSection title="Business Profiles" description="Manage your business locations and profiles">
                 <div className="space-y-4">
-                    <h3 className="font-bold text-brand-text">Business Profiles</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {profileData.business.business_name && (
-                            <div className="bg-brand-light p-4 rounded-lg border border-brand-border flex items-center justify-between">
-                                <div>
-                                    <h4 className="font-bold text-brand-text">{profileData.business.business_name}</h4>
-                                    <p className="text-sm text-brand-text-muted">{profileData.business.location}</p>
-                                </div>
-                                <span className="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Primary</span>
+                    {profileData.business.business_name && (
+                        <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-md border border-brand-border">
+                            <div>
+                                <h4 className="font-medium text-brand-text">{profileData.business.business_name}</h4>
+                                <p className="text-sm text-brand-text-muted mt-0.5">{profileData.business.location}</p>
                             </div>
-                        )}
-                        <button
-                            onClick={handleAddBusinessRequest}
-                            className="bg-brand-light hover:bg-brand-border border border-brand-border p-4 rounded-lg text-brand-text font-semibold flex items-center justify-center gap-2"
-                        >
-                            <PlusIcon className="w-5 h-5" />
-                            Add Business Profile
-                        </button>
-                    </div>
+                            <span className="text-xs font-medium bg-green-100 text-green-700 px-2.5 py-1 rounded">Primary</span>
+                        </div>
+                    )}
+                    <button
+                        onClick={handleAddBusinessRequest}
+                        className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-4 rounded-md text-brand-text font-medium flex items-center justify-center gap-2 transition-colors"
+                    >
+                        <PlusIcon className="w-5 h-5 text-accent-purple" />
+                        Add Business Profile
+                    </button>
                 </div>
+            </AccountSection>
 
-                <div className="space-y-4 mt-6">
-                    <h3 className="font-bold text-brand-text">Team Members</h3>
-                    <div className="space-y-2">
+            {/* Team Members */}
+            <AccountSection title="Team Members" description="Manage team access and permissions">
+                <div className="space-y-4">
+                    <div className="divide-y divide-brand-border">
                         {teamMembers.map(member => (
                             <TeamMemberCard key={member.id} member={member} onRemove={() => alert('Remove functionality coming soon')} />
                         ))}
                     </div>
                     <button
                         onClick={handleInviteMemberRequest}
-                        className="w-full bg-brand-light hover:bg-brand-border border border-brand-border p-3 rounded-lg text-brand-text font-semibold flex items-center justify-center gap-2"
+                        className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-3 rounded-md text-brand-text font-medium flex items-center justify-center gap-2 transition-colors"
                     >
-                        <PlusIcon className="w-5 h-5" />
+                        <PlusIcon className="w-5 h-5 text-accent-purple" />
                         Invite Team Member
                     </button>
                 </div>
             </AccountSection>
 
-            {/* Logout */}
-            <AccountSection title="Account Actions">
-                <button
-                    onClick={onLogout}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md"
-                >
-                    Log Out
-                </button>
+            {/* Account Security */}
+            <AccountSection title="Account Security" description="Manage your security preferences">
+                <div className="space-y-4">
+                    <button
+                        onClick={onLogout}
+                        className="w-full bg-white hover:bg-red-50 text-red-600 font-medium text-sm py-2.5 px-4 rounded-md border border-red-200 hover:border-red-300 transition-colors"
+                    >
+                        Sign Out
+                    </button>
+                    <p className="text-xs text-center text-brand-text-muted">
+                        You'll be redirected to the login page
+                    </p>
+                </div>
             </AccountSection>
         </div>
     );
