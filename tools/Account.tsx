@@ -620,7 +620,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         Join hundreds of partners who are earning with JetSuite
                                     </p>
                                     <a
-                                        href="https://jetsuite.com/partners"
+                                        href="https://jetsuiteaffiliates.getrewardful.com/signup"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-block bg-white text-accent-purple font-semibold text-sm py-3 px-8 rounded-md hover:shadow-lg transition-shadow"
