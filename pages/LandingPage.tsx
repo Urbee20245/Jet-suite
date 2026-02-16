@@ -248,13 +248,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                   </span>
                   <br/>
                   <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gray-400 font-bold leading-snug block mt-4">
-                      The all-in-one AI growth engine for modern businesses.
+                      The all-in-one growth engine for modern businesses.
                   </span>
               </h1>
 
               <p className="max-w-2xl text-lg sm:text-xl md:text-2xl text-gray-400 leading-relaxed font-medium">
-                  Start your subscription today.
-                  JetSuite is the AI platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
+                  JetSuite is the platform that helps you improve Google rankings, manage reputation, and power on-brand content and advertising — so customers find you and choose you first.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-stretch sm:items-center">
