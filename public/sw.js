@@ -1,11 +1,9 @@
 // Service Worker for Jet Suite PWA
-const CACHE_NAME = 'jet-suite-v1';
-const RUNTIME_CACHE = 'jet-suite-runtime';
+const CACHE_NAME = 'jet-suite-v2';
+const RUNTIME_CACHE = 'jet-suite-runtime-v2';
 
 // Assets to cache on install
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/Jetsuitewing.png'
 ];
@@ -39,7 +37,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - network first, fallback to cache
+// Fetch event - network first for HTML, cache first for assets
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
@@ -51,20 +49,44 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      // Return cached response if found
-      if (cachedResponse) {
-        // Update cache in background
-        fetch(event.request).then(response => {
+  // Network first strategy for HTML documents
+  if (event.request.destination === 'document' || event.request.url.endsWith('.html') || event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache the new HTML response
           if (response && response.status === 200) {
+            const responseToCache = response.clone();
             caches.open(RUNTIME_CACHE).then(cache => {
-              cache.put(event.request, response.clone());
+              cache.put(event.request, responseToCache);
             });
           }
-        }).catch(() => {
-          // Network error, use cached version
-        });
+          return response;
+        })
+        .catch(() => {
+          // Network failed, try to return cached version
+          return caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Return a basic offline page
+            return new Response('Offline - please check your connection', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({
+                'Content-Type': 'text/html'
+              })
+            });
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache first strategy for static assets (JS, CSS, images, etc.)
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
         return cachedResponse;
       }
 
@@ -75,20 +97,15 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
 
-        // Clone the response
+        // Clone and cache the response
         const responseToCache = response.clone();
-
-        // Cache the fetched response
         caches.open(RUNTIME_CACHE).then(cache => {
           cache.put(event.request, responseToCache);
         });
 
         return response;
       }).catch(() => {
-        // Network failed, return offline page if it's a navigation request
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
+        // Network failed, no cached version available
         return new Response('Offline - content not available', {
           status: 503,
           statusText: 'Service Unavailable',
