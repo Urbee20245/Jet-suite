@@ -39,38 +39,38 @@ const TabButton: React.FC<{
 );
 
 const ContentSection: React.FC<{ title: string; description?: string; children: React.ReactNode }> = ({ title, description, children }) => (
-    <div className="space-y-6">
-        <div>
-            <h2 className="text-2xl font-semibold text-brand-text">{title}</h2>
-            {description && <p className="text-sm text-brand-text-muted mt-2">{description}</p>}
+    <div className="space-y-4 md:space-y-6">
+        <div className="px-1">
+            <h2 className="text-xl md:text-2xl font-semibold text-brand-text">{title}</h2>
+            {description && <p className="text-sm text-brand-text-muted mt-1 md:mt-2">{description}</p>}
         </div>
-        <div className="bg-white rounded-lg border border-brand-border p-6">
+        <div className="bg-white rounded-lg border border-brand-border p-4 md:p-6">
             {children}
         </div>
     </div>
 );
 
 const TeamMemberCard: React.FC<{ member: TeamMember; onRemove: (id: string) => void }> = ({ member, onRemove }) => (
-    <div className="flex items-center justify-between py-4 border-b border-brand-border last:border-b-0">
-        <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-white font-semibold">
+    <div className="flex items-start sm:items-center justify-between py-3 md:py-4 border-b border-brand-border last:border-b-0 gap-3">
+        <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                 {member.firstName[0]}{member.lastName[0]}
             </div>
-            <div>
-                <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-brand-text">{member.firstName} {member.lastName}</h4>
-                    <span className={`px-2 py-0.5 text-xs font-medium rounded ${member.role === 'Owner' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{member.role}</span>
-                    {member.status === 'Pending Invite' && <span className="text-xs font-medium text-yellow-600">Pending</span>}
+            <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-medium text-brand-text text-sm md:text-base truncate">{member.firstName} {member.lastName}</h4>
+                    <span className={`px-2 py-0.5 text-xs font-medium rounded whitespace-nowrap ${member.role === 'Owner' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{member.role}</span>
+                    {member.status === 'Pending Invite' && <span className="text-xs font-medium text-yellow-600 whitespace-nowrap">Pending</span>}
                 </div>
-                <p className="text-sm text-brand-text-muted mt-0.5">{member.email}</p>
+                <p className="text-xs md:text-sm text-brand-text-muted mt-1 truncate">{member.email}</p>
             </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
             {member.role !== 'Owner' && (
                 <button
                     onClick={() => onRemove(member.id)}
                     title="Remove team member"
-                    className="p-2 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 hover:bg-red-50 rounded transition-colors touch-manipulation"
                 >
                     <TrashIcon className="w-4 h-4 text-gray-400 hover:text-red-600" />
                 </button>
@@ -227,9 +227,75 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
     };
 
     return (
-        <div className="flex gap-6 h-full min-h-[600px]">
-            {/* Left Sidebar - Vertical Tabs */}
-            <div className="w-64 flex-shrink-0">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6 h-full min-h-[600px]">
+            {/* Mobile - Horizontal Tabs (scrollable) */}
+            <div className="md:hidden bg-white rounded-lg border border-brand-border p-2 overflow-x-auto">
+                <div className="flex gap-2 min-w-max">
+                    <button
+                        onClick={() => setActiveTab('profile')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'profile'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        My Profile
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('billing')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'billing'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        Billing
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('business')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'business'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        Business
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('team')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'team'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        Team
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('security')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'security'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        Security
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('partner')}
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                            activeTab === 'partner'
+                                ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
+                                : 'text-brand-text bg-gray-50'
+                        }`}
+                    >
+                        Partner Program
+                    </button>
+                </div>
+            </div>
+
+            {/* Desktop - Left Sidebar Vertical Tabs */}
+            <div className="hidden md:block w-64 flex-shrink-0">
                 <div className="bg-white rounded-lg border border-brand-border p-4 space-y-2 sticky top-4">
                     <TabButton
                         active={activeTab === 'profile'}
@@ -272,16 +338,16 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 </div>
             </div>
 
-            {/* Right Content Area */}
-            <div className="flex-1 min-w-0">
+            {/* Content Area - Responsive */}
+            <div className="flex-1 min-w-0 w-full">
                 {/* Profile Tab */}
                 {activeTab === 'profile' && (
                     <ContentSection
                         title="My Profile"
                         description="Manage your personal information and preferences"
                     >
-                        <form onSubmit={handleProfileSave} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <form onSubmit={handleProfileSave} className="space-y-4 md:space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                                 <div>
                                     <label className="block text-sm font-medium text-brand-text mb-2">First Name</label>
                                     <input
@@ -289,7 +355,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         name="firstName"
                                         value={formState.firstName}
                                         onChange={handleFormChange}
-                                        className="w-full bg-white border border-brand-border rounded-md px-3 py-2.5 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                                        className="w-full bg-white border border-brand-border rounded-md px-3 py-3 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition touch-manipulation"
                                     />
                                 </div>
                                 <div>
@@ -299,7 +365,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         name="lastName"
                                         value={formState.lastName}
                                         onChange={handleFormChange}
-                                        className="w-full bg-white border border-brand-border rounded-md px-3 py-2.5 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                                        className="w-full bg-white border border-brand-border rounded-md px-3 py-3 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition touch-manipulation"
                                     />
                                 </div>
                             </div>
@@ -310,7 +376,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     type="email"
                                     value={profileData.user.email}
                                     disabled
-                                    className="w-full bg-gray-50 border border-brand-border rounded-md px-3 py-2.5 text-sm text-brand-text-muted cursor-not-allowed"
+                                    className="w-full bg-gray-50 border border-brand-border rounded-md px-3 py-3 text-sm text-brand-text-muted cursor-not-allowed"
                                 />
                                 <p className="text-xs text-brand-text-muted mt-2">Your email address cannot be changed. Contact support if needed.</p>
                             </div>
@@ -326,7 +392,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     value={formState.phone}
                                     onChange={handleFormChange}
                                     placeholder="+1 (555) 123-4567"
-                                    className="w-full bg-white border border-brand-border rounded-md px-3 py-2.5 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                                    className="w-full bg-white border border-brand-border rounded-md px-3 py-3 text-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition touch-manipulation"
                                 />
                                 <p className="text-xs text-brand-text-muted mt-2">
                                     For SMS notifications and account recovery
@@ -339,7 +405,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                     name="role"
                                     value={formState.role}
                                     onChange={handleFormChange}
-                                    className="w-full bg-white border border-brand-border rounded-md px-3 py-2.5 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                                    className="w-full bg-white border border-brand-border rounded-md px-3 py-3 text-sm text-brand-text focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition touch-manipulation"
                                 >
                                     <option value="Owner">Owner</option>
                                     <option value="Manager">Manager</option>
@@ -352,7 +418,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                 <div className="flex justify-end pt-4 border-t border-brand-border">
                                     <button
                                         type="submit"
-                                        className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-medium text-sm py-2.5 px-6 rounded-md hover:opacity-90 transition-opacity"
+                                        className="w-full sm:w-auto bg-gradient-to-r from-accent-blue to-accent-purple text-white font-medium text-sm py-3 px-6 rounded-md hover:opacity-90 transition-opacity touch-manipulation"
                                     >
                                         Save Changes
                                     </button>
@@ -376,33 +442,33 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             <div className="space-y-6">
                                 {billingAccount ? (
                                     <>
-                                        <div className="space-y-5">
-                                            <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+                                        <div className="space-y-4 md:space-y-5">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-brand-border">
                                                 <div>
-                                                    <p className="text-sm font-medium text-brand-text-muted">Current Plan</p>
-                                                    <p className="text-xl font-semibold text-brand-text mt-1">JetSuite Complete</p>
+                                                    <p className="text-xs md:text-sm font-medium text-brand-text-muted">Current Plan</p>
+                                                    <p className="text-lg md:text-xl font-semibold text-brand-text mt-1">JetSuite Complete</p>
                                                 </div>
-                                                <span className={`px-3 py-1.5 text-xs font-medium rounded-full ${getSubscriptionStatusColor(billingAccount?.subscription_status)}`}>
+                                                <span className={`px-3 py-1.5 text-xs font-medium rounded-full w-fit ${getSubscriptionStatusColor(billingAccount?.subscription_status)}`}>
                                                     {getSubscriptionStatusLabel(billingAccount?.subscription_status)}
                                                 </span>
                                             </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                                <div className="space-y-1.5">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                                                <div className="space-y-1.5 p-3 bg-gray-50 rounded-md sm:bg-transparent sm:p-0">
                                                     <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Renewal Date</p>
-                                                    <p className="text-sm font-semibold text-brand-text">
+                                                    <p className="text-sm md:text-base font-semibold text-brand-text">
                                                         {billingAccount.current_period_end ? new Date(billingAccount.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
                                                     </p>
                                                 </div>
-                                                <div className="space-y-1.5">
+                                                <div className="space-y-1.5 p-3 bg-gray-50 rounded-md sm:bg-transparent sm:p-0">
                                                     <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Business Profiles</p>
-                                                    <p className="text-sm font-semibold text-brand-text">
+                                                    <p className="text-sm md:text-base font-semibold text-brand-text">
                                                         {actualBusinessCount} of {billingAccount.business_count || 1} used
                                                     </p>
                                                 </div>
-                                                <div className="space-y-1.5">
+                                                <div className="space-y-1.5 p-3 bg-gray-50 rounded-md sm:bg-transparent sm:p-0">
                                                     <p className="text-xs font-medium text-brand-text-muted uppercase tracking-wide">Team Seats</p>
-                                                    <p className="text-sm font-semibold text-brand-text">
+                                                    <p className="text-sm md:text-base font-semibold text-brand-text">
                                                         {actualSeatCount} of {billingAccount.seat_count || 1} used
                                                     </p>
                                                 </div>
@@ -422,7 +488,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                             <button
                                                 onClick={handleManageSubscription}
                                                 disabled={isOpeningPortal || !billingAccount?.stripe_customer_id}
-                                                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-medium text-sm py-3 px-4 rounded-md transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                                                className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-medium text-sm py-3.5 px-4 rounded-md transition-opacity flex items-center justify-center gap-2 disabled:opacity-50 touch-manipulation"
                                             >
                                                 {isOpeningPortal ? (
                                                     <>
@@ -436,7 +502,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                                     </>
                                                 )}
                                             </button>
-                                            <p className="text-xs text-center text-brand-text-muted">
+                                            <p className="text-xs text-center text-brand-text-muted px-2">
                                                 Update payment method, view invoices, or cancel subscription
                                             </p>
                                         </div>
@@ -465,20 +531,20 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     >
                         <div className="space-y-4">
                             {profileData.business.business_name && (
-                                <div className="flex items-center justify-between py-4 px-5 bg-gray-50 rounded-lg border border-brand-border">
-                                    <div>
-                                        <h4 className="font-semibold text-brand-text">{profileData.business.business_name}</h4>
-                                        <p className="text-sm text-brand-text-muted mt-1">{profileData.business.location}</p>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 px-4 md:px-5 bg-gray-50 rounded-lg border border-brand-border">
+                                    <div className="min-w-0">
+                                        <h4 className="font-semibold text-brand-text text-sm md:text-base">{profileData.business.business_name}</h4>
+                                        <p className="text-xs md:text-sm text-brand-text-muted mt-1">{profileData.business.location}</p>
                                     </div>
-                                    <span className="text-xs font-medium bg-green-100 text-green-700 px-3 py-1.5 rounded-md">Primary</span>
+                                    <span className="text-xs font-medium bg-green-100 text-green-700 px-3 py-1.5 rounded-md w-fit">Primary</span>
                                 </div>
                             )}
                             <button
                                 onClick={handleAddBusinessRequest}
-                                className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-5 rounded-lg text-brand-text font-medium flex items-center justify-center gap-2 transition-colors"
+                                className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-4 md:p-5 rounded-lg text-brand-text font-medium flex items-center justify-center gap-2 transition-colors touch-manipulation"
                             >
                                 <PlusIcon className="w-5 h-5 text-accent-purple" />
-                                Add Business Profile
+                                <span className="text-sm md:text-base">Add Business Profile</span>
                             </button>
                         </div>
                     </ContentSection>
@@ -490,7 +556,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         title="Team Members"
                         description="Manage team access and permissions"
                     >
-                        <div className="space-y-6">
+                        <div className="space-y-4 md:space-y-6">
                             <div className="divide-y divide-brand-border">
                                 {teamMembers.map(member => (
                                     <TeamMemberCard key={member.id} member={member} onRemove={() => alert('Remove functionality coming soon')} />
@@ -498,10 +564,10 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             </div>
                             <button
                                 onClick={handleInviteMemberRequest}
-                                className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-4 rounded-lg text-brand-text font-medium flex items-center justify-center gap-2 transition-colors"
+                                className="w-full border-2 border-dashed border-brand-border hover:border-accent-purple hover:bg-purple-50 p-4 rounded-lg text-brand-text font-medium flex items-center justify-center gap-2 transition-colors touch-manipulation"
                             >
                                 <PlusIcon className="w-5 h-5 text-accent-purple" />
-                                Invite Team Member
+                                <span className="text-sm md:text-base">Invite Team Member</span>
                             </button>
                         </div>
                     </ContentSection>
@@ -516,11 +582,11 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         <div className="space-y-4">
                             <button
                                 onClick={onLogout}
-                                className="w-full bg-white hover:bg-red-50 text-red-600 font-medium text-sm py-3 px-4 rounded-md border-2 border-red-200 hover:border-red-300 transition-all"
+                                className="w-full bg-white hover:bg-red-50 text-red-600 font-medium text-sm py-3.5 px-4 rounded-md border-2 border-red-200 hover:border-red-300 transition-all touch-manipulation"
                             >
                                 Sign Out
                             </button>
-                            <p className="text-xs text-center text-brand-text-muted">
+                            <p className="text-xs text-center text-brand-text-muted px-2">
                                 You'll be redirected to the login page
                             </p>
                         </div>
@@ -533,20 +599,20 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         title="JetSuite Partner Program"
                         description="Earn rewards by referring businesses to JetSuite"
                     >
-                        <div className="space-y-6">
+                        <div className="space-y-4 md:space-y-6">
                             {/* Hero Section */}
-                            <div className="text-center py-6 bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-pink/10 rounded-lg border border-accent-purple/20">
-                                <h3 className="text-2xl font-semibold text-brand-text mb-3">
+                            <div className="text-center py-5 md:py-6 px-3 bg-gradient-to-br from-accent-blue/10 via-accent-purple/10 to-accent-pink/10 rounded-lg border border-accent-purple/20">
+                                <h3 className="text-xl md:text-2xl font-semibold text-brand-text mb-2 md:mb-3">
                                     Become a JetSuite Partner
                                 </h3>
-                                <p className="text-brand-text-muted max-w-2xl mx-auto leading-relaxed">
+                                <p className="text-sm md:text-base text-brand-text-muted max-w-2xl mx-auto leading-relaxed">
                                     Join our affiliate program and earn generous commissions by referring businesses to JetSuite.
                                     Help others grow their business while earning rewards for every successful referral.
                                 </p>
                             </div>
 
                             {/* Benefits Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                                 <div className="p-4 bg-gray-50 rounded-lg border border-brand-border">
                                     <div className="w-10 h-10 bg-gradient-to-br from-accent-blue to-accent-purple rounded-lg flex items-center justify-center mb-3">
                                         <span className="text-white font-bold text-lg">💰</span>
@@ -611,9 +677,9 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                             </div>
 
                             {/* CTA Section */}
-                            <div className="pt-6 border-t border-brand-border">
-                                <div className="bg-gradient-to-r from-accent-blue to-accent-purple p-6 rounded-lg text-center">
-                                    <h4 className="text-lg font-semibold text-white mb-2">
+                            <div className="pt-4 md:pt-6 border-t border-brand-border">
+                                <div className="bg-gradient-to-r from-accent-blue to-accent-purple p-5 md:p-6 rounded-lg text-center">
+                                    <h4 className="text-base md:text-lg font-semibold text-white mb-2">
                                         Ready to Get Started?
                                     </h4>
                                     <p className="text-white/90 text-sm mb-4">
@@ -623,12 +689,12 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         href="https://jetsuiteaffiliates.getrewardful.com/signup"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-block bg-white text-accent-purple font-semibold text-sm py-3 px-8 rounded-md hover:shadow-lg transition-shadow"
+                                        className="inline-block w-full sm:w-auto bg-white text-accent-purple font-semibold text-sm py-3.5 px-8 rounded-md hover:shadow-lg transition-shadow touch-manipulation"
                                     >
                                         Join Partner Program
                                     </a>
                                 </div>
-                                <p className="text-xs text-center text-brand-text-muted mt-4">
+                                <p className="text-xs text-center text-brand-text-muted mt-4 px-2">
                                     Have questions? Contact us at <a href="mailto:partners@jetsuite.com" className="text-accent-purple hover:underline">partners@jetsuite.com</a>
                                 </p>
                             </div>
