@@ -996,3 +996,203 @@ Format in markdown with proper structure.`;
         throw error;
     }
 };
+
+/**
+ * AI-assisted Press Release Helpers
+ */
+
+export const suggestPressReleaseHeadlines = async (
+    profileData: ProfileData,
+    newsType: string,
+    briefDescription: string
+): Promise<string[]> => {
+    try {
+        const ai = getAiClient();
+
+        const basePrompt = `You are an expert PR professional. Generate 5 strong press release headlines in AP Style for the following announcement:
+
+BUSINESS: ${profileData.business.business_name}
+LOCATION: ${profileData.business.location || 'Local Area'}
+ANNOUNCEMENT TYPE: ${newsType}
+BRIEF DESCRIPTION: ${briefDescription}
+
+AP Style Headline Requirements:
+- Active voice, present tense
+- No articles (a/an/the)
+- Capitalize first word and proper nouns only
+- 8-12 words maximum
+- Newsworthy, not promotional
+- Include company name and key action
+
+Return exactly 5 headline options as a JSON array of strings.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        headlines: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    },
+                    required: ["headlines"]
+                }
+            }
+        });
+
+        const result = JSON.parse(response.text ?? '{"headlines":[]}');
+        return result.headlines || [];
+    } catch (error) {
+        console.error('Error suggesting headlines:', error);
+        return [];
+    }
+};
+
+export const suggestPressReleaseQuote = async (
+    profileData: ProfileData,
+    newsType: string,
+    headline: string,
+    keyDetails: {what: string; when: string; where: string; why: string; who: string}
+): Promise<string> => {
+    try {
+        const ai = getAiClient();
+
+        const basePrompt = `You are an expert PR professional. Generate a compelling quote from a business executive for a press release.
+
+BUSINESS: ${profileData.business.business_name}
+ANNOUNCEMENT TYPE: ${newsType}
+HEADLINE: ${headline}
+KEY DETAILS:
+- What: ${keyDetails.what}
+- When: ${keyDetails.when}
+- Where: ${keyDetails.where}
+- Why: ${keyDetails.why}
+- Who: ${keyDetails.who}
+
+Quote Requirements:
+- 25-40 words (2-3 sentences maximum)
+- Professional and newsworthy tone (NOT promotional)
+- Focus on significance, impact, or vision
+- Include words like "allows", "enables", "helps" rather than "excited" or "proud"
+- Sound like it came from a real executive
+- Do NOT include quotation marks in the output
+
+Generate only the quote text without any additional formatting or explanation.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+        });
+
+        return (response.text ?? '').replace(/^["']|["']$/g, '').trim();
+    } catch (error) {
+        console.error('Error suggesting quote:', error);
+        return '';
+    }
+};
+
+export const expandPressReleaseDetail = async (
+    briefDetail: string,
+    context: string
+): Promise<string> => {
+    try {
+        const ai = getAiClient();
+
+        const basePrompt = `You are an expert PR professional. Expand the following brief detail into a complete, AP Style-compliant sentence for a press release.
+
+BRIEF DETAIL: ${briefDetail}
+CONTEXT: ${context}
+
+Requirements:
+- Write in third person
+- Use active voice
+- Be specific and factual
+- 15-25 words
+- Professional journalism tone
+- Do NOT be promotional
+
+Return only the expanded sentence without any additional formatting or explanation.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+        });
+
+        return (response.text ?? '').trim();
+    } catch (error) {
+        console.error('Error expanding detail:', error);
+        return briefDetail;
+    }
+};
+
+export const assistPressReleaseForm = async (
+    profileData: ProfileData,
+    newsType: string,
+    partialFormData: any
+): Promise<{
+    suggestedHeadline?: string;
+    suggestedQuote?: string;
+    suggestedDetails?: {
+        what?: string;
+        when?: string;
+        where?: string;
+        why?: string;
+        who?: string;
+    };
+}> => {
+    try {
+        const ai = getAiClient();
+
+        const basePrompt = `You are an expert PR professional helping to draft a press release. Based on the information provided, suggest content for the missing fields.
+
+BUSINESS: ${profileData.business.business_name}
+INDUSTRY: ${profileData.business.industry || 'General Business'}
+LOCATION: ${profileData.business.location || 'Local Area'}
+ANNOUNCEMENT TYPE: ${newsType}
+
+PARTIALLY FILLED FORM DATA:
+${JSON.stringify(partialFormData, null, 2)}
+
+Generate helpful suggestions for any missing or incomplete fields. Follow AP Style guidelines.
+
+Return a JSON object with the following structure:
+{
+  "suggestedHeadline": "headline if not provided",
+  "suggestedQuote": "quote if not provided",
+  "suggestedDetails": {
+    "what": "what is happening (if not provided)",
+    "when": "when it's happening (if not provided)",
+    "where": "where it's happening (if not provided)",
+    "why": "why it's significant (if not provided)",
+    "who": "who is involved (if not provided)"
+  }
+}
+
+Only include suggestions for fields that are truly empty or incomplete.`;
+
+        const prompt = injectDateContext(basePrompt);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+            }
+        });
+
+        return JSON.parse(response.text ?? '{}');
+    } catch (error) {
+        console.error('Error assisting form:', error);
+        return {};
+    }
+};

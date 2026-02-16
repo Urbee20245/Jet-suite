@@ -3,6 +3,7 @@ import type { ProfileData, KeywordData, WebsiteConnection, BlogPublication } fro
 import { generateLocalContent, suggestBlogTitles, generateImage } from '../../services/geminiService';
 import { Loader } from '../../components/Loader';
 import { ResultDisplay } from '../../components/ResultDisplay';
+import { BlogPostPreview } from '../../components/BlogPostPreview';
 import { SparklesIcon, CheckCircleIcon, ArrowRightIcon } from '../../components/icons/MiniIcons';
 import { AnalysisLoadingState } from '../../components/AnalysisLoadingState';
 import { getWebsiteConnections } from '../../services/websiteService';
@@ -811,7 +812,15 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
       {!batchMode && result && (
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <ResultDisplay markdownText={result} />
+          <BlogPostPreview
+            title={topic}
+            content={result}
+            featuredImage={featuredImage}
+            metaDescription={optimization?.meta_description}
+            keywords={optimization?.keywords}
+            tags={optimization?.tags}
+            slug={optimization?.slug}
+          />
 
           {/* Success Message */}
           {success && (
