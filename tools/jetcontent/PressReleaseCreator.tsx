@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ProfileData } from '../../types';
-import { MegaphoneIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { MegaphoneIcon, InformationCircleIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { suggestPressReleaseHeadlines, suggestPressReleaseQuote } from '../../services/geminiService';
 
 interface PressReleaseFormData {
   newsType: string;
@@ -55,6 +56,10 @@ export const PressReleaseCreator: React.FC<PressReleaseCreatorProps> = ({ profil
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [suggestedHeadlines, setSuggestedHeadlines] = useState<string[]>([]);
+  const [loadingHeadlines, setLoadingHeadlines] = useState(false);
+  const [loadingQuote, setLoadingQuote] = useState(false);
+  const [showAIHelp, setShowAIHelp] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +97,62 @@ export const PressReleaseCreator: React.FC<PressReleaseCreatorProps> = ({ profil
     }
   };
 
+  const handleSuggestHeadlines = async () => {
+    if (!formData.newsType) {
+      setError('Please select an announcement type first');
+      return;
+    }
+
+    // Create a brief description from available details
+    const briefDesc = Object.values(formData.keyDetails).filter(v => v.trim()).join('. ');
+    if (!briefDesc) {
+      setError('Please fill in at least one key detail to get headline suggestions');
+      return;
+    }
+
+    try {
+      setLoadingHeadlines(true);
+      setError('');
+      const headlines = await suggestPressReleaseHeadlines(profileData, formData.newsType, briefDesc);
+      setSuggestedHeadlines(headlines);
+      setShowAIHelp(true);
+    } catch (err: any) {
+      setError('Failed to generate headline suggestions. Please try again.');
+    } finally {
+      setLoadingHeadlines(false);
+    }
+  };
+
+  const handleSuggestQuote = async () => {
+    if (!formData.newsType || !formData.headline) {
+      setError('Please select announcement type and enter a headline first');
+      return;
+    }
+
+    // Check if we have some key details
+    const hasDetails = Object.values(formData.keyDetails).some(v => v.trim());
+    if (!hasDetails) {
+      setError('Please fill in at least one key detail to get quote suggestions');
+      return;
+    }
+
+    try {
+      setLoadingQuote(true);
+      setError('');
+      const quote = await suggestPressReleaseQuote(
+        profileData,
+        formData.newsType,
+        formData.headline,
+        formData.keyDetails
+      );
+      setFormData({ ...formData, quote });
+    } catch (err: any) {
+      setError('Failed to generate quote suggestion. Please try again.');
+    } finally {
+      setLoadingQuote(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
 
@@ -126,6 +187,29 @@ export const PressReleaseCreator: React.FC<PressReleaseCreatorProps> = ({ profil
                 Press releases follow strict AP Style journalism standards. Our AI will format everything correctly, but provide accurate, factual information only.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* AI Assistant Toggle */}
+        <div className="mt-4 bg-gradient-to-r from-accent-purple/10 to-accent-blue/10 border border-accent-purple/20 p-4 rounded-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <SparklesIcon className="w-6 h-6 text-accent-purple" />
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">AI Writing Assistant</h3>
+                <p className="text-xs text-gray-600 mt-0.5">Get AI-powered suggestions for headlines, quotes, and details</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAIHelp(!showAIHelp)}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                showAIHelp
+                  ? 'bg-gradient-to-r from-accent-purple to-accent-blue text-white shadow-md'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:border-accent-purple'
+              }`}
+            >
+              {showAIHelp ? '✓ Active' : 'Activate'}
+            </button>
           </div>
         </div>
       </div>
@@ -166,11 +250,45 @@ export const PressReleaseCreator: React.FC<PressReleaseCreatorProps> = ({ profil
             </div>
           </div>
 
-          {/* Headline */}
+          {/* Headline with AI Suggestions */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-3">
-              Headline *
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-gray-900">
+                Headline *
+              </label>
+              {showAIHelp && (
+                <button
+                  type="button"
+                  onClick={handleSuggestHeadlines}
+                  disabled={loadingHeadlines}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-accent-purple to-accent-blue text-white rounded-lg text-xs font-semibold hover:shadow-md transition-all duration-200 disabled:opacity-50"
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  {loadingHeadlines ? 'Generating...' : 'AI Suggest'}
+                </button>
+              )}
+            </div>
+
+            {/* Suggested Headlines */}
+            {suggestedHeadlines.length > 0 && showAIHelp && (
+              <div className="mb-4 space-y-2">
+                <p className="text-xs text-gray-600 font-medium">AI-Generated Headlines (click to use):</p>
+                {suggestedHeadlines.map((headline, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setFormData({ ...formData, headline });
+                      setSuggestedHeadlines([]);
+                    }}
+                    className="w-full text-left px-4 py-2.5 bg-gradient-to-r from-accent-purple/5 to-accent-blue/5 border border-accent-purple/20 rounded-lg text-sm text-gray-800 hover:border-accent-purple hover:shadow-sm transition-all duration-200"
+                  >
+                    {headline}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <input
               type="text"
               value={formData.headline}
@@ -215,11 +333,24 @@ export const PressReleaseCreator: React.FC<PressReleaseCreatorProps> = ({ profil
             </div>
           </div>
 
-          {/* Quote */}
+          {/* Quote with AI Assistance */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <label className="block text-sm font-semibold text-gray-900 mb-3">
-              Notable Quote *
-            </label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-semibold text-gray-900">
+                Notable Quote *
+              </label>
+              {showAIHelp && (
+                <button
+                  type="button"
+                  onClick={handleSuggestQuote}
+                  disabled={loadingQuote}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-accent-purple to-accent-blue text-white rounded-lg text-xs font-semibold hover:shadow-md transition-all duration-200 disabled:opacity-50"
+                >
+                  <SparklesIcon className="w-4 h-4" />
+                  {loadingQuote ? 'Generating...' : 'AI Generate'}
+                </button>
+              )}
+            </div>
             <p className="text-xs text-gray-600 mb-3">
               Provide a quote from the business owner or executive. Should be newsworthy, not promotional.
             </p>
