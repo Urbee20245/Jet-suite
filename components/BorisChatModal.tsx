@@ -146,7 +146,11 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
         {/* Header */}
         <div className="flex-shrink-0 p-4 border-b border-purple-700/30 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <JetbotAvatar size={40} />
+            <div className="p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400 shadow-md shadow-purple-500/40">
+              <div className="rounded-full overflow-hidden">
+                <JetbotAvatar size={40} />
+              </div>
+            </div>
             <div>
               <h2 className="text-white font-bold text-lg">Chat with Boris</h2>
               <p className="text-purple-300 text-xs">Your AI Growth Coach</p>
@@ -169,7 +173,11 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
             >
               {/* Jetbot avatar on the left for Boris messages */}
               {message.role === 'boris' && (
-                <JetbotAvatar size={28} className="flex-shrink-0 mb-1" />
+                <div className="flex-shrink-0 mb-1 p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400">
+                  <div className="rounded-full overflow-hidden">
+                    <JetbotAvatar size={28} />
+                  </div>
+                </div>
               )}
 
               <div
@@ -198,7 +206,11 @@ export const BorisChatModal: React.FC<BorisChatModalProps> = ({
 
           {isLoading && (
             <div className="flex items-end gap-2 justify-start">
-              <JetbotAvatar size={28} className="flex-shrink-0 mb-1" />
+              <div className="flex-shrink-0 mb-1 p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400">
+                <div className="rounded-full overflow-hidden">
+                  <JetbotAvatar size={28} />
+                </div>
+              </div>
               <div className="bg-purple-800/40 border border-purple-600/30 rounded-2xl rounded-bl-sm px-4 py-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
