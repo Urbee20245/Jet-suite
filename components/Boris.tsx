@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { SparklesIcon as SparklesIconSolid, ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon, ChevronDownIcon } from './icons/MiniIcons';
+import { ArrowRightIcon, ChatBubbleLeftRightIcon, BoltIcon, CheckCircleIcon, InformationCircleIcon, ChevronDownIcon } from './icons/MiniIcons';
 import { BorisChatModal } from './BorisChatModal';
 import confetti from 'canvas-confetti';
 import type { BorisContext } from '../services/borisAIService';
 import { ALL_TOOLS } from '../constants';
 import { manuallyStartTour } from '../components/ProductTour';
+import { JetbotAvatar } from './JetbotAvatar';
 
 interface TypingTextProps {
   text: string;
@@ -323,9 +324,7 @@ export const Boris: React.FC<BorisProps> = ({
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
-              <SparklesIconSolid className="w-8 h-8 text-white" />
-            </div>
+            <JetbotAvatar size={64} />
             <div>
               <h3 className="text-2xl font-bold text-slate-900">Loading Boris...</h3>
               <p className="text-slate-600 text-sm">Analyzing your progress...</p>
@@ -362,10 +361,12 @@ export const Boris: React.FC<BorisProps> = ({
         <div className="flex items-start justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-lg opacity-20 animate-pulse"></div>
-              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg border-2 border-white/30">
-                <SparklesIconSolid className="w-8 h-8 text-white" />
+              {/* Soft glow halo behind Jetbot */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-xl opacity-30 animate-pulse scale-110"></div>
+              <div className="relative">
+                <JetbotAvatar size={72} />
               </div>
+              {/* Online status badge */}
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-sm border-2 border-white">
                 <BoltIcon className="w-3 h-3 text-white" />
               </div>
