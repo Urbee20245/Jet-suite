@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Tool, ProfileData, AdToAnalyze, AdPerformanceResult, AdPerformanceStatus } from '../types';
-import { generateAdCopy, generateImage, analyzeAdPerformance } from '../services/geminiService';
+import type { Tool, ProfileData, AdToAnalyze, AdPerformanceResult, AdPerformanceStatus, FacebookAdLibraryResult, FacebookAdLibraryInsights } from '../types';
+import { generateAdCopy, generateImage, analyzeAdPerformance, analyzeFacebookAdLibrary } from '../services/geminiService';
 import { HowToUse } from '../components/HowToUse';
 import {
   InformationCircleIcon,
@@ -27,7 +27,8 @@ interface Ad {
 }
 
 type Platform = 'Facebook' | 'Google Ads' | 'Instagram';
-type JetAdsTab = 'generate' | 'analyze';
+type JetAdsTab = 'generate' | 'analyze' | 'adlibrary';
+type AdType = 'ALL' | 'POLITICAL_AND_ISSUE_ADS' | 'HOUSING_ADS' | 'EMPLOYMENT_ADS' | 'CREDIT_ADS';
 
 interface AdAnalyzeFormEntry {
   id: string;
@@ -41,6 +42,8 @@ interface AdAnalyzeFormEntry {
   impressions: string;
   clicks: string;
   budget: string;
+  roas: string;       // Facebook-specific
+  frequency: string;  // Facebook-specific
 }
 
 const platformDetails: { [key in Platform]: { aspectRatio: '1:1' | '16:9' | '4:3'; postUrl: string } } = {
@@ -199,6 +202,17 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
 
+  // ── Ad Library tab state ──
+  const [libraryKeyword, setLibraryKeyword] = useState('');
+  const [libraryCountry, setLibraryCountry] = useState('US');
+  const [libraryAdType, setLibraryAdType] = useState<AdType>('ALL');
+  const [libraryResults, setLibraryResults] = useState<FacebookAdLibraryResult[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState('');
+  const [libraryInsights, setLibraryInsights] = useState<FacebookAdLibraryInsights | null>(null);
+  const [libraryInsightsLoading, setLibraryInsightsLoading] = useState(false);
+  const [libraryInsightsError, setLibraryInsightsError] = useState('');
+
   function createEmptyEntry(): AdAnalyzeFormEntry {
     return {
       id: crypto.randomUUID(),
@@ -206,6 +220,7 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
       platform: 'Facebook',
       ctr: '', conversionRate: '', cpc: '',
       impressions: '', clicks: '', budget: '',
+      roas: '', frequency: '',
     };
   }
 
@@ -265,6 +280,60 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
   const handleEntryChange = (id: string, field: keyof AdAnalyzeFormEntry, value: string) =>
     setAnalyzeEntries(prev => prev.map(e => e.id === id ? { ...e, [field]: value } : e));
 
+  // ── Ad Library handlers ──
+  const handleLibrarySearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!libraryKeyword.trim()) {
+      setLibraryError('Please enter a keyword to search the Ad Library.');
+      return;
+    }
+    setLibraryError('');
+    setLibraryResults([]);
+    setLibraryInsights(null);
+    setLibraryInsightsError('');
+    setLibraryLoading(true);
+    try {
+      const params = new URLSearchParams({
+        search_terms: libraryKeyword.trim(),
+        ad_reached_countries: libraryCountry,
+        ad_type: libraryAdType,
+      });
+      const response = await fetch(`/api/facebook/ad-library?${params.toString()}`);
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        setLibraryError(data.error ?? 'Failed to fetch ads. Please try again.');
+      } else {
+        setLibraryResults(data.ads ?? []);
+        if ((data.ads ?? []).length === 0) {
+          setLibraryError('No ads found for that search. Try different keywords or a broader ad type.');
+        }
+      }
+    } catch {
+      setLibraryError('Network error. Please check your connection and try again.');
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  const handleAnalyzeLibrary = async () => {
+    if (libraryResults.length === 0) return;
+    setLibraryInsightsError('');
+    setLibraryInsights(null);
+    setLibraryInsightsLoading(true);
+    try {
+      const insights = await analyzeFacebookAdLibrary(libraryResults, businessType || 'local business');
+      setLibraryInsights(insights);
+    } catch (err: any) {
+      if (err.message?.includes('AI_KEY_MISSING')) {
+        setLibraryInsightsError('AI features are disabled due to missing API key.');
+      } else {
+        setLibraryInsightsError('Analysis failed. Please try again.');
+      }
+    } finally {
+      setLibraryInsightsLoading(false);
+    }
+  };
+
   const handleAnalyzeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAnalyzeError('');
@@ -293,6 +362,8 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
         impressions: parseInt(e.impressions, 10) || 0,
         clicks: parseInt(e.clicks, 10) || 0,
         budget: parseFloat(e.budget) || 0,
+        ...(e.platform === 'Facebook' && e.roas ? { roas: parseFloat(e.roas) } : {}),
+        ...(e.platform === 'Facebook' && e.frequency ? { frequency: parseFloat(e.frequency) } : {}),
       },
     }));
 
@@ -350,17 +421,17 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
       {/* Tab bar */}
       <div className="bg-brand-card p-2 rounded-xl shadow-lg mb-6">
         <div className="flex space-x-2">
-          {(['generate', 'analyze'] as JetAdsTab[]).map(tab => (
+          {(['generate', 'analyze', 'adlibrary'] as JetAdsTab[]).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition capitalize ${
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition text-sm ${
                 activeTab === tab
                   ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white shadow'
                   : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
               }`}
             >
-              {tab === 'generate' ? 'Generate' : 'Analyze Performance'}
+              {tab === 'generate' ? 'Generate' : tab === 'analyze' ? 'Analyze Performance' : 'FB Ad Library'}
             </button>
           ))}
         </div>
@@ -592,6 +663,30 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                       className={inputCls}
                     />
                   </div>
+                  {entry.platform === 'Facebook' && (
+                    <>
+                      <div>
+                        <label className={labelCls}>ROAS <span className="text-accent-blue normal-case font-normal">(Facebook)</span></label>
+                        <input
+                          type="number" step="0.1" min="0"
+                          value={entry.roas}
+                          onChange={e => handleEntryChange(entry.id, 'roas', e.target.value)}
+                          placeholder="e.g., 3.2"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Frequency <span className="text-accent-blue normal-case font-normal">(Facebook)</span></label>
+                        <input
+                          type="number" step="0.1" min="0"
+                          value={entry.frequency}
+                          onChange={e => handleEntryChange(entry.id, 'frequency', e.target.value)}
+                          placeholder="e.g., 2.4"
+                          className={inputCls}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -630,6 +725,228 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
               {analyzeResults.map((result, index) => (
                 <AdResultCard key={result.id} result={result} index={index} />
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── AD LIBRARY TAB ── */}
+      {activeTab === 'adlibrary' && (
+        <div>
+          <div className="bg-accent-blue/5 border-l-4 border-accent-blue p-4 rounded-r-xl mb-6">
+            <p className="text-sm font-semibold text-accent-blue mb-2">Facebook Ad Library — Competitor Intelligence</p>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-accent-blue/80">
+              <li>Search Meta's public Ad Library to see what competitors are running.</li>
+              <li>Results show ad copy, reach estimates, spend ranges, and platforms.</li>
+              <li>Click "Analyze with AI" to extract winning patterns and get tailored recommendations.</li>
+              <li>Use these insights to inspire your next campaign in the Generate tab.</li>
+            </ul>
+          </div>
+
+          {/* Search form */}
+          <form onSubmit={handleLibrarySearch} className="bg-brand-card p-6 rounded-xl shadow-lg mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="md:col-span-1">
+                <label className={labelCls}>Keyword / Competitor Name</label>
+                <input
+                  type="text"
+                  value={libraryKeyword}
+                  onChange={e => setLibraryKeyword(e.target.value)}
+                  placeholder="e.g., coffee shop, HVAC, dentist"
+                  className={inputCls}
+                  required
+                />
+              </div>
+              <div>
+                <label className={labelCls}>Country</label>
+                <select
+                  value={libraryCountry}
+                  onChange={e => setLibraryCountry(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="US">United States</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                  <option value="IE">Ireland</option>
+                  <option value="NZ">New Zealand</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Ad Type</label>
+                <select
+                  value={libraryAdType}
+                  onChange={e => setLibraryAdType(e.target.value as AdType)}
+                  className={inputCls}
+                >
+                  <option value="ALL">All Ads</option>
+                  <option value="POLITICAL_AND_ISSUE_ADS">Political &amp; Issue</option>
+                  <option value="HOUSING_ADS">Housing</option>
+                  <option value="EMPLOYMENT_ADS">Employment</option>
+                  <option value="CREDIT_ADS">Credit</option>
+                </select>
+              </div>
+            </div>
+            {libraryError && <p className="text-red-500 text-sm mb-3">{libraryError}</p>}
+            <button
+              type="submit"
+              disabled={libraryLoading}
+              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            >
+              {libraryLoading ? 'Searching Ad Library...' : 'Search Facebook Ad Library'}
+            </button>
+          </form>
+
+          {libraryLoading && (
+            <AnalysisLoadingState
+              title="Searching Facebook Ad Library"
+              message="Fetching live ads from Meta's Ad Library. This usually takes just a few seconds."
+              durationEstimateSeconds={10}
+            />
+          )}
+
+          {/* Results */}
+          {libraryResults.length > 0 && !libraryLoading && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-brand-text">
+                  {libraryResults.length} Ad{libraryResults.length !== 1 ? 's' : ''} Found
+                </h2>
+                <button
+                  onClick={handleAnalyzeLibrary}
+                  disabled={libraryInsightsLoading}
+                  className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-2 px-5 rounded-lg text-sm transition-all disabled:opacity-50 shadow hover:shadow-md"
+                >
+                  {libraryInsightsLoading ? 'Analyzing...' : 'Analyze with AI'}
+                </button>
+              </div>
+
+              {libraryInsightsError && (
+                <p className="text-red-500 text-sm mb-4">{libraryInsightsError}</p>
+              )}
+
+              {/* AI Insights Panel */}
+              {libraryInsightsLoading && (
+                <AnalysisLoadingState
+                  title="Extracting Competitive Insights"
+                  message="AI is analyzing ad patterns, hooks, and CTAs to generate tailored recommendations for your business."
+                  durationEstimateSeconds={30}
+                />
+              )}
+
+              {libraryInsights && !libraryInsightsLoading && (
+                <div className="bg-brand-card rounded-xl shadow-lg border border-accent-purple/20 p-6 mb-8">
+                  <p className="text-xs font-bold text-accent-purple uppercase tracking-widest mb-4">AI Competitive Intelligence</p>
+                  <p className="text-sm text-brand-text mb-5 leading-relaxed">{libraryInsights.summary}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Top Creative Patterns</p>
+                      <ul className="space-y-1">
+                        {libraryInsights.topPatterns.map((p, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
+                            <SparklesIcon className="w-4 h-4 text-accent-purple flex-shrink-0 mt-0.5" />
+                            {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Winning Angles</p>
+                      <ul className="space-y-1">
+                        {libraryInsights.winningAngles.map((a, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
+                            <CheckCircleIcon className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                            {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Top CTAs Observed</p>
+                      <div className="flex flex-wrap gap-2">
+                        {libraryInsights.topCTAs.map((cta, i) => (
+                          <span key={i} className="bg-accent-blue/10 text-accent-blue text-xs font-semibold px-3 py-1 rounded-full border border-accent-blue/20">
+                            {cta}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Recommended for You</p>
+                      <ul className="space-y-1">
+                        {libraryInsights.recommendedApproaches.map((r, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
+                            <ExclamationTriangleIcon className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Ad cards */}
+              <div className="space-y-4">
+                {libraryResults.map((ad, index) => {
+                  const body = ad.ad_creative_bodies?.[0] ?? '';
+                  const title = ad.ad_creative_link_titles?.[0] ?? '';
+                  const description = ad.ad_creative_link_descriptions?.[0] ?? '';
+                  const impressionText = ad.impressions
+                    ? `${parseInt(ad.impressions.lower_bound, 10).toLocaleString()}–${parseInt(ad.impressions.upper_bound, 10).toLocaleString()} impressions`
+                    : null;
+                  const spendText = ad.spend
+                    ? `${ad.spend.currency} ${parseInt(ad.spend.lower_bound, 10).toLocaleString()}–${parseInt(ad.spend.upper_bound, 10).toLocaleString()} spent`
+                    : null;
+
+                  return (
+                    <div key={ad.id ?? index} className="bg-brand-card rounded-xl shadow border border-brand-border p-5">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="min-w-0">
+                          <p className="text-xs text-brand-text-muted font-semibold uppercase tracking-wide mb-0.5">Advertiser</p>
+                          <p className="font-bold text-brand-text truncate">{ad.page_name}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 flex-shrink-0">
+                          {(ad.publisher_platforms ?? []).map((p) => (
+                            <span key={p} className="text-xs bg-brand-light border border-brand-border px-2 py-0.5 rounded-full text-brand-text-muted capitalize">
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {(body || title) && (
+                        <div className="bg-brand-light rounded-lg p-4 mb-3 border border-brand-border">
+                          {title && <p className="font-semibold text-brand-text text-sm mb-1">{title}</p>}
+                          {body && <p className="text-brand-text-muted text-sm leading-relaxed">{body}</p>}
+                          {description && <p className="text-brand-text-muted text-xs mt-2 italic">{description}</p>}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-3">
+                          {impressionText && (
+                            <span className="text-xs text-brand-text-muted">{impressionText}</span>
+                          )}
+                          {spendText && (
+                            <span className="text-xs text-brand-text-muted">{spendText}</span>
+                          )}
+                        </div>
+                        {ad.ad_snapshot_url && (
+                          <a
+                            href={ad.ad_snapshot_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-accent-purple font-semibold hover:underline"
+                          >
+                            View Ad
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
