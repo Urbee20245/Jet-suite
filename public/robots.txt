@@ -1,0 +1,37 @@
+# JetSuite (getjetsuite.com) — Robots.txt
+# Allow all crawlers full access to JetSuite
+
+User-agent: *
+Allow: /
+
+# Block internal app routes from indexing
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /billing/
+Disallow: /jetcreate
+Disallow: /jetsocial
+Disallow: /jetcontent
+Disallow: /jetseo
+Disallow: /jetbiz
+Disallow: /jetviz
+Disallow: /jetcompete
+Disallow: /jetkeywords
+Disallow: /jetreply
+Disallow: /jettrust
+Disallow: /jetleads
+Disallow: /jetevents
+Disallow: /jetads
+Disallow: /jetimage
+Disallow: /jetproduct
+Disallow: /jetservices
+Disallow: /growthplan
+Disallow: /account
+Disallow: /connections
+Disallow: /planner
+Disallow: /growthscore
+Disallow: /businessdetails
+Disallow: /support
+Disallow: /login
+
+# Sitemap location for JetSuite
+Sitemap: https://getjetsuite.com/sitemap.xml
