@@ -1,8 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { 
-    AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna, 
+import type {
+    AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna,
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
-    LiveWebsiteAnalysis, BusinessReview, YoutubeThumbnailRequest
+    LiveWebsiteAnalysis, BusinessReview, YoutubeThumbnailRequest,
+    AdToAnalyze, AdPerformanceResult
 } from '../types';
 import { getCurrentMonthYear, getCurrentYear, getAIDateTimeContextShort } from '../utils/dateTimeUtils';
 
@@ -1195,4 +1196,116 @@ Only include suggestions for fields that are truly empty or incomplete.`;
         console.error('Error assisting form:', error);
         return {};
     }
+};
+// ── JetAds Analyze ────────────────────────────────────────────────────────────
+
+const AD_BENCHMARKS: Record<string, { ctr: string; conversion: string; cpc: string }> = {
+  'Facebook':   { ctr: '0.9–1.5%', conversion: '9–10%',  cpc: '$0.50–$2.00' },
+  'Instagram':  { ctr: '0.8–1.5%', conversion: '1–3%',   cpc: '$0.70–$1.50' },
+  'Google Ads': { ctr: '2–5%',     conversion: '2–5%',   cpc: '$1.00–$4.00' },
+};
+
+export const analyzeAdPerformance = async (
+  ads: AdToAnalyze[],
+  businessType: string
+): Promise<AdPerformanceResult[]> => {
+  try {
+    const ai = getAiClient();
+
+    const adContext = ads.map(ad => {
+      const b = AD_BENCHMARKS[ad.metrics.platform] ?? AD_BENCHMARKS['Google Ads'];
+      return (
+        `ID: ${ad.id}\n` +
+        `Platform: ${ad.metrics.platform}\n` +
+        `Headline: "${ad.headline}"\n` +
+        `Description: "${ad.description}"\n` +
+        `CTA: "${ad.cta}"\n` +
+        `CTR: ${ad.metrics.ctr}%  (industry benchmark: ${b.ctr})\n` +
+        `Conversion Rate: ${ad.metrics.conversionRate}%  (industry benchmark: ${b.conversion})\n` +
+        `CPC: $${ad.metrics.cpc}  (industry benchmark: ${b.cpc})\n` +
+        `Impressions: ${ad.metrics.impressions}  Clicks: ${ad.metrics.clicks}  Budget Spent: $${ad.metrics.budget}`
+      );
+    }).join('\n\n---\n\n');
+
+    const basePrompt = `You are an expert digital advertising strategist reviewing ad campaigns for a ${businessType} business.
+
+SCORING RULES:
+- Weight CTR 40%, conversion rate 30%, copy quality 30%.
+- performanceScore 0-100 (100 = best-in-class).
+- status = "good" if CTR ≥ benchmark floor; "warning" if CTR is 50–80% of benchmark floor; "critical" if CTR < 50% of benchmark floor.
+
+INDUSTRY BENCHMARKS:
+- Facebook/Instagram Ads: Good CTR = 0.9–1.5%, Good Conversion = 9–10%
+- Google Ads: Good CTR = 2–5%, Good Conversion = 2–5%
+
+FOR EACH AD BELOW:
+1. Assign performanceScore (0-100) and status ("good", "warning", or "critical").
+2. List 2-4 specific issues, each referencing actual numbers (e.g., "CTR of 0.4% is 80% below the Google Ads benchmark floor of 2%").
+3. Provide 3-5 actionable suggestions to improve copy, targeting, or bid strategy.
+4. Write an improved headline (max 40 chars for Google Ads, max 60 chars for Facebook/Instagram) that directly addresses the issues.
+5. Write an improved description that is specific, benefit-led, and includes urgency or social proof.
+6. Fill benchmarkComparison with the benchmark string and the user's exact value (formatted as a percentage string, e.g. "1.2%").
+7. Return the exact id string provided — do not modify it.
+
+ADS TO ANALYZE:
+${adContext}
+
+Return JSON with a top-level "results" array. Each element must have: id, headline, performanceScore, status, issues, suggestions, suggestedNewHeadline, suggestedNewDescription, benchmarkComparison.`;
+
+    const prompt = injectDateContext(basePrompt);
+
+    const adResultSchema = {
+      type: Type.OBJECT,
+      properties: {
+        id:                    { type: Type.STRING },
+        headline:              { type: Type.STRING },
+        performanceScore:      { type: Type.NUMBER },
+        status:                { type: Type.STRING },
+        issues:                { type: Type.ARRAY, items: { type: Type.STRING } },
+        suggestions:           { type: Type.ARRAY, items: { type: Type.STRING } },
+        suggestedNewHeadline:  { type: Type.STRING },
+        suggestedNewDescription: { type: Type.STRING },
+        benchmarkComparison: {
+          type: Type.OBJECT,
+          properties: {
+            ctrBenchmark:        { type: Type.STRING },
+            yourCtr:             { type: Type.STRING },
+            ctrStatus:           { type: Type.STRING },
+            conversionBenchmark: { type: Type.STRING },
+            yourConversion:      { type: Type.STRING },
+            conversionStatus:    { type: Type.STRING },
+          },
+          required: ['ctrBenchmark', 'yourCtr', 'ctrStatus', 'conversionBenchmark', 'yourConversion', 'conversionStatus'],
+        },
+      },
+      required: ['id', 'headline', 'performanceScore', 'status', 'issues', 'suggestions', 'suggestedNewHeadline', 'suggestedNewDescription', 'benchmarkComparison'],
+    };
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            results: { type: Type.ARRAY, items: adResultSchema },
+          },
+          required: ['results'],
+        },
+      },
+    });
+
+    const parsed = JSON.parse(response.text?.trim() ?? '{"results":[]}');
+    // Re-inject original IDs by position as a safety net
+    return (parsed.results as AdPerformanceResult[]).map((r, i) => ({
+      ...r,
+      id: ads[i]?.id ?? r.id,
+    }));
+  } catch (error) {
+    if (error instanceof Error && error.message === 'AI_KEY_MISSING') {
+      throw new Error('AI features are disabled due to missing API key.');
+    }
+    throw error;
+  }
 };
