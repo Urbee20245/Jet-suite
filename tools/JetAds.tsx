@@ -9,6 +9,14 @@ import {
   TrashIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  ChartBarIcon,
+  BoltIcon,
+  PhotoIcon,
+  ArrowRightIcon,
+  CheckIcon,
+  GlobeAltIcon,
+  RocketLaunchIcon,
+  TrendingUpIcon,
 } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
@@ -60,6 +68,80 @@ const statusConfig: Record<AdPerformanceStatus, { label: string; bgCls: string; 
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
+const SCORE_COLOR_MAP: Record<AdPerformanceStatus, string> = {
+  good: '#4ade80',
+  warning: '#facc15',
+  critical: '#f87171',
+};
+
+const ScoreRing: React.FC<{ score: number; status: AdPerformanceStatus }> = ({ score, status }) => {
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (score / 100) * circ;
+  return (
+    <div className="relative w-24 h-24 flex-shrink-0 flex items-center justify-center">
+      <svg className="absolute inset-0 -rotate-90" viewBox="0 0 96 96">
+        <circle cx="48" cy="48" r={r} strokeWidth="8" stroke="#E2E8F0" fill="none" />
+        <circle
+          cx="48" cy="48" r={r} strokeWidth="8" fill="none"
+          stroke={SCORE_COLOR_MAP[status] ?? SCORE_COLOR_MAP.warning}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.7s ease' }}
+        />
+      </svg>
+      <div className="z-10 text-center">
+        <p className="text-2xl font-black text-brand-text leading-none">{score}</p>
+        <p className="text-[10px] text-brand-text-muted font-semibold">/100</p>
+      </div>
+    </div>
+  );
+};
+
+const PLATFORM_SVGS: Record<Platform, React.ReactNode> = {
+  Facebook: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  ),
+  'Google Ads': (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+  ),
+  Instagram: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+    </svg>
+  ),
+};
+
+const PlatformToggle: React.FC<{ value: Platform; onChange: (p: Platform) => void }> = ({ value, onChange }) => (
+  <div className="grid grid-cols-3 gap-3">
+    {(['Facebook', 'Google Ads', 'Instagram'] as Platform[]).map(p => (
+      <button
+        key={p}
+        type="button"
+        onClick={() => onChange(p)}
+        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 font-semibold text-sm transition-all duration-200 ${
+          value === p
+            ? 'border-accent-purple bg-accent-purple/5 text-accent-purple shadow-sm'
+            : 'border-brand-border bg-white text-brand-text-muted hover:border-accent-blue/40 hover:text-brand-text'
+        }`}
+      >
+        <span className={value === p ? 'text-accent-purple' : 'text-brand-text-muted'}>
+          {PLATFORM_SVGS[p]}
+        </span>
+        <span className="text-xs font-bold">{p}</span>
+      </button>
+    ))}
+  </div>
+);
+
 const AdResultCard: React.FC<{ result: AdPerformanceResult; index: number }> = ({ result, index }) => {
   const cfg = statusConfig[result.status] ?? statusConfig.warning;
   const StatusIcon = cfg.Icon;
@@ -78,38 +160,36 @@ const AdResultCard: React.FC<{ result: AdPerformanceResult; index: number }> = (
   };
 
   return (
-    <div className={`bg-brand-card rounded-xl shadow-lg border ${cfg.borderCls} overflow-hidden`}>
-      {/* Header */}
-      <div className={`p-4 ${cfg.bgCls} flex flex-wrap items-center justify-between gap-3`}>
-        <div className="flex items-center gap-2 min-w-0">
-          <StatusIcon className={`w-5 h-5 flex-shrink-0 ${cfg.textCls}`} />
-          <h3 className="font-bold text-brand-text truncate">Ad #{index + 1}: {result.headline}</h3>
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.bgCls} ${cfg.textCls} border ${cfg.borderCls}`}>
-            {cfg.label}
-          </span>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-xs text-brand-text-muted">Score</p>
-          <p className={`text-2xl font-black ${scoreColor}`}>
-            {result.performanceScore}<span className="text-sm font-normal">/100</span>
-          </p>
+    <div className={`bg-brand-card rounded-2xl shadow-lg border ${cfg.borderCls} overflow-hidden`}>
+      {/* Header with score ring */}
+      <div className={`${cfg.bgCls} flex items-center gap-5 p-5`}>
+        <ScoreRing score={result.performanceScore} status={result.status} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${cfg.bgCls} ${cfg.textCls} ${cfg.borderCls}`}>
+              <StatusIcon className="w-3.5 h-3.5" />
+              {cfg.label}
+            </span>
+            <span className="text-xs text-brand-text-muted font-medium">Ad #{index + 1}</span>
+          </div>
+          <h3 className="font-black text-brand-text text-base leading-snug">{result.headline}</h3>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-5">
         {/* Benchmark comparison */}
         <div>
           <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">Benchmark Comparison</p>
           <div className="grid grid-cols-2 gap-3">
-            <div className={`p-3 rounded-lg border ${ctrCfg.borderCls} ${ctrCfg.bgCls}`}>
-              <p className="text-xs text-brand-text-muted mb-1">Click-Through Rate</p>
-              <p className={`text-lg font-bold ${ctrCfg.textCls}`}>{result.benchmarkComparison.yourCtr}</p>
-              <p className="text-xs text-brand-text-muted">Benchmark: {result.benchmarkComparison.ctrBenchmark}</p>
+            <div className={`p-4 rounded-xl border ${ctrCfg.borderCls} ${ctrCfg.bgCls}`}>
+              <p className="text-[11px] text-brand-text-muted mb-1 font-medium uppercase tracking-wide">Click-Through Rate</p>
+              <p className={`text-2xl font-black ${ctrCfg.textCls}`}>{result.benchmarkComparison.yourCtr}</p>
+              <p className="text-xs text-brand-text-muted mt-0.5">Benchmark: <span className="font-semibold">{result.benchmarkComparison.ctrBenchmark}</span></p>
             </div>
-            <div className={`p-3 rounded-lg border ${convCfg.borderCls} ${convCfg.bgCls}`}>
-              <p className="text-xs text-brand-text-muted mb-1">Conversion Rate</p>
-              <p className={`text-lg font-bold ${convCfg.textCls}`}>{result.benchmarkComparison.yourConversion}</p>
-              <p className="text-xs text-brand-text-muted">Benchmark: {result.benchmarkComparison.conversionBenchmark}</p>
+            <div className={`p-4 rounded-xl border ${convCfg.borderCls} ${convCfg.bgCls}`}>
+              <p className="text-[11px] text-brand-text-muted mb-1 font-medium uppercase tracking-wide">Conversion Rate</p>
+              <p className={`text-2xl font-black ${convCfg.textCls}`}>{result.benchmarkComparison.yourConversion}</p>
+              <p className="text-xs text-brand-text-muted mt-0.5">Benchmark: <span className="font-semibold">{result.benchmarkComparison.conversionBenchmark}</span></p>
             </div>
           </div>
         </div>
@@ -120,7 +200,7 @@ const AdResultCard: React.FC<{ result: AdPerformanceResult; index: number }> = (
             <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">Issues Detected</p>
             <ul className="space-y-2">
               {result.issues.map((issue, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
+                <li key={i} className="flex items-start gap-2.5 bg-red-500/5 border border-red-500/15 rounded-xl px-3 py-2.5 text-sm text-brand-text">
                   <ExclamationTriangleIcon className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
                   {issue}
                 </li>
@@ -132,10 +212,10 @@ const AdResultCard: React.FC<{ result: AdPerformanceResult; index: number }> = (
         {/* Suggestions */}
         {result.suggestions.length > 0 && (
           <div>
-            <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">What to Change</p>
+            <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">Recommendations</p>
             <ul className="space-y-2">
               {result.suggestions.map((s, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
+                <li key={i} className="flex items-start gap-2.5 bg-accent-purple/5 border border-accent-purple/15 rounded-xl px-3 py-2.5 text-sm text-brand-text">
                   <SparklesIcon className="w-4 h-4 text-accent-purple flex-shrink-0 mt-0.5" />
                   {s}
                 </li>
@@ -145,31 +225,35 @@ const AdResultCard: React.FC<{ result: AdPerformanceResult; index: number }> = (
         )}
 
         {/* AI-suggested new copy */}
-        <div className="bg-brand-light p-4 rounded-lg border border-accent-purple/20">
-          <p className="text-xs font-bold text-accent-purple uppercase tracking-widest mb-3">AI-Suggested New Copy</p>
-          <div className="space-y-3">
+        <div className="rounded-xl overflow-hidden border border-accent-purple/20">
+          <div className="bg-gradient-to-r from-accent-purple to-accent-blue px-4 py-2.5 flex items-center gap-2">
+            <SparklesIcon className="w-4 h-4 text-white/90 flex-shrink-0" />
+            <p className="text-xs font-bold text-white uppercase tracking-widest">AI-Rewritten Copy</p>
+          </div>
+          <div className="bg-brand-light/50 p-4 space-y-4">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs text-brand-text-muted">Headline</p>
-                <p className="text-sm font-bold text-brand-text">{result.suggestedNewHeadline}</p>
+              <div className="min-w-0">
+                <p className="text-[11px] text-brand-text-muted uppercase tracking-wide font-semibold mb-1">Headline</p>
+                <p className="text-sm font-bold text-brand-text leading-snug">{result.suggestedNewHeadline}</p>
               </div>
               <button
                 onClick={() => handleCopy('headline', result.suggestedNewHeadline)}
-                className="flex-shrink-0 text-xs text-accent-purple hover:text-accent-purple/70 font-semibold transition"
+                className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${copied === 'headline' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-white border-brand-border text-accent-purple hover:border-accent-purple/40'}`}
               >
-                {copied === 'headline' ? 'Copied!' : 'Copy'}
+                {copied === 'headline' ? <><CheckIcon className="w-3 h-3" /> Copied</> : 'Copy'}
               </button>
             </div>
+            <div className="h-px bg-brand-border" />
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs text-brand-text-muted">Description</p>
-                <p className="text-sm text-brand-text">{result.suggestedNewDescription}</p>
+              <div className="min-w-0">
+                <p className="text-[11px] text-brand-text-muted uppercase tracking-wide font-semibold mb-1">Description</p>
+                <p className="text-sm text-brand-text leading-relaxed">{result.suggestedNewDescription}</p>
               </div>
               <button
                 onClick={() => handleCopy('description', result.suggestedNewDescription)}
-                className="flex-shrink-0 text-xs text-accent-purple hover:text-accent-purple/70 font-semibold transition"
+                className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${copied === 'description' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-white border-brand-border text-accent-purple hover:border-accent-purple/40'}`}
               >
-                {copied === 'description' ? 'Copied!' : 'Copy'}
+                {copied === 'description' ? <><CheckIcon className="w-3 h-3" /> Copied</> : 'Copy'}
               </button>
             </div>
           </div>
@@ -387,17 +471,20 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
   // ── Business type guard ──
   if (!businessType) {
     return (
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-          Please add a category to your business profile (e.g., "Coffee Shop") to use JetAds.
+      <div className="bg-brand-card p-8 sm:p-12 rounded-2xl shadow-lg text-center border border-brand-border">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 flex items-center justify-center mb-4 border border-accent-purple/10">
+          <InformationCircleIcon className="w-8 h-8 text-accent-purple" />
+        </div>
+        <h2 className="text-2xl font-black text-brand-text mb-2">Set Your Business Category</h2>
+        <p className="text-brand-text-muted mb-6 max-w-md mx-auto leading-relaxed">
+          Please add a category to your business profile (e.g., "Coffee Shop") so JetAds can tailor ad copy and benchmarks for your industry.
         </p>
         <button
           onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
+          className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
         >
           Go to Business Details
+          <ArrowRightIcon className="w-4 h-4" />
         </button>
       </div>
     );
@@ -418,58 +505,70 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
         </HowToUse>
       )}
 
-      {/* Tab bar */}
-      <div className="bg-brand-card p-2 rounded-xl shadow-lg mb-6">
-        <div className="flex space-x-2">
-          {(['generate', 'analyze', 'adlibrary'] as JetAdsTab[]).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition text-sm ${
-                activeTab === tab
-                  ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white shadow'
-                  : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
-              }`}
-            >
-              {tab === 'generate' ? 'Generate' : tab === 'analyze' ? 'Analyze Performance' : 'FB Ad Library'}
-            </button>
-          ))}
-        </div>
+      {/* Tab bar — segmented control */}
+      <div className="flex bg-brand-light p-1.5 rounded-2xl gap-1 mb-6" style={{ boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)' }}>
+        {([
+          { id: 'generate', label: 'Generate', Icon: SparklesIcon },
+          { id: 'analyze', label: 'Analyze Performance', Icon: ChartBarIcon },
+          { id: 'adlibrary', label: 'FB Ad Library', Icon: GlobeAltIcon },
+        ] as { id: JetAdsTab; label: string; Icon: React.FC<React.SVGProps<SVGSVGElement>> }[]).map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-2 rounded-xl font-semibold text-sm transition-all duration-200 ${
+              activeTab === id
+                ? 'bg-white shadow-md text-brand-text'
+                : 'text-brand-text-muted hover:text-brand-text'
+            }`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden sm:inline">{label}</span>
+            <span className="sm:hidden">{id === 'generate' ? 'Generate' : id === 'analyze' ? 'Analyze' : 'Library'}</span>
+          </button>
+        ))}
       </div>
 
       {/* ── GENERATE TAB ── */}
       {activeTab === 'generate' && (
         <div>
-          <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <p className="text-brand-text-muted mb-6">{tool.description}</p>
-            <form onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <input
-                  type="text"
-                  value={product}
-                  onChange={e => setProduct(e.target.value)}
-                  placeholder="Product/Service/Offer"
-                  className={inputCls}
-                />
-                <select
-                  value={platform}
-                  onChange={e => setPlatform(e.target.value as Platform)}
-                  className={inputCls}
-                >
-                  <option>Facebook</option>
-                  <option>Google Ads</option>
-                  <option>Instagram</option>
-                </select>
+          <div className="bg-brand-card rounded-2xl shadow-lg overflow-hidden">
+            {/* Card header */}
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm flex-shrink-0">
+                <SparklesIcon className="w-5 h-5 text-white" />
               </div>
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-              >
-                {loading ? 'Generating Ads...' : 'Generate Ad Copy'}
-              </button>
-            </form>
+              <div>
+                <h2 className="font-black text-brand-text text-base">Create Your Ad</h2>
+                <p className="text-xs text-brand-text-muted">AI generates 3 high-converting variations</p>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className={labelCls}>What are you promoting?</label>
+                  <input
+                    type="text"
+                    value={product}
+                    onChange={e => setProduct(e.target.value)}
+                    placeholder="e.g., 20% off coffee this weekend, new HVAC installation service..."
+                    className={`${inputCls} py-3.5 text-base`}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Select Platform</label>
+                  <PlatformToggle value={platform} onChange={setPlatform} />
+                </div>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
+                >
+                  <BoltIcon className="w-4 h-4" />
+                  {loading ? 'Generating Ads...' : 'Generate Ad Copy'}
+                </button>
+              </form>
+            </div>
           </div>
 
           {loading && (
@@ -481,40 +580,58 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
           )}
 
           {ads.length > 0 && (
-            <div className="mt-6 space-y-6">
+            <div className="mt-6 space-y-5">
               {copySuccess && (
-                <div className="bg-green-100 text-green-800 text-sm font-semibold p-3 rounded-lg text-center shadow">
+                <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-600 text-sm font-semibold p-3 rounded-xl">
+                  <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
                   {copySuccess}
                 </div>
               )}
               {ads.map((ad, index) => (
-                <div key={index} className="bg-brand-card p-6 rounded-xl shadow-lg">
-                  <div className="border-l-4 border-accent-purple pl-4">
-                    <h3 className="text-lg font-bold text-brand-text">{ad.headline}</h3>
-                    <p className="text-brand-text-muted my-2">{ad.description}</p>
-                    <p className="text-accent-purple mt-2 font-semibold">{ad.cta}</p>
+                <div key={index} className="bg-brand-card rounded-2xl shadow-lg overflow-hidden border border-brand-border">
+                  {/* Ad card header */}
+                  <div className="bg-gradient-to-r from-accent-blue/6 to-accent-purple/6 border-b border-brand-border px-6 py-3 flex items-center gap-3">
+                    <span className="bg-gradient-to-r from-accent-blue to-accent-purple text-white text-xs font-black px-3 py-1 rounded-full tracking-wide">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Ad Variation</span>
                   </div>
-                  <div className="mt-4 bg-brand-light p-4 rounded-lg border border-brand-border">
-                    <h4 className="text-sm font-semibold text-brand-text mb-2">Visual Suggestion</h4>
-                    <p className="text-brand-text-muted text-sm italic mb-3">📷 {ad.visual_suggestion}</p>
-                    {generatedImages[index] ? (
-                      <img src={generatedImages[index]} alt={ad.visual_suggestion} className="rounded-md w-full h-auto mt-2" />
-                    ) : (
-                      <button
-                        onClick={() => handleGenerateImage(index, ad.visual_suggestion)}
-                        disabled={imageLoading === index}
-                        className="w-full text-sm bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-2 px-4 rounded-md transition duration-300 disabled:opacity-50 shadow hover:shadow-md"
-                      >
-                        {imageLoading === index ? 'Generating...' : `Generate Image for Ad #${index + 1}`}
-                      </button>
-                    )}
+                  <div className="p-6">
+                    <h3 className="text-xl font-black text-brand-text mb-2 leading-snug">{ad.headline}</h3>
+                    <p className="text-brand-text-muted leading-relaxed mb-4">{ad.description}</p>
+                    <span className="inline-flex items-center gap-1.5 bg-accent-purple/10 text-accent-purple text-sm font-bold px-4 py-1.5 rounded-full border border-accent-purple/20">
+                      {ad.cta}
+                    </span>
+
+                    {/* Visual suggestion */}
+                    <div className="mt-5 bg-brand-light/60 rounded-xl border border-dashed border-brand-border p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <PhotoIcon className="w-4 h-4 text-brand-text-muted" />
+                        <h4 className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Visual Suggestion</h4>
+                      </div>
+                      <p className="text-brand-text-muted text-sm italic mb-3">{ad.visual_suggestion}</p>
+                      {generatedImages[index] ? (
+                        <img src={generatedImages[index]} alt={ad.visual_suggestion} className="rounded-xl w-full h-auto" />
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateImage(index, ad.visual_suggestion)}
+                          disabled={imageLoading === index}
+                          className="w-full flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-accent-purple to-accent-blue text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 shadow hover:shadow-md"
+                        >
+                          <PhotoIcon className="w-4 h-4" />
+                          {imageLoading === index ? 'Generating...' : `Generate Image`}
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleCopyAndPost(index, ad)}
+                      className="mt-4 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
+                    >
+                      Open in {platform} Ads Manager
+                      <ArrowRightIcon className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleCopyAndPost(index, ad)}
-                    className="mt-4 w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                  >
-                    Copy & Post to {platform}
-                  </button>
                 </div>
               ))}
             </div>
@@ -525,168 +642,203 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
       {/* ── ANALYZE TAB ── */}
       {activeTab === 'analyze' && (
         <div>
-          <div className="bg-accent-blue/5 border-l-4 border-accent-blue p-4 rounded-r-xl mb-6">
-            <p className="text-sm font-semibold text-accent-blue mb-2">How to use Ad Performance Analysis</p>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-accent-blue/80">
-              <li>Enter the copy and metrics from your existing ad campaigns.</li>
-              <li>Add multiple ads to compare campaigns side by side.</li>
-              <li>Find your metrics in Google Ads or Facebook Ads Manager.</li>
-              <li>Click "Analyze Ads" to get scores, issue detection, and rewritten copy.</li>
-            </ul>
+          {/* 3-step guide */}
+          <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {[
+                { n: '01', title: 'Enter ad copy', desc: 'Paste your headline, description & CTA from any campaign', Icon: SparklesIcon },
+                { n: '02', title: 'Add metrics', desc: 'CTR, CPC & conversions from your Ads Manager', Icon: ChartBarIcon },
+                { n: '03', title: 'Get AI analysis', desc: 'Performance score, issue detection & rewritten copy', Icon: RocketLaunchIcon },
+              ].map(step => (
+                <div key={step.n} className="flex items-start gap-3 flex-1">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0 shadow-sm">
+                    {step.n}
+                  </div>
+                  <div>
+                    <p className="font-bold text-brand-text text-sm">{step.title}</p>
+                    <p className="text-xs text-brand-text-muted mt-0.5">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <form onSubmit={handleAnalyzeSubmit} className="space-y-6">
+          <form onSubmit={handleAnalyzeSubmit} className="space-y-5">
             {analyzeEntries.map((entry, index) => (
-              <div key={entry.id} className="bg-brand-card p-6 rounded-xl shadow-lg border border-brand-border">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-brand-text">Ad #{index + 1}</h3>
+              <div key={entry.id} className="bg-brand-card rounded-2xl shadow-lg border border-brand-border overflow-hidden">
+                {/* Card header */}
+                <div className="bg-gradient-to-r from-brand-light to-white border-b border-brand-border px-6 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="bg-gradient-to-r from-accent-blue to-accent-purple text-white text-[11px] font-black px-2.5 py-1 rounded-full tracking-wide">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-bold text-brand-text text-sm">Ad #{index + 1}</span>
+                    {entry.platform && (
+                      <span className="text-xs bg-brand-light border border-brand-border text-brand-text-muted px-2 py-0.5 rounded-full font-medium">{entry.platform}</span>
+                    )}
+                  </div>
                   {analyzeEntries.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveEntry(entry.id)}
-                      className="p-1.5 text-brand-text-muted hover:text-red-400 transition"
+                      className="p-1.5 text-brand-text-muted hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-all"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                {/* Ad copy */}
-                <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">Ad Copy</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <div className="p-6 space-y-5">
+                  {/* Ad copy */}
                   <div>
-                    <label className={labelCls}>Headline *</label>
-                    <input
-                      type="text"
-                      value={entry.headline}
-                      onChange={e => handleEntryChange(entry.id, 'headline', e.target.value)}
-                      placeholder="Your ad headline"
-                      className={inputCls}
-                      required
-                    />
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-4 bg-accent-purple rounded-full" />
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Ad Copy</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className={labelCls}>Headline *</label>
+                        <input
+                          type="text"
+                          value={entry.headline}
+                          onChange={e => handleEntryChange(entry.id, 'headline', e.target.value)}
+                          placeholder="Your ad headline"
+                          className={inputCls}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Description</label>
+                        <input
+                          type="text"
+                          value={entry.description}
+                          onChange={e => handleEntryChange(entry.id, 'description', e.target.value)}
+                          placeholder="Ad body text"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Call to Action</label>
+                        <input
+                          type="text"
+                          value={entry.cta}
+                          onChange={e => handleEntryChange(entry.id, 'cta', e.target.value)}
+                          placeholder="e.g., Shop Now"
+                          className={inputCls}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelCls}>Description</label>
-                    <input
-                      type="text"
-                      value={entry.description}
-                      onChange={e => handleEntryChange(entry.id, 'description', e.target.value)}
-                      placeholder="Ad body text"
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Call to Action</label>
-                    <input
-                      type="text"
-                      value={entry.cta}
-                      onChange={e => handleEntryChange(entry.id, 'cta', e.target.value)}
-                      placeholder="e.g., Shop Now"
-                      className={inputCls}
-                    />
-                  </div>
-                </div>
 
-                {/* Metrics */}
-                <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-3">Performance Metrics</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className={labelCls}>Platform</label>
-                    <select
-                      value={entry.platform}
-                      onChange={e => handleEntryChange(entry.id, 'platform', e.target.value)}
-                      className={inputCls}
-                    >
-                      <option>Facebook</option>
-                      <option>Google Ads</option>
-                      <option>Instagram</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className={labelCls}>CTR % *</label>
-                    <input
-                      type="number" step="0.01" min="0"
-                      value={entry.ctr}
-                      onChange={e => handleEntryChange(entry.id, 'ctr', e.target.value)}
-                      placeholder="e.g., 1.4"
-                      className={inputCls}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Conversion Rate %</label>
-                    <input
-                      type="number" step="0.01" min="0"
-                      value={entry.conversionRate}
-                      onChange={e => handleEntryChange(entry.id, 'conversionRate', e.target.value)}
-                      placeholder="e.g., 2.1"
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>CPC ($)</label>
-                    <input
-                      type="number" step="0.01" min="0"
-                      value={entry.cpc}
-                      onChange={e => handleEntryChange(entry.id, 'cpc', e.target.value)}
-                      placeholder="e.g., 1.25"
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Impressions</label>
-                    <input
-                      type="number" min="0"
-                      value={entry.impressions}
-                      onChange={e => handleEntryChange(entry.id, 'impressions', e.target.value)}
-                      placeholder="e.g., 10000"
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Clicks</label>
-                    <input
-                      type="number" min="0"
-                      value={entry.clicks}
-                      onChange={e => handleEntryChange(entry.id, 'clicks', e.target.value)}
-                      placeholder="e.g., 140"
-                      className={inputCls}
-                    />
-                  </div>
-                  <div>
-                    <label className={labelCls}>Budget Spent ($)</label>
-                    <input
-                      type="number" step="0.01" min="0"
-                      value={entry.budget}
-                      onChange={e => handleEntryChange(entry.id, 'budget', e.target.value)}
-                      placeholder="e.g., 175.00"
-                      className={inputCls}
-                    />
-                  </div>
-                  {entry.platform === 'Facebook' && (
-                    <>
+                  {/* Metrics */}
+                  <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-border/60">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-4 bg-accent-blue rounded-full" />
+                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Performance Metrics</p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <label className={labelCls}>ROAS <span className="text-accent-blue normal-case font-normal">(Facebook)</span></label>
+                        <label className={labelCls}>Platform</label>
+                        <select
+                          value={entry.platform}
+                          onChange={e => handleEntryChange(entry.id, 'platform', e.target.value)}
+                          className={inputCls}
+                        >
+                          <option>Facebook</option>
+                          <option>Google Ads</option>
+                          <option>Instagram</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>CTR % *</label>
                         <input
-                          type="number" step="0.1" min="0"
-                          value={entry.roas}
-                          onChange={e => handleEntryChange(entry.id, 'roas', e.target.value)}
-                          placeholder="e.g., 3.2"
+                          type="number" step="0.01" min="0"
+                          value={entry.ctr}
+                          onChange={e => handleEntryChange(entry.id, 'ctr', e.target.value)}
+                          placeholder="e.g., 1.4"
+                          className={inputCls}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Conversion Rate %</label>
+                        <input
+                          type="number" step="0.01" min="0"
+                          value={entry.conversionRate}
+                          onChange={e => handleEntryChange(entry.id, 'conversionRate', e.target.value)}
+                          placeholder="e.g., 2.1"
                           className={inputCls}
                         />
                       </div>
                       <div>
-                        <label className={labelCls}>Frequency <span className="text-accent-blue normal-case font-normal">(Facebook)</span></label>
+                        <label className={labelCls}>CPC ($)</label>
                         <input
-                          type="number" step="0.1" min="0"
-                          value={entry.frequency}
-                          onChange={e => handleEntryChange(entry.id, 'frequency', e.target.value)}
-                          placeholder="e.g., 2.4"
+                          type="number" step="0.01" min="0"
+                          value={entry.cpc}
+                          onChange={e => handleEntryChange(entry.id, 'cpc', e.target.value)}
+                          placeholder="e.g., 1.25"
                           className={inputCls}
                         />
                       </div>
-                    </>
-                  )}
+                      <div>
+                        <label className={labelCls}>Impressions</label>
+                        <input
+                          type="number" min="0"
+                          value={entry.impressions}
+                          onChange={e => handleEntryChange(entry.id, 'impressions', e.target.value)}
+                          placeholder="e.g., 10000"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Clicks</label>
+                        <input
+                          type="number" min="0"
+                          value={entry.clicks}
+                          onChange={e => handleEntryChange(entry.id, 'clicks', e.target.value)}
+                          placeholder="e.g., 140"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Budget Spent ($)</label>
+                        <input
+                          type="number" step="0.01" min="0"
+                          value={entry.budget}
+                          onChange={e => handleEntryChange(entry.id, 'budget', e.target.value)}
+                          placeholder="e.g., 175.00"
+                          className={inputCls}
+                        />
+                      </div>
+                    </div>
+                    {entry.platform === 'Facebook' && (
+                      <div className="mt-4 bg-accent-blue/5 border border-accent-blue/20 rounded-xl p-3">
+                        <p className="text-[11px] font-bold text-accent-blue uppercase tracking-widest mb-3">Facebook-Specific Metrics</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className={labelCls}>ROAS</label>
+                            <input
+                              type="number" step="0.1" min="0"
+                              value={entry.roas}
+                              onChange={e => handleEntryChange(entry.id, 'roas', e.target.value)}
+                              placeholder="e.g., 3.2"
+                              className={inputCls}
+                            />
+                          </div>
+                          <div>
+                            <label className={labelCls}>Frequency</label>
+                            <input
+                              type="number" step="0.1" min="0"
+                              value={entry.frequency}
+                              onChange={e => handleEntryChange(entry.id, 'frequency', e.target.value)}
+                              placeholder="e.g., 2.4"
+                              className={inputCls}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -694,19 +846,25 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
             <button
               type="button"
               onClick={handleAddEntry}
-              className="w-full py-3 border-2 border-dashed border-brand-border text-brand-text-muted hover:border-accent-purple hover:text-accent-purple rounded-xl font-semibold transition flex items-center justify-center gap-2"
+              className="w-full py-3 border-2 border-dashed border-brand-border text-brand-text-muted hover:border-accent-purple hover:text-accent-purple hover:bg-accent-purple/3 rounded-2xl font-semibold transition-all duration-200 flex items-center justify-center gap-2"
             >
               <PlusIcon className="w-4 h-4" />
-              Add Another Ad
+              Add Another Ad to Compare
             </button>
 
-            {analyzeError && <p className="text-red-500 text-sm">{analyzeError}</p>}
+            {analyzeError && (
+              <div className="flex items-center gap-2 bg-red-500/5 border border-red-500/20 text-red-500 text-sm font-medium p-3 rounded-xl">
+                <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
+                {analyzeError}
+              </div>
+            )}
 
             <button
               type="submit"
               disabled={analyzeLoading}
-              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
             >
+              <ChartBarIcon className="w-4 h-4" />
               {analyzeLoading ? 'Analyzing...' : 'Analyze Ads'}
             </button>
           </form>
@@ -720,8 +878,13 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
           )}
 
           {analyzeResults.length > 0 && !analyzeLoading && (
-            <div className="mt-8 space-y-6">
-              <h2 className="text-xl font-bold text-brand-text">Analysis Results</h2>
+            <div className="mt-8 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm flex-shrink-0">
+                  <ChartBarIcon className="w-4 h-4 text-white" />
+                </div>
+                <h2 className="text-xl font-black text-brand-text">Analysis Results</h2>
+              </div>
               {analyzeResults.map((result, index) => (
                 <AdResultCard key={result.id} result={result} index={index} />
               ))}
@@ -733,69 +896,104 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
       {/* ── AD LIBRARY TAB ── */}
       {activeTab === 'adlibrary' && (
         <div>
-          <div className="bg-accent-blue/5 border-l-4 border-accent-blue p-4 rounded-r-xl mb-6">
-            <p className="text-sm font-semibold text-accent-blue mb-2">Facebook Ad Library — Competitor Intelligence</p>
-            <ul className="list-disc pl-5 space-y-1 text-sm text-accent-blue/80">
-              <li>Search Meta's public Ad Library to see what competitors are running.</li>
-              <li>Results show ad copy, reach estimates, spend ranges, and platforms.</li>
-              <li>Click "Analyze with AI" to extract winning patterns and get tailored recommendations.</li>
-              <li>Use these insights to inspire your next campaign in the Generate tab.</li>
-            </ul>
+          {/* Feature highlight card */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-accent-blue/5 via-white to-accent-purple/5 border border-brand-border rounded-2xl p-6 mb-6">
+            <div className="absolute top-0 right-0 w-52 h-52 bg-gradient-to-bl from-accent-purple/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm flex-shrink-0">
+                  <GlobeAltIcon className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-black text-brand-text text-base">Facebook Ad Library</h2>
+                  <p className="text-xs text-brand-text-muted">Real competitor ads · AI pattern analysis · Tailored recommendations</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { Icon: GlobeAltIcon, title: 'Live Ad Data', desc: "Meta's public library" },
+                  { Icon: TrendingUpIcon, title: 'Competitor Ads', desc: 'Real campaigns running now' },
+                  { Icon: SparklesIcon, title: 'AI Analysis', desc: 'Patterns & angles extracted' },
+                  { Icon: RocketLaunchIcon, title: 'Recommendations', desc: 'Tailored to your business' },
+                ].map(f => (
+                  <div key={f.title} className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-white border border-brand-border flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <f.Icon className="w-3.5 h-3.5 text-accent-purple" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-brand-text">{f.title}</p>
+                      <p className="text-[11px] text-brand-text-muted">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Search form */}
-          <form onSubmit={handleLibrarySearch} className="bg-brand-card p-6 rounded-xl shadow-lg mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="md:col-span-1">
-                <label className={labelCls}>Keyword / Competitor Name</label>
+          <div className="bg-brand-card rounded-2xl shadow-lg mb-6 overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <svg className="w-4 h-4 text-brand-text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <div>
+                <p className="font-bold text-brand-text text-sm">Search Ad Library</p>
+                <p className="text-xs text-brand-text-muted">Find what competitors in your space are running</p>
+              </div>
+            </div>
+            <form onSubmit={handleLibrarySearch} className="p-6 space-y-4">
+              <div>
+                <label className={labelCls}>Keyword / Competitor / Industry</label>
                 <input
                   type="text"
                   value={libraryKeyword}
                   onChange={e => setLibraryKeyword(e.target.value)}
-                  placeholder="e.g., coffee shop, HVAC, dentist"
-                  className={inputCls}
+                  placeholder="e.g., coffee shop, HVAC installation, dentist offers..."
+                  className={`${inputCls} py-3.5 text-base`}
                   required
                 />
               </div>
-              <div>
-                <label className={labelCls}>Country</label>
-                <select
-                  value={libraryCountry}
-                  onChange={e => setLibraryCountry(e.target.value)}
-                  className={inputCls}
-                >
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="CA">Canada</option>
-                  <option value="AU">Australia</option>
-                  <option value="IE">Ireland</option>
-                  <option value="NZ">New Zealand</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelCls}>Country</label>
+                  <select value={libraryCountry} onChange={e => setLibraryCountry(e.target.value)} className={inputCls}>
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="AU">Australia</option>
+                    <option value="IE">Ireland</option>
+                    <option value="NZ">New Zealand</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Ad Type</label>
+                  <select value={libraryAdType} onChange={e => setLibraryAdType(e.target.value as AdType)} className={inputCls}>
+                    <option value="ALL">All Ads</option>
+                    <option value="POLITICAL_AND_ISSUE_ADS">Political &amp; Issue</option>
+                    <option value="HOUSING_ADS">Housing</option>
+                    <option value="EMPLOYMENT_ADS">Employment</option>
+                    <option value="CREDIT_ADS">Credit</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className={labelCls}>Ad Type</label>
-                <select
-                  value={libraryAdType}
-                  onChange={e => setLibraryAdType(e.target.value as AdType)}
-                  className={inputCls}
-                >
-                  <option value="ALL">All Ads</option>
-                  <option value="POLITICAL_AND_ISSUE_ADS">Political &amp; Issue</option>
-                  <option value="HOUSING_ADS">Housing</option>
-                  <option value="EMPLOYMENT_ADS">Employment</option>
-                  <option value="CREDIT_ADS">Credit</option>
-                </select>
-              </div>
-            </div>
-            {libraryError && <p className="text-red-500 text-sm mb-3">{libraryError}</p>}
-            <button
-              type="submit"
-              disabled={libraryLoading}
-              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-            >
-              {libraryLoading ? 'Searching Ad Library...' : 'Search Facebook Ad Library'}
-            </button>
-          </form>
+              {libraryError && (
+                <div className="flex items-center gap-2 bg-red-500/5 border border-red-500/20 text-red-500 text-sm font-medium p-3 rounded-xl">
+                  <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
+                  {libraryError}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={libraryLoading}
+                className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                {libraryLoading ? 'Searching Ad Library...' : 'Search Facebook Ad Library'}
+              </button>
+            </form>
+          </div>
 
           {libraryLoading && (
             <AnalysisLoadingState
@@ -808,24 +1006,33 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
           {/* Results */}
           {libraryResults.length > 0 && !libraryLoading && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-brand-text">
-                  {libraryResults.length} Ad{libraryResults.length !== 1 ? 's' : ''} Found
-                </h2>
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm flex-shrink-0">
+                    <TrendingUpIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <h2 className="text-xl font-black text-brand-text">
+                    {libraryResults.length} Ad{libraryResults.length !== 1 ? 's' : ''} Found
+                  </h2>
+                </div>
                 <button
                   onClick={handleAnalyzeLibrary}
                   disabled={libraryInsightsLoading}
-                  className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-2 px-5 rounded-lg text-sm transition-all disabled:opacity-50 shadow hover:shadow-md"
+                  className="flex items-center gap-2 bg-gradient-to-r from-accent-purple to-accent-blue text-white font-bold py-2.5 px-5 rounded-xl text-sm transition-all disabled:opacity-50 shadow-md hover:shadow-lg hover:shadow-accent-purple/20"
                 >
+                  <SparklesIcon className="w-4 h-4" />
                   {libraryInsightsLoading ? 'Analyzing...' : 'Analyze with AI'}
                 </button>
               </div>
 
               {libraryInsightsError && (
-                <p className="text-red-500 text-sm mb-4">{libraryInsightsError}</p>
+                <div className="flex items-center gap-2 bg-red-500/5 border border-red-500/20 text-red-500 text-sm font-medium p-3 rounded-xl mb-4">
+                  <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
+                  {libraryInsightsError}
+                </div>
               )}
 
-              {/* AI Insights Panel */}
+              {/* AI Insights Loading */}
               {libraryInsightsLoading && (
                 <AnalysisLoadingState
                   title="Extracting Competitive Insights"
@@ -834,49 +1041,65 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                 />
               )}
 
+              {/* AI Insights Panel */}
               {libraryInsights && !libraryInsightsLoading && (
-                <div className="bg-brand-card rounded-xl shadow-lg border border-accent-purple/20 p-6 mb-8">
-                  <p className="text-xs font-bold text-accent-purple uppercase tracking-widest mb-4">AI Competitive Intelligence</p>
-                  <p className="text-sm text-brand-text mb-5 leading-relaxed">{libraryInsights.summary}</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="rounded-2xl overflow-hidden border border-accent-purple/20 shadow-lg mb-8">
+                  {/* Panel header */}
+                  <div className="bg-gradient-to-r from-accent-purple to-accent-blue p-5 flex items-start gap-3">
+                    <SparklesIcon className="w-5 h-5 text-white/90 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Top Creative Patterns</p>
-                      <ul className="space-y-1">
+                      <p className="text-xs font-bold text-white/70 uppercase tracking-widest mb-1">AI Competitive Intelligence</p>
+                      <p className="text-sm text-white leading-relaxed">{libraryInsights.summary}</p>
+                    </div>
+                  </div>
+                  {/* Panel body */}
+                  <div className="bg-gradient-to-br from-accent-purple/5 to-accent-blue/5 p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-accent-purple/15 text-accent-purple text-[11px] font-bold px-2.5 py-1 rounded-full">Patterns</span>
+                      </div>
+                      <ul className="space-y-2">
                         {libraryInsights.topPatterns.map((p, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
-                            <SparklesIcon className="w-4 h-4 text-accent-purple flex-shrink-0 mt-0.5" />
+                            <SparklesIcon className="w-3.5 h-3.5 text-accent-purple flex-shrink-0 mt-0.5" />
                             {p}
                           </li>
                         ))}
                       </ul>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Winning Angles</p>
-                      <ul className="space-y-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-green-500/10 text-green-600 text-[11px] font-bold px-2.5 py-1 rounded-full">Winning Angles</span>
+                      </div>
+                      <ul className="space-y-2">
                         {libraryInsights.winningAngles.map((a, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
-                            <CheckCircleIcon className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                            <CheckCircleIcon className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
                             {a}
                           </li>
                         ))}
                       </ul>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Top CTAs Observed</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-accent-blue/10 text-accent-blue text-[11px] font-bold px-2.5 py-1 rounded-full">Top CTAs</span>
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {libraryInsights.topCTAs.map((cta, i) => (
-                          <span key={i} className="bg-accent-blue/10 text-accent-blue text-xs font-semibold px-3 py-1 rounded-full border border-accent-blue/20">
+                          <span key={i} className="bg-gradient-to-r from-accent-blue to-accent-cyan text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
                             {cta}
                           </span>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest mb-2">Recommended for You</p>
-                      <ul className="space-y-1">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="bg-yellow-500/10 text-yellow-600 text-[11px] font-bold px-2.5 py-1 rounded-full">For Your Business</span>
+                      </div>
+                      <ul className="space-y-2">
                         {libraryInsights.recommendedApproaches.map((r, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-brand-text">
-                            <ExclamationTriangleIcon className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                            <RocketLaunchIcon className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0 mt-0.5" />
                             {r}
                           </li>
                         ))}
@@ -886,7 +1109,7 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                 </div>
               )}
 
-              {/* Ad cards */}
+              {/* Ad cards — sponsored post preview style */}
               <div className="space-y-4">
                 {libraryResults.map((ad, index) => {
                   const body = ad.ad_creative_bodies?.[0] ?? '';
@@ -900,36 +1123,46 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                     : null;
 
                   return (
-                    <div key={ad.id ?? index} className="bg-brand-card rounded-xl shadow border border-brand-border p-5">
-                      <div className="flex items-start justify-between gap-3 mb-3">
+                    <div key={ad.id ?? index} className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+                      {/* Top strip — advertiser + platforms */}
+                      <div className="bg-brand-light border-b border-brand-border px-4 py-2.5 flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-xs text-brand-text-muted font-semibold uppercase tracking-wide mb-0.5">Advertiser</p>
-                          <p className="font-bold text-brand-text truncate">{ad.page_name}</p>
+                          <p className="font-bold text-brand-text text-sm truncate">{ad.page_name}</p>
                         </div>
-                        <div className="flex flex-wrap gap-1.5 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0">
                           {(ad.publisher_platforms ?? []).map((p) => (
-                            <span key={p} className="text-xs bg-brand-light border border-brand-border px-2 py-0.5 rounded-full text-brand-text-muted capitalize">
+                            <span key={p} className="text-xs bg-white border border-brand-border px-2 py-0.5 rounded-full text-brand-text-muted capitalize font-medium shadow-sm">
                               {p}
                             </span>
                           ))}
+                          <span className="text-[10px] border border-brand-border text-brand-text-muted font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-white">
+                            Sponsored
+                          </span>
                         </div>
                       </div>
 
+                      {/* Ad content */}
                       {(body || title) && (
-                        <div className="bg-brand-light rounded-lg p-4 mb-3 border border-brand-border">
-                          {title && <p className="font-semibold text-brand-text text-sm mb-1">{title}</p>}
-                          {body && <p className="text-brand-text-muted text-sm leading-relaxed">{body}</p>}
+                        <div className="p-5">
+                          {title && <p className="font-bold text-brand-text text-base leading-snug mb-1">{title}</p>}
+                          {body && <p className="text-brand-text text-sm leading-relaxed mt-1">{body}</p>}
                           {description && <p className="text-brand-text-muted text-xs mt-2 italic">{description}</p>}
                         </div>
                       )}
 
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      {/* Footer — stats + link */}
+                      <div className="bg-brand-light/60 border-t border-brand-border px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap gap-3">
                           {impressionText && (
-                            <span className="text-xs text-brand-text-muted">{impressionText}</span>
+                            <span className="inline-flex items-center gap-1 text-xs bg-white border border-brand-border text-brand-text-muted px-2 py-1 rounded-lg font-medium">
+                              <TrendingUpIcon className="w-3 h-3" />
+                              {impressionText}
+                            </span>
                           )}
                           {spendText && (
-                            <span className="text-xs text-brand-text-muted">{spendText}</span>
+                            <span className="inline-flex items-center gap-1 text-xs bg-white border border-brand-border text-brand-text-muted px-2 py-1 rounded-lg font-medium">
+                              {spendText}
+                            </span>
                           )}
                         </div>
                         {ad.ad_snapshot_url && (
@@ -937,9 +1170,10 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                             href={ad.ad_snapshot_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-accent-purple font-semibold hover:underline"
+                            className="inline-flex items-center gap-1.5 text-xs text-accent-purple font-bold hover:text-accent-purple/70 transition"
                           >
-                            View Ad
+                            View Full Ad
+                            <ArrowRightIcon className="w-3 h-3" />
                           </a>
                         )}
                       </div>
