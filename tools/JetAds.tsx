@@ -927,6 +927,12 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                   </div>
                 ))}
               </div>
+              <div className="mt-4 flex items-start gap-2 bg-white/60 border border-brand-border rounded-xl px-4 py-3">
+                <InformationCircleIcon className="w-4 h-4 text-accent-blue flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-brand-text-muted leading-relaxed">
+                  <span className="font-semibold text-brand-text">Pro tip:</span> Meta's Ad Library shows all ad categories for US searches. For the widest selection of competitor ads, try switching the country to a European option (e.g., Germany or France) — EU regulations require Meta to make all ad types publicly available there.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -958,11 +964,18 @@ export const JetAds: React.FC<JetAdsProps> = ({ tool, profileData, setActiveTool
                   <label className={labelCls}>Country</label>
                   <select value={libraryCountry} onChange={e => setLibraryCountry(e.target.value)} className={inputCls}>
                     <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
                     <option value="CA">Canada</option>
+                    <option value="GB">United Kingdom</option>
                     <option value="AU">Australia</option>
                     <option value="IE">Ireland</option>
                     <option value="NZ">New Zealand</option>
+                    <option disabled>── EU (broader results) ──</option>
+                    <option value="DE">Germany</option>
+                    <option value="FR">France</option>
+                    <option value="ES">Spain</option>
+                    <option value="IT">Italy</option>
+                    <option value="NL">Netherlands</option>
+                    <option value="SE">Sweden</option>
                   </select>
                 </div>
                 <div>

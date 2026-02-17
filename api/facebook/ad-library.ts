@@ -1,15 +1,19 @@
 // api/facebook/ad-library.ts
 // Vercel Serverless Function — Facebook Ad Library proxy
-// Uses app access token (APP_ID|APP_SECRET) so credentials never reach the client.
+//
+// IMPORTANT: The Meta ads_archive endpoint requires a USER access token with
+// the `ads_read` permission — an app access token (APP_ID|SECRET) is NOT
+// sufficient and will return "An unknown error has occurred" (error code 10).
+//
+// Setup steps:
+// 1. Complete identity verification at facebook.com/ID
+// 2. Enable 2FA on your Facebook account
+// 3. Generate a long-lived user token at developers.facebook.com/tools/explorer
+//    with the `ads_read` permission scope
+// 4. Add it to Vercel environment variables as: FACEBOOK_USER_ACCESS_TOKEN
+// 5. Refresh every ~55 days at developers.facebook.com/tools/debug/accesstoken
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
-const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
-
-if (!FACEBOOK_APP_ID || !FACEBOOK_APP_SECRET) {
-  throw new Error('Missing FACEBOOK_APP_ID or FACEBOOK_APP_SECRET environment variables.');
-}
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v21.0';
 
@@ -23,8 +27,6 @@ const AD_LIBRARY_FIELDS = [
   'ad_creative_link_titles',
   'ad_delivery_start_time',
   'ad_snapshot_url',
-  'impressions',
-  'spend',
   'page_name',
   'publisher_platforms',
 ].join(',');
@@ -33,6 +35,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Prefer long-lived user access token; fall back to app token with a warning
+  const userAccessToken = process.env.FACEBOOK_USER_ACCESS_TOKEN;
+  const appId = process.env.FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
+
+  if (!userAccessToken && (!appId || !appSecret)) {
+    return res.status(503).json({
+      error: 'Facebook Ad Library is not configured. Ask your administrator to add FACEBOOK_USER_ACCESS_TOKEN to the environment variables.',
+      setup_required: true,
+    });
+  }
+
+  const accessToken = userAccessToken ?? `${appId}|${appSecret}`;
+  const usingAppToken = !userAccessToken;
 
   const {
     search_terms,
@@ -48,11 +65,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // App access token — safe to use on the server
-    const appAccessToken = `${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}`;
-
     const params = new URLSearchParams({
-      access_token: appAccessToken,
+      access_token: accessToken,
       ad_type: Array.isArray(ad_type) ? ad_type[0] : ad_type,
       ad_reached_countries: `["${Array.isArray(ad_reached_countries) ? ad_reached_countries[0] : ad_reached_countries}"]`,
       fields: AD_LIBRARY_FIELDS,
@@ -73,14 +87,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data = await response.json();
 
     if (!response.ok || data.error) {
+      const fbCode = data.error?.code;
+      const fbMessage = data.error?.message ?? 'Unknown error from Meta API';
+
       console.error('Facebook Ad Library API error:', data.error);
+
+      // Error 10 / 200: permission denied — most often means the token type is wrong
+      // or identity verification hasn't been completed
+      if (fbCode === 10 || fbCode === 200) {
+        return res.status(403).json({
+          error: usingAppToken
+            ? 'The Facebook Ad Library requires a user access token with the ads_read permission. Please add FACEBOOK_USER_ACCESS_TOKEN to your environment variables. See setup instructions in api/facebook/ad-library.ts.'
+            : 'Your Facebook access token does not have permission to access the Ad Library. Make sure you completed identity verification at facebook.com/ID, enabled 2FA, and your token has the ads_read permission.',
+          code: fbCode,
+          setup_required: usingAppToken,
+        });
+      }
+
+      // Error 190: invalid or expired token
+      if (fbCode === 190) {
+        return res.status(401).json({
+          error: 'Your Facebook access token has expired. Please generate a new long-lived token at developers.facebook.com/tools/explorer and update FACEBOOK_USER_ACCESS_TOKEN in your environment variables.',
+          code: fbCode,
+          token_expired: true,
+        });
+      }
+
       return res.status(response.status || 500).json({
-        error: data.error?.message ?? 'Failed to fetch ads from the Facebook Ad Library.',
-        code: data.error?.code,
+        error: fbMessage,
+        code: fbCode,
       });
     }
 
-    // Return only the data array, capped for safety
     return res.status(200).json({ ads: data.data ?? [] });
   } catch (error) {
     console.error('Ad Library endpoint error:', error);
