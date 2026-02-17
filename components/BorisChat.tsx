@@ -202,7 +202,11 @@ export const BorisChat: React.FC<BorisChatProps> = ({
             {/* Boris Avatar & Title */}
             <div className="flex items-center gap-3">
               <div className="relative">
-                <JetbotAvatar size={44} />
+                <div className="p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400 shadow-md shadow-purple-500/40">
+                  <div className="rounded-full overflow-hidden">
+                    <JetbotAvatar size={44} />
+                  </div>
+                </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-purple-900">
                   <div className="absolute inset-0 animate-ping bg-green-400 rounded-full"></div>
                 </div>
@@ -235,7 +239,11 @@ export const BorisChat: React.FC<BorisChatProps> = ({
           {/* Daily Greeting Message */}
           {messages.length > 0 && (
             <div className="flex gap-3 justify-start">
-              <JetbotAvatar size={32} className="flex-shrink-0" />
+              <div className="flex-shrink-0 p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400">
+                <div className="rounded-full overflow-hidden">
+                  <JetbotAvatar size={32} />
+                </div>
+              </div>
               <div className="max-w-[85%] bg-gradient-to-r from-purple-900/80 to-purple-800/80 border border-purple-700/30 rounded-2xl rounded-tl-none px-6 py-4 shadow-lg">
                 <p className="text-white text-sm mb-4">{messages[0].content}</p>
                 
@@ -322,7 +330,11 @@ export const BorisChat: React.FC<BorisChatProps> = ({
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex gap-3 justify-start">
-              <JetbotAvatar size={32} className="flex-shrink-0" />
+              <div className="flex-shrink-0 p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400">
+                <div className="rounded-full overflow-hidden">
+                  <JetbotAvatar size={32} />
+                </div>
+              </div>
               <div className="bg-gradient-to-r from-purple-900/80 to-purple-800/80 border border-purple-700/30 rounded-2xl rounded-tl-none px-4 py-3 shadow-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>

@@ -13,7 +13,8 @@ export const JetbotAvatar: React.FC<JetbotAvatarProps> = ({ size = 40, className
       animationData={animationData}
       loop={true}
       autoplay={true}
-      style={{ width: size, height: size, objectFit: 'contain' }}
+      style={{ width: size, height: size }}
+      rendererSettings={{ preserveAspectRatio: 'xMidYMid slice' }}
       className={className}
     />
   );

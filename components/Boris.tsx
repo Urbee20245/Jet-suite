@@ -365,7 +365,7 @@ export const Boris: React.FC<BorisProps> = ({
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full blur-xl opacity-30 animate-pulse scale-110"></div>
               {/* Circular gradient ring frame */}
               <div className="relative p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400 shadow-lg shadow-purple-300/50">
-                <div className="rounded-full bg-white/90 p-1 overflow-hidden">
+                <div className="rounded-full overflow-hidden">
                   <JetbotAvatar size={64} className="rounded-full" />
                 </div>
               </div>
