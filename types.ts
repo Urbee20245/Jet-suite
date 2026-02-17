@@ -275,6 +275,8 @@ export interface AdMetrics {
   impressions: number;
   clicks: number;
   budget: number;
+  roas?: number;       // Facebook-specific: Return on Ad Spend
+  frequency?: number;  // Facebook-specific: avg times each person saw the ad
 }
 
 export interface AdToAnalyze {
@@ -302,6 +304,29 @@ export interface AdPerformanceResult {
     yourConversion: string;
     conversionStatus: AdPerformanceStatus;
   };
+}
+
+// Facebook Ad Library Types
+export interface FacebookAdLibraryResult {
+  id: string;
+  page_name: string;
+  ad_creative_bodies?: string[];
+  ad_creative_link_titles?: string[];
+  ad_creative_link_descriptions?: string[];
+  ad_creative_link_captions?: string[];
+  impressions?: { lower_bound: string; upper_bound: string };
+  spend?: { lower_bound: string; upper_bound: string; currency: string };
+  publisher_platforms?: string[];
+  ad_snapshot_url?: string;
+  ad_creation_time?: string;
+}
+
+export interface FacebookAdLibraryInsights {
+  topPatterns: string[];
+  winningAngles: string[];
+  recommendedApproaches: string[];
+  topCTAs: string[];
+  summary: string;
 }
 
 // JetKeywords Types
