@@ -3,7 +3,8 @@ import type {
     AuditReport, BusinessSearchResult, ConfirmedBusiness, BusinessDna,
     BusinessProfile, BrandDnaProfile, ProfileData, CampaignIdea, CreativeAssets,
     LiveWebsiteAnalysis, BusinessReview, YoutubeThumbnailRequest,
-    AdToAnalyze, AdPerformanceResult
+    AdToAnalyze, AdPerformanceResult,
+    FacebookAdLibraryResult, FacebookAdLibraryInsights,
 } from '../types';
 import { getCurrentMonthYear, getCurrentYear, getAIDateTimeContextShort } from '../utils/dateTimeUtils';
 
@@ -1214,34 +1215,43 @@ export const analyzeAdPerformance = async (
 
     const adContext = ads.map(ad => {
       const b = AD_BENCHMARKS[ad.metrics.platform] ?? AD_BENCHMARKS['Google Ads'];
-      return (
-        `ID: ${ad.id}\n` +
-        `Platform: ${ad.metrics.platform}\n` +
-        `Headline: "${ad.headline}"\n` +
-        `Description: "${ad.description}"\n` +
-        `CTA: "${ad.cta}"\n` +
-        `CTR: ${ad.metrics.ctr}%  (industry benchmark: ${b.ctr})\n` +
-        `Conversion Rate: ${ad.metrics.conversionRate}%  (industry benchmark: ${b.conversion})\n` +
-        `CPC: $${ad.metrics.cpc}  (industry benchmark: ${b.cpc})\n` +
-        `Impressions: ${ad.metrics.impressions}  Clicks: ${ad.metrics.clicks}  Budget Spent: $${ad.metrics.budget}`
-      );
+      const lines = [
+        `ID: ${ad.id}`,
+        `Platform: ${ad.metrics.platform}`,
+        `Headline: "${ad.headline}"`,
+        `Description: "${ad.description}"`,
+        `CTA: "${ad.cta}"`,
+        `CTR: ${ad.metrics.ctr}%  (industry benchmark: ${b.ctr})`,
+        `Conversion Rate: ${ad.metrics.conversionRate}%  (industry benchmark: ${b.conversion})`,
+        `CPC: $${ad.metrics.cpc}  (industry benchmark: ${b.cpc})`,
+        `Impressions: ${ad.metrics.impressions}  Clicks: ${ad.metrics.clicks}  Budget Spent: $${ad.metrics.budget}`,
+      ];
+      if (ad.metrics.roas != null) {
+        lines.push(`ROAS: ${ad.metrics.roas}x  (Facebook-specific: Return on Ad Spend; benchmark 2–4x is typical)`);
+      }
+      if (ad.metrics.frequency != null) {
+        lines.push(`Frequency: ${ad.metrics.frequency}  (Facebook-specific: avg times each person saw this ad; >3 often causes fatigue)`);
+      }
+      return lines.join('\n');
     }).join('\n\n---\n\n');
 
     const basePrompt = `You are an expert digital advertising strategist reviewing ad campaigns for a ${businessType} business.
 
 SCORING RULES:
 - Weight CTR 40%, conversion rate 30%, copy quality 30%.
+- For Facebook ads that include ROAS: adjust score up/down by up to 10 points based on ROAS vs 2–4x benchmark.
+- For Facebook ads that include Frequency: flag frequency > 3 as an issue (ad fatigue risk).
 - performanceScore 0-100 (100 = best-in-class).
 - status = "good" if CTR ≥ benchmark floor; "warning" if CTR is 50–80% of benchmark floor; "critical" if CTR < 50% of benchmark floor.
 
 INDUSTRY BENCHMARKS:
-- Facebook/Instagram Ads: Good CTR = 0.9–1.5%, Good Conversion = 9–10%
+- Facebook/Instagram Ads: Good CTR = 0.9–1.5%, Good Conversion = 9–10%, Good ROAS = 2–4x, Safe Frequency = ≤3
 - Google Ads: Good CTR = 2–5%, Good Conversion = 2–5%
 
 FOR EACH AD BELOW:
 1. Assign performanceScore (0-100) and status ("good", "warning", or "critical").
-2. List 2-4 specific issues, each referencing actual numbers (e.g., "CTR of 0.4% is 80% below the Google Ads benchmark floor of 2%").
-3. Provide 3-5 actionable suggestions to improve copy, targeting, or bid strategy.
+2. List 2-4 specific issues, each referencing actual numbers (e.g., "CTR of 0.4% is 80% below the Google Ads benchmark floor of 2%"). If ROAS or Frequency are provided and concerning, include them as issues.
+3. Provide 3-5 actionable suggestions to improve copy, targeting, or bid strategy. If frequency is high, suggest creative refresh.
 4. Write an improved headline (max 40 chars for Google Ads, max 60 chars for Facebook/Instagram) that directly addresses the issues.
 5. Write an improved description that is specific, benefit-led, and includes urgency or social proof.
 6. Fill benchmarkComparison with the benchmark string and the user's exact value (formatted as a percentage string, e.g. "1.2%").
@@ -1302,6 +1312,80 @@ Return JSON with a top-level "results" array. Each element must have: id, headli
       ...r,
       id: ads[i]?.id ?? r.id,
     }));
+  } catch (error) {
+    if (error instanceof Error && error.message === 'AI_KEY_MISSING') {
+      throw new Error('AI features are disabled due to missing API key.');
+    }
+    throw error;
+  }
+};
+
+// ── Facebook Ad Library Analysis ───────────────────────────────────────────────
+
+export const analyzeFacebookAdLibrary = async (
+  ads: FacebookAdLibraryResult[],
+  businessType: string
+): Promise<FacebookAdLibraryInsights> => {
+  try {
+    const ai = getAiClient();
+
+    const adSummaries = ads.map((ad, i) => {
+      const bodies = ad.ad_creative_bodies?.join(' | ') ?? '(no body text)';
+      const titles = ad.ad_creative_link_titles?.join(' | ') ?? '';
+      const descriptions = ad.ad_creative_link_descriptions?.join(' | ') ?? '';
+      const platforms = ad.publisher_platforms?.join(', ') ?? 'unknown';
+      const impressionRange = ad.impressions
+        ? `${ad.impressions.lower_bound}–${ad.impressions.upper_bound}`
+        : 'unknown';
+      const spendRange = ad.spend
+        ? `${ad.spend.currency} ${ad.spend.lower_bound}–${ad.spend.upper_bound}`
+        : 'unknown';
+
+      return (
+        `Ad ${i + 1} | Advertiser: ${ad.page_name}\n` +
+        `Body: ${bodies}\n` +
+        `Title: ${titles}\n` +
+        `Description: ${descriptions}\n` +
+        `Platforms: ${platforms} | Impressions: ${impressionRange} | Spend: ${spendRange}`
+      );
+    }).join('\n\n---\n\n');
+
+    const basePrompt = `You are a senior Facebook advertising strategist. Analyze the following ${ads.length} ads from the Facebook Ad Library and extract competitive intelligence for a ${businessType} business that wants to create better-performing ads.
+
+ADS FROM AD LIBRARY:
+${adSummaries}
+
+YOUR TASK:
+1. topPatterns: List 3-5 recurring creative patterns you observe (e.g., "Before/after framing", "Discount-first hooks", "Problem-solution structure").
+2. winningAngles: List 3-5 emotional or persuasion angles that appear most in high-reach ads (e.g., "Fear of missing out", "Social proof from customers", "Authority/expertise signaling").
+3. recommendedApproaches: List 4-6 specific, actionable recommendations for a ${businessType} business to apply these patterns in their own ads.
+4. topCTAs: List the 3-5 most common calls-to-action you see across these ads.
+5. summary: Write 2-3 sentences summarizing the overall competitive landscape and the single biggest opportunity for a ${businessType} advertiser.
+
+Return JSON with keys: topPatterns, winningAngles, recommendedApproaches, topCTAs, summary.`;
+
+    const prompt = injectDateContext(basePrompt);
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            topPatterns:            { type: Type.ARRAY, items: { type: Type.STRING } },
+            winningAngles:          { type: Type.ARRAY, items: { type: Type.STRING } },
+            recommendedApproaches:  { type: Type.ARRAY, items: { type: Type.STRING } },
+            topCTAs:                { type: Type.ARRAY, items: { type: Type.STRING } },
+            summary:                { type: Type.STRING },
+          },
+          required: ['topPatterns', 'winningAngles', 'recommendedApproaches', 'topCTAs', 'summary'],
+        },
+      },
+    });
+
+    return JSON.parse(response.text?.trim() ?? '{}') as FacebookAdLibraryInsights;
   } catch (error) {
     if (error instanceof Error && error.message === 'AI_KEY_MISSING') {
       throw new Error('AI features are disabled due to missing API key.');
