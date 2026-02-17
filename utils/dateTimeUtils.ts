@@ -216,8 +216,12 @@ IMPORTANT: When generating content, use the above current date/time. Do not refe
 
 /**
  * Get short AI context (for token efficiency)
+ * Includes current date and Google policy alignment instruction.
+ * Date is computed at call time — no hardcoded dates — so every AI prompt
+ * automatically reflects the current date and latest Google standards.
  */
 export const getAIDateTimeContextShort = (): string => {
   const now = getNow();
-  return `Current date: ${formatDateForDisplay(now)}. Current year: ${now.getFullYear()}.`;
+  const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return `Current date: ${formatDateForDisplay(now)}. Current year: ${now.getFullYear()}. All recommendations must reflect the LATEST Google Business Profile policies, Google Search Quality Guidelines (E-E-A-T), and local SEO best practices as of ${monthYear}.`;
 };

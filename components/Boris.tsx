@@ -211,8 +211,63 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   const getTaskNavigationTarget = (task: any): string => {
-    if (task.sourceModule && task.sourceModule !== 'growthplan') {
-      return task.sourceModule.toLowerCase();
+    const title = (task.title || '').toLowerCase();
+    const description = (task.description || '').toLowerCase();
+    const sourceModule = (task.sourceModule || '').toLowerCase();
+    const combined = `${title} ${description}`;
+
+    // Social media / posting tasks → JetSocial
+    if (/\b(post|share|publish|social media|instagram|facebook|tweet|linkedin|tiktok|client.{0,20}success|success.{0,20}update)\b/.test(combined)) {
+      return 'jetsocial';
+    }
+    // Review / reputation tasks → JetReply
+    if (/\b(review|reply|respond|rating|reputation|star|feedback)\b/.test(combined)) {
+      return 'jetreply';
+    }
+    // Ad / advertising tasks → JetAds
+    if (/\b(ads?|advertis|campaign|ppc|facebook ad|google ad|paid|sponsor)\b/.test(combined)) {
+      return 'jetads';
+    }
+    // Blog / content writing tasks → JetContent
+    if (/\b(blog|article|write|content|seo content)\b/.test(combined)) {
+      return 'jetcontent';
+    }
+    // Keyword / SEO research tasks → JetKeywords
+    if (/\b(keyword|search term|seo|ranking|meta|schema)\b/.test(combined)) {
+      return 'jetkeywords';
+    }
+    // Competitor analysis → JetCompete
+    if (/\b(competitor|competition|compete|rival)\b/.test(combined)) {
+      return 'jetcompete';
+    }
+    // Event / promotion tasks → JetEvents
+    if (/\b(event|promotion|promo|workshop|sale|discount|offer)\b/.test(combined)) {
+      return 'jetevents';
+    }
+    // Lead generation → JetLeads
+    if (/\b(lead|prospect|acquisition|outreach)\b/.test(combined)) {
+      return 'jetleads';
+    }
+    // Image / visual tasks → JetImage
+    if (/\b(image|photo|visual|graphic|picture|design)\b/.test(combined)) {
+      return 'jetimage';
+    }
+    // Trust / widget tasks → JetTrust
+    if (/\b(widget|trust|testimonial|embed)\b/.test(combined)) {
+      return 'jettrust';
+    }
+    // Website / design tasks → JetViz
+    if (/\b(website|web page|landing page|site speed|mobile|load time)\b/.test(combined)) {
+      return 'jetviz';
+    }
+    // Google Business Profile tasks → JetBiz
+    if (/\b(google business|gbp|business profile|google maps|listing|citation)\b/.test(combined)) {
+      return 'jetbiz';
+    }
+
+    // Fallback: use source module if it maps to a known tool, otherwise Growth Plan
+    if (sourceModule && sourceModule !== 'growthplan' && ALL_TOOLS[sourceModule]) {
+      return sourceModule;
     }
     return 'growthplan';
   };
@@ -251,7 +306,7 @@ export const Boris: React.FC<BorisProps> = ({
     }
 
     return {
-      userName: profileData?.user?.name || 'there',
+      userName: profileData?.user?.firstName || profileData?.user?.name || userFirstName || 'there',
       businessName: profileData?.business?.business_name || '',
       growthScore: profileData?.growthScore || 0,
       pendingTasks: growthPlanTasks.filter((t: any) => t.status !== 'completed').length,
@@ -409,7 +464,7 @@ export const Boris: React.FC<BorisProps> = ({
                                       onClick={() => onNavigate(toolId)}
                                       className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
                                     >
-                                      {toolId === 'growthplan' ? 'View Task' : 'Go to Tool'}
+                                      {toolId === 'growthplan' ? 'View Task' : `Go to ${ALL_TOOLS[toolId]?.name || 'Tool'}`}
                                       <ArrowRightIcon className="w-3.5 h-3.5" />
                                     </button>
                                   )}
