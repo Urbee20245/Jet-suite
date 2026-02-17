@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { GrowthPlanTask, ScheduledPost, CalendarDay, PostStatus } from '../types';
 import { getScheduledPosts, PLATFORM_INFO } from '../services/socialMediaService';
 import { Loader } from '../components/Loader';
-import { CheckCircleIcon, ChevronDownIcon, ChevronUpIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, ChevronDownIcon, ChevronUpIcon, SparklesIcon, BoltIcon, ChartBarIcon, ArrowRightIcon, PlusIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
 
 interface PlannerProps {
@@ -169,24 +169,38 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <h1 className="text-3xl font-extrabold text-brand-text">Your Growth Planner</h1>
-        <p className="text-lg text-brand-text-muted mt-1">A unified view of your scheduled posts and growth tasks for the month.</p>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <ChartBarIcon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-brand-text">Your Growth Planner</h1>
+              <p className="text-lg text-brand-text-muted mt-0.5">A unified view of your scheduled posts and growth tasks for the month.</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Collapsible Growth Tasks Section */}
-      <div className="bg-brand-card rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
         <button
           onClick={() => setShowTasksDropdown(!showTasksDropdown)}
-          className="w-full flex items-center justify-between p-6 hover:bg-brand-light/30 transition-colors"
+          className="w-full flex items-center justify-between bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 hover:from-accent-blue/10 hover:to-accent-purple/10 transition-colors"
         >
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-brand-text">This Week's Growth Tasks ({pendingTasks.length})</h2>
-            {totalCalendarTasks > 0 && (
-              <span className="text-xs font-semibold text-accent-purple bg-accent-purple/10 px-3 py-1 rounded-full">
-                {totalCalendarTasks} assigned
-              </span>
-            )}
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <BoltIcon className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-brand-text">This Week's Growth Tasks ({pendingTasks.length})</h2>
+              {totalCalendarTasks > 0 && (
+                <span className="text-xs font-semibold text-accent-purple bg-accent-purple/10 px-3 py-1 rounded-full">
+                  {totalCalendarTasks} assigned
+                </span>
+              )}
+            </div>
           </div>
           {showTasksDropdown ? (
             <ChevronUpIcon className="w-6 h-6 text-brand-text-muted" />
@@ -196,11 +210,11 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
         </button>
 
         {showTasksDropdown && (
-          <div className="px-6 pb-6 border-t border-brand-border pt-4">
+          <div className="px-6 pb-6 pt-4">
             {pendingTasks.length > 0 ? (
               <div className="space-y-2">
                 {pendingTasks.map(task => (
-                  <div key={task.id} className="bg-brand-light p-3 rounded-lg border border-brand-border flex items-center gap-3 group">
+                  <div key={task.id} className="bg-brand-light p-3 rounded-2xl border border-brand-border flex items-center gap-3 group">
                     <button
                       onClick={() => onTaskStatusChange(task.id, 'completed')}
                       className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-brand-border hover:border-green-500 hover:bg-green-50 transition-colors flex items-center justify-center"
@@ -219,7 +233,7 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
                     <select
                       value={task.scheduledDate || ''}
                       onChange={(e) => handleAssignDay(task.id, e.target.value || null)}
-                      className="text-xs font-medium bg-white border border-brand-border rounded-lg px-2 py-1.5 text-brand-text cursor-pointer hover:border-accent-purple focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple transition flex-shrink-0 min-w-[140px]"
+                      className="text-xs font-medium bg-white border border-brand-border rounded-xl px-2 py-1.5 text-brand-text cursor-pointer hover:border-accent-purple focus:ring-2 focus:ring-accent-purple/30 focus:border-accent-purple transition flex-shrink-0 min-w-[140px]"
                     >
                       <option value="">Assign to calendar...</option>
                       {calendarDays.filter(d => d.date.getMonth() === currentMonth).map(day => (
@@ -240,37 +254,36 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
       </div>
 
       {/* Monthly Calendar - THE FOCAL POINT */}
-      <div className="bg-brand-card rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
         {/* Calendar Header */}
-        <div className="px-6 py-4 border-b border-brand-border">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-4">
-              {/* Month Navigation */}
-              <div className="flex items-center gap-2">
+              {/* Month Navigation - segmented control style */}
+              <div className="flex bg-brand-light p-1.5 rounded-2xl gap-1 shadow-inner">
                 <button
                   onClick={goToPreviousMonth}
-                  className="p-2 hover:bg-brand-light rounded-lg transition"
+                  className="flex items-center justify-center py-2 px-3 rounded-xl font-semibold text-sm transition-all duration-200 text-brand-text-muted hover:text-brand-text hover:bg-white hover:shadow-md"
                   title="Previous month"
                 >
-                  <svg className="w-5 h-5 text-brand-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <h2 className="text-2xl font-bold text-brand-text min-w-[200px] text-center">{getMonthName()}</h2>
-                <button
-                  onClick={goToNextMonth}
-                  className="p-2 hover:bg-brand-light rounded-lg transition"
-                  title="Next month"
-                >
-                  <svg className="w-5 h-5 text-brand-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
                 <button
                   onClick={goToToday}
-                  className="ml-2 px-3 py-1.5 text-xs font-semibold text-accent-purple bg-accent-purple/10 hover:bg-accent-purple/20 rounded-lg transition"
+                  className="flex items-center justify-center py-2 px-4 rounded-xl font-semibold text-sm transition-all duration-200 bg-white shadow-md text-brand-text min-w-[180px]"
                 >
-                  Today
+                  {getMonthName()}
+                </button>
+                <button
+                  onClick={goToNextMonth}
+                  className="flex items-center justify-center py-2 px-3 rounded-xl font-semibold text-sm transition-all duration-200 text-brand-text-muted hover:text-brand-text hover:bg-white hover:shadow-md"
+                  title="Next month"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -289,7 +302,7 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
               )}
               <button
                 onClick={() => loadPlannerData()}
-                className="flex items-center gap-1.5 text-accent-purple hover:text-accent-purple/80 font-semibold text-sm transition"
+                className="flex items-center gap-1.5 bg-gradient-to-r from-accent-blue to-accent-purple text-white hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] font-semibold text-sm rounded-xl px-4 py-2 transition-all duration-200"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -332,7 +345,7 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
                 <div className="flex items-center justify-between mb-2">
                   <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
                     day.isToday
-                      ? 'bg-accent-purple text-white'
+                      ? 'bg-gradient-to-br from-accent-blue to-accent-purple text-white'
                       : isCurrentMonth
                       ? 'text-brand-text'
                       : 'text-brand-text-muted'
@@ -352,7 +365,7 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
                   {day.tasks.slice(0, 1).map(task => (
                     <div
                       key={`task-${task.id}`}
-                      className="px-1.5 py-1 rounded-md border text-[10px] leading-tight bg-purple-50 border-purple-200"
+                      className="px-1.5 py-1 rounded-xl border text-[10px] leading-tight bg-purple-50 border-purple-200"
                       title={task.title}
                     >
                       <div className="flex items-center gap-0.5">
@@ -368,7 +381,7 @@ export const Planner: React.FC<PlannerProps> = ({ userId, growthPlanTasks, onTas
                     return (
                       <div
                         key={post.id}
-                        className={`px-1.5 py-1 rounded-md border text-[10px] leading-tight ${style.bg}`}
+                        className={`px-1.5 py-1 rounded-xl border text-[10px] leading-tight ${style.bg}`}
                         title={post.post_text}
                       >
                         <div className="flex items-center gap-0.5 mb-0.5">

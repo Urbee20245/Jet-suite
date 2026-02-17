@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, AuditReport, BusinessSearchResult, ConfirmedBusiness, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { searchGoogleBusiness, analyzeBusinessListing } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon, ArrowDownTrayIcon, XMarkIcon, TrashIcon } from '../components/icons/MiniIcons';
+import { MapPinIcon, StarIcon, TagIcon, InformationCircleIcon, CheckCircleIcon, ExclamationTriangleIcon, ArrowPathIcon, ChevronDownIcon, ArrowDownTrayIcon, XMarkIcon, TrashIcon, ChartBarIcon, SparklesIcon, BoltIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
@@ -103,32 +103,38 @@ const BusinessResultCard: React.FC<{ business: BusinessSearchResult; onSelect: (
 );
 
 const JetBizGuidanceMode: React.FC<{setActiveTool: (tool: Tool | null) => void}> = ({setActiveTool}) => (
-    <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-brand-text">Pre-Profile Guidance Mode</h2>
-            <p className="text-brand-text-muted mt-1">Your Google Business Profile isn't connected yet. Here's how to get started.</p>
-          </div>
-          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">GUIDANCE</span>
+    <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 flex items-center justify-center flex-shrink-0">
+                <SparklesIcon className="w-7 h-7 text-accent-purple" />
+            </div>
+            <div className="flex-1">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-brand-text">Pre-Profile Guidance Mode</h2>
+                    <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">GUIDANCE</span>
+                </div>
+                <p className="text-brand-text-muted mt-1">Your Google Business Profile isn't connected yet. Here's how to get started.</p>
+            </div>
         </div>
-        
-        <div className="bg-brand-light p-6 rounded-lg border border-brand-border">
-          <p className="text-brand-text mb-4">A verified Google Business Profile is the most important step for local discovery. Follow this checklist to create a powerful profile, then connect it to JetSuite to run a full analysis.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Choose the most accurate primary business category.</span></li>
-            <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Add high-quality photos of your business, products, and team.</span></li>
-            <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Write a compelling, keyword-rich business description.</span></li>
-            <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Ensure your business name, address, and phone number (NAP) are consistent everywhere.</span></li>
-          </ul>
-        </div>
-        
-        <div className="mt-6 flex flex-col sm:flex-row gap-4">
-            <a href="https://www.google.com/business/" target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-5 rounded-lg transition-colors shadow">
-                Create Google Business Profile
-            </a>
-            <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="flex-1 text-center bg-brand-card hover:bg-brand-light border border-brand-border font-bold py-3 px-5 rounded-lg transition-colors shadow-sm">
-                Update Profile Status in JetSuite
-            </button>
+        <div className="p-6 sm:p-8">
+            <div className="bg-brand-light p-6 rounded-lg border border-brand-border">
+              <p className="text-brand-text mb-4">A verified Google Business Profile is the most important step for local discovery. Follow this checklist to create a powerful profile, then connect it to JetSuite to run a full analysis.</p>
+              <ul className="space-y-3">
+                <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Choose the most accurate primary business category.</span></li>
+                <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Add high-quality photos of your business, products, and team.</span></li>
+                <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Write a compelling, keyword-rich business description.</span></li>
+                <li className="flex items-start"><CheckCircleIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0"/><span>Ensure your business name, address, and phone number (NAP) are consistent everywhere.</span></li>
+              </ul>
+            </div>
+            
+            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+                <a href="https://www.google.com/business/" target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-5 rounded-lg transition-colors shadow">
+                    Create Google Business Profile
+                </a>
+                <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="flex-1 text-center bg-brand-card hover:bg-brand-light border border-brand-border font-bold py-3 px-5 rounded-lg transition-colors shadow-sm">
+                    Update Profile Status in JetSuite
+                </button>
+            </div>
         </div>
     </div>
 );
@@ -223,43 +229,69 @@ const JetBizResultDisplay: React.FC<{
 
   return (
     <div className="space-y-8 mt-6">
-       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg">
-            <div className="flex">
-                <div className="py-1">
-                    <InformationCircleIcon className="w-6 h-6 mr-3"/>
-                </div>
-                <div>
-                    <p className="font-bold">Your Action Plan is Ready!</p>
-                    <p className="text-sm">
-                        All recommended tasks below have been automatically added to your Growth Plan.
-                        <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
-                    </p>
-                </div>
+      <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {[
+            { n: '01', title: 'Your action plan is ready', desc: 'All tasks have been added to your Growth Plan' },
+            { n: '02', title: 'Review recommendations', desc: 'Check the weekly actions and issues below' },
+            { n: '03', title: 'Execute your plan', desc: 'Go to Growth Plan to start taking action' },
+          ].map(step => (
+            <div key={step.n} className="flex items-start gap-3 flex-1">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0">{step.n}</div>
+              <div>
+                <p className="font-semibold text-brand-text text-sm">{step.title}</p>
+                <p className="text-xs text-brand-text-muted">{step.desc}</p>
+              </div>
             </div>
-        </div>
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="flex justify-between items-center mb-4">
-            <div>
-                <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
-                <p className="text-brand-text-muted mt-1">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
-            </div>
-            <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
-        </div>
-         <div className="mb-4">
-            <div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div></div>
-        </div>
-        <div className="space-y-4">
-          {(report.weeklyActions || []).map((task, index) => (
-            <SimpleTaskCard key={index} task={task} />
           ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-brand-border">
+          <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline flex items-center gap-1">
+            Go to Growth Plan <ArrowRightIcon className="w-4 h-4" />
+          </button>
         </div>
       </div>
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
-        <div className="space-y-4">
-          {(report.issues || []).map(issue => (
-            <SimpleIssueCard key={issue.id} issue={issue} />
-          ))}
+
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <BoltIcon className="w-5 h-5 text-accent-blue" />
+          <div className="flex-1 flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Weekly Actions</p>
+              <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
+              <p className="text-brand-text-muted mt-1">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
+            </div>
+            <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0 flex items-center gap-1">
+              View Growth Plan <ArrowRightIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="mb-4">
+            <div className="w-full bg-brand-light rounded-full h-2"><div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div></div>
+          </div>
+          <div className="space-y-4">
+            {(report.weeklyActions || []).map((task, index) => (
+              <SimpleTaskCard key={index} task={task} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <ExclamationTriangleIcon className="w-5 h-5 text-accent-blue" />
+          <div>
+            <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Issues Found</p>
+            <h2 className="text-2xl font-extrabold text-brand-text">Full List of Issues Identified</h2>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="space-y-4">
+            {(report.issues || []).map(issue => (
+              <SimpleIssueCard key={issue.id} issue={issue} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -287,11 +319,20 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
   
   if (!profileData.business.business_name) {
     return (
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile First</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please provide your business name in your profile to use this tool.</p>
-        <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-center gap-3">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-blue/10 to-accent-purple/10 flex items-center justify-center">
+            <InformationCircleIcon className="w-7 h-7 text-accent-blue" />
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <h2 className="text-2xl font-bold text-brand-text mt-2">Complete Your Profile First</h2>
+          <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please provide your business name in your profile to use this tool.</p>
+          <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-200 flex items-center gap-2 mx-auto">
+            <ArrowRightIcon className="w-4 h-4" />
+            Go to Business Details
+          </button>
+        </div>
       </div>
     );
   }
@@ -384,14 +425,17 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     if (step === 'result' && auditReport) {
         return (
           <>
-            <div className="bg-brand-card p-4 sm:p-6 rounded-xl shadow-lg mb-6 flex justify-between items-center">
-              <div>
+            <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden mb-6">
+              <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                <ChartBarIcon className="w-5 h-5 text-accent-blue" />
+                <div className="flex-1 flex justify-between items-center">
                   <h2 className="text-lg font-bold text-brand-text">
-                      <span className="text-sm text-brand-text-muted font-normal">Analysis for:</span> 
-                      <span className="ml-2 font-extrabold">{auditReport.businessName}</span>
+                    <span className="text-sm text-brand-text-muted font-normal">Analysis for:</span>
+                    <span className="ml-2 font-extrabold">{auditReport.businessName}</span>
                   </h2>
+                  <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
+                </div>
               </div>
-              <button onClick={handleStartOver} className="text-sm font-semibold text-accent-purple hover:text-accent-pink">Start New Analysis</button>
             </div>
             {error && <p className="text-red-500 text-sm my-4 bg-red-100 p-4 rounded-lg">{error}</p>}
             <JetBizResultDisplay 
@@ -405,10 +449,10 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
             <div className="mt-6">
                 <button
                     onClick={handleFinalNavigation}
-                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-300 shadow-md flex items-center justify-center gap-2 text-lg"
                 >
                     Go to Growth Plan to Execute Tasks
-                    <ArrowPathIcon className="w-5 h-5" />
+                    <ArrowRightIcon className="w-5 h-5" />
                 </button>
             </div>
           </>
@@ -416,9 +460,81 @@ export const JetBiz: React.FC<JetBizProps> = ({ tool, addTasksToGrowthPlan, onSa
     }
 
     switch (step) {
-      case 'initial': return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><form onSubmit={handleSearch}><button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-lg">{loading ? 'Searching...' : 'Analyze My Business'}</button></form></div> );
-      case 'select': return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold text-brand-text">Is this your business?</h2><p className="mb-6 text-brand-text-muted">Please choose the correct listing from Google Maps.</p><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{searchResults.map((biz, i) => <BusinessResultCard key={i} business={biz} onSelect={(b) => { setSelectedBusiness(b); setStep('confirm'); }} />)}</div></div> );
-      case 'confirm': if (!selectedBusiness) return null; return ( <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg"><h2 className="text-xl font-bold text-brand-text">Confirm Your Selection</h2><p className="mb-6 text-brand-text-muted">Is this the profile you want us to audit?</p><div className="bg-brand-light border rounded-lg p-4"><h3 className="font-bold text-lg text-brand-text">{selectedBusiness.name}</h3><p className="text-sm mt-1 text-brand-text-muted">{selectedBusiness.address}</p></div><div className="flex justify-between mt-6"><button onClick={() => setStep('select')} className="text-sm font-semibold text-brand-text-muted hover:text-brand-text">&larr; Choose a different listing</button><button onClick={handleConfirm} disabled={deepAnalysisRunning} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-lg shadow-md">{deepAnalysisRunning ? 'Starting Audit...' : 'Confirm & Start Deep Audit'}</button></div></div> );
+      case 'initial': return (
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <ChartBarIcon className="w-5 h-5 text-accent-blue" />
+            <div>
+              <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">AI Analysis</p>
+              <h2 className="text-lg font-bold text-brand-text">Analyze Your Business Listing</h2>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8">
+            <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {[
+                  { n: '01', title: 'Enter business details', desc: 'Confirm your business name and industry' },
+                  { n: '02', title: 'AI deep analysis', desc: 'Gemini analyzes your market position' },
+                  { n: '03', title: 'Get your action plan', desc: 'SWOT, opportunities & growth steps' },
+                ].map(s => (
+                  <div key={s.n} className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0">{s.n}</div>
+                    <div><p className="font-semibold text-brand-text text-sm">{s.title}</p><p className="text-xs text-brand-text-muted">{s.desc}</p></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <form onSubmit={handleSearch}>
+              <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2">
+                <ChartBarIcon className="w-5 h-5" />
+                {loading ? 'Searching...' : 'Analyze My Business'}
+              </button>
+            </form>
+          </div>
+        </div>
+      );
+      case 'select': return (
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <ChartBarIcon className="w-5 h-5 text-accent-blue" />
+            <div>
+              <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Select Listing</p>
+              <h2 className="text-xl font-bold text-brand-text">Is this your business?</h2>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="mb-6 text-brand-text-muted">Please choose the correct listing from Google Maps.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {searchResults.map((biz, i) => <BusinessResultCard key={i} business={biz} onSelect={(b) => { setSelectedBusiness(b); setStep('confirm'); }} />)}
+            </div>
+          </div>
+        </div>
+      );
+      case 'confirm': if (!selectedBusiness) return null; return (
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <ChartBarIcon className="w-5 h-5 text-accent-blue" />
+            <div>
+              <p className="text-xs font-bold text-brand-text-muted uppercase tracking-widest">Confirm Selection</p>
+              <h2 className="text-xl font-bold text-brand-text">Confirm Your Selection</h2>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8">
+            <p className="mb-6 text-brand-text-muted">Is this the profile you want us to audit?</p>
+            <div className="bg-brand-light border rounded-lg p-4">
+              <h3 className="font-bold text-lg text-brand-text">{selectedBusiness.name}</h3>
+              <p className="text-sm mt-1 text-brand-text-muted">{selectedBusiness.address}</p>
+            </div>
+            <div className="flex justify-between mt-6">
+              <button onClick={() => setStep('select')} className="text-sm font-semibold text-brand-text-muted hover:text-brand-text">&larr; Choose a different listing</button>
+              <button onClick={handleConfirm} disabled={deepAnalysisRunning} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-200 shadow-md flex items-center gap-2">
+                <ChartBarIcon className="w-5 h-5" />
+                {deepAnalysisRunning ? 'Starting Audit...' : 'Confirm & Start Deep Audit'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
       default: return null;
     }
   };

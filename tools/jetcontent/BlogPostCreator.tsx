@@ -505,11 +505,15 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border/50">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        {/* Card gradient header */}
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 flex items-center justify-center shrink-0">
+            <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
+          </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-brand-text mb-2">Create Blog Post</h2>
-            <p className="text-sm text-brand-text-muted leading-relaxed">
+            <h2 className="text-base font-bold text-brand-text">Create Blog Post</h2>
+            <p className="text-xs text-brand-text-muted mt-0.5 leading-relaxed">
               Generate SEO-optimized blog posts that drive organic traffic and engage your audience.
             </p>
           </div>
@@ -526,7 +530,7 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
                 setBatchTopics(['', '', '']);
               }
             }}
-            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-200 ${
+            className={`px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${
               batchMode
                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white shadow-md'
                 : 'bg-brand-light text-brand-text hover:bg-brand-border'
@@ -535,6 +539,7 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
             {batchMode ? '✓ Batch Mode' : 'Batch Mode'}
           </button>
         </div>
+        <div className="p-6 sm:p-8">
 
         {/* Batch Mode UI */}
         {batchMode ? (
@@ -704,7 +709,7 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
 
                 {batchResults.map((result, index) => (
                   result ? (
-                    <div key={index} className="bg-brand-card p-5 rounded-xl border border-brand-border/50">
+                    <div key={index} className="bg-brand-card p-5 rounded-2xl border border-brand-border shadow-sm">
                       <div className="flex items-start gap-4">
                         {result.image && (
                           <img
@@ -847,6 +852,7 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
         </form>
           </>
         )}
+        </div>{/* end padding wrapper */}
       </div>
 
       {!batchMode && loading && (
@@ -903,16 +909,17 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
           )}
 
           {/* SEO Optimization Section */}
-          <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-brand-text text-sm flex items-center gap-2">
-                <SparklesIcon className="w-4.5 h-4.5 text-accent-blue" />
-                SEO Optimization
-              </h3>
+          <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 flex items-center justify-center shrink-0">
+                <SparklesIcon className="w-4 h-4 text-accent-blue" />
+              </div>
+              <h3 className="font-bold text-brand-text text-sm flex-1">SEO Optimization</h3>
               {!optimization && !optimizing && (
                 <span className="text-xs text-accent-blue/70 font-medium">Auto-generated</span>
               )}
             </div>
+            <div className="p-6">
 
             {!optimization ? (
               <button
@@ -1029,19 +1036,21 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
                 </div>
               </div>
             )}
+            </div>{/* end SEO p-6 */}
           </div>
 
           {/* Featured Image Section */}
-          <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-brand-text text-sm flex items-center gap-2">
-                <SparklesIcon className="w-4.5 h-4.5 text-accent-purple" />
-                Featured Image
-              </h3>
+          <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-purple/20 to-accent-blue/20 flex items-center justify-center shrink-0">
+                <SparklesIcon className="w-4 h-4 text-accent-purple" />
+              </div>
+              <h3 className="font-bold text-brand-text text-sm flex-1">Featured Image</h3>
               {!featuredImage && !showImagePrompt && !generatingImage && (
                 <span className="text-xs text-accent-purple/70 font-medium">Auto-generated</span>
               )}
             </div>
+            <div className="p-6">
 
             {featuredImage ? (
               <div>
@@ -1115,15 +1124,19 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
                 + Generate Featured Image
               </button>
             )}
+            </div>{/* end Featured Image p-6 */}
           </div>
 
           {/* Scheduling Section */}
           {websiteConnections.length > 0 && (
-            <div className="mt-6 bg-brand-card p-6 rounded-xl border border-brand-border/50 shadow-sm">
-              <h3 className="font-bold text-brand-text text-sm mb-5 flex items-center gap-2">
-                <svg className="w-4.5 h-4.5 text-accent-blue" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
-                Schedule Blog Post
-              </h3>
+            <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+              <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 flex items-center justify-center shrink-0">
+                  <svg className="w-4 h-4 text-accent-blue" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                </div>
+                <h3 className="font-bold text-brand-text text-sm">Schedule Blog Post</h3>
+              </div>
+              <div className="p-6">
 
               {!showScheduling ? (
                 <button
@@ -1195,6 +1208,7 @@ export const BlogPostCreator: React.FC<BlogPostCreatorProps> = ({ profileData, i
                   </div>
                 </div>
               )}
+              </div>{/* end Scheduling p-6 */}
             </div>
           )}
 

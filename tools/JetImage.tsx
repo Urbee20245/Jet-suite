@@ -3,7 +3,7 @@ import type { Tool, ProfileData } from '../types';
 import { generateImage, getTrendingImageStyles } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, ArrowPathIcon, TrashIcon } from '../components/icons/MiniIcons';
+import { ArrowUpTrayIcon, XCircleIcon, SparklesIcon, ArrowDownTrayIcon, ArrowPathIcon, TrashIcon, PhotoIcon, BoltIcon, ArrowRightIcon, CheckIcon } from '../components/icons/MiniIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
@@ -365,359 +365,379 @@ VISUAL REQUIREMENTS:
         </HowToUse>
       )}
       
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <p className="text-brand-text-muted mb-2"><span className="font-bold text-brand-text">{tool.description}</span></p>
-        <p className="text-sm text-brand-text-muted mb-6">
-            Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
-        </p>
-        
-        {/* Monthly Credit Counter */}
-        {!loadingCredits && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-brand-light to-white border border-brand-border rounded-xl shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <span className="text-sm font-semibold text-brand-text">Monthly Generations</span>
-                <p className="text-xs text-brand-text-muted mt-0.5">Resets {nextResetDate}</p>
-              </div>
-              <div className="text-right">
-                <span className={`text-2xl font-bold ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`}>
-                  {creditsUsed}
-                </span>
-                <span className="text-lg text-brand-text-muted"> / {creditsLimit}</span>
-              </div>
-            </div>
-            
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-              <div 
-                className={`h-3 rounded-full transition-all duration-500 ${
-                  creditsUsed >= creditsLimit 
-                    ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                    : 'bg-gradient-to-r from-accent-purple to-accent-pink'
-                }`}
-                style={{ width: `${Math.min((creditsUsed / creditsLimit) * 100, 100)}%` }}
-              ></div>
-            </div>
-            
-            <div className="mt-2 text-center">
-              <p className={`text-sm font-medium ${creditsUsed >= creditsLimit ? 'text-red-600' : 'text-accent-purple'}`}>
-                {creditsUsed >= creditsLimit 
-                  ? '🚫 No generations remaining' 
-                  : `✨ ${creditsRemaining} generations remaining this month`
-                }
-              </p>
-            </div>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        {/* Card Header */}
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+            <PhotoIcon className="w-5 h-5 text-white" />
           </div>
-        )}
-
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 border-b border-brand-border">
-          <button
-            onClick={() => setActiveTab('standard')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-              activeTab === 'standard'
-                ? 'text-accent-purple border-accent-purple'
-                : 'text-brand-text-muted border-transparent hover:text-brand-text'
-            }`}
-          >
-            Standard Image Generator
-          </button>
-          <button
-            onClick={() => setActiveTab('youtube')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-              activeTab === 'youtube'
-                ? 'text-accent-purple border-accent-purple'
-                : 'text-brand-text-muted border-transparent hover:text-brand-text'
-            }`}
-          >
-            YouTube Thumbnail Generator
-          </button>
+          <div>
+            <p className="font-bold text-brand-text">{tool.description}</p>
+            <p className="text-sm text-brand-text-muted">
+              Replaces: <span className="text-accent-purple font-semibold">Graphic Designer ($1,000-3,000/mo)</span>
+            </p>
+          </div>
         </div>
 
-        {/* STANDARD IMAGE GENERATOR */}
-        {activeTab === 'standard' && (
-          <form onSubmit={handleSubmit}>
-            {/* Upload Base Image */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-brand-text mb-2">Upload Base Image (Optional)</label>
-              {inputImage ? (
-                <div className="relative group w-32 h-32">
-                  <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                  <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110">
-                    <XCircleIcon className="w-7 h-7" />
+        <div className="p-6 sm:p-8">
+          {/* Monthly Credit Counter */}
+          {!loadingCredits && (
+            <div className="mb-6 p-4 bg-gradient-to-r from-brand-light to-white border border-brand-border rounded-xl shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="text-sm font-semibold text-brand-text">Monthly Generations</span>
+                  <p className="text-xs text-brand-text-muted mt-0.5">Resets {nextResetDate}</p>
+                </div>
+                <div className="text-right">
+                  <span className={`text-2xl font-bold ${creditsUsed >= creditsLimit ? 'text-red-500' : 'text-accent-purple'}`}>
+                    {creditsUsed}
+                  </span>
+                  <span className="text-lg text-brand-text-muted"> / {creditsLimit}</span>
+                </div>
+              </div>
+              
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className={`h-3 rounded-full transition-all duration-500 ${
+                    creditsUsed >= creditsLimit 
+                      ? 'bg-gradient-to-r from-red-500 to-red-600' 
+                      : 'bg-gradient-to-r from-accent-purple to-accent-pink'
+                  }`}
+                  style={{ width: `${Math.min((creditsUsed / creditsLimit) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <div className="mt-2 text-center">
+                <p className={`text-sm font-medium ${creditsUsed >= creditsLimit ? 'text-red-600' : 'text-accent-purple'}`}>
+                  {creditsUsed >= creditsLimit 
+                    ? '🚫 No generations remaining' 
+                    : `✨ ${creditsRemaining} generations remaining this month`
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Navigation - Segmented Control */}
+          <div className="flex bg-brand-light p-1.5 rounded-2xl gap-1 mb-6 shadow-inner">
+            <button
+              onClick={() => setActiveTab('standard')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                activeTab === 'standard'
+                  ? 'bg-white shadow-md text-brand-text'
+                  : 'text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              <PhotoIcon className="w-4 h-4" /> Standard Generator
+            </button>
+            <button
+              onClick={() => setActiveTab('youtube')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                activeTab === 'youtube'
+                  ? 'bg-white shadow-md text-brand-text'
+                  : 'text-brand-text-muted hover:text-brand-text'
+              }`}
+            >
+              <BoltIcon className="w-4 h-4" /> YouTube Thumbnail
+            </button>
+          </div>
+
+          {/* STANDARD IMAGE GENERATOR */}
+          {activeTab === 'standard' && (
+            <form onSubmit={handleSubmit}>
+              {/* Upload Base Image */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-brand-text mb-2">Upload Base Image (Optional)</label>
+                {inputImage ? (
+                  <div className="relative group w-32 h-32">
+                    <img src={inputImage.dataUrl} alt="Input preview" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
+                    <button type="button" onClick={clearInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110">
+                      <XCircleIcon className="w-7 h-7" />
+                    </button>
+                  </div>
+                ) : (
+                  <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
+                    <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
+                    <p className="mt-2 text-sm text-brand-text">Click to upload</p>
+                    <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
+                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                  </div>
+                )}
+              </div>
+
+              {/* Trending Styles */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-brand-text">Trending Styles</label>
+                  <button
+                    type="button"
+                    onClick={() => fetchStyles(true)}
+                    disabled={isRefreshingStyles}
+                    className="flex items-center gap-1 text-xs text-accent-purple hover:text-accent-purple/80 disabled:opacity-50"
+                  >
+                    <ArrowPathIcon className={`w-4 h-4 ${isRefreshingStyles ? 'animate-spin' : ''}`} />
+                    Refresh
                   </button>
                 </div>
-              ) : (
-                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-brand-border rounded-lg p-6 text-center cursor-pointer hover:border-accent-purple hover:bg-brand-light transition-colors">
-                  <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-brand-text-muted" />
-                  <p className="mt-2 text-sm text-brand-text">Click to upload</p>
-                  <p className="text-xs text-brand-text-muted">PNG, JPG, GIF up to 10MB</p>
-                  <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                </div>
-              )}
-            </div>
-
-            {/* Trending Styles */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-brand-text">Trending Styles</label>
-                <button
-                  type="button"
-                  onClick={() => fetchStyles(true)}
-                  disabled={isRefreshingStyles}
-                  className="flex items-center gap-1 text-xs text-accent-purple hover:text-accent-purple/80 disabled:opacity-50"
-                >
-                  <ArrowPathIcon className={`w-4 h-4 ${isRefreshingStyles ? 'animate-spin' : ''}`} />
-                  Refresh
-                </button>
+                {isLoadingStyles ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {[...Array(12)].map((_, i) => (
+                      <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-20 animate-pulse">
+                        <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {trendingStyles.map(style => (
+                      <button
+                        type="button"
+                        key={style.name}
+                        onClick={() => setPrompt(style.prompt)}
+                        className={`p-3 bg-brand-light border rounded-lg text-left hover:border-accent-purple transition-colors ${
+                          prompt === style.prompt ? 'border-accent-purple bg-accent-purple/5' : 'border-brand-border'
+                        }`}
+                        title={style.prompt}
+                      >
+                        <p className="text-xs font-bold text-brand-text">{style.name}</p>
+                        <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {isLoadingStyles ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {[...Array(12)].map((_, i) => (
-                    <div key={i} className="p-3 bg-brand-light border border-brand-border rounded-lg h-20 animate-pulse">
-                      <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-2 bg-gray-200 rounded w-full"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {trendingStyles.map(style => (
+
+              {/* Prompt */}
+              <div className="mb-6">
+                <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">
+                  {inputImage ? 'Describe how to change the image' : 'Describe the image you want'}
+                </label>
+                <textarea
+                  id="prompt"
+                  rows={3}
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={inputImage ? "e.g., 'make this a watercolor painting'" : "e.g., 'A futuristic cityscape at sunset, neon lights'"}
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-base text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Image Size */}
+              <div className="mb-6">
+                <span className="block text-sm font-medium text-brand-text mb-2">Image Size</span>
+                <div className="flex space-x-2">
+                  {(['1K', '2K', '4K'] as ImageSize[]).map(size => (
                     <button
                       type="button"
-                      key={style.name}
-                      onClick={() => setPrompt(style.prompt)}
-                      className={`p-3 bg-brand-light border rounded-lg text-left hover:border-accent-purple transition-colors ${
-                        prompt === style.prompt ? 'border-accent-purple bg-accent-purple/5' : 'border-brand-border'
+                      key={size}
+                      onClick={() => setImageSize(size)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                        imageSize === size
+                          ? 'bg-accent-purple text-white shadow'
+                          : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
                       }`}
-                      title={style.prompt}
                     >
-                      <p className="text-xs font-bold text-brand-text">{style.name}</p>
-                      <p className="text-[10px] text-brand-text-muted mt-1 line-clamp-2">{style.description}</p>
+                      {size}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Prompt */}
-            <div className="mb-6">
-              <label htmlFor="prompt" className="block text-sm font-medium text-brand-text mb-2">
-                {inputImage ? 'Describe how to change the image' : 'Describe the image you want'}
-              </label>
-              <textarea
-                id="prompt"
-                rows={3}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder={inputImage ? "e.g., 'make this a watercolor painting'" : "e.g., 'A futuristic cityscape at sunset, neon lights'"}
-                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-              />
-            </div>
-
-            {/* Image Size */}
-            <div className="mb-6">
-              <span className="block text-sm font-medium text-brand-text mb-2">Image Size</span>
-              <div className="flex space-x-2">
-                {(['1K', '2K', '4K'] as ImageSize[]).map(size => (
-                  <button
-                    type="button"
-                    key={size}
-                    onClick={() => setImageSize(size)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      imageSize === size
-                        ? 'bg-accent-purple text-white shadow'
-                        : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
               </div>
-            </div>
 
-            {/* Aspect Ratio */}
-            <div className="mb-6">
-              <span className="block text-sm font-medium text-brand-text mb-2">Aspect Ratio</span>
-              <div className="flex space-x-2">
-                {(['1:1', '16:9', '4:3', '3:4', '9:16'] as AspectRatio[]).map(ratio => (
-                  <button
-                    type="button"
-                    key={ratio}
-                    onClick={() => setAspectRatio(ratio)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      aspectRatio === ratio
-                        ? 'bg-accent-purple text-white shadow'
-                        : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
-                    }`}
-                  >
-                    {ratio}
-                  </button>
-                ))}
+              {/* Aspect Ratio */}
+              <div className="mb-6">
+                <span className="block text-sm font-medium text-brand-text mb-2">Aspect Ratio</span>
+                <div className="flex space-x-2">
+                  {(['1:1', '16:9', '4:3', '3:4', '9:16'] as AspectRatio[]).map(ratio => (
+                    <button
+                      type="button"
+                      key={ratio}
+                      onClick={() => setAspectRatio(ratio)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                        aspectRatio === ratio
+                          ? 'bg-accent-purple text-white shadow'
+                          : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'
+                      }`}
+                    >
+                      {ratio}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            
-            <button
-              type="submit"
-              disabled={loading || creditsUsed >= creditsLimit || loadingCredits}
-              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Generating Image...
-                </>
-              ) : (
-                <>
-                  <SparklesIcon className="w-5 h-5" />
-                  Generate Image
-                </>
-              )}
-            </button>
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              
+              <button
+                type="submit"
+                disabled={loading || creditsUsed >= creditsLimit || loadingCredits}
+                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Generating Image...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="w-5 h-5" />
+                    Generate Image
+                  </>
+                )}
+              </button>
 
-            {creditsUsed >= creditsLimit && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">⚠️</div>
-                  <div>
-                    <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
-                    <p className="text-xs text-red-700 mt-1">
-                      You've used all {creditsLimit} generations for {new Date().toLocaleDateString('en-US', { month: 'long' })}. 
-                      Your limit will reset on {nextResetDate}.
-                    </p>
+              {creditsUsed >= creditsLimit && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">⚠️</div>
+                    <div>
+                      <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
+                      <p className="text-xs text-red-700 mt-1">
+                        You've used all {creditsLimit} generations for {new Date().toLocaleDateString('en-US', { month: 'long' })}. 
+                        Your limit will reset on {nextResetDate}.
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )}
+            </form>
+          )}
+
+          {/* YOUTUBE THUMBNAIL GENERATOR */}
+          {activeTab === 'youtube' && (
+            <div>
+              {/* Upload Image for Thumbnail */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-brand-text mb-2">
+                  Upload Your Photo/Product (Optional)
+                </label>
+                <p className="text-xs text-brand-text-muted mb-2">Upload a face shot, product image, or logo to include in your thumbnail</p>
+                {youtubeInputImage ? (
+                  <div className="relative group w-32 h-32">
+                    <img src={youtubeInputImage.dataUrl} alt="YouTube thumbnail input" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
+                    <button type="button" onClick={clearYoutubeInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110">
+                      <XCircleIcon className="w-7 h-7" />
+                    </button>
+                  </div>
+                ) : (
+                  <div onClick={() => youtubeFileInputRef.current?.click()} className="border-2 border-dashed border-red-200 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 hover:bg-red-50 transition-colors">
+                    <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-red-500" />
+                    <p className="mt-2 text-sm text-brand-text">Click to upload your photo</p>
+                    <p className="text-xs text-brand-text-muted">PNG or JPG (face shot works best)</p>
+                    <input type="file" ref={youtubeFileInputRef} onChange={handleYoutubeImageUpload} accept="image/*" className="hidden" />
+                  </div>
+                )}
               </div>
-            )}
-          </form>
-        )}
-
-        {/* YOUTUBE THUMBNAIL GENERATOR */}
-        {activeTab === 'youtube' && (
-          <div>
-            {/* Upload Image for Thumbnail */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-brand-text mb-2">
-                Upload Your Photo/Product (Optional)
-              </label>
-              <p className="text-xs text-brand-text-muted mb-2">Upload a face shot, product image, or logo to include in your thumbnail</p>
-              {youtubeInputImage ? (
-                <div className="relative group w-32 h-32">
-                  <img src={youtubeInputImage.dataUrl} alt="YouTube thumbnail input" className="w-full h-full object-cover rounded-lg border-2 border-brand-border" />
-                  <button type="button" onClick={clearYoutubeInputImage} className="absolute -top-2 -right-2 bg-white rounded-full text-red-500 hover:text-red-700 transition-transform group-hover:scale-110">
-                    <XCircleIcon className="w-7 h-7" />
-                  </button>
-                </div>
-              ) : (
-                <div onClick={() => youtubeFileInputRef.current?.click()} className="border-2 border-dashed border-red-200 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 hover:bg-red-50 transition-colors">
-                  <ArrowUpTrayIcon className="w-8 h-8 mx-auto text-red-500" />
-                  <p className="mt-2 text-sm text-brand-text">Click to upload your photo</p>
-                  <p className="text-xs text-brand-text-muted">PNG or JPG (face shot works best)</p>
-                  <input type="file" ref={youtubeFileInputRef} onChange={handleYoutubeImageUpload} accept="image/*" className="hidden" />
-                </div>
-              )}
-            </div>
-          
-            <div className="mb-6">
-              <label htmlFor="youtubeTitle" className="block text-sm font-medium text-brand-text mb-2">
-                Video Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="youtubeTitle"
-                type="text"
-                value={youtubeTitle}
-                onChange={(e) => setYoutubeTitle(e.target.value)}
-                placeholder="e.g., 'How I Made $10,000 in 30 Days'"
-                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="youtubeNiche" className="block text-sm font-medium text-brand-text mb-2">
-                Niche/Category (Optional)
-              </label>
-              <input
-                id="youtubeNiche"
-                type="text"
-                value={youtubeNiche}
-                onChange={(e) => setYoutubeNiche(e.target.value)}
-                placeholder="e.g., 'Finance', 'Gaming', 'Cooking'"
-                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="youtubeEmotion" className="block text-sm font-medium text-brand-text mb-2">
-                Target Emotion (Optional)
-              </label>
-              <input
-                id="youtubeEmotion"
-                type="text"
-                value={youtubeEmotion}
-                onChange={(e) => setYoutubeEmotion(e.target.value)}
-                placeholder="e.g., 'Excited', 'Shocked', 'Curious'"
-                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-              />
-            </div>
-
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
             
-            <button
-              onClick={handleYoutubeGenerate}
-              disabled={loadingYoutube || creditsUsed >= creditsLimit || loadingCredits}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-            >
-              {loadingYoutube ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  Generating Thumbnail...
-                </>
-              ) : (
-                <>
-                  <SparklesIcon className="w-5 h-5" />
-                  Generate YouTube Thumbnail
-                </>
-              )}
-            </button>
+              <div className="mb-6">
+                <label htmlFor="youtubeTitle" className="block text-sm font-medium text-brand-text mb-2">
+                  Video Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="youtubeTitle"
+                  type="text"
+                  value={youtubeTitle}
+                  onChange={(e) => setYoutubeTitle(e.target.value)}
+                  placeholder="e.g., 'How I Made $10,000 in 30 Days'"
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-base text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
 
-            {creditsUsed >= creditsLimit && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">⚠️</div>
-                  <div>
-                    <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
-                    <p className="text-xs text-red-700 mt-1">
-                      Your limit will reset on {nextResetDate}.
-                    </p>
+              <div className="mb-6">
+                <label htmlFor="youtubeNiche" className="block text-sm font-medium text-brand-text mb-2">
+                  Niche/Category (Optional)
+                </label>
+                <input
+                  id="youtubeNiche"
+                  type="text"
+                  value={youtubeNiche}
+                  onChange={(e) => setYoutubeNiche(e.target.value)}
+                  placeholder="e.g., 'Finance', 'Gaming', 'Cooking'"
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-base text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
+
+              <div className="mb-6">
+                <label htmlFor="youtubeEmotion" className="block text-sm font-medium text-brand-text mb-2">
+                  Target Emotion (Optional)
+                </label>
+                <input
+                  id="youtubeEmotion"
+                  type="text"
+                  value={youtubeEmotion}
+                  onChange={(e) => setYoutubeEmotion(e.target.value)}
+                  placeholder="e.g., 'Excited', 'Shocked', 'Curious'"
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-base text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              
+              <button
+                onClick={handleYoutubeGenerate}
+                disabled={loadingYoutube || creditsUsed >= creditsLimit || loadingCredits}
+                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2"
+              >
+                {loadingYoutube ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Generating Thumbnail...
+                  </>
+                ) : (
+                  <>
+                    <BoltIcon className="w-5 h-5" />
+                    Generate YouTube Thumbnail
+                  </>
+                )}
+              </button>
+
+              {creditsUsed >= creditsLimit && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">⚠️</div>
+                    <div>
+                      <p className="text-sm font-bold text-red-800">Monthly Limit Reached</p>
+                      <p className="text-xs text-red-700 mt-1">
+                        Your limit will reset on {nextResetDate}.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
+        </div>
       </div>
       
       {generatedImageUrl && (
-        <div className="mt-6 bg-brand-card p-6 rounded-xl shadow-lg">
-          <h3 className="text-2xl font-bold mb-4 text-brand-text">Generated Image</h3>
-          <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="rounded-lg w-full h-auto max-w-xl mx-auto border border-brand-border" />
-          
-          <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
-            <button
-              onClick={handleDownload}
-              className="flex items-center justify-center gap-2 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
-            >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-              Download Image
-            </button>
-            <button
-              onClick={handleCreateAnotherImage}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink hover:from-accent-purple/80 hover:to-accent-pink/80 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg"
-            >
-              <SparklesIcon className="w-5 h-5" />
-              Create Another Image
-            </button>
+        <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          {/* Output Card Header */}
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+              <CheckIcon className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-brand-text">Generated Image</h3>
+          </div>
+
+          <div className="p-6">
+            <div className="rounded-2xl overflow-hidden shadow-md border border-brand-border">
+              <img src={generatedImageUrl} alt={activeTab === 'youtube' ? youtubeTitle : prompt} className="w-full h-auto max-w-xl mx-auto block" />
+            </div>
+            
+            <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
+              <button
+                onClick={handleDownload}
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+                Download Image
+              </button>
+              <button
+                onClick={handleCreateAnotherImage}
+                className="flex items-center justify-center gap-2 bg-brand-light border border-brand-border text-brand-text font-bold py-3 px-6 rounded-xl transition-all hover:shadow-lg active:scale-[0.99]"
+              >
+                <SparklesIcon className="w-5 h-5" />
+                Create Another Image
+              </button>
+            </div>
           </div>
         </div>
       )}

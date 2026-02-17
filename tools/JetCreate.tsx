@@ -5,6 +5,10 @@ import { getSocialConnections, createScheduledPost, PLATFORM_INFO } from '../ser
 import { Loader } from '../components/Loader';
 import { 
     SparklesIcon, 
+    RocketLaunchIcon,
+    BoltIcon,
+    CheckIcon,
+    ArrowRightIcon,
     ArrowDownTrayIcon, 
     ArrowPathIcon, 
     InformationCircleIcon,
@@ -435,33 +439,43 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
     if (!isProfileLocked) {
         return (
             <div className="h-full flex items-center justify-center text-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
-                <div className="bg-brand-card p-8 rounded-2xl max-w-lg shadow-xl border border-brand-border">
-                    <LockClosedIcon className="w-16 h-16 mx-auto mb-4 text-red-500" />
-                    <h2 className="text-2xl font-bold text-brand-text mb-2">Profile Confirmation Required</h2>
-                    <p className="text-sm text-brand-text-muted mb-6">
-                        Before JetCreate can generate on-brand campaigns, you must verify your **Logo and Brand Colors** 
-                        and click **"Lock Profile"** in your Business Details.
-                    </p>
+                <div className="bg-brand-card rounded-2xl max-w-lg shadow-xl border border-brand-border overflow-hidden">
+                    <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                            <LockClosedIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="text-left">
+                            <h2 className="font-bold text-brand-text text-sm">Profile Confirmation Required</h2>
+                            <p className="text-xs text-brand-text-muted">Lock your profile to unlock campaign generation</p>
+                        </div>
+                    </div>
+                    <div className="p-8">
+                        <p className="text-sm text-brand-text-muted mb-6">
+                            Before JetCreate can generate on-brand campaigns, you must verify your **Logo and Brand Colors** 
+                            and click **"Lock Profile"** in your Business Details.
+                        </p>
 
-                    <button
-                        onClick={() => {
-                            const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
-                            if (businessDetailsTool) setActiveTool(businessDetailsTool);
-                        }}
-                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                    >
-                        Review & Lock Profile
-                    </button>
-                    
-                    <div className="mt-6 p-4 bg-brand-light rounded-lg text-left text-xs text-brand-text-muted">
-                        <p className="font-semibold text-brand-text mb-2 flex items-center gap-2">
-                            <SparklesIcon className="w-3 h-3 text-accent-purple" />
-                            Why is this required?
-                        </p>
-                        <p>
-                            To ensure your campaigns use your specific color scheme and logo, we need you to 
-                            officially approve the extracted Brand DNA. This prevents generic AI results.
-                        </p>
+                        <button
+                            onClick={() => {
+                                const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
+                                if (businessDetailsTool) setActiveTool(businessDetailsTool);
+                            }}
+                            className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2"
+                        >
+                            <ArrowRightIcon className="w-4 h-4" />
+                            Review & Lock Profile
+                        </button>
+                        
+                        <div className="mt-6 p-4 bg-brand-light rounded-lg text-left text-xs text-brand-text-muted">
+                            <p className="font-semibold text-brand-text mb-2 flex items-center gap-2">
+                                <SparklesIcon className="w-3 h-3 text-accent-purple" />
+                                Why is this required?
+                            </p>
+                            <p>
+                                To ensure your campaigns use your specific color scheme and logo, we need you to 
+                                officially approve the extracted Brand DNA. This prevents generic AI results.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -472,23 +486,33 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
     if (!profileData.brandDnaProfile) {
         return (
             <div className="h-full flex items-center justify-center text-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
-                <div className="bg-brand-card p-8 rounded-2xl max-w-lg shadow-xl border border-brand-border">
-                    <SparklesIcon className="w-16 h-16 mx-auto mb-4 text-accent-purple" />
-                    <h2 className="text-2xl font-bold text-brand-text mb-2">Business DNA Required</h2>
-                    <p className="text-sm text-brand-text-muted mb-6">
-                        JetCreate uses your Business DNA to generate perfectly on-brand campaigns.
-                        Complete your Business Details to unlock this tool.
-                    </p>
+                <div className="bg-brand-card rounded-2xl max-w-lg shadow-xl border border-brand-border overflow-hidden">
+                    <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                            <SparklesIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="text-left">
+                            <h2 className="font-bold text-brand-text text-sm">Business DNA Required</h2>
+                            <p className="text-xs text-brand-text-muted">Complete your profile to unlock campaigns</p>
+                        </div>
+                    </div>
+                    <div className="p-8">
+                        <p className="text-sm text-brand-text-muted mb-6">
+                            JetCreate uses your Business DNA to generate perfectly on-brand campaigns.
+                            Complete your Business Details to unlock this tool.
+                        </p>
 
-                    <button
-                        onClick={() => {
-                            const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
-                            if (businessDetailsTool) setActiveTool(businessDetailsTool);
-                        }}
-                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-                    >
-                        Complete Business Details
-                    </button>
+                        <button
+                            onClick={() => {
+                                const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
+                                if (businessDetailsTool) setActiveTool(businessDetailsTool);
+                            }}
+                            className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2"
+                        >
+                            <ArrowRightIcon className="w-4 h-4" />
+                            Complete Business Details
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -498,7 +522,17 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
     if (!hasStartedGeneration && campaignIdeas.length === 0) {
         return (
             <div className="h-full flex items-center justify-center p-8 bg-gradient-to-br from-brand-darker to-brand-dark">
-                <div className="bg-brand-card p-8 rounded-2xl max-w-4xl w-full shadow-xl border border-brand-border">
+                <div className="bg-brand-card rounded-2xl max-w-4xl w-full shadow-xl border border-brand-border overflow-hidden">
+                    <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                            <RocketLaunchIcon className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-brand-text text-sm">Campaign Idea Generator</h2>
+                            <p className="text-xs text-brand-text-muted">AI-powered campaigns tailored to your brand</p>
+                        </div>
+                    </div>
+                    <div className="p-8">
                     {/* Header */}
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-accent-purple/20 to-accent-pink/20 mb-4">
@@ -520,8 +554,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                             </h3>
                             <div className="space-y-4 text-sm text-brand-text-muted">
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-accent-purple/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-xs font-bold text-accent-purple">1</span>
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-[10px] font-black text-white">1</span>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-brand-text">AI-Generated Campaign Ideas</p>
@@ -529,8 +563,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-accent-pink/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-xs font-bold text-accent-pink">2</span>
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-[10px] font-black text-white">2</span>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-brand-text">Ready-to-Use Creative Assets</p>
@@ -538,8 +572,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-accent-blue/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-xs font-bold text-accent-blue">3</span>
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-[10px] font-black text-white">3</span>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-brand-text">Branded Imagery</p>
@@ -547,8 +581,8 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-3">
-                                    <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <span className="text-xs font-bold text-green-600">4</span>
+                                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <span className="text-[10px] font-black text-white">4</span>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-brand-text">Schedule & Post</p>
@@ -582,15 +616,16 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     {/* CTA Button */}
                     <button
                         onClick={handleStartGeneration}
-                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                        className="w-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue hover:opacity-90 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-3 text-lg"
                     >
-                        <SparklesIcon className="w-6 h-6" />
+                        <BoltIcon className="w-6 h-6" />
                         Generate Campaign Ideas
                     </button>
 
                     <p className="text-center text-xs text-brand-text-muted mt-4">
                         This process may take a few minutes as we craft personalized campaigns for your business.
                     </p>
+                    </div>{/* end p-8 */}
                 </div>
             </div>
         );
@@ -681,10 +716,17 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
             <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
                 {/* Left Panel: Campaign Ideas */}
                 <aside className="w-full lg:w-80 lg:flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
-                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm flex-shrink-0">
-                        <h2 className="font-bold text-lg text-brand-text mb-1">Campaign Ideas</h2>
-                        <p className="text-xs text-brand-text-muted mb-4">Generated for your business</p>
-                        
+                    <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden flex-shrink-0">
+                        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-4 py-3 flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                <SparklesIcon className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-brand-text text-sm">Campaign Ideas</h2>
+                                <p className="text-xs text-brand-text-muted">Generated for your business</p>
+                            </div>
+                        </div>
+                        <div className="p-4">
                         <div className="space-y-3 pr-1">
                             {campaignIdeas.map(idea => (
                                     <button 
@@ -718,7 +760,12 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                             </div>
                                         )}
                                         <div className="p-3">
-                                            <h3 className="font-semibold text-sm text-brand-text mb-1">{idea.name}</h3>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-[10px] font-black text-white">{campaignIdeas.indexOf(idea) + 1}</span>
+                                                </div>
+                                                <h3 className="font-semibold text-sm text-brand-text">{idea.name}</h3>
+                                            </div>
                                             <p className="text-xs text-brand-text-muted line-clamp-2">{idea.description}</p>
                                             <div className="flex flex-wrap gap-1 mt-2">
                                                 {idea.channels.map(ch => (
@@ -732,11 +779,21 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                 ))
                             }
                         </div>
+                        </div>{/* end p-4 */}
                     </div>
 
                     {/* Custom Campaign Input */}
-                    <div className="bg-brand-card rounded-xl p-4 border border-brand-border shadow-sm flex-shrink-0">
-                        <h3 className="font-semibold text-sm text-brand-text mb-2">Custom Campaign</h3>
+                    <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden flex-shrink-0">
+                        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-4 py-3 flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                <RocketLaunchIcon className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-brand-text text-sm">Custom Campaign</h3>
+                                <p className="text-xs text-brand-text-muted">Describe your own idea</p>
+                            </div>
+                        </div>
+                        <div className="p-4">
                         <textarea 
                             value={customCampaignPrompt} 
                             onChange={e => setCustomCampaignPrompt(e.target.value)} 
@@ -747,16 +804,17 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                         <button 
                             onClick={handleCustomCampaign} 
                             disabled={!customCampaignPrompt.trim()}
-                            className="w-full mt-2 bg-gradient-to-r from-accent-purple to-accent-pink text-white font-semibold py-2 rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full mt-2 bg-gradient-to-r from-accent-purple to-accent-pink text-white font-semibold py-2 rounded-xl text-sm hover:opacity-90 hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            <SparklesIcon className="w-4 h-4" />
+                            <BoltIcon className="w-4 h-4" />
                             Generate Campaign
                         </button>
+                        </div>{/* end p-4 */}
                     </div>
                 </aside>
 
                 {/* Main Panel: Creative Assets */}
-                <main className="flex-1 bg-brand-card rounded-xl border border-brand-border shadow-sm flex flex-col overflow-hidden">
+                <main className="flex-1 bg-brand-card rounded-2xl shadow-md border border-brand-border flex flex-col overflow-hidden">
                     {!selectedCampaign ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-brand-text-muted">
                             <SparklesIcon className="w-16 h-16 mb-4 opacity-20" />
@@ -814,17 +872,24 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* Social Posts */}
                                     <div className="space-y-4">
-                                        <h2 className="font-bold text-lg text-brand-text flex items-center gap-2">
-                                            <SparklesIcon className="w-5 h-5 text-accent-purple" />
+                                        <h2 className="font-bold text-base text-brand-text flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                                <SparklesIcon className="w-3 h-3 text-white" />
+                                            </div>
                                             Social Media Posts
                                         </h2>
                                         {assets.social_posts.map((post, i) => (
-                                            <div key={post.id || i} className="bg-brand-light rounded-lg p-4 border border-brand-border hover:border-accent-purple/50 transition-colors group">
-                                                {/* Action Bar */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <label className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide">
-                                                        {post.platform}
-                                                    </label>
+                                            <div key={post.id || i} className="bg-brand-light rounded-2xl border border-brand-border hover:border-accent-purple/50 transition-colors group overflow-hidden">
+                                                {/* Card Header */}
+                                                <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-4 py-2 flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-[10px] font-black text-white">{i + 1}</span>
+                                                        </div>
+                                                        <label className="text-xs font-semibold text-brand-text uppercase tracking-wide">
+                                                            {post.platform}
+                                                        </label>
+                                                    </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => setSchedulingAsset(post)} title="Schedule post" className="p-1.5 rounded hover:bg-green-500 hover:text-white transition-colors"><CalendarDaysIcon className="w-4 h-4" /></button>
                                                         <button onClick={() => handleRegenerateImage(i, 'social')} disabled={generatingImageFor === post.id} title="Generate image" className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50">{generatingImageFor === post.id ? (<div className="w-4 h-4"><Loader /></div>) : (<PhotoIcon className="w-4 h-4" />)}</button>
@@ -832,7 +897,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                                         <button onClick={() => handleDeleteAsset(i, 'social')} title="Delete" className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"><TrashIcon className="w-4 h-4" /></button>
                                                     </div>
                                                 </div>
-
+                                                <div className="p-4">
                                                 {/* Image Preview */}
                                                 {post.imageUrl && (
                                                     <div className="mb-3 rounded-lg overflow-hidden bg-slate-200 aspect-square">
@@ -853,23 +918,31 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                                         <strong className="text-accent-blue">Visual Suggestion:</strong> {post.visual_suggestion}
                                                     </p>
                                                 </div>
+                                                </div>{/* end p-4 */}
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Ad Copy */}
                                     <div className="space-y-4">
-                                        <h2 className="font-bold text-lg text-brand-text flex items-center gap-2">
-                                            <SparklesIcon className="w-5 h-5 text-accent-pink" />
+                                        <h2 className="font-bold text-base text-brand-text flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                                <SparklesIcon className="w-3 h-3 text-white" />
+                                            </div>
                                             Ad Copy
                                         </h2>
                                         {assets.ad_copy.map((ad, i) => (
-                                            <div key={ad.id || i} className="bg-brand-light rounded-lg p-4 border border-brand-border hover:border-accent-pink/50 transition-colors group">
-                                                {/* Action Bar */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <label className="text-xs font-semibold text-brand-text-muted uppercase tracking-wide">
-                                                        Ad Variant {i + 1}
-                                                    </label>
+                                            <div key={ad.id || i} className="bg-brand-light rounded-2xl border border-brand-border hover:border-accent-pink/50 transition-colors group overflow-hidden">
+                                                {/* Card Header */}
+                                                <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-4 py-2 flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                                                            <span className="text-[10px] font-black text-white">{i + 1}</span>
+                                                        </div>
+                                                        <label className="text-xs font-semibold text-brand-text uppercase tracking-wide">
+                                                            Ad Variant {i + 1}
+                                                        </label>
+                                                    </div>
                                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => setSchedulingAsset(ad)} title="Schedule post" className="p-1.5 rounded hover:bg-green-500 hover:text-white transition-colors"><CalendarDaysIcon className="w-4 h-4" /></button>
                                                         <button onClick={() => handleRegenerateImage(i, 'ad')} disabled={generatingImageFor === ad.id} title="Generate image" className="p-1.5 rounded hover:bg-accent-purple hover:text-white transition-colors disabled:opacity-50">{generatingImageFor === ad.id ? (<div className="w-4 h-4"><Loader /></div>) : (<PhotoIcon className="w-4 h-4" />)}</button>
@@ -877,7 +950,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                                         <button onClick={() => handleDeleteAsset(i, 'ad')} title="Delete" className="p-1.5 rounded hover:bg-red-500 hover:text-white transition-colors"><TrashIcon className="w-4 h-4" /></button>
                                                     </div>
                                                 </div>
-
+                                                <div className="p-4">
                                                 {/* Image Preview */}
                                                 {ad.imageUrl && (
                                                     <div className="mb-3 rounded-lg overflow-hidden bg-slate-200 aspect-video">
@@ -917,6 +990,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                                                         />
                                                     </div>
                                                 </div>
+                                                </div>{/* end p-4 */}
                                             </div>
                                         ))}
                                     </div>

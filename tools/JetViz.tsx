@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Tool, LiveWebsiteAnalysis, GrowthPlanTask, ProfileData, AuditIssue } from '../types';
 import { analyzeWebsiteWithLiveApis } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, CheckCircleIcon, ArrowPathIcon, ExclamationTriangleIcon, ChevronDownIcon, XMarkIcon, GlobeAltIcon, SparklesIcon, ChartBarIcon, ArrowRightIcon, BoltIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { syncToSupabase } from '../utils/syncService';
@@ -141,47 +141,68 @@ const JetVizResultDisplay: React.FC<{
 
     return (
     <div className="space-y-8 mt-6">
-       <div className="bg-accent-blue/10 border-l-4 border-accent-blue text-accent-blue/90 p-4 rounded-r-lg">
-            <div className="flex">
-                <div className="py-1">
-                    <InformationCircleIcon className="w-6 h-6 mr-3"/>
-                </div>
-                <div>
-                    <p className="font-bold">Your Action Plan is Ready!</p>
-                    <p className="text-sm">
-                        All recommended tasks below have been automatically added to your Growth Plan.
-                        <button onClick={onNavigate} className="font-bold underline ml-2 whitespace-nowrap">Go to Growth Plan &rarr;</button>
-                    </p>
-                </div>
-            </div>
+       <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {[
+              { n: '01', title: 'Enter website URL', desc: 'Paste any competitor or your own website' },
+              { n: '02', title: 'AI visual analysis', desc: 'Colors, fonts, layout & brand identity' },
+              { n: '03', title: 'Get design insights', desc: 'Actionable improvements for your site' },
+            ].map(step => (
+              <div key={step.n} className="flex items-start gap-3 flex-1">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0">{step.n}</div>
+                <div><p className="font-semibold text-brand-text text-sm">{step.title}</p><p className="text-xs text-brand-text-muted">{step.desc}</p></div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-brand-border">
+            <p className="text-sm text-brand-text"><span className="font-bold">Your Action Plan is Ready!</span> All recommended tasks have been automatically added to your Growth Plan. <button onClick={onNavigate} className="font-bold text-accent-purple hover:underline ml-1 whitespace-nowrap">Go to Growth Plan &rarr;</button></p>
+          </div>
         </div>
         
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-                <div>
-                    <h2 className="text-2xl font-extrabold text-brand-text">What You Should Do This Week</h2>
-                    <p className="text-brand-text-muted mt-1">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                        <ChartBarIcon className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                        <span className="text-xs font-bold uppercase tracking-widest text-accent-blue">This Week</span>
+                        <h2 className="font-bold text-brand-text text-sm">What You Should Do This Week</h2>
+                    </div>
                 </div>
-                <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline mt-2 sm:mt-0">View Growth Plan &rarr;</button>
+                <button onClick={onNavigate} className="text-sm font-bold text-accent-purple hover:underline">View Growth Plan &rarr;</button>
             </div>
-            <div className="mb-4">
-                <div className="w-full bg-brand-light rounded-full h-2">
-                    <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div>
+            <div className="p-6 sm:p-8">
+                <p className="text-brand-text-muted mb-4 text-sm">These high-impact tasks are already in your Growth Plan - ready to execute.</p>
+                <div className="mb-4">
+                    <div className="w-full bg-brand-light rounded-full h-2">
+                        <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2 rounded-full" style={{ width: `100%` }}></div>
+                    </div>
                 </div>
-            </div>
-            <div className="space-y-4">
-                {(report.weeklyActions || []).map((task, index) => (
-                    <SimpleTaskCard key={index} task={task} />
-                ))}
+                <div className="space-y-4">
+                    {(report.weeklyActions || []).map((task, index) => (
+                        <SimpleTaskCard key={index} task={task} />
+                    ))}
+                </div>
             </div>
         </div>
 
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <h2 className="text-2xl font-extrabold text-brand-text mb-4">Full List of Issues Identified</h2>
-            <div className="space-y-4">
-                {(report.issues || []).map(issue => (
-                    <SimpleIssueCard key={issue.id} issue={issue} />
-                ))}
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                    <SparklesIcon className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                    <span className="text-xs font-bold uppercase tracking-widest text-accent-purple">Audit Results</span>
+                    <h2 className="font-bold text-brand-text text-sm">Full List of Issues Identified</h2>
+                </div>
+            </div>
+            <div className="p-6 sm:p-8">
+                <div className="space-y-4">
+                    {(report.issues || []).map(issue => (
+                        <SimpleIssueCard key={issue.id} issue={issue} />
+                    ))}
+                </div>
             </div>
         </div>
     </div>
@@ -206,11 +227,26 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
 
   if (!profileData.business.business_website && !result) {
     return (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-            <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-            <h2 className="text-2xl font-bold text-brand-text mt-4">Complete Your Profile</h2>
-            <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p>
-            <button onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])} className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-lg">Go to Business Details</button>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                <BoltIcon className="w-4 h-4 text-white" />
+              </div>
+              <div className="text-left">
+                <h2 className="font-bold text-brand-text text-sm">Complete Your Profile</h2>
+                <p className="text-xs text-brand-text-muted">Required to use JetViz</p>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8">
+              <p className="text-brand-text-muted my-4 max-w-md mx-auto">Please add your website URL to your business profile to use this tool.</p>
+              <button
+                onClick={() => setActiveTool(ALL_TOOLS['businessdetails'])}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition"
+              >
+                <ArrowRightIcon className="w-4 h-4" />
+                Go to Business Details
+              </button>
+            </div>
         </div>
     );
   }
@@ -310,27 +346,39 @@ export const JetViz: React.FC<JetVizProps> = ({ tool, addTasksToGrowthPlan, onSa
             <div className="mt-8">
                 <button
                     onClick={handleFinalNavigation}
-                    className="w-full bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-lg"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] text-lg"
                 >
+                    <ChartBarIcon className="w-5 h-5" />
                     Go to Growth Plan to Execute Tasks
-                    <ArrowPathIcon className="w-5 h-5" />
                 </button>
             </div>
         </>
       )}
 
       {!loading && !result && (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label htmlFor="url" className="block text-sm font-medium text-brand-text mb-2">Website URL to Analyze</label>
-              <input type="text" id="url" value={urlToAnalyze} onChange={(e) => setUrlToAnalyze(e.target.value)} placeholder="https://your-business-website.com" className="w-full bg-brand-light border rounded-lg p-3"/>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <GlobeAltIcon className="w-4 h-4 text-white" />
             </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-4 rounded-lg disabled:opacity-50">
-              {loading ? 'Auditing...' : 'Audit Website'}
-            </button>
-          </form>
+            <div>
+              <h2 className="font-bold text-brand-text text-sm">Analyze Website</h2>
+              <p className="text-xs text-brand-text-muted">Enter a URL to run a live audit</p>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8">
+            <form onSubmit={handleSubmit}>
+              <div className="mb-6">
+                <label htmlFor="url" className="block text-sm font-medium text-brand-text mb-2">Website URL to Analyze</label>
+                <input type="text" id="url" value={urlToAnalyze} onChange={(e) => setUrlToAnalyze(e.target.value)} placeholder="https://your-business-website.com" className="w-full bg-brand-light border rounded-lg p-3"/>
+              </div>
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-4 rounded-xl disabled:opacity-50 hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-300">
+                <ChartBarIcon className="w-5 h-5" />
+                {loading ? 'Auditing...' : 'Audit Website'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

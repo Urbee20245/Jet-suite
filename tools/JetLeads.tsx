@@ -4,7 +4,7 @@ import { findLeads } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { ResultDisplay } from '../components/ResultDisplay';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon, MapPinIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, MapPinIcon, BoltIcon, SparklesIcon, CheckIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
@@ -61,20 +61,29 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
   // If critical info is missing, show a helpful setup screen
   if (!service) {
     return (
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-        <div className="w-16 h-16 bg-accent-blue/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <InformationCircleIcon className="w-10 h-10 text-accent-blue" />
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <InformationCircleIcon className="w-4 h-4 text-white" />
+          </div>
+          <h2 className="font-bold text-brand-text text-sm">Profile Setup Required</h2>
         </div>
-        <h2 className="text-2xl font-bold text-brand-text mb-2">Lead Discovery Requires Category</h2>
-        <p className="text-brand-text-muted mb-8 max-w-md mx-auto">
-          To find people looking for your services, we need to know your **Business Category**.
-        </p>
-        <button
-          onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 shadow-lg"
-        >
-          Complete Business Details
-        </button>
+        <div className="p-6 sm:p-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-accent-blue to-accent-purple rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <InformationCircleIcon className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-brand-text mb-2">Lead Discovery Requires Category</h2>
+          <p className="text-brand-text-muted mb-8 max-w-md mx-auto">
+            To find people looking for your services, we need to know your **Business Category**.
+          </p>
+          <button
+            onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+            className="bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center gap-2 mx-auto"
+          >
+            <ArrowRightIcon className="w-4 h-4" />
+            Complete Business Details
+          </button>
+        </div>
       </div>
     );
   }
@@ -90,43 +99,55 @@ export const JetLeads: React.FC<JetLeadsProps> = ({ tool, profileData, setActive
             </ul>
         </HowToUse>
       )}
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
-                <span className="text-sm font-medium text-brand-text mr-2">Your Service:</span>
-                <span className="font-semibold text-brand-text">{service}</span>
-            </div>
-            <div className="relative">
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Service Area</label>
-                <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
-                    <MapPinIcon className="w-4 h-4 text-accent-purple mr-2" />
-                    <input 
-                        type="text" 
-                        value={targetArea} 
-                        onChange={e => setTargetArea(e.target.value)} 
-                        placeholder="e.g., Metro Atlanta or Online Forums" 
-                        className="bg-transparent border-none p-0 text-brand-text font-semibold focus:ring-0 w-full"
-                        required
-                    />
-                </div>
-                {profileLocation && profileLocation !== targetArea && (
-                    <p className="text-xs text-brand-text-muted mt-1 ml-1">
-                        Profile location: {profileLocation}. You can override it here.
-                    </p>
-                )}
-            </div>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <BoltIcon className="w-4 h-4 text-white" />
           </div>
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-4 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-lg"
-          >
-            {loading ? 'Searching for Local Leads...' : 'Find High-Intent Leads'}
-          </button>
-        </form>
+          <div>
+            <h2 className="font-bold text-brand-text text-sm">Lead Generation</h2>
+            <p className="text-xs text-brand-text-muted">AI-powered lead capture and qualification</p>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <p className="text-brand-text-muted mb-6">{tool.description}</p>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
+                  <span className="text-sm font-medium text-brand-text mr-2">Your Service:</span>
+                  <span className="font-semibold text-brand-text">{service}</span>
+              </div>
+              <div className="relative">
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Service Area</label>
+                  <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
+                      <MapPinIcon className="w-4 h-4 text-accent-purple mr-2" />
+                      <input 
+                          type="text" 
+                          value={targetArea} 
+                          onChange={e => setTargetArea(e.target.value)} 
+                          placeholder="e.g., Metro Atlanta or Online Forums" 
+                          className="bg-transparent border-none p-0 text-brand-text font-semibold focus:ring-0 w-full"
+                          required
+                      />
+                  </div>
+                  {profileLocation && profileLocation !== targetArea && (
+                      <p className="text-xs text-brand-text-muted mt-1 ml-1">
+                          Profile location: {profileLocation}. You can override it here.
+                      </p>
+                  )}
+              </div>
+            </div>
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-4 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] text-lg flex items-center justify-center gap-2"
+            >
+              <SparklesIcon className="w-5 h-5" />
+              {loading ? 'Searching for Local Leads...' : 'Find High-Intent Leads'}
+            </button>
+          </form>
+        </div>
       </div>
       {loading && (
           <AnalysisLoadingState 

@@ -18,7 +18,11 @@ import {
   GlobeAltIcon,
   PaperAirplaneIcon,
   UserGroupIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  BoltIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  ChartBarIcon
 } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { QRCodeCanvas } from 'qrcode.react';
@@ -200,29 +204,38 @@ const QRCodeGenerator: React.FC<{ url: string; businessName: string }> = ({ url,
   };
 
   return (
-    <div className="mt-12 p-6 bg-gray-100 rounded-xl shadow-inner">
-      <h3 className="text-xl font-bold text-gray-800 mb-4">Download Your Review QR Code</h3>
-      <p className="text-sm text-gray-600 mb-4">Place this QR code on receipts, flyers, or business cards to instantly direct customers to your review page.</p>
-      
-      <div ref={qrCodeRef} className="flex justify-center mb-6 p-4 bg-white rounded-lg shadow-md">
-        <QRCodeCanvas value={url} size={256} level="H" />
+    <div className="mt-12 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+      <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+          <ArrowDownTrayIcon className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-gray-800">Download Your Review QR Code</h3>
+          <p className="text-sm text-gray-600">Place this QR code on receipts, flyers, or business cards to instantly direct customers to your review page.</p>
+        </div>
       </div>
 
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => downloadQrCode('png')}
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Download PNG
-        </button>
-        <button
-          onClick={() => downloadQrCode('jpeg')}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-          Download JPEG
-        </button>
+      <div className="p-6">
+        <div ref={qrCodeRef} className="flex justify-center mb-6 p-4 bg-white rounded-xl shadow-md border border-brand-border">
+          <QRCodeCanvas value={url} size={256} level="H" />
+        </div>
+
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={() => downloadQrCode('png')}
+            className="bg-gradient-to-r from-accent-blue to-accent-purple hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] text-white font-bold py-2 px-4 rounded-xl transition-all flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Download PNG
+          </button>
+          <button
+            onClick={() => downloadQrCode('jpeg')}
+            className="bg-brand-light border border-brand-border text-brand-text font-bold py-2 px-4 rounded-xl transition-all hover:shadow-lg active:scale-[0.99] flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Download JPEG
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -880,22 +893,29 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
           </HowToUse>
         )}
         
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-          <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue mb-4" />
-          <h2 className="text-2xl font-bold text-brand-text mb-2">Google Business Profile Required</h2>
-          <p className="text-brand-text-muted mb-6 max-w-md mx-auto">
-            JetTrust needs your verified Google Business Profile to fetch and display reviews. 
-            Once connected, you can create beautiful review widgets for your website.
-          </p>
-          <button
-            onClick={() => {
-              const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
-              if (businessDetailsTool) setActiveTool(businessDetailsTool);
-            }}
-            className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity shadow-lg"
-          >
-            Connect Google Business Profile
-          </button>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+              <InformationCircleIcon className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-brand-text">Google Business Profile Required</h2>
+          </div>
+          <div className="p-8">
+            <p className="text-brand-text-muted mb-6 max-w-md mx-auto">
+              JetTrust needs your verified Google Business Profile to fetch and display reviews. 
+              Once connected, you can create beautiful review widgets for your website.
+            </p>
+            <button
+              onClick={() => {
+                const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
+                if (businessDetailsTool) setActiveTool(businessDetailsTool);
+              }}
+              className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] shadow-lg inline-flex items-center gap-2"
+            >
+              <ArrowRightIcon className="w-5 h-5" />
+              Connect Google Business Profile
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -915,57 +935,55 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
         </HowToUse>
       )}
 
-      {/* Tab Navigation */}
-      <div className="bg-brand-card rounded-xl shadow-sm border border-brand-border overflow-hidden">
-        <div className="flex border-b border-brand-border">
-          <button
-            onClick={() => setActiveTab('widget')}
-            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-              activeTab === 'widget'
-                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
-                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
-            }`}
-          >
-            <CodeBracketIcon className="w-4 h-4" />
-            Review Widget
-          </button>
-          <button
-            onClick={() => setActiveTab('reviewpage')}
-            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-              activeTab === 'reviewpage'
-                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
-                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
-            }`}
-          >
-            <GlobeAltIcon className="w-4 h-4" />
-            Public Review Page
-          </button>
-          <button
-            onClick={() => setActiveTab('emails')}
-            className={`flex-1 px-4 py-3 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
-              activeTab === 'emails'
-                ? 'bg-accent-purple/10 text-accent-purple border-b-2 border-accent-purple'
-                : 'text-brand-text-muted hover:text-brand-text hover:bg-brand-light'
-            }`}
-          >
-            <EnvelopeIcon className="w-4 h-4" />
-            Email Requests
-            {emailsSentToday > 0 && (
-              <span className="bg-accent-purple text-white text-xs px-1.5 py-0.5 rounded-full">
-                {emailsSentToday}/{MAX_DAILY_EMAILS}
-              </span>
-            )}
-          </button>
-        </div>
+      {/* Tab Navigation - Segmented Control */}
+      <div className="flex bg-brand-light p-1.5 rounded-2xl gap-1 shadow-inner">
+        <button
+          onClick={() => setActiveTab('widget')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+            activeTab === 'widget'
+              ? 'bg-white shadow-md text-brand-text'
+              : 'text-brand-text-muted hover:text-brand-text'
+          }`}
+        >
+          <CodeBracketIcon className="w-4 h-4" />
+          Review Widget
+        </button>
+        <button
+          onClick={() => setActiveTab('reviewpage')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+            activeTab === 'reviewpage'
+              ? 'bg-white shadow-md text-brand-text'
+              : 'text-brand-text-muted hover:text-brand-text'
+          }`}
+        >
+          <GlobeAltIcon className="w-4 h-4" />
+          Public Review Page
+        </button>
+        <button
+          onClick={() => setActiveTab('emails')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
+            activeTab === 'emails'
+              ? 'bg-white shadow-md text-brand-text'
+              : 'text-brand-text-muted hover:text-brand-text'
+          }`}
+        >
+          <EnvelopeIcon className="w-4 h-4" />
+          Email Requests
+          {emailsSentToday > 0 && (
+            <span className="bg-accent-purple text-white text-xs px-1.5 py-0.5 rounded-full">
+              {emailsSentToday}/{MAX_DAILY_EMAILS}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Tool Description */}
-      <div className="bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
+      <div className="bg-brand-card p-4 rounded-2xl shadow-md border border-brand-border">
         <p className="text-brand-text-muted mb-2">{tool.description}</p>
       </div>
 
       {/* Connected Business Info */}
-      <div className="bg-brand-card p-4 rounded-xl shadow-sm border border-brand-border">
+      <div className="bg-brand-card p-4 rounded-2xl shadow-md border border-brand-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -993,9 +1011,9 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       {activeTab === 'reviewpage' && (
         <div className="space-y-6">
           {/* Review Page Setup */}
-          <div className="bg-brand-card p-6 rounded-xl shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center">
+          <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-purple to-accent-pink flex items-center justify-center shadow-sm">
                 <GlobeAltIcon className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -1004,226 +1022,228 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               </div>
             </div>
 
-            {existingReviewPage && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CheckCircleIcon className="w-5 h-5 text-green-600" />
-                    <span className="text-green-800 font-semibold">Your review page is live!</span>
-                  </div>
-                  <button
-                    onClick={handleCopyReviewPageLink}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold transition"
-                  >
-                    <LinkIcon className="w-4 h-4" />
-                    {reviewPageLinkCopied ? 'Copied!' : 'Copy Link'}
-                  </button>
-                </div>
-                <p className="text-sm text-green-700 mt-2">
-                  {window.location.origin}/r/{reviewPageSettings.slug}
-                </p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column - Settings */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Page URL Slug *
-                  </label>
-                  <div className="flex items-center">
-                    <span className="bg-brand-light px-3 py-2 rounded-l-lg border border-r-0 border-brand-border text-sm text-brand-text-muted">
-                      {window.location.origin}/r/
-                    </span>
-                    <input
-                      type="text"
-                      value={reviewPageSettings.slug}
-                      onChange={e => setReviewPageSettings(prev => ({
-                        ...prev,
-                        slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                      }))}
-                      placeholder="your-business-name"
-                      className="flex-1 px-3 py-2 border border-brand-border rounded-r-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
-                    />
-                  </div>
-                  <p className="text-xs text-brand-text-muted mt-1">Only lowercase letters, numbers, and hyphens</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Business Name
-                  </label>
-                  <input
-                    type="text"
-                    value={reviewPageSettings.business_name}
-                    onChange={e => setReviewPageSettings(prev => ({ ...prev, business_name: e.target.value }))}
-                    className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Google Review URL *
-                  </label>
-                  <input
-                    type="url"
-                    value={reviewPageSettings.google_review_url}
-                    onChange={e => setReviewPageSettings(prev => ({ ...prev, google_review_url: e.target.value }))}
-                    placeholder="https://g.page/..."
-                    className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
-                  />
-                  <p className="text-xs text-brand-text-muted mt-1">Where customers will be redirected after rating</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Primary Color
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={reviewPageSettings.primary_color}
-                      onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
-                      className="w-10 h-10 rounded border-none cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={reviewPageSettings.primary_color}
-                      onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text font-mono text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column - Image Uploads */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Logo (optional)
-                  </label>
-                  <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
-                    {reviewPageSettings.logo_url ? (
-                      <div className="relative">
-                        <img
-                          src={reviewPageSettings.logo_url}
-                          alt="Logo preview"
-                          className="h-20 mx-auto object-contain"
-                        />
-                        <button
-                          onClick={() => setReviewPageSettings(prev => ({ ...prev, logo_url: null }))}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
-                        <p className="text-sm text-brand-text-muted">Click to upload logo</p>
-                        <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG</p>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/gif,image/webp"
-                          onChange={e => handleImageUpload(e, 'logo')}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-brand-text mb-2">
-                    Hero Image (optional)
-                  </label>
-                  <p className="text-xs text-brand-text-muted mb-2">Displayed on the left side of the page on desktop</p>
-                  <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
-                    {reviewPageSettings.hero_image_url ? (
-                      <div className="relative">
-                        <img
-                          src={reviewPageSettings.hero_image_url}
-                          alt="Hero preview"
-                          className="h-32 mx-auto object-cover rounded"
-                        />
-                        <button
-                          onClick={() => setReviewPageSettings(prev => ({ ...prev, hero_image_url: null }))}
-                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="cursor-pointer">
-                        <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
-                        <p className="text-sm text-brand-text-muted">Click to upload hero image</p>
-                        <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG - Best at 800x1200px</p>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/gif,image/webp"
-                          onChange={e => handleImageUpload(e, 'hero')}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {reviewPageError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-                <p className="text-red-600 text-sm">{reviewPageError}</p>
-              </div>
-            )}
-
-            {reviewPageSaved && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                <p className="text-green-600 text-sm">Review page saved successfully!</p>
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="p-6">
               {existingReviewPage && (
-                <a
-                  href={`/r/${reviewPageSettings.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 border border-brand-border rounded-lg text-brand-text font-semibold hover:bg-brand-light transition"
-                >
-                  Preview Page
-                </a>
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircleIcon className="w-5 h-5 text-green-600" />
+                      <span className="text-green-800 font-semibold">Your review page is live!</span>
+                    </div>
+                    <button
+                      onClick={handleCopyReviewPageLink}
+                      className="flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-3 py-1.5 rounded-xl text-sm font-semibold transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+                    >
+                      <LinkIcon className="w-4 h-4" />
+                      {reviewPageLinkCopied ? 'Copied!' : 'Copy Link'}
+                    </button>
+                  </div>
+                  <p className="text-sm text-green-700 mt-2">
+                    {window.location.origin}/r/{reviewPageSettings.slug}
+                  </p>
+                </div>
               )}
-              <button
-                onClick={handleSaveReviewPage}
-                disabled={reviewPageLoading}
-                className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg transition-opacity disabled:opacity-50 flex items-center gap-2"
-              >
-                {reviewPageLoading ? (
-                  <>
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircleIcon className="w-4 h-4" />
-                    {existingReviewPage ? 'Update Page' : 'Create Page'}
-                  </>
-                )}
-              </button>
-            </div>
-            
-            {existingReviewPage && (
-              <div className="mt-8">
-                <QRCodeGenerator 
-                  url={`${window.location.origin}/r/${reviewPageSettings.slug}`} 
-                  businessName={reviewPageSettings.business_name} 
-                />
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column - Settings */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Page URL Slug *
+                    </label>
+                    <div className="flex items-center">
+                      <span className="bg-brand-light px-3 py-2 rounded-l-lg border border-r-0 border-brand-border text-sm text-brand-text-muted">
+                        {window.location.origin}/r/
+                      </span>
+                      <input
+                        type="text"
+                        value={reviewPageSettings.slug}
+                        onChange={e => setReviewPageSettings(prev => ({
+                          ...prev,
+                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
+                        }))}
+                        placeholder="your-business-name"
+                        className="flex-1 px-3 py-2 border border-brand-border rounded-r-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                      />
+                    </div>
+                    <p className="text-xs text-brand-text-muted mt-1">Only lowercase letters, numbers, and hyphens</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Business Name
+                    </label>
+                    <input
+                      type="text"
+                      value={reviewPageSettings.business_name}
+                      onChange={e => setReviewPageSettings(prev => ({ ...prev, business_name: e.target.value }))}
+                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Google Review URL *
+                    </label>
+                    <input
+                      type="url"
+                      value={reviewPageSettings.google_review_url}
+                      onChange={e => setReviewPageSettings(prev => ({ ...prev, google_review_url: e.target.value }))}
+                      placeholder="https://g.page/..."
+                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                    />
+                    <p className="text-xs text-brand-text-muted mt-1">Where customers will be redirected after rating</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Primary Color
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={reviewPageSettings.primary_color}
+                        onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                        className="w-10 h-10 rounded border-none cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        value={reviewPageSettings.primary_color}
+                        onChange={e => setReviewPageSettings(prev => ({ ...prev, primary_color: e.target.value }))}
+                        className="flex-1 px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text font-mono text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Image Uploads */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Logo (optional)
+                    </label>
+                    <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
+                      {reviewPageSettings.logo_url ? (
+                        <div className="relative">
+                          <img
+                            src={reviewPageSettings.logo_url}
+                            alt="Logo preview"
+                            className="h-20 mx-auto object-contain"
+                          />
+                          <button
+                            onClick={() => setReviewPageSettings(prev => ({ ...prev, logo_url: null }))}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer">
+                          <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
+                          <p className="text-sm text-brand-text-muted">Click to upload logo</p>
+                          <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG</p>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={e => handleImageUpload(e, 'logo')}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-brand-text mb-2">
+                      Hero Image (optional)
+                    </label>
+                    <p className="text-xs text-brand-text-muted mb-2">Displayed on the left side of the page on desktop</p>
+                    <div className="border-2 border-dashed border-brand-border rounded-lg p-4 text-center hover:border-accent-purple transition-colors">
+                      {reviewPageSettings.hero_image_url ? (
+                        <div className="relative">
+                          <img
+                            src={reviewPageSettings.hero_image_url}
+                            alt="Hero preview"
+                            className="h-32 mx-auto object-cover rounded"
+                          />
+                          <button
+                            onClick={() => setReviewPageSettings(prev => ({ ...prev, hero_image_url: null }))}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="cursor-pointer">
+                          <PhotoIcon className="w-10 h-10 mx-auto text-brand-text-muted mb-2" />
+                          <p className="text-sm text-brand-text-muted">Click to upload hero image</p>
+                          <p className="text-xs text-brand-text-muted">Max 5MB, JPEG/PNG - Best at 800x1200px</p>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={e => handleImageUpload(e, 'hero')}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            )}
+
+              {reviewPageError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                  <p className="text-red-600 text-sm">{reviewPageError}</p>
+                </div>
+              )}
+
+              {reviewPageSaved && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
+                  <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                  <p className="text-green-600 text-sm">Review page saved successfully!</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                {existingReviewPage && (
+                  <a
+                    href={`/r/${reviewPageSettings.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-brand-light border border-brand-border rounded-xl text-brand-text font-semibold hover:shadow-lg transition-all active:scale-[0.99]"
+                  >
+                    Preview Page
+                  </a>
+                )}
+                <button
+                  onClick={handleSaveReviewPage}
+                  disabled={reviewPageLoading}
+                  className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-2 px-6 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] disabled:opacity-50 flex items-center gap-2"
+                >
+                  {reviewPageLoading ? (
+                    <>
+                      <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon className="w-4 h-4" />
+                      {existingReviewPage ? 'Update Page' : 'Create Page'}
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {existingReviewPage && (
+                <div className="mt-8">
+                  <QRCodeGenerator 
+                    url={`${window.location.origin}/r/${reviewPageSettings.slug}`} 
+                    businessName={reviewPageSettings.business_name} 
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1232,9 +1252,9 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       {activeTab === 'emails' && (
         <div className="space-y-6">
           {/* Email Request Section */}
-          <div className="bg-brand-card p-6 rounded-xl shadow-lg">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center">
+          <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
                 <EnvelopeIcon className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -1243,146 +1263,148 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               </div>
             </div>
 
-            {/* Daily Limit Info */}
-            <div className="mb-6 p-4 bg-accent-blue/5 border border-accent-blue/20 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <UserGroupIcon className="w-5 h-5 text-accent-blue" />
-                  <span className="text-brand-text font-semibold">Daily Email Limit</span>
+            <div className="p-6">
+              {/* Daily Limit Info */}
+              <div className="mb-6 p-4 bg-accent-blue/5 border border-accent-blue/20 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserGroupIcon className="w-5 h-5 text-accent-blue" />
+                    <span className="text-brand-text font-semibold">Daily Email Limit</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-accent-blue">{emailsSentToday}</span>
+                    <span className="text-brand-text-muted">/ {MAX_DAILY_EMAILS} sent today</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-accent-blue">{emailsSentToday}</span>
-                  <span className="text-brand-text-muted">/ {MAX_DAILY_EMAILS} sent today</span>
+                <div className="mt-2 w-full bg-brand-light rounded-full h-2">
+                  <div
+                    className="h-2 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full transition-all"
+                    style={{ width: `${(emailsSentToday / MAX_DAILY_EMAILS) * 100}%` }}
+                  />
                 </div>
               </div>
-              <div className="mt-2 w-full bg-brand-light rounded-full h-2">
-                <div
-                  className="h-2 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full transition-all"
-                  style={{ width: `${(emailsSentToday / MAX_DAILY_EMAILS) * 100}%` }}
-                />
-              </div>
-            </div>
 
-            {!existingReviewPage && (
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-3">
-                <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0" />
-                <div>
-                  <p className="text-yellow-800 font-semibold">Review Page Required</p>
-                  <p className="text-yellow-700 text-sm">
-                    Please create your public review page first before sending email requests.
-                    <button
-                      onClick={() => setActiveTab('reviewpage')}
-                      className="text-accent-purple font-semibold ml-1 hover:underline"
-                    >
-                      Create Review Page →
-                    </button>
+              {!existingReviewPage && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-center gap-3">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-yellow-800 font-semibold">Review Page Required</p>
+                    <p className="text-yellow-700 text-sm">
+                      Please create your public review page first before sending email requests.
+                      <button
+                        onClick={() => setActiveTab('reviewpage')}
+                        className="text-accent-purple font-semibold ml-1 hover:underline"
+                      >
+                        Create Review Page →
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Email Recipients Form */}
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-brand-text">
+                  Email Recipients ({emailRecipients.length}/{MAX_DAILY_EMAILS - emailsSentToday} remaining today)
+                </label>
+
+                {emailRecipients.map((recipient, index) => (
+                  <div key={index} className="flex gap-3 items-start">
+                    <div className="flex-1">
+                      <input
+                        type="email"
+                        value={recipient.email}
+                        onChange={e => updateEmailRecipient(index, 'email', e.target.value)}
+                        placeholder="customer@email.com"
+                        className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={recipient.name}
+                        onChange={e => updateEmailRecipient(index, 'name', e.target.value)}
+                        placeholder="Customer name (optional)"
+                        className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
+                      />
+                    </div>
+                    {emailRecipients.length > 1 && (
+                      <button
+                        onClick={() => removeEmailRecipient(index)}
+                        className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {emailRecipients.length < (MAX_DAILY_EMAILS - emailsSentToday) && emailRecipients.length < 5 && (
+                  <button
+                    onClick={addEmailRecipient}
+                    className="text-accent-purple hover:text-accent-pink font-semibold text-sm flex items-center gap-1"
+                  >
+                    + Add another recipient
+                  </button>
+                )}
+              </div>
+
+              {emailError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
+                  <p className="text-red-600 text-sm">{emailError}</p>
+                </div>
+              )}
+
+              {emailSuccess && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
+                  <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                  <p className="text-green-600 text-sm">{emailSuccess}</p>
+                </div>
+              )}
+
+              <div className="mt-6">
+                <button
+                  onClick={handleSendReviewEmails}
+                  disabled={emailSending || emailsSentToday >= MAX_DAILY_EMAILS || !existingReviewPage}
+                  className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {emailSending ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-5 h-5" />
+                      Send Review Request Emails
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Email Template Preview */}
+              <div className="mt-6 p-4 bg-brand-light rounded-xl">
+                <p className="text-xs text-brand-text-muted mb-2 font-semibold">EMAIL PREVIEW</p>
+                <div className="bg-white p-4 rounded-xl border border-brand-border">
+                  <p className="text-sm text-brand-text">
+                    <strong>Subject:</strong> {reviewPageSettings.business_name} would love your feedback!
+                  </p>
+                  <hr className="my-3 border-brand-border" />
+                  <p className="text-sm text-brand-text-muted">
+                    Hi [Customer Name],
+                    <br /><br />
+                    Thank you for choosing <strong>{reviewPageSettings.business_name}</strong>! We hope you had a great experience with us.
+                    <br /><br />
+                    We'd really appreciate it if you could take a moment to share your feedback. Your review helps us improve and helps others discover our business.
+                    <br /><br />
+                    <span className="text-accent-purple">[Leave a Review Button]</span>
+                    <br /><br />
+                    Thank you for your support!
+                    <br />
+                    - The {reviewPageSettings.business_name} Team
                   </p>
                 </div>
-              </div>
-            )}
-
-            {/* Email Recipients Form */}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-brand-text">
-                Email Recipients ({emailRecipients.length}/{MAX_DAILY_EMAILS - emailsSentToday} remaining today)
-              </label>
-
-              {emailRecipients.map((recipient, index) => (
-                <div key={index} className="flex gap-3 items-start">
-                  <div className="flex-1">
-                    <input
-                      type="email"
-                      value={recipient.email}
-                      onChange={e => updateEmailRecipient(index, 'email', e.target.value)}
-                      placeholder="customer@email.com"
-                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={recipient.name}
-                      onChange={e => updateEmailRecipient(index, 'name', e.target.value)}
-                      placeholder="Customer name (optional)"
-                      className="w-full px-3 py-2 border border-brand-border rounded-lg bg-white text-brand-text focus:ring-2 focus:ring-accent-purple focus:border-transparent"
-                    />
-                  </div>
-                  {emailRecipients.length > 1 && (
-                    <button
-                      onClick={() => removeEmailRecipient(index)}
-                      className="px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              {emailRecipients.length < (MAX_DAILY_EMAILS - emailsSentToday) && emailRecipients.length < 5 && (
-                <button
-                  onClick={addEmailRecipient}
-                  className="text-accent-purple hover:text-accent-pink font-semibold text-sm flex items-center gap-1"
-                >
-                  + Add another recipient
-                </button>
-              )}
-            </div>
-
-            {emailError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                <ExclamationTriangleIcon className="w-5 h-5 text-red-500" />
-                <p className="text-red-600 text-sm">{emailError}</p>
-              </div>
-            )}
-
-            {emailSuccess && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                <p className="text-green-600 text-sm">{emailSuccess}</p>
-              </div>
-            )}
-
-            <div className="mt-6">
-              <button
-                onClick={handleSendReviewEmails}
-                disabled={emailSending || emailsSentToday >= MAX_DAILY_EMAILS || !existingReviewPage}
-                className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {emailSending ? (
-                  <>
-                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <PaperAirplaneIcon className="w-5 h-5" />
-                    Send Review Request Emails
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Email Template Preview */}
-            <div className="mt-6 p-4 bg-brand-light rounded-lg">
-              <p className="text-xs text-brand-text-muted mb-2 font-semibold">EMAIL PREVIEW</p>
-              <div className="bg-white p-4 rounded border border-brand-border">
-                <p className="text-sm text-brand-text">
-                  <strong>Subject:</strong> {reviewPageSettings.business_name} would love your feedback!
-                </p>
-                <hr className="my-3 border-brand-border" />
-                <p className="text-sm text-brand-text-muted">
-                  Hi [Customer Name],
-                  <br /><br />
-                  Thank you for choosing <strong>{reviewPageSettings.business_name}</strong>! We hope you had a great experience with us.
-                  <br /><br />
-                  We'd really appreciate it if you could take a moment to share your feedback. Your review helps us improve and helps others discover our business.
-                  <br /><br />
-                  <span className="text-accent-purple">[Leave a Review Button]</span>
-                  <br /><br />
-                  Thank you for your support!
-                  <br />
-                  - The {reviewPageSettings.business_name} Team
-                </p>
               </div>
             </div>
           </div>
@@ -1393,153 +1415,162 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
       {activeTab === 'widget' && (
       <>
       {/* Widget Configuration */}
-      <div className="bg-brand-card p-6 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold text-brand-text mb-6">Widget Configuration</h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Layout Selection */}
-          <div>
-            <label className="block text-sm font-medium text-brand-text mb-3">Layout Style</label>
-            <div className="space-y-3">
-              {[
-                { value: 'grid' as WidgetLayout, label: 'Grid' },
-                { value: 'carousel' as WidgetLayout, label: 'Carousel' },
-                { value: 'list' as WidgetLayout, label: 'List' }
-              ].map(option => (
-                <button
-                  key={option.value}
-                  onClick={() => setLayout(option.value)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                    layout === option.value
-                      ? 'bg-accent-purple/10 border-accent-purple'
-                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
-                  }`}
-                >
-                  <p className="font-bold text-brand-text">{option.label}</p>
-                </button>
-              ))}
-            </div>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+            <CodeBracketIcon className="w-5 h-5 text-white" />
           </div>
-
-          {/* Star Filter */}
-          <div>
-            <label className="block text-sm font-medium text-brand-text mb-3">Minimum Star Rating</label>
-            <div className="space-y-2">
-              {[5, 4, 3].map(stars => (
-                <button
-                  key={stars}
-                  onClick={() => setMinStars(stars as StarFilter)}
-                  className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
-                    minStars === stars
-                      ? 'bg-accent-purple/10 border-accent-purple'
-                      : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-brand-text">{stars}+ Stars Only</span>
-                    <StarRating rating={stars} size="sm" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Color Customization */}
-          <div>
-            <label className="block text-sm font-medium text-brand-text mb-3">Widget Colors</label>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
-                <label htmlFor="primaryColor" className="text-sm text-brand-text-muted">Primary</label>
-                <input type="color" id="primaryColor" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
-              </div>
-              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
-                <label htmlFor="textColor" className="text-sm text-brand-text-muted">Text</label>
-                <input type="color" id="textColor" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
-              </div>
-              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
-                <label htmlFor="backgroundColor" className="text-sm text-brand-text-muted">Background</label>
-                <input type="color" id="backgroundColor" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
-              </div>
-              <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
-                <label htmlFor="cardColor" className="text-sm text-brand-text-muted">Card</label>
-                <input type="color" id="cardColor" value={cardColor} onChange={e => setCardColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
-              </div>
-            </div>
-          </div>
+          <h2 className="text-2xl font-bold text-brand-text">Widget Configuration</h2>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
-          </div>
-        )}
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Layout Selection */}
+            <div>
+              <label className="block text-sm font-medium text-brand-text mb-3">Layout Style</label>
+              <div className="space-y-3">
+                {[
+                  { value: 'grid' as WidgetLayout, label: 'Grid' },
+                  { value: 'carousel' as WidgetLayout, label: 'Carousel' },
+                  { value: 'list' as WidgetLayout, label: 'List' }
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => setLayout(option.value)}
+                    className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                      layout === option.value
+                        ? 'bg-accent-purple/10 border-accent-purple'
+                        : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
+                    }`}
+                  >
+                    <p className="font-bold text-brand-text">{option.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        {reviews.length === 0 && !loading && (
-          <div className="mb-6 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
-            <p className="text-sm text-brand-text">
-              <strong className="text-accent-blue">No reviews yet?</strong> No problem! Generate your widget now to start collecting reviews. 
-              The widget will display a call-to-action encouraging customers to leave their first review.
-            </p>
-          </div>
-        )}
+            {/* Star Filter */}
+            <div>
+              <label className="block text-sm font-medium text-brand-text mb-3">Minimum Star Rating</label>
+              <div className="space-y-2">
+                {[5, 4, 3].map(stars => (
+                  <button
+                    key={stars}
+                    onClick={() => setMinStars(stars as StarFilter)}
+                    className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                      minStars === stars
+                        ? 'bg-accent-purple/10 border-accent-purple'
+                        : 'bg-brand-light border-brand-border hover:border-accent-purple/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-brand-text">{stars}+ Stars Only</span>
+                      <StarRating rating={stars} size="sm" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={generateWidgetCode}
-            disabled={loading}
-            className="flex-1 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
-          >
-            <CodeBracketIcon className="w-5 h-5" />
-            {filteredReviews.length === 0 ? 'Generate Review Collection Widget' : 'Generate Widget Code'}
-          </button>
-          {widgetCode && (
+            {/* Color Customization */}
+            <div>
+              <label className="block text-sm font-medium text-brand-text mb-3">Widget Colors</label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                  <label htmlFor="primaryColor" className="text-sm text-brand-text-muted">Primary</label>
+                  <input type="color" id="primaryColor" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+                </div>
+                <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                  <label htmlFor="textColor" className="text-sm text-brand-text-muted">Text</label>
+                  <input type="color" id="textColor" value={textColor} onChange={e => setTextColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+                </div>
+                <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                  <label htmlFor="backgroundColor" className="text-sm text-brand-text-muted">Background</label>
+                  <input type="color" id="backgroundColor" value={backgroundColor} onChange={e => setBackgroundColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+                </div>
+                <div className="flex items-center justify-between bg-brand-light p-2 rounded-lg">
+                  <label htmlFor="cardColor" className="text-sm text-brand-text-muted">Card</label>
+                  <input type="color" id="cardColor" value={cardColor} onChange={e => setCardColor(e.target.value)} className="w-8 h-8 rounded border-none cursor-pointer" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          {reviews.length === 0 && !loading && (
+            <div className="mb-6 p-4 bg-accent-blue/5 border-l-4 border-accent-blue rounded">
+              <p className="text-sm text-brand-text">
+                <strong className="text-accent-blue">No reviews yet?</strong> No problem! Generate your widget now to start collecting reviews. 
+                The widget will display a call-to-action encouraging customers to leave their first review.
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3">
             <button
-              onClick={handleDownloadWidget}
-              className="px-6 bg-accent-blue hover:bg-accent-blue/90 text-white font-bold py-3 rounded-lg transition-all shadow-lg flex items-center gap-2"
+              onClick={generateWidgetCode}
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
             >
-              <ArrowDownTrayIcon className="w-5 h-5" />
-              Download
+              <CodeBracketIcon className="w-5 h-5" />
+              {filteredReviews.length === 0 ? 'Generate Review Collection Widget' : 'Generate Widget Code'}
             </button>
+            {widgetCode && (
+              <button
+                onClick={handleDownloadWidget}
+                className="px-6 bg-brand-light border border-brand-border text-brand-text font-bold py-3 rounded-xl transition-all hover:shadow-lg active:scale-[0.99] flex items-center gap-2"
+              >
+                <ArrowDownTrayIcon className="w-5 h-5" />
+                Download
+              </button>
+            )}
+          </div>
+
+          {filteredReviews.length === 0 && reviews.length > 0 && (
+            <p className="text-center text-brand-text-muted text-sm mt-4">
+              No reviews match your filter. Try selecting a lower minimum rating.
+            </p>
           )}
         </div>
-
-        {filteredReviews.length === 0 && reviews.length > 0 && (
-          <p className="text-center text-brand-text-muted text-sm mt-4">
-            No reviews match your filter. Try selecting a lower minimum rating.
-          </p>
-        )}
       </div>
 
       {/* Loading State with Progress */}
       {loading && (
-        <div className="bg-brand-card p-8 rounded-xl shadow-lg">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <SparklesIcon className="w-6 h-6 text-accent-purple animate-pulse" />
-              <h3 className="text-lg font-bold text-brand-text">Fetching Your Reviews</h3>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <SparklesIcon className="w-6 h-6 text-accent-purple animate-pulse" />
+                <h3 className="text-lg font-bold text-brand-text">Fetching Your Reviews</h3>
+              </div>
+              <p className="text-sm text-brand-text-muted animate-pulse">{loadingMessage}</p>
             </div>
-            <p className="text-sm text-brand-text-muted animate-pulse">{loadingMessage}</p>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="w-full bg-brand-light rounded-full h-3 overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue transition-all duration-300 ease-out"
-              style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-          <p className="text-center text-xs text-brand-text-muted mt-3">{loadingProgress}% Complete</p>
-          
-          {/* Loading Steps */}
-          <div className="mt-6 space-y-2">
-            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 30 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
-              {loadingProgress >= 30 ? '✓' : '○'} Authenticating connection
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-brand-light rounded-full h-3 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-accent-purple via-accent-pink to-accent-blue transition-all duration-300 ease-out"
+                style={{ width: `${loadingProgress}%` }}
+              />
             </div>
-            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 60 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
-              {loadingProgress >= 60 ? '✓' : '○'} Retrieving reviews
-            </div>
-            <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 90 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
-              {loadingProgress >= 90 ? '✓' : '○'} Processing data
+            <p className="text-center text-xs text-brand-text-muted mt-3">{loadingProgress}% Complete</p>
+            
+            {/* Loading Steps */}
+            <div className="mt-6 space-y-2">
+              <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 30 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+                {loadingProgress >= 30 ? '✓' : '○'} Authenticating connection
+              </div>
+              <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 60 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+                {loadingProgress >= 60 ? '✓' : '○'} Retrieving reviews
+              </div>
+              <div className={`flex items-center gap-2 text-sm ${loadingProgress >= 90 ? 'text-accent-purple' : 'text-brand-text-muted'}`}>
+                {loadingProgress >= 90 ? '✓' : '○'} Processing data
+              </div>
             </div>
           </div>
         </div>
@@ -1547,7 +1578,7 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
 
       {/* Quick Link Section */}
       {!loading && (
-        <div className="bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 p-6 rounded-xl shadow-sm border border-accent-blue/20">
+        <div className="bg-gradient-to-br from-accent-blue/5 to-accent-purple/5 p-6 rounded-2xl shadow-sm border border-accent-blue/20">
           <div className="flex items-start gap-3 mb-4">
             <InformationCircleIcon className="w-6 h-6 text-accent-blue flex-shrink-0 mt-0.5" />
             <div>
@@ -1563,11 +1594,11 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
               type="text"
               value={reviewUrl}
               readOnly
-              className="flex-1 bg-white border border-brand-border rounded-lg px-4 py-2 text-sm text-brand-text font-mono"
+              className="flex-1 bg-white border border-brand-border rounded-xl px-4 py-2 text-sm text-brand-text font-mono"
             />
             <button
               onClick={handleCopyQuickLink}
-              className="bg-accent-blue hover:bg-accent-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2 whitespace-nowrap"
+              className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-semibold py-2 px-4 rounded-xl transition-all hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center gap-2 whitespace-nowrap"
             >
               {linkCopied ? '✓ Copied!' : 'Copy Link'}
             </button>
@@ -1581,59 +1612,69 @@ export const JetTrust: React.FC<JetTrustProps> = ({ tool, profileData, setActive
 
       {/* Widget Preview */}
       {!loading && (
-        <div className="bg-brand-card p-6 rounded-xl shadow-lg">
-          <h3 className="text-xl font-bold text-brand-text mb-2">Widget Preview</h3>
-          <p className="text-sm text-brand-text-muted mb-4">
-            {filteredReviews.length === 0 
-              ? `Preview: Call-to-action layout (will encourage first review)`
-              : `Showing ${filteredReviews.length} review(s) with ${minStars}+ stars in ${layout} layout`
-            }
-          </p>
-          <div className="border-2 border-dashed border-brand-border rounded-lg p-4">
-            {filteredReviews.length === 0 ? (
-              <div style={{ backgroundColor: backgroundColor }} className="p-8 rounded-lg">
-                <div className="text-center mb-6">
-                  <h2 className="text-2xl font-bold" style={{ color: textColor }}>What Our Customers Say</h2>
-                  <p style={{ color: textColor, opacity: 0.7 }}>Real reviews from real customers</p>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center shadow-sm">
+              <ChartBarIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-brand-text">Widget Preview</h3>
+              <p className="text-sm text-brand-text-muted">
+                {filteredReviews.length === 0 
+                  ? `Preview: Call-to-action layout (will encourage first review)`
+                  : `Showing ${filteredReviews.length} review(s) with ${minStars}+ stars in ${layout} layout`
+                }
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="border-2 border-dashed border-brand-border rounded-2xl p-4">
+              {filteredReviews.length === 0 ? (
+                <div style={{ backgroundColor: backgroundColor }} className="p-8 rounded-xl">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold" style={{ color: textColor }}>What Our Customers Say</h2>
+                    <p style={{ color: textColor, opacity: 0.7 }}>Real reviews from real customers</p>
+                  </div>
+                  <div className="text-center py-12 rounded-xl border-2 border-dashed" style={{ backgroundColor: cardColor, borderColor: 'rgba(0,0,0,0.1)' }}>
+                    <div className="text-6xl mb-4">⭐</div>
+                    <h3 className="text-2xl font-bold" style={{ color: textColor }}>Be Our First Reviewer!</h3>
+                    <p className="mb-6" style={{ color: textColor, opacity: 0.7 }}>We'd love to hear about your experience with us.</p>
+                    <a
+                      href={reviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-white font-semibold py-3 px-8 rounded-lg transition"
+                      style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
+                    >
+                      Leave the First Review
+                    </a>
+                  </div>
+                  <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+                    <a
+                      href={reviewUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
+                      style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
+                    >
+                      Leave a Review
+                    </a>
+                    <p className="text-center text-xs" style={{ color: textColor, opacity: 0.6 }}>
+                      Powered by <span className="font-semibold" style={{ color: primaryColor }}>JetSuite</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="text-center py-12 rounded-xl border-2 border-dashed" style={{ backgroundColor: cardColor, borderColor: 'rgba(0,0,0,0.1)' }}>
-                  <div className="text-6xl mb-4">⭐</div>
-                  <h3 className="text-2xl font-bold" style={{ color: textColor }}>Be Our First Reviewer!</h3>
-                  <p className="mb-6" style={{ color: textColor, opacity: 0.7 }}>We'd love to hear about your experience with us.</p>
-                  <a
-                    href={reviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block text-white font-semibold py-3 px-8 rounded-lg transition"
-                    style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
-                  >
-                    Leave the First Review
-                  </a>
-                </div>
-                <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
-                  <a
-                    href={reviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full text-white font-semibold py-3 px-6 rounded-lg text-center transition mb-3"
-                    style={{ background: `linear-gradient(to right, ${primaryColor}, color-mix(in srgb, ${primaryColor} 80%, black))` }}
-                  >
-                    Leave a Review
-                  </a>
-                  <p className="text-center text-xs" style={{ color: textColor, opacity: 0.6 }}>
-                    Powered by <span className="font-semibold" style={{ color: primaryColor }}>JetSuite</span>
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <WidgetPreview
-                reviews={filteredReviews.slice(0, layout === 'list' ? 5 : 6)}
-                layout={layout}
-                businessName={profileData.business.business_name}
-                reviewUrl={reviewUrl}
-                colors={{ primary: primaryColor, text: textColor, background: backgroundColor, card: cardColor }}
-              />
-            )}
+              ) : (
+                <WidgetPreview
+                  reviews={filteredReviews.slice(0, layout === 'list' ? 5 : 6)}
+                  layout={layout}
+                  businessName={profileData.business.business_name}
+                  reviewUrl={reviewUrl}
+                  colors={{ primary: primaryColor, text: textColor, background: backgroundColor, card: cardColor }}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

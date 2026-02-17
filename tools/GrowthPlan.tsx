@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import type { GrowthPlanTask, Tool, ProfileData } from '../types';
 import { ALL_TOOLS } from '../constants';
-import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
+import { TrashIcon, CheckCircleIcon, ArrowDownTrayIcon, ChevronDownIcon, InformationCircleIcon, ArrowPathIcon, ChartBarIcon, SparklesIcon, BoltIcon, CheckIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { GrowthPlanIcon } from '../components/icons/ToolIcons';
 import { syncToSupabase, loadFromSupabase } from '../utils/syncService';
 
@@ -23,6 +23,18 @@ const statusStyles: { [key in GrowthPlanTask['status']]: { badge: string; text: 
   completed: { badge: 'bg-green-100 text-green-800', text: 'Completed' },
 };
 
+const priorityStyles: { [key: string]: string } = {
+  high: 'bg-red-500/10 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-500/20',
+  urgent: 'bg-red-500/10 text-red-600 text-xs font-bold px-2.5 py-1 rounded-full border border-red-500/20',
+  medium: 'bg-yellow-500/10 text-yellow-700 text-xs font-bold px-2.5 py-1 rounded-full border border-yellow-500/20',
+  low: 'bg-green-500/10 text-green-600 text-xs font-bold px-2.5 py-1 rounded-full border border-green-500/20',
+};
+
+const getPriorityStyle = (priority?: string): string => {
+  if (!priority) return priorityStyles['low'];
+  return priorityStyles[priority.toLowerCase()] || priorityStyles['low'];
+};
+
 const PendingTaskCard: React.FC<{ 
     task: GrowthPlanTask; 
     onStatusChange: (id: string, status: GrowthPlanTask['status']) => void; 
@@ -34,52 +46,71 @@ const PendingTaskCard: React.FC<{
   };
 
   return (
-    <div className="p-5 rounded-xl shadow-md border bg-white border-brand-border hover:border-accent-purple/50 transition-all glow-card glow-card-rounded-xl group">
-        <div className="flex justify-between items-start">
-            <h3 className="text-lg font-bold text-brand-text pr-4">{task.title}</h3>
-            <div className="flex items-center gap-2">
-                <div className="relative flex-shrink-0">
-                    <select 
-                        value={task.status} 
-                        onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} 
-                        className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
-                    >
-                        <option value="to_do">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                    <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
-                <button 
-                  onClick={() => onRemove(task.id)}
-                  className="p-1 hover:bg-red-50 rounded transition-colors"
-                  title="Delete Task"
-                >
-                  <TrashIcon className="w-4 h-4 text-red-400 hover:text-red-600" />
-                </button>
-            </div>
+    <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden hover:border-accent-purple/50 transition-all glow-card glow-card-rounded-2xl group">
+      {/* Top strip */}
+      <div className="bg-gradient-to-r from-brand-light to-white border-b border-brand-border px-5 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {(task as any).priority && (
+            <span className={getPriorityStyle((task as any).priority)}>
+              {(task as any).priority}
+            </span>
+          )}
+          <span className="text-xs text-brand-text-muted font-medium">{task.sourceModule}</span>
         </div>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-shrink-0">
+            <select 
+              value={task.status} 
+              onChange={(e) => onStatusChange(task.id, e.target.value as GrowthPlanTask['status'])} 
+              className={`text-xs font-semibold rounded-full border-none appearance-none cursor-pointer py-1 pl-2 pr-7 ${statusStyles[task.status].badge}`}
+            >
+              <option value="to_do">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+            <ChevronDownIcon className="w-4 h-4 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+          <button 
+            onClick={() => onRemove(task.id)}
+            className="p-1 hover:bg-red-50 rounded transition-colors"
+            title="Delete Task"
+          >
+            <TrashIcon className="w-4 h-4 text-red-400 hover:text-red-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-5">
+        <h3 className="text-lg font-bold text-brand-text">{task.title}</h3>
       
         <div className="mt-4 space-y-3">
-            <div>
-                <h4 className="text-sm font-semibold text-brand-text-muted mb-1 flex items-center"><InformationCircleIcon className="w-4 h-4 mr-1"/>Why this matters</h4>
-                <p className="text-brand-text">{task.whyItMatters}</p>
-            </div>
+          <div>
+            <h4 className="text-sm font-semibold text-brand-text-muted mb-1 flex items-center"><InformationCircleIcon className="w-4 h-4 mr-1"/>Why this matters</h4>
+            <p className="text-brand-text">{task.whyItMatters}</p>
+          </div>
 
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg relative">
-                <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
-            </div>
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg relative">
+            <h4 className="text-sm font-semibold text-yellow-800 mb-1">How to do it</h4>
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">{task.description}</p>
+          </div>
         </div>
 
         <div className="mt-4 pt-4 border-t border-brand-border flex justify-between items-center text-xs text-brand-text-muted">
-            <div>
-                <span>Effort: <span className="font-bold text-brand-text">{task.effort}</span></span>
-                <span className="mx-2">|</span>
-                <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
-            </div>
-            <button onClick={handleMarkComplete} className="bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm shadow-sm">Mark Complete ✓</button>
+          <div>
+            <span>Effort: <span className="font-bold text-brand-text">{task.effort}</span></span>
+            <span className="mx-2">|</span>
+            <span>Source: <span className="font-bold text-brand-text">{task.sourceModule}</span></span>
+          </div>
+          <button
+            onClick={handleMarkComplete}
+            className="flex items-center gap-1.5 bg-accent-blue hover:bg-accent-blue/80 text-white font-bold py-2 px-4 rounded-xl transition-colors text-sm shadow-sm hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+          >
+            <CheckIcon className="w-4 h-4" />
+            Mark Complete
+          </button>
         </div>
+      </div>
     </div>
   );
 };
@@ -182,44 +213,47 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
 
   return (
     <div>
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <div>
-                <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                        <h2 className="text-3xl font-extrabold text-brand-text">Your Growth Plan</h2>
-                        <p className="text-brand-text-muted mt-2 leading-relaxed">
-                            Your prioritized action items for business growth. <strong className="text-accent-purple">Complete these steps in order.</strong>
-                        </p>
-                    </div>
-                    <div className="text-right ml-4">
-                        <span className="text-sm font-semibold text-brand-text-muted">Growth Score</span>
-                        <div className="text-4xl font-bold text-accent-purple">{growthScore}</div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-brand-light/50 p-5 rounded-xl border border-brand-border flex flex-col gap-3">
-                <div className="flex items-start gap-2">
-                    <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
-                    <p className="text-sm text-brand-text-muted leading-snug">
-                        Changes are saved automatically when you update task status. Use the Planner to assign tasks to specific days.
-                    </p>
-                </div>
-            </div>
+      {/* Main header card */}
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        {/* Gradient card header */}
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <ChartBarIcon className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-extrabold text-brand-text">Your Growth Plan</h2>
+            <p className="text-xs text-brand-text-muted mt-0.5">
+              Prioritized action items for business growth. <strong className="text-accent-purple">Complete these steps in order.</strong>
+            </p>
+          </div>
+          <div className="text-right ml-4">
+            <span className="text-xs font-semibold text-brand-text-muted">Growth Score</span>
+            <div className="text-3xl font-bold text-accent-purple">{growthScore}</div>
+          </div>
         </div>
 
-        {tasks.length > 0 && (
-            <div className="mt-8 pt-6 border-t border-brand-border">
-                <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-semibold text-brand-text">Overall Progress</span>
-                    <span className="text-sm font-bold text-accent-purple">{completedTasks.length} of {tasks.length} tasks complete</span>
-                </div>
-                <div className="w-full bg-brand-light rounded-full h-2.5">
-                    <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }}></div>
-                </div>
+        <div className="p-6 sm:p-8">
+          <div className="bg-brand-light/50 p-5 rounded-xl border border-brand-border flex flex-col gap-3">
+            <div className="flex items-start gap-2">
+              <InformationCircleIcon className="w-5 h-5 text-accent-blue shrink-0 mt-0.5" />
+              <p className="text-sm text-brand-text-muted leading-snug">
+                Changes are saved automatically when you update task status. Use the Planner to assign tasks to specific days.
+              </p>
             </div>
-        )}
+          </div>
+
+          {tasks.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-brand-border">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-semibold text-brand-text">Overall Progress</span>
+                <span className="text-sm font-bold text-accent-purple">{completedTasks.length} of {tasks.length} tasks complete</span>
+              </div>
+              <div className="w-full bg-brand-light rounded-full h-2.5">
+                <div className="bg-gradient-to-r from-accent-blue to-accent-purple h-2.5 rounded-full transition-all duration-500" style={{ width: `${completionPercentage}%` }}></div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
       {tasks.length > 0 ? (
@@ -257,26 +291,40 @@ export const GrowthPlan: React.FC<GrowthPlanProps> = ({ tasks, setTasks, setActi
 
           <div className="mt-12">
             <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-brand-text">Completed Tasks ({completedTasks.length})</h3>
-                <div className="flex items-center gap-4">
-                    <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show</label>
-                    {completedTasks.length > 0 && <button onClick={handleClearCompleted} className="text-xs font-semibold text-red-500 hover:underline">Clear All</button>}
-                </div>
+              <h3 className="text-xl font-bold text-brand-text">Completed Tasks ({completedTasks.length})</h3>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center text-sm cursor-pointer"><input type="checkbox" checked={showCompleted} onChange={e => setShowCompleted(e.target.checked)} className="h-4 w-4 rounded mr-2"/> Show</label>
+                {completedTasks.length > 0 && <button onClick={handleClearCompleted} className="text-xs font-semibold text-red-500 hover:underline">Clear All</button>}
+              </div>
             </div>
             {showCompleted && completedTasks.length > 0 && (
-                <div className="space-y-3">
-                    {completedTasks.map(task => <CompletedTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
-                </div>
+              <div className="space-y-3">
+                {completedTasks.map(task => <CompletedTaskCard key={task.id} task={task} onStatusChange={onTaskStatusChange} onRemove={handleRemoveTask} /> )}
+              </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="mt-6 text-center bg-brand-card p-12 rounded-xl shadow-lg border-2 border-dashed border-brand-border">
-          <div className="max-w-md mx-auto">
-            <GrowthPlanIcon className="w-16 h-16 mx-auto text-brand-text-muted opacity-50" />
-            <h3 className="text-xl font-bold text-brand-text mt-4">Your Growth Plan is Empty</h3>
-            <p className="text-brand-text-muted mt-2 mb-6">Run an analysis from a tool like JetBiz or JetViz to automatically generate your prioritized action plan.</p>
-            <button onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-lg shadow-md">Start an Analysis</button>
+        <div className="mt-6 text-center bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <SparklesIcon className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="font-bold text-brand-text text-sm">Get Started</h3>
+          </div>
+          <div className="p-12">
+            <div className="max-w-md mx-auto">
+              <GrowthPlanIcon className="w-16 h-16 mx-auto text-brand-text-muted opacity-50" />
+              <h3 className="text-xl font-bold text-brand-text mt-4">Your Growth Plan is Empty</h3>
+              <p className="text-brand-text-muted mt-2 mb-6">Run an analysis from a tool like JetBiz or JetViz to automatically generate your prioritized action plan.</p>
+              <button
+                onClick={() => setActiveTool(ALL_TOOLS['jetbiz'])}
+                className="flex items-center gap-2 mx-auto bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-8 rounded-xl shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all"
+              >
+                <BoltIcon className="w-4 h-4" />
+                Start an Analysis
+              </button>
+            </div>
           </div>
         </div>
       )}
