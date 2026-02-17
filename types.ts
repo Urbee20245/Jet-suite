@@ -264,6 +264,46 @@ export interface CreativeAssets {
   ad_copy: AdCopyAsset[];
 }
 
+// JetAds Analyze Types
+export type AdPerformanceStatus = 'good' | 'warning' | 'critical';
+
+export interface AdMetrics {
+  platform: 'Facebook' | 'Google Ads' | 'Instagram';
+  ctr: number;
+  conversionRate: number;
+  cpc: number;
+  impressions: number;
+  clicks: number;
+  budget: number;
+}
+
+export interface AdToAnalyze {
+  id: string;
+  headline: string;
+  description: string;
+  cta: string;
+  metrics: AdMetrics;
+}
+
+export interface AdPerformanceResult {
+  id: string;
+  headline: string;
+  performanceScore: number;
+  status: AdPerformanceStatus;
+  issues: string[];
+  suggestions: string[];
+  suggestedNewHeadline: string;
+  suggestedNewDescription: string;
+  benchmarkComparison: {
+    ctrBenchmark: string;
+    yourCtr: string;
+    ctrStatus: AdPerformanceStatus;
+    conversionBenchmark: string;
+    yourConversion: string;
+    conversionStatus: AdPerformanceStatus;
+  };
+}
+
 // JetKeywords Types
 export interface KeywordData {
     keyword: string;
