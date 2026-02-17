@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- JetSuite Homepage — Primary brand page -->
+  <url>
+    <loc>https://getjetsuite.com/</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- JetSuite Features -->
+  <url>
+    <loc>https://getjetsuite.com/features</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- JetSuite Pricing -->
+  <url>
+    <loc>https://getjetsuite.com/pricing</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- How JetSuite Works -->
+  <url>
+    <loc>https://getjetsuite.com/how-it-works</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Get Started with JetSuite -->
+  <url>
+    <loc>https://getjetsuite.com/get-started</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- JetSuite FAQ -->
+  <url>
+    <loc>https://getjetsuite.com/faq</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- JetSuite Savings Calculator -->
+  <url>
+    <loc>https://getjetsuite.com/savings</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- JetSuite Contact -->
+  <url>
+    <loc>https://getjetsuite.com/contact</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- JetSuite Schedule Demo -->
+  <url>
+    <loc>https://getjetsuite.com/schedule-demo</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- JetSuite Affiliate Program -->
+  <url>
+    <loc>https://getjetsuite.com/affiliate-program</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- JetSuite Privacy Policy -->
+  <url>
+    <loc>https://getjetsuite.com/privacy-policy</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- JetSuite Terms of Service -->
+  <url>
+    <loc>https://getjetsuite.com/terms-of-service</loc>
+    <lastmod>2026-02-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>

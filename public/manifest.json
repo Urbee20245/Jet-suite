@@ -1,7 +1,7 @@
 {
-  "name": "Jet Suite - AI Tools for Local Business",
-  "short_name": "Jet Suite",
-  "description": "Transform your business with AI-powered tools for content creation, reviews, SEO, and more",
+  "name": "JetSuite - AI Tools for Local Business",
+  "short_name": "JetSuite",
+  "description": "JetSuite is the all-in-one AI SaaS platform for local businesses — reviews, SEO, content creation, and more.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",
