@@ -319,9 +319,9 @@ export const Boris: React.FC<BorisProps> = ({
 
   if (!borisState) {
     return (
-      <div className="relative rounded-2xl p-8 overflow-hidden border-2 border-purple-300/50 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
+      <div className="relative rounded-[2rem] p-8 overflow-hidden border-2 border-purple-400/60 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
         <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/40 to-indigo-100/40 animate-pulse"></div>
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-500 via-indigo-400 to-blue-500 opacity-90"></div>
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-6">
             <JetbotAvatar size={64} />
@@ -343,17 +343,17 @@ export const Boris: React.FC<BorisProps> = ({
   };
 
   return (
-    <div className="relative rounded-2xl p-8 overflow-hidden border-2 border-purple-300/50 bg-gradient-to-br from-purple-50 via-white to-indigo-50 shadow-xl">
+    <div className="relative rounded-[2rem] p-8 overflow-hidden border-2 border-purple-400/60 bg-gradient-to-br from-purple-50 via-white to-indigo-50 shadow-2xl shadow-purple-200/50">
       {/* Enhanced glowing background */}
       <div className="absolute inset-0 bg-gradient-to-tr from-purple-100/30 to-indigo-100/30 animate-pulse"></div>
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500"></div>
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-500 via-indigo-400 to-blue-500 opacity-90"></div>
       
       {/* Glowing orb effects */}
       <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-purple-300/30 to-pink-300/30 rounded-full blur-3xl -translate-y-36 translate-x-36"></div>
       <div className="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-indigo-300/30 to-blue-300/30 rounded-full blur-3xl -translate-x-28 translate-y-28"></div>
       
       {/* Inner border glow */}
-      <div className="absolute inset-0 rounded-2xl border border-purple-200/50 pointer-events-none"></div>
+      <div className="absolute inset-0 rounded-[2rem] border border-purple-300/60 pointer-events-none"></div>
       
       {/* Main content */}
       <div className="relative z-10">
@@ -362,9 +362,12 @@ export const Boris: React.FC<BorisProps> = ({
           <div className="flex items-center gap-4">
             <div className="relative">
               {/* Soft glow halo behind Jetbot */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-2xl blur-xl opacity-30 animate-pulse scale-110"></div>
-              <div className="relative">
-                <JetbotAvatar size={72} />
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full blur-xl opacity-30 animate-pulse scale-110"></div>
+              {/* Circular gradient ring frame */}
+              <div className="relative p-0.5 rounded-full bg-gradient-to-br from-purple-400 via-indigo-400 to-blue-400 shadow-lg shadow-purple-300/50">
+                <div className="rounded-full bg-white/90 p-1 overflow-hidden">
+                  <JetbotAvatar size={64} className="rounded-full" />
+                </div>
               </div>
               {/* Online status badge */}
               <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-sm border-2 border-white">
