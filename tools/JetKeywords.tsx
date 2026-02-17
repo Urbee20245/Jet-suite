@@ -3,7 +3,7 @@ import type { Tool, ProfileData, KeywordAnalysisResult, KeywordSearchResult } fr
 import { findKeywords } from '../services/geminiService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon, MapPinIcon, PlusIcon, XMarkIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, MapPinIcon, PlusIcon, XMarkIcon, SparklesIcon, TrendingUpIcon, ChartBarIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
@@ -16,28 +16,28 @@ interface JetKeywordsProps {
 const difficultyColor = (difficulty: string) => {
   switch (difficulty?.toLowerCase()) {
     case 'low':
-      return 'bg-green-100 text-green-800';
+      return 'bg-green-500/10 text-green-600 text-xs font-bold px-2.5 py-0.5 rounded-full';
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-yellow-500/10 text-yellow-600 text-xs font-bold px-2.5 py-0.5 rounded-full';
     case 'high':
-      return 'bg-red-100 text-red-800';
+      return 'bg-red-500/10 text-red-600 text-xs font-bold px-2.5 py-0.5 rounded-full';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'bg-gray-100 text-gray-800 text-xs font-bold px-2.5 py-0.5 rounded-full';
   }
 };
 
 const KeywordCategory: React.FC<{ title: string; keywords: KeywordSearchResult[] | undefined }> = ({ title, keywords }) => {
   if (!keywords || keywords.length === 0) return null;
   return (
-    <div className="bg-brand-light p-4 rounded-lg border border-brand-border">
+    <div className="bg-brand-light p-4 rounded-2xl border border-brand-border">
       <h4 className="text-lg font-semibold text-accent-purple mb-3">{title}</h4>
       <ul className="space-y-2">
         {keywords.map((kw, index) => (
-          <li key={index} className="flex justify-between items-center bg-brand-card p-3 rounded-md shadow-sm">
+          <li key={index} className="flex justify-between items-center bg-brand-card p-3 rounded-xl shadow-sm border border-brand-border/50">
             <span className="text-brand-text text-sm md:text-base break-all pr-2">{kw.keyword}</span>
             <div className="flex items-center space-x-3 flex-shrink-0">
               <span className="text-xs text-brand-text-muted font-mono hidden sm:inline">{kw.monthly_volume}</span>
-              <span className={`px-2 py-1 text-xs font-bold rounded-full ${difficultyColor(kw.difficulty)}`}>
+              <span className={difficultyColor(kw.difficulty)}>
                 {kw.difficulty}
               </span>
             </div>
@@ -119,18 +119,25 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
   
   if (!service) {
     return (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-            <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-            <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-            <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-                Please set your business category in your profile to find relevant keywords.
-            </p>
-            <button
-                onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-                className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-            >
-                Go to Business Details
-            </button>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                    <InformationCircleIcon className="w-4 h-4 text-white" />
+                </div>
+                <h2 className="font-bold text-brand-text text-sm">Business Category Required</h2>
+            </div>
+            <div className="p-6 sm:p-8">
+                <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
+                <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+                    Please set your business category in your profile to find relevant keywords.
+                </p>
+                <button
+                    onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+                    className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+                >
+                    Go to Business Details
+                </button>
+            </div>
         </div>
     );
   }
@@ -146,73 +153,101 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
             </ul>
         </HowToUse>
       )}
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-        <p className="text-brand-text-muted mb-6">{tool.description}</p>
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
-                <span className="text-sm font-medium text-brand-text mr-2">Primary Service:</span>
-                <span className="font-semibold text-brand-text">{service}</span>
-            </div>
-            <div className="relative">
-                <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Location (Required)</label>
-                <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
-                    <MapPinIcon className="w-4 h-4 text-accent-purple mr-2" />
-                    <input 
-                        type="text" 
-                        value={targetLocation} 
-                        onChange={e => setTargetLocation(e.target.value)} 
-                        placeholder="e.g., Metro Atlanta" 
-                        className="bg-transparent border-none p-0 text-brand-text font-semibold focus:ring-0 w-full"
-                        required
-                    />
+
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <SparklesIcon className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h2 className="font-bold text-brand-text text-sm">Keyword Research</h2>
+            <p className="text-xs text-brand-text-muted">Find high-value keywords for your business</p>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {[
+                { n: '01', title: 'Enter a seed keyword', desc: 'Start with your main product or service' },
+                { n: '02', title: 'AI research', desc: 'Find related terms with search intent' },
+                { n: '03', title: 'Prioritize & act', desc: 'Use difficulty scores to pick winners' },
+              ].map(step => (
+                <div key={step.n} className="flex items-start gap-3 flex-1">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0">{step.n}</div>
+                  <div><p className="font-semibold text-brand-text text-sm">{step.title}</p><p className="text-xs text-brand-text-muted">{step.desc}</p></div>
                 </div>
+              ))}
             </div>
           </div>
-          
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-                <label htmlFor="descriptive-keywords" className="text-sm font-medium text-brand-text">
-                  Your Descriptive Keywords
-                </label>
-                <span className="text-xs text-brand-text-muted">Separated by commas</span>
+
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text-muted flex items-center">
+                  <span className="text-sm font-medium text-brand-text mr-2">Primary Service:</span>
+                  <span className="font-semibold text-brand-text">{service}</span>
+              </div>
+              <div className="relative">
+                  <label className="block text-xs font-bold text-brand-text-muted uppercase mb-1 ml-1">Target Location (Required)</label>
+                  <div className="flex items-center bg-brand-light border border-brand-border rounded-lg p-3 focus-within:ring-2 focus-within:ring-accent-purple transition-all">
+                      <MapPinIcon className="w-4 h-4 text-accent-purple mr-2" />
+                      <input 
+                          type="text" 
+                          value={targetLocation} 
+                          onChange={e => setTargetLocation(e.target.value)} 
+                          placeholder="e.g., Metro Atlanta" 
+                          className="bg-transparent border-none p-0 text-brand-text font-semibold focus:ring-0 w-full"
+                          required
+                      />
+                  </div>
+              </div>
             </div>
             
-            {/* Suggestion Tags */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                {getSuggestions().map(suggestion => (
-                    <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => handleAddSuggestion(suggestion)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-accent-purple/10 hover:border-accent-purple hover:text-accent-purple transition-all"
-                    >
-                        <PlusIcon className="w-3 h-3" />
-                        {suggestion}
-                    </button>
-                ))}
-            </div>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                  <label htmlFor="descriptive-keywords" className="text-sm font-medium text-brand-text">
+                    Your Descriptive Keywords
+                  </label>
+                  <span className="text-xs text-brand-text-muted">Separated by commas</span>
+              </div>
+              
+              {/* Suggestion Tags */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                  {getSuggestions().map(suggestion => (
+                      <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => handleAddSuggestion(suggestion)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-600 hover:bg-accent-purple/10 hover:border-accent-purple hover:text-accent-purple transition-all"
+                      >
+                          <PlusIcon className="w-3 h-3" />
+                          {suggestion}
+                      </button>
+                  ))}
+              </div>
 
-            <textarea
-              id="descriptive-keywords"
-              rows={3}
-              value={descriptiveKeywords}
-              onChange={(e) => setDescriptiveKeywords(e.target.value)}
-              placeholder="e.g., custom website design, local SEO services, high converting websites..."
-              className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
-            />
-          </div>
-          
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-          >
-            {loading ? 'Finding Keywords...' : 'Find Keywords'}
-          </button>
-        </form>
+              <textarea
+                id="descriptive-keywords"
+                rows={3}
+                value={descriptiveKeywords}
+                onChange={(e) => setDescriptiveKeywords(e.target.value)}
+                placeholder="e.g., custom website design, local SEO services, high converting websites..."
+                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition resize-none"
+              />
+            </div>
+            
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2"
+            >
+              <TrendingUpIcon className="w-4 h-4" />
+              {loading ? 'Finding Keywords...' : 'Find Keywords'}
+            </button>
+          </form>
+        </div>
       </div>
+
       {loading && (
           <AnalysisLoadingState 
             title="Performing Local Keyword Research"
@@ -221,19 +256,26 @@ export const JetKeywords: React.FC<JetKeywordsProps> = ({ tool, profileData, set
           />
       )}
       {result && (
-        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold text-brand-text">Keyword Ideas for {targetLocation}</h3>
+        <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                <ChartBarIcon className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-brand-text text-sm">Keyword Ideas for {targetLocation}</h3>
+              </div>
               <div className="hidden sm:flex items-center space-x-2 text-xs text-brand-text-muted">
                 <span>Vol/Mo</span>
                 <span>Difficulty</span>
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <KeywordCategory title="Primary Keywords" keywords={result.primary_keywords} />
-                <KeywordCategory title="Long-Tail Keywords" keywords={result.long_tail_keywords} />
-                <KeywordCategory title="Question-Based Keywords" keywords={result.question_keywords} />
-                <KeywordCategory title="Local Modifier Keywords" keywords={result.local_modifier_keywords} />
+            <div className="p-6 sm:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <KeywordCategory title="Primary Keywords" keywords={result.primary_keywords} />
+                  <KeywordCategory title="Long-Tail Keywords" keywords={result.long_tail_keywords} />
+                  <KeywordCategory title="Question-Based Keywords" keywords={result.question_keywords} />
+                  <KeywordCategory title="Local Modifier Keywords" keywords={result.local_modifier_keywords} />
+              </div>
             </div>
         </div>
       )}

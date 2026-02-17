@@ -19,7 +19,7 @@ import type { ServiceListing, ServiceImage, ServiceCalendarEvent } from '../serv
 import { getSocialConnections, createScheduledPost, PLATFORM_INFO } from '../services/socialMediaService';
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, PlusIcon, SparklesIcon, BoltIcon, TrashIcon, ArrowRightIcon, CheckIcon } from '../components/icons/MiniIcons';
 import { SocialConnectionsManager } from '../components/SocialConnectionsManager';
 import { SevenDayPlanner } from '../components/SevenDayPlanner';
 import { SharePostModal } from '../components/SharePostModal';
@@ -792,18 +792,28 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
 
   if (!businessType) {
     return (
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-        <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue" />
-        <h2 className="text-2xl font-bold text-brand-text mt-4">Set Your Business Category</h2>
-        <p className="text-brand-text-muted my-4 max-w-md mx-auto">
-          Please add a category to your business profile to use JetServices.
-        </p>
-        <button
-          onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-          className="bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-        >
-          Go to Business Details
-        </button>
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <BoltIcon className="w-4 h-4 text-white" />
+          </div>
+          <div className="text-left">
+            <h2 className="font-bold text-brand-text text-sm">Set Your Business Category</h2>
+            <p className="text-xs text-brand-text-muted">Required to use JetServices</p>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8">
+          <p className="text-brand-text-muted my-4 max-w-md mx-auto">
+            Please add a category to your business profile to use JetServices.
+          </p>
+          <button
+            onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2 px-6 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+          >
+            <ArrowRightIcon className="w-4 h-4" />
+            Go to Business Details
+          </button>
+        </div>
       </div>
     );
   }
@@ -898,9 +908,10 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               </p>
               <button
                 onClick={() => { resetForm(); setViewMode('create'); }}
-                className="bg-gradient-to-r from-accent-blue to-accent-purple text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition"
               >
-                + Add Your First Service
+                <PlusIcon className="w-4 h-4" />
+                Add Your First Service
               </button>
             </div>
           ) : (
@@ -909,98 +920,105 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
                 <h2 className="text-xl font-bold text-brand-text">{services.length} Service{services.length !== 1 ? 's' : ''}</h2>
                 <button
                   onClick={() => { resetForm(); setViewMode('create'); }}
-                  className="bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-lg font-semibold text-sm hover:shadow-lg transition"
+                  className="inline-flex items-center gap-1.5 bg-gradient-to-r from-accent-blue to-accent-purple text-white px-4 py-2 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition"
                 >
-                  + Add Service
+                  <PlusIcon className="w-3.5 h-3.5" />
+                  Add Service
                 </button>
               </div>
 
               {services.map((service) => (
-                <div key={service.id} className="bg-brand-card p-6 rounded-xl shadow-lg">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-brand-text">{service.title}</h3>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${service.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                          {service.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      {service.description && (
-                        <p className="text-brand-text-muted text-sm mb-2">{service.description}</p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-brand-text-muted">
-                        <span className="bg-brand-light px-2 py-1 rounded">{service.category}</span>
-                        {service.price && (
-                          <span className="font-semibold text-accent-purple">
-                            {service.price_type === 'free' ? 'Free' :
-                              service.price_type === 'custom' ? 'Custom Quote' :
-                                `$${service.price}${service.price_type === 'hourly' ? '/hr' : service.price_type === 'starting_at' ? '+' : ''}`}
-                          </span>
-                        )}
-                        {service.duration && <span>{service.duration}</span>}
-                      </div>
-                      {service.tags?.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {service.tags.map((tag, i) => (
-                            <span key={i} className="text-xs bg-accent-purple/10 text-accent-purple px-2 py-0.5 rounded-full">{tag}</span>
-                          ))}
-                        </div>
-                      )}
+                <div key={service.id} className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+                  {/* Top strip */}
+                  <div className="bg-gradient-to-r from-brand-light to-white border-b border-brand-border px-5 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-bold text-brand-text">{service.title}</h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${service.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                        {service.is_active ? 'Active' : 'Inactive'}
+                      </span>
                     </div>
-
                     {/* Service Images Preview */}
                     {service.images?.length > 0 && (
-                      <div className="flex gap-2 ml-4">
+                      <div className="flex gap-2">
                         {service.images.slice(0, 3).map((img, i) => (
                           <img
                             key={i}
                             src={img.image_url}
                             alt={`${service.title} image ${i + 1}`}
-                            className="w-16 h-16 rounded-lg object-cover border border-brand-border"
+                            className="w-10 h-10 rounded-lg object-cover border border-brand-border"
                           />
                         ))}
                       </div>
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-brand-border">
-                    <button
-                      onClick={() => {
-                        setSelectedService(service);
-                        setGeneratedImage(null);
-                        setUploadedImage(null);
-                        setSelectedStyle(null);
-                        setCustomPrompt('');
-                        setViewMode('create');
-                        setEditingService(null);
-                        // Scroll to image section - use a small timeout so the view renders first
-                        setTimeout(() => {
-                          document.getElementById('image-gen-section')?.scrollIntoView({ behavior: 'smooth' });
-                        }, 100);
-                      }}
-                      className="text-sm font-semibold text-accent-blue hover:text-accent-blue/80 transition"
-                    >
-                      Generate Images
-                    </button>
-                    <button
-                      onClick={() => handleStartPromote(service)}
-                      className="text-sm font-semibold text-accent-purple hover:text-accent-purple/80 transition"
-                    >
-                      Promote on Social
-                    </button>
-                    <button
-                      onClick={() => handleEditService(service)}
-                      className="text-sm font-semibold text-brand-text-muted hover:text-brand-text transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteService(service.id)}
-                      className="text-sm font-semibold text-red-500 hover:text-red-700 transition"
-                    >
-                      Delete
-                    </button>
+                  {/* Content */}
+                  <div className="p-5">
+                    {service.description && (
+                      <p className="text-brand-text-muted text-sm mb-3">{service.description}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-brand-text-muted mb-3">
+                      <span className="bg-brand-light px-2 py-1 rounded">{service.category}</span>
+                      {service.price && (
+                        <span className="font-semibold text-accent-purple">
+                          {service.price_type === 'free' ? 'Free' :
+                            service.price_type === 'custom' ? 'Custom Quote' :
+                              `$${service.price}${service.price_type === 'hourly' ? '/hr' : service.price_type === 'starting_at' ? '+' : ''}`}
+                        </span>
+                      )}
+                      {service.duration && <span>{service.duration}</span>}
+                    </div>
+                    {service.tags?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {service.tags.map((tag, i) => (
+                          <span key={i} className="text-xs bg-accent-purple/10 text-accent-purple px-2 py-0.5 rounded-full">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 pt-3 border-t border-brand-border">
+                      <button
+                        onClick={() => {
+                          setSelectedService(service);
+                          setGeneratedImage(null);
+                          setUploadedImage(null);
+                          setSelectedStyle(null);
+                          setCustomPrompt('');
+                          setViewMode('create');
+                          setEditingService(null);
+                          // Scroll to image section - use a small timeout so the view renders first
+                          setTimeout(() => {
+                            document.getElementById('image-gen-section')?.scrollIntoView({ behavior: 'smooth' });
+                          }, 100);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-blue hover:text-accent-blue/80 transition"
+                      >
+                        <SparklesIcon className="w-3.5 h-3.5" />
+                        Generate Images
+                      </button>
+                      <button
+                        onClick={() => handleStartPromote(service)}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-purple hover:text-accent-purple/80 transition"
+                      >
+                        <BoltIcon className="w-3.5 h-3.5" />
+                        Promote on Social
+                      </button>
+                      <button
+                        onClick={() => handleEditService(service)}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-text-muted hover:text-brand-text transition"
+                      >
+                        <CheckIcon className="w-3.5 h-3.5" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteService(service.id)}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-700 transition"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1013,11 +1031,18 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
       {viewMode === 'create' && (
         <div className="space-y-6">
           {/* Service Form */}
-          <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-            <h2 className="text-xl font-bold text-brand-text mb-6">
-              {editingService ? 'Edit Service' : 'Add New Service'}
-            </h2>
+          <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                <PlusIcon className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="font-bold text-brand-text text-sm">{editingService ? 'Edit Service' : 'Add Service'}</h2>
+                <p className="text-xs text-brand-text-muted">Add a service to your portfolio</p>
+              </div>
+            </div>
 
+            <div className="p-6 sm:p-8">
             <form onSubmit={handleCreateService} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1149,19 +1174,21 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
                 <button
                   type="submit"
                   disabled={formSaving}
-                  className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
                 >
+                  <CheckIcon className="w-4 h-4" />
                   {formSaving ? 'Saving...' : editingService ? 'Update Service' : 'Create Service'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { resetForm(); setViewMode('services'); }}
-                  className="bg-brand-light text-brand-text font-semibold py-3 px-6 rounded-lg hover:bg-brand-light/80 transition"
+                  className="bg-brand-light text-brand-text font-semibold py-3 px-6 rounded-xl hover:bg-brand-light/80 transition"
                 >
                   Cancel
                 </button>
               </div>
             </form>
+            </div>
           </div>
 
           {/* Image Generation Section */}
@@ -1536,7 +1563,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               <div className="flex justify-center">
                 <button
                   onClick={() => { setPromoteStage('select'); setPostIdeas([]); }}
-                  className="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-lg transition"
+                  className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition"
                 >
                   Start Over
                 </button>
@@ -1560,7 +1587,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
                   <h2 className="text-2xl font-bold text-accent-purple">{finalPost.platform} Post</h2>
                   <button
                     onClick={() => { setPromoteStage('select'); setFinalPost(null); setPostIdeas([]); }}
-                    className="bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold py-2 px-4 rounded-lg transition"
+                    className="bg-gradient-to-r from-accent-blue to-accent-purple text-white text-sm font-semibold py-2 px-4 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition"
                   >
                     Create Another
                   </button>
@@ -1610,8 +1637,9 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
                     )}
                     <button
                       onClick={() => handleCopyAndPost(finalPost.platform, finalPost.post_text, finalPost.hashtags)}
-                      className="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+                      className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-3 px-4 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition duration-300"
                     >
+                      <ArrowRightIcon className="w-4 h-4" />
                       Copy & Post Now
                     </button>
                   </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Tool, ProfileData, BusinessDna, GbpStatus, BrandDnaProfile, BusinessSearchResult, GrowthPlanTask } from '../types';
 import { extractWebsiteDna, extractBrandDnaProfile, searchGoogleBusiness, generateBusinessDescription } from '../services/geminiService';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon as InfoIcon, CheckCircleIcon, XMarkIcon, ChevronDownIcon, MapPinIcon, StarIcon, SparklesIcon, ArrowRightIcon, ChevronUpIcon, LockClosedIcon, LockOpenIcon, CheckIcon, BoltIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { HintTooltip } from '../components/HintTooltip';
@@ -243,12 +243,12 @@ const DnaReviewAndSaved: React.FC<{
                 {isEditable ? (
                     <>
                         <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">Cancel</button>
-                        <button type="button" onClick={onSave} className="bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-lg shadow-lg">Save & Approve DNA</button>
+                        <button type="button" onClick={onSave} className="flex items-center gap-2 bg-gradient-to-r from-accent-purple to-accent-pink text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"><CheckIcon className="w-4 h-4" />Save &amp; Approve DNA</button>
                     </>
                 ) : (
                     <>
                         <button type="button" onClick={onRestart} className="text-sm font-semibold text-brand-text-muted hover:underline">Re-extract from Website</button>
-                        <button type="button" onClick={onEdit} className="bg-accent-blue text-white font-bold py-3 px-6 rounded-lg shadow-lg">Edit Business DNA</button>
+                        <button type="button" onClick={onEdit} className="flex items-center gap-2 bg-accent-blue text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"><BoltIcon className="w-4 h-4" />Edit Business DNA</button>
                     </>
                 )}
             </div>
@@ -294,7 +294,7 @@ const GbpConnect: React.FC<{
             </div>
             <div className="flex gap-4 justify-center">
                 <button type="button" onClick={onCancel} className="text-sm font-semibold text-brand-text-muted hover:underline">No, search again</button>
-                <button type="button" onClick={onConfirm} className="bg-accent-blue text-white font-bold py-2 px-4 rounded-lg">Save & Connect Profile</button>
+                <button type="button" onClick={onConfirm} className="flex items-center gap-2 bg-accent-blue text-white font-bold py-2 px-4 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"><CheckIcon className="w-4 h-4" />Save &amp; Connect Profile</button>
             </div>
         </div>
     );
@@ -349,7 +349,7 @@ const LockInCard: React.FC<{ onLock: () => void, isDirty: boolean, onSave: (e: R
                     <button 
                         onClick={onSave} 
                         disabled={isSaving || isProcessing}
-                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                        className="w-full bg-accent-blue hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                         {isSaving ? <Loader /> : <CheckCircleIcon className="w-5 h-5" />}
                         {isSaving ? 'Saving Changes...' : 'Save All Changes'}
@@ -407,9 +407,9 @@ const StepCard: React.FC<{ number: number; title: string; badge: string; badgeCo
         }
     };
     return (
-        <div className={`bg-brand-card rounded-xl shadow-lg border-l-4 ${statusBorderColor} transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
+        <div className={`bg-brand-card rounded-2xl shadow-md border border-brand-border border-l-4 ${statusBorderColor} overflow-hidden transition-all duration-300 ${isLocked ? 'opacity-60' : ''} relative`}>
             {isLocked && (
-                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-xl"></div>
+                <div className="absolute inset-0 bg-brand-card/50 z-10 rounded-2xl"></div>
             )}
             <button onClick={handleClick} className="w-full flex items-center justify-between p-6 sm:p-8 text-left relative z-20">
                 <div className="flex items-center gap-4">
@@ -842,7 +842,17 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 <button type="button" onClick={() => setNotification(null)}><XMarkIcon className="w-5 h-5" /></button>
             </div>
         )}
-        <div><h1 className="text-3xl font-extrabold text-brand-text">Business Details</h1><p className="text-lg text-brand-text-muted mt-1">Complete these steps to set up your business profile.</p></div>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <SparklesIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold text-brand-text">Business Details</h1>
+              <p className="text-sm text-brand-text-muted mt-0.5">Complete these steps to set up your business profile.</p>
+            </div>
+          </div>
+        </div>
         <ProgressBar currentStep={currentStep} totalSteps={3} />
         {isLocked ? (
             <LockedView onUnlock={handleUnlockProfile} onNext={() => setActiveTool(ALL_TOOLS['jetbiz'])} isProcessing={isLocking} />
@@ -890,7 +900,8 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                 {/* ALWAYS show save button if unlocked to allow the user to clear dirty state and lock */}
                 {!isLocked && (
                     <div className="flex justify-end pt-2">
-                        <button type="submit" disabled={isSavingInfo} className="bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-all disabled:opacity-50">
+                        <button type="submit" disabled={isSavingInfo} className="flex items-center gap-2 bg-accent-blue hover:opacity-90 text-white font-bold py-2 px-6 rounded-xl shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all disabled:opacity-50">
+                            <CheckIcon className="w-4 h-4" />
                             {isSavingInfo ? 'Saving Changes...' : 'Save Changes'}
                         </button>
                     </div>
@@ -931,7 +942,7 @@ export const BusinessDetails: React.FC<BusinessDetailsProps> = ({ profileData, o
                             type="button"
                             onClick={() => handleSaveInfo()}
                             disabled={isSavingInfo}
-                            className="bg-accent-blue text-white px-4 rounded-lg font-bold hover:bg-opacity-90 disabled:opacity-50"
+                            className="bg-accent-blue text-white px-4 rounded-xl font-bold hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] disabled:opacity-50 flex items-center gap-1"
                         >
                             {isSavingInfo ? '...' : 'Save'}
                         </button>

@@ -4,7 +4,7 @@ import { generateReviewReply, fetchBusinessReviews } from '../services/geminiSer
 import { Loader } from '../components/Loader';
 import { HowToUse } from '../components/HowToUse';
 import { ReadinessBanner } from '../components/ReadinessBanner';
-import { StarIcon, InformationCircleIcon, ArrowPathIcon } from '../components/icons/MiniIcons';
+import { StarIcon, InformationCircleIcon, ArrowPathIcon, SparklesIcon, BoltIcon, CheckIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { ALL_TOOLS } from '../constants';
 import { AnalysisLoadingState } from '../components/AnalysisLoadingState';
 
@@ -188,22 +188,31 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
           </HowToUse>
         )}
         
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg text-center">
-          <InformationCircleIcon className="w-12 h-12 mx-auto text-accent-blue mb-4" />
-          <h2 className="text-2xl font-bold text-brand-text mb-2">Google Business Profile Required</h2>
-          <p className="text-brand-text-muted mb-6 max-w-md mx-auto">
-            JetReply needs your connected Google Business Profile to fetch reviews automatically. 
-            Once connected, we'll pull your latest reviews for you to respond to.
-          </p>
-          <button
-            onClick={() => {
-              const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
-              if (businessDetailsTool) setActiveTool(businessDetailsTool);
-            }}
-            className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-opacity shadow-lg"
-          >
-            Connect Google Business Profile
-          </button>
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <InformationCircleIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-brand-text text-sm">Google Business Profile Required</h2>
+              <p className="text-xs text-brand-text-muted">Connect to unlock review replies</p>
+            </div>
+          </div>
+          <div className="p-6 sm:p-8 text-center">
+            <p className="text-brand-text-muted mb-6 max-w-md mx-auto">
+              JetReply needs your connected Google Business Profile to fetch reviews automatically. 
+              Once connected, we'll pull your latest reviews for you to respond to.
+            </p>
+            <button
+              onClick={() => {
+                const businessDetailsTool = Object.values(ALL_TOOLS).find(t => t.id === 'businessdetails');
+                if (businessDetailsTool) setActiveTool(businessDetailsTool);
+              }}
+              className="bg-gradient-to-r from-accent-purple to-accent-pink hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition-opacity shadow-lg hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+            >
+              Connect Google Business Profile
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -313,51 +322,79 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
 
       {/* Manual Input (Always shown if no reviews, or on toggle) */}
       {(showManualInput || reviews.length === 0) && (
-        <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-          <h3 className="text-lg font-bold text-brand-text mb-4">
-            {reviews.length > 0 ? 'Or Paste a Review Manually' : 'Paste a Review'}
-          </h3>
-          <form onSubmit={handleGenerateReply}>
-            <div className="mb-6">
-              <label htmlFor="review" className="block text-sm font-medium text-brand-text mb-2">Customer Review</label>
-              <textarea
-                id="review"
-                rows={5}
-                value={manualReview}
-                onChange={(e) => {
-                  setManualReview(e.target.value);
-                  setSelectedReview(null);
-                }}
-                placeholder="Paste customer review here..."
-                className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
-              />
+        <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+              <SparklesIcon className="w-4 h-4 text-white" />
             </div>
-            <div className="flex items-center space-x-4 mb-6">
-              <span className="text-sm font-medium text-brand-text">Review Type:</span>
-              <button 
-                type="button" 
-                onClick={() => setIsPositive(true)} 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${isPositive ? 'bg-green-500 text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}
-              >
-                Positive
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setIsPositive(false)} 
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${!isPositive ? 'bg-red-500 text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}
-              >
-                Negative
-              </button>
+            <div>
+              <h2 className="font-bold text-brand-text text-sm">Reply to Reviews</h2>
+              <p className="text-xs text-brand-text-muted">AI-generated professional responses</p>
             </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            <button 
-              type="submit" 
-              disabled={loading || (!selectedReview && !manualReview)} 
-              className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-            >
-              {loading ? 'Drafting Reply...' : 'Draft Reply for Selected Review'}
-            </button>
-          </form>
+          </div>
+          <div className="p-6 sm:p-8">
+            {/* 3-step guide */}
+            <div className="bg-brand-card rounded-2xl border border-brand-border shadow-sm p-5 mb-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {[
+                  { n: '01', title: 'Paste the review', desc: 'Copy the customer review text' },
+                  { n: '02', title: 'Add context', desc: 'Select platform and sentiment' },
+                  { n: '03', title: 'Get AI reply', desc: 'Professional response ready to post' },
+                ].map(step => (
+                  <div key={step.n} className="flex items-start gap-3 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple text-white text-xs font-black flex items-center justify-center flex-shrink-0">{step.n}</div>
+                    <div><p className="font-semibold text-brand-text text-sm">{step.title}</p><p className="text-xs text-brand-text-muted">{step.desc}</p></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <h3 className="text-lg font-bold text-brand-text mb-4">
+              {reviews.length > 0 ? 'Or Paste a Review Manually' : 'Paste a Review'}
+            </h3>
+            <form onSubmit={handleGenerateReply}>
+              <div className="mb-6">
+                <label htmlFor="review" className="block text-sm font-medium text-brand-text mb-2">Customer Review</label>
+                <textarea
+                  id="review"
+                  rows={5}
+                  value={manualReview}
+                  onChange={(e) => {
+                    setManualReview(e.target.value);
+                    setSelectedReview(null);
+                  }}
+                  placeholder="Paste customer review here..."
+                  className="w-full bg-brand-light border border-brand-border rounded-lg p-3 text-brand-text placeholder-brand-text-muted focus:ring-2 focus:ring-accent-purple focus:border-transparent transition"
+                />
+              </div>
+              <div className="flex items-center space-x-4 mb-6">
+                <span className="text-sm font-medium text-brand-text">Review Type:</span>
+                <button 
+                  type="button" 
+                  onClick={() => setIsPositive(true)} 
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${isPositive ? 'bg-green-500 text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}
+                >
+                  Positive
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setIsPositive(false)} 
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${!isPositive ? 'bg-red-500 text-white shadow' : 'bg-brand-light text-brand-text-muted hover:bg-gray-200'}`}
+                >
+                  Negative
+                </button>
+              </div>
+              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              <button 
+                type="submit" 
+                disabled={loading || (!selectedReview && !manualReview)} 
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+              >
+                <BoltIcon className="w-4 h-4" />
+                {loading ? 'Drafting Reply...' : 'Draft Reply for Selected Review'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
@@ -367,41 +404,65 @@ export const JetReply: React.FC<JetReplyProps> = ({ tool, profileData, readiness
           <button
             onClick={handleGenerateReply}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
           >
+            <BoltIcon className="w-4 h-4" />
             {loading ? 'Drafting Reply...' : 'Draft Reply for Selected Review'}
           </button>
         </div>
       )}
       
       {reply && (
-        <div className="mt-6 bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg">
-          <h3 className="text-xl font-bold mb-2 text-brand-text">Suggested Reply</h3>
-          {selectedReview && (
-            <div className="mb-4 p-3 bg-brand-light rounded-lg border border-brand-border">
-              <p className="text-xs text-brand-text-muted mb-1">Replying to:</p>
-              <p className="text-sm font-semibold text-brand-text">{selectedReview.author}</p>
-              <StarRating rating={selectedReview.rating} />
+        <div className="mt-6 bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+          {/* Gradient top strip with platform badge */}
+          <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                <SparklesIcon className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-brand-text text-sm">Suggested Reply</h3>
+                <p className="text-xs text-brand-text-muted">AI-generated response</p>
+              </div>
             </div>
-          )}
-          <p className="text-brand-text whitespace-pre-wrap bg-brand-light p-4 rounded-lg border border-brand-border mb-4">{reply}</p>
-          <div className="flex gap-3">
-            <button 
-              onClick={handleCopyToClipboard} 
-              className="flex-1 bg-accent-purple hover:bg-accent-purple/90 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-            >
-              {copied ? '✓ Copied!' : 'Copy to Clipboard'}
-            </button>
-            <button
-              onClick={() => {
-                setReply('');
-                setSelectedReview(null);
-                setManualReview('');
-              }}
-              className="px-4 py-2 bg-brand-light hover:bg-gray-200 text-brand-text font-semibold rounded-lg transition"
-            >
-              Clear
-            </button>
+            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border border-accent-purple/20 text-xs font-semibold text-accent-purple">
+              AI Reply
+            </span>
+          </div>
+          <div className="p-6 sm:p-8">
+            {selectedReview && (
+              <div className="mb-4 p-3 bg-brand-light rounded-lg border border-brand-border">
+                <p className="text-xs text-brand-text-muted mb-1">Replying to:</p>
+                <p className="text-sm font-semibold text-brand-text">{selectedReview.author}</p>
+                <StarRating rating={selectedReview.rating} />
+              </div>
+            )}
+            <p className="text-brand-text whitespace-pre-wrap bg-brand-light p-4 rounded-lg border border-brand-border mb-4">{reply}</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={handleCopyToClipboard} 
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple hover:from-accent-blue hover:to-accent-purple/80 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99]"
+              >
+                {copied ? (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  'Copy to Clipboard'
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setReply('');
+                  setSelectedReview(null);
+                  setManualReview('');
+                }}
+                className="px-4 py-2 bg-brand-light hover:bg-gray-200 text-brand-text font-semibold rounded-lg transition"
+              >
+                Clear
+              </button>
+            </div>
           </div>
         </div>
       )}

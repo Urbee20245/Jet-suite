@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { Tool, ProfileData, KeywordData } from '../types';
 import { HowToUse } from '../components/HowToUse';
-import { InformationCircleIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, SparklesIcon, BoltIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { TOOLS } from '../constants';
 import { ContentTypeSelector } from './jetcontent/ContentTypeSelector';
 import { BlogPostCreator } from './jetcontent/BlogPostCreator';
@@ -30,20 +30,25 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
   // Check if business category is set
   if (!businessType) {
     return (
-      <div className="bg-brand-card p-8 sm:p-10 rounded-xl shadow-lg border border-brand-border/50 text-center">
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-accent-blue/10 flex items-center justify-center">
-          <InformationCircleIcon className="w-7 h-7 text-accent-blue" />
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden text-center">
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 flex items-center justify-center shrink-0">
+            <InformationCircleIcon className="w-5 h-5 text-accent-blue" />
+          </div>
+          <h2 className="text-base font-bold text-brand-text tracking-tight">Set Your Business Category</h2>
         </div>
-        <h2 className="text-xl font-bold text-brand-text mt-5 tracking-tight">Set Your Business Category</h2>
-        <p className="text-sm text-brand-text-muted my-4 max-w-sm mx-auto leading-relaxed">
-          Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant content.
-        </p>
-        <button
-          onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
-          className="bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.98] text-sm"
-        >
-          Go to Business Details
-        </button>
+        <div className="p-8 sm:p-10">
+          <p className="text-sm text-brand-text-muted my-4 max-w-sm mx-auto leading-relaxed">
+            Please add a category to your business profile (e.g., "Coffee Shop") to generate relevant content.
+          </p>
+          <button
+            onClick={() => setActiveTool(TOOLS.find(t => t.id === 'businessdetails')!)}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold py-2.5 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] text-sm"
+          >
+            <ArrowRightIcon className="w-4 h-4" />
+            Go to Business Details
+          </button>
+        </div>
       </div>
     );
   }
@@ -167,13 +172,16 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
       {/* Result display for Articles and Press Releases */}
       {result && (selectedType === 'article' || selectedType === 'press_release') && (
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="bg-brand-card p-6 rounded-xl border border-brand-border/50 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-brand-text">
+          <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden mb-6">
+            <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-blue/20 to-accent-purple/20 flex items-center justify-center shrink-0">
+                <SparklesIcon className="w-4.5 h-4.5 text-accent-purple" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-brand-text">
                   {selectedType === 'article' ? 'Your Article is Ready' : 'Your Press Release is Ready'}
                 </h3>
-                <p className="text-sm text-brand-text-muted mt-1">
+                <p className="text-xs text-brand-text-muted mt-0.5">
                   {selectedType === 'article'
                     ? 'Review your thought leadership content below'
                     : 'Review your AP Style formatted press release below'}
@@ -184,8 +192,9 @@ export const JetContent: React.FC<JetContentProps> = ({ tool, initialProps, prof
                   setResult('');
                   setError('');
                 }}
-                className="px-4 py-2 border-2 border-gray-300 text-gray-700 font-medium rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-blue to-accent-purple text-white font-bold rounded-xl text-sm hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-200"
               >
+                <BoltIcon className="w-4 h-4" />
                 Create Another
               </button>
             </div>

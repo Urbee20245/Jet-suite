@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Tool, ProfileData, BlogPublication, WebsiteConnection } from '../types';
 import { Loader } from '../components/Loader';
-import { InformationCircleIcon, SparklesIcon } from '../components/icons/MiniIcons';
+import { InformationCircleIcon, SparklesIcon, BoltIcon, CheckIcon, ArrowRightIcon, TrashIcon } from '../components/icons/MiniIcons';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import { getWebsiteConnections } from '../services/websiteService';
 
@@ -148,7 +148,7 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="bg-brand-card p-10 rounded-xl shadow-lg border border-brand-border/50 text-center">
+        <div className="bg-brand-card p-10 rounded-2xl shadow-md border border-brand-border text-center">
           <Loader />
           <p className="text-sm text-brand-text-muted mt-3">Loading scheduled posts...</p>
         </div>
@@ -158,20 +158,21 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-brand-card p-6 sm:p-8 rounded-xl shadow-lg border border-brand-border/50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+        {/* Card Header */}
+        <div className="bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-brand-text tracking-tight">Scheduled Blog Posts</h2>
-            <p className="text-sm text-brand-text-muted mt-1.5">Manage your scheduled and published blog posts</p>
+            <p className="text-sm text-brand-text-muted mt-1">Manage your scheduled and published blog posts</p>
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex gap-1.5 bg-brand-light p-1 rounded-xl">
+          {/* Filter Segmented Control */}
+          <div className="flex gap-1 bg-brand-light p-1.5 rounded-2xl">
             {(['all', 'scheduled', 'published', 'failed'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   filter === f
                     ? 'bg-white text-brand-text shadow-sm'
                     : 'text-brand-text-muted hover:text-brand-text'
@@ -183,115 +184,121 @@ export const ScheduledPosts: React.FC<ScheduledPostsProps> = ({ tool, profileDat
           </div>
         </div>
 
-        {/* Success Message */}
-        {success && (
-          <div className="bg-green-50 text-green-700 px-4 py-3 rounded-xl mb-5 text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
-            <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm border border-red-200/60 flex items-start gap-2.5">
-            <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Posts Table */}
-        {filteredPosts.length === 0 ? (
-          <div className="text-center py-12 px-6 bg-brand-light/50 rounded-xl border-2 border-dashed border-brand-border/50">
-            <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-light flex items-center justify-center mb-3">
-              <InformationCircleIcon className="w-6 h-6 text-brand-text-muted/40" />
+        <div className="p-6 sm:p-8">
+          {/* Success Message */}
+          {success && (
+            <div className="bg-green-50 text-green-700 px-4 py-3 rounded-xl mb-5 text-sm font-medium border border-green-200/60 flex items-start gap-2.5">
+              <svg className="w-4 h-4 mt-0.5 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+              <span>{success}</span>
             </div>
-            <p className="text-brand-text font-medium text-sm">
-              {filter === 'all' ? 'No scheduled posts yet' : `No ${filter} posts`}
-            </p>
-            <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed max-w-sm mx-auto">
-              Create blog posts in JetContent and schedule them to your connected websites
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-brand-border/50">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-brand-light/50 border-b border-brand-border/50">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Title</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Platform</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Scheduled Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-brand-text-muted uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border/40">
-                {filteredPosts.map((post) => (
-                  <tr key={post.id} className="hover:bg-brand-light/40 transition-colors duration-150 group">
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        {post.featured_image_url && (
-                          <img
-                            src={post.featured_image_url}
-                            alt={post.title}
-                            className="w-16 h-10 object-cover rounded border border-brand-border/50 shrink-0"
-                          />
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 text-red-700 px-4 py-3 rounded-xl mb-5 text-sm border border-red-200/60 flex items-start gap-2.5">
+              <svg className="w-4 h-4 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Posts List */}
+          {filteredPosts.length === 0 ? (
+            <div className="text-center py-12 px-6 bg-brand-light/50 rounded-2xl border-2 border-dashed border-brand-border">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-brand-light flex items-center justify-center mb-3">
+                <InformationCircleIcon className="w-6 h-6 text-brand-text-muted/40" />
+              </div>
+              <p className="text-brand-text font-medium text-sm">
+                {filter === 'all' ? 'No scheduled posts yet' : `No ${filter} posts`}
+              </p>
+              <p className="text-xs text-brand-text-muted mt-1.5 leading-relaxed max-w-sm mx-auto">
+                Create blog posts in JetContent and schedule them to your connected websites
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredPosts.map((post) => (
+                <div key={post.id} className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
+                  {/* Post Card Top Strip */}
+                  <div className="bg-brand-light border-b border-brand-border px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-gradient-to-r from-accent-blue/10 to-accent-purple/10 border border-accent-blue/20 text-accent-blue text-xs font-bold px-2.5 py-1 rounded-full">
+                        {getWebsiteName(post.website_connection_id)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {post.scheduled_publish_at && (
+                        <span className="text-xs text-brand-text-muted font-medium bg-brand-card border border-brand-border px-2.5 py-1 rounded-full">
+                          {new Date(post.scheduled_publish_at).toLocaleString()}
+                        </span>
+                      )}
+                      {!post.scheduled_publish_at && (
+                        <span className="text-xs text-brand-text-muted font-medium bg-brand-card border border-brand-border px-2.5 py-1 rounded-full">
+                          Not scheduled
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Post Card Content */}
+                  <div className="p-4">
+                    <div className="flex items-start gap-4">
+                      {post.featured_image_url && (
+                        <img
+                          src={post.featured_image_url}
+                          alt={post.title}
+                          className="w-20 h-14 object-cover rounded-xl border border-brand-border shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-brand-text text-sm leading-snug">{post.title}</p>
+                        {post.auto_optimized && (
+                          <span className="inline-flex items-center gap-1 text-xs text-accent-blue mt-1.5">
+                            <SparklesIcon className="w-3 h-3" />
+                            SEO Optimized
+                          </span>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-brand-text text-sm truncate">{post.title}</p>
-                          {post.auto_optimized && (
-                            <span className="inline-flex items-center gap-1 text-xs text-accent-blue mt-0.5">
-                              <SparklesIcon className="w-3 h-3" />
-                              SEO Optimized
-                            </span>
-                          )}
-                        </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <p className="text-sm text-brand-text">{getWebsiteName(post.website_connection_id)}</p>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <p className="text-sm text-brand-text-muted">
-                        {post.scheduled_publish_at
-                          ? new Date(post.scheduled_publish_at).toLocaleString()
-                          : 'Not scheduled'}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3.5">{getStatusBadge(post.status)}</td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1">
-                        {post.status === 'scheduled' && (
-                          <button
-                            onClick={() => handlePublishNow(post.id)}
-                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 px-2.5 py-1.5 rounded-lg hover:bg-accent-blue/5 transition-all duration-200"
-                          >
-                            Publish Now
-                          </button>
-                        )}
-                        {post.status === 'published' && post.wordpress_post_id && (
-                          <a
-                            href={`${websiteConnections.find(c => c.id === post.website_connection_id)?.website_url}/?p=${post.wordpress_post_id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-semibold text-accent-blue hover:text-accent-blue/80 px-2.5 py-1.5 rounded-lg hover:bg-accent-blue/5 transition-all duration-200"
-                          >
-                            View
-                          </a>
-                        )}
+                    </div>
+                  </div>
+
+                  {/* Post Card Footer */}
+                  <div className="bg-brand-light/60 border-t border-brand-border px-4 py-2 flex items-center justify-between">
+                    <div>{getStatusBadge(post.status)}</div>
+                    <div className="flex items-center gap-1">
+                      {post.status === 'scheduled' && (
                         <button
-                          onClick={() => handleDelete(post.id)}
-                          className="text-xs font-semibold text-red-500 hover:text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-50 transition-all duration-200"
+                          onClick={() => handlePublishNow(post.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold bg-gradient-to-r from-accent-blue to-accent-purple text-white px-3 py-1.5 rounded-xl hover:shadow-lg hover:shadow-accent-purple/20 active:scale-[0.99] transition-all duration-200"
                         >
-                          Delete
+                          <ArrowRightIcon className="w-3 h-3" />
+                          Publish Now
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      )}
+                      {post.status === 'published' && post.wordpress_post_id && (
+                        <a
+                          href={`${websiteConnections.find(c => c.id === post.website_connection_id)?.website_url}/?p=${post.wordpress_post_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-blue hover:text-accent-blue/80 px-2.5 py-1.5 rounded-xl hover:bg-accent-blue/5 transition-all duration-200"
+                        >
+                          <ArrowRightIcon className="w-3 h-3" />
+                          View
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleDelete(post.id)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:text-red-600 px-2.5 py-1.5 rounded-xl hover:bg-red-50 transition-all duration-200"
+                      >
+                        <TrashIcon className="w-3 h-3" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

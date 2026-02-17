@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ALL_TOOLS } from '../constants';
 import type { Tool, ProfileData, ReadinessState, GrowthPlanTask } from '../types';
-import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, SparklesIcon, CheckCircleIcon, StarIcon } from '../components/icons/MiniIcons';
+import { ArrowRightIcon, InformationCircleIcon, ChevronDownIcon, ChevronUpIcon, SparklesIcon, CheckCircleIcon, StarIcon, BoltIcon, ChartBarIcon, TrendingUpIcon } from '../components/icons/MiniIcons';
 import { QuickStatsCards } from '../components/QuickStatsCards';
 import { Boris } from '../components/Boris';
 
@@ -36,10 +36,10 @@ const ToolCard: React.FC<{
   return (
     <button 
       onClick={onClick}
-      className={`bg-brand-card p-3 rounded-lg shadow-sm border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-md transition-all duration-200 flex flex-col items-start text-left w-full group`}
+      className={`bg-brand-card p-3 rounded-2xl shadow-md border ${colorClasses[accentColor] || colorClasses['bg-accent-purple']} hover:shadow-lg transition-all duration-200 flex flex-col items-start text-left w-full group`}
     >
-      <div className={`w-10 h-10 ${accentColor} bg-opacity-10 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-        {tool.icon && <tool.icon className={`w-5 h-5 ${accentColor.replace('bg-', 'text-')}`} />}
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+        {tool.icon && <tool.icon className="w-5 h-5 text-white" />}
       </div>
       <h3 className="font-bold text-sm text-brand-text mb-1 group-hover:text-accent-purple transition-colors">
         {tool.name}
@@ -70,15 +70,15 @@ const CategoryCard: React.FC<{
   };
 
   return (
-    <div className={`bg-brand-card rounded-xl shadow-lg border ${colorClasses[accentColor]} transition-all duration-300 ${isExpanded ? 'col-span-full' : ''}`}>
+    <div className={`bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden transition-all duration-300 ${isExpanded ? 'col-span-full' : ''}`}>
       {/* Header - Always Visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-6 flex items-center justify-between hover:bg-brand-light/50 rounded-xl transition-colors"
+        className="w-full p-6 flex items-center justify-between hover:bg-brand-light/50 transition-colors"
       >
         <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 ${accentColor} bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0`}>
-            <span className={`text-2xl font-bold ${textColor}`}>{number}</span>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+            <span className="text-lg font-bold text-white">{number}</span>
           </div>
           <div className="text-left">
             <h2 className={`text-lg font-bold ${textColor} mb-1`}>{title}</h2>
@@ -97,7 +97,7 @@ const CategoryCard: React.FC<{
 
       {/* Expanded Content - Tools Grid */}
       {isExpanded && (
-        <div className="px-6 pb-6 pt-2">
+        <div className="px-6 pb-6 pt-2 border-t border-brand-border">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {tools.map(toolId => {
               const tool = ALL_TOOLS[toolId];
@@ -174,22 +174,27 @@ export const Welcome: React.FC<WelcomeProps> = ({
           
           {/* Access All Tools Card */}
           <div className="max-w-4xl mx-auto mt-6">
-            <div className="bg-brand-card rounded-xl border border-brand-border shadow-lg">
+            <div className="bg-brand-card rounded-2xl shadow-md border border-brand-border overflow-hidden">
               <button
                 onClick={() => setIsToolsExpanded(!isToolsExpanded)}
-                className="w-full p-6 flex justify-between items-center text-left hover:bg-brand-light/50 rounded-xl transition-colors"
+                className="w-full flex justify-between items-center text-left bg-gradient-to-r from-accent-blue/5 to-accent-purple/5 border-b border-brand-border px-6 py-4 hover:from-accent-blue/10 hover:to-accent-purple/10 transition-colors"
               >
-                <div>
-                  <h3 className="text-lg font-bold text-brand-text">Access All Tools</h3>
-                  <p className="text-sm text-brand-text-muted mt-1">
-                    Browse all available tools organized by category.
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center flex-shrink-0">
+                    <SparklesIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-brand-text">Access All Tools</h3>
+                    <p className="text-sm text-brand-text-muted mt-0.5">
+                      Browse all available tools organized by category.
+                    </p>
+                  </div>
                 </div>
                 <ChevronDownIcon className={`w-6 h-6 text-brand-text-muted transition-transform ${isToolsExpanded ? 'rotate-180' : ''}`} />
               </button>
 
               {isToolsExpanded && (
-                <div className="p-6 border-t border-brand-border">
+                <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* 1. Business Foundation */}
                     <CategoryCard

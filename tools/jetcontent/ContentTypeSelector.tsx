@@ -1,5 +1,6 @@
 import React from 'react';
 import { DocumentTextIcon, NewspaperIcon, MegaphoneIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, BoltIcon, ArrowRightIcon } from '../../components/icons/MiniIcons';
 
 interface ContentTypeSelectorProps {
   onSelect: (type: 'blog_post' | 'article' | 'press_release') => void;
@@ -24,11 +25,16 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
         {/* Blog Post Card */}
         <button
           onClick={() => onSelect('blog_post')}
-          className="group relative bg-white rounded-2xl border-2 border-gray-200 p-8 text-left hover:border-accent-blue hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          className="group relative bg-brand-card rounded-2xl shadow-md border-2 border-brand-border p-8 text-left hover:border-accent-blue/30 hover:shadow-xl transition-all duration-200"
         >
-          {/* Icon container with gradient */}
+          {/* Gradient icon badge */}
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <DocumentTextIcon className="w-8 h-8 text-white" />
+          </div>
+          {/* AI badge */}
+          <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-accent-blue/10 border border-accent-blue/20">
+            <SparklesIcon className="w-3 h-3 text-accent-blue" />
+            <span className="text-xs font-semibold text-accent-blue">SEO</span>
           </div>
 
           {/* Content */}
@@ -67,7 +73,7 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
         {/* Article Card */}
         <button
           onClick={() => onSelect('article')}
-          className="group relative bg-white rounded-2xl border-2 border-gray-200 p-8 text-left hover:border-accent-purple hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          className="group relative bg-brand-card rounded-2xl shadow-md border-2 border-brand-border p-8 text-left hover:border-accent-purple hover:shadow-xl hover:shadow-accent-purple/10 transition-all duration-200"
         >
           {/* Premium badge */}
           <div className="absolute top-4 right-4">
@@ -76,7 +82,7 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
             </span>
           </div>
 
-          {/* Icon container with gradient */}
+          {/* Gradient icon badge */}
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <NewspaperIcon className="w-8 h-8 text-white" />
           </div>
@@ -117,7 +123,7 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
         {/* Press Release Card */}
         <button
           onClick={() => onSelect('press_release')}
-          className="group relative bg-white rounded-2xl border-2 border-gray-200 p-8 text-left hover:border-emerald-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          className="group relative bg-brand-card rounded-2xl shadow-md border-2 border-brand-border p-8 text-left hover:border-emerald-500 hover:shadow-xl transition-all duration-200"
         >
           {/* Premium badge */}
           <div className="absolute top-4 right-4">
@@ -126,7 +132,7 @@ export const ContentTypeSelector: React.FC<ContentTypeSelectorProps> = ({ onSele
             </span>
           </div>
 
-          {/* Icon container with gradient */}
+          {/* Gradient icon badge */}
           <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
             <MegaphoneIcon className="w-8 h-8 text-white" />
           </div>

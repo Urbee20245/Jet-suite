@@ -1,7 +1,7 @@
 // DYAD_NATIVE_GIT_TEST
 import React, { useState, useEffect } from 'react';
 import type { ProfileData, TeamMember, Tool } from '../types';
-import { CheckCircleIcon, TrashIcon, XMarkIcon, CreditCardIcon, MinusIcon, PlusIcon, InformationCircleIcon } from '../components/icons/MiniIcons';
+import { CheckCircleIcon, TrashIcon, XMarkIcon, CreditCardIcon, MinusIcon, PlusIcon, InformationCircleIcon, SparklesIcon, GlobeAltIcon, LockClosedIcon, BoltIcon, ChatBubbleLeftRightIcon, ArrowRightIcon } from '../components/icons/MiniIcons';
 import { createPortalSession, getBillingAccount } from '../services/stripeService';
 import { getSubscriptionStatusLabel, getSubscriptionStatusColor } from '../services/subscriptionService';
 import { Loader } from '../components/Loader';
@@ -233,62 +233,68 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                 <div className="flex gap-2 min-w-max">
                     <button
                         onClick={() => setActiveTab('profile')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'profile'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <SparklesIcon className="w-4 h-4" />
                         My Profile
                     </button>
                     <button
                         onClick={() => setActiveTab('billing')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'billing'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <CreditCardIcon className="w-4 h-4" />
                         Billing
                     </button>
                     <button
                         onClick={() => setActiveTab('business')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'business'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <GlobeAltIcon className="w-4 h-4" />
                         Business
                     </button>
                     <button
                         onClick={() => setActiveTab('team')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'team'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <ChatBubbleLeftRightIcon className="w-4 h-4" />
                         Team
                     </button>
                     <button
                         onClick={() => setActiveTab('security')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'security'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <LockClosedIcon className="w-4 h-4" />
                         Security
                     </button>
                     <button
                         onClick={() => setActiveTab('partner')}
-                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all ${
+                        className={`px-4 py-2 text-xs font-medium rounded-md whitespace-nowrap transition-all flex items-center gap-1.5 ${
                             activeTab === 'partner'
                                 ? 'bg-gradient-to-r from-accent-blue to-accent-purple text-white'
                                 : 'text-brand-text bg-gray-50'
                         }`}
                     >
+                        <BoltIcon className="w-4 h-4" />
                         Partner Program
                     </button>
                 </div>
@@ -300,30 +306,35 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                     <TabButton
                         active={activeTab === 'profile'}
                         onClick={() => setActiveTab('profile')}
+                        icon={<SparklesIcon className="w-4 h-4" />}
                     >
                         My Profile
                     </TabButton>
                     <TabButton
                         active={activeTab === 'billing'}
                         onClick={() => setActiveTab('billing')}
+                        icon={<CreditCardIcon className="w-4 h-4" />}
                     >
                         Subscription & Billing
                     </TabButton>
                     <TabButton
                         active={activeTab === 'business'}
                         onClick={() => setActiveTab('business')}
+                        icon={<GlobeAltIcon className="w-4 h-4" />}
                     >
                         Business Profiles
                     </TabButton>
                     <TabButton
                         active={activeTab === 'team'}
                         onClick={() => setActiveTab('team')}
+                        icon={<ChatBubbleLeftRightIcon className="w-4 h-4" />}
                     >
                         Team Members
                     </TabButton>
                     <TabButton
                         active={activeTab === 'security'}
                         onClick={() => setActiveTab('security')}
+                        icon={<LockClosedIcon className="w-4 h-4" />}
                     >
                         Account Security
                     </TabButton>
@@ -331,6 +342,7 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                         <TabButton
                             active={activeTab === 'partner'}
                             onClick={() => setActiveTab('partner')}
+                            icon={<BoltIcon className="w-4 h-4" />}
                         >
                             Partner Program
                         </TabButton>
@@ -418,8 +430,9 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                 <div className="flex justify-end pt-4 border-t border-brand-border">
                                     <button
                                         type="submit"
-                                        className="w-full sm:w-auto bg-gradient-to-r from-accent-blue to-accent-purple text-white font-medium text-sm py-3 px-6 rounded-md hover:opacity-90 transition-opacity touch-manipulation"
+                                        className="w-full sm:w-auto bg-gradient-to-r from-accent-blue to-accent-purple text-white font-medium text-sm py-3 px-6 rounded-md hover:opacity-90 transition-opacity touch-manipulation flex items-center gap-2 justify-center"
                                     >
+                                        <CheckCircleIcon className="w-4 h-4" />
                                         Save Changes
                                     </button>
                                 </div>
@@ -798,9 +811,10 @@ export const Account: React.FC<AccountProps> = ({ plan, profileData, onLogout, o
                                         href="https://jetsuiteaffiliates.getrewardful.com/signup"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-block w-full sm:w-auto bg-white text-accent-purple font-semibold text-sm py-3.5 px-8 rounded-md hover:shadow-lg transition-shadow touch-manipulation"
+                                        className="inline-flex items-center gap-2 justify-center w-full sm:w-auto bg-white text-accent-purple font-semibold text-sm py-3.5 px-8 rounded-md hover:shadow-lg transition-shadow touch-manipulation"
                                     >
                                         Join the Affiliate Program
+                                        <ArrowRightIcon className="w-4 h-4" />
                                     </a>
                                     <p className="mt-3 text-xs text-white/80">
                                         Free to join • No approval required • Start earning immediately
