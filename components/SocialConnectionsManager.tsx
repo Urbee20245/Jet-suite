@@ -79,8 +79,8 @@ const platformNames: { [key: string]: string } = {
   'google_business': 'Google Business',
 };
 
-// All four platforms use real OAuth (Instagram via Facebook)
-const oauthPlatforms = ['facebook', 'instagram', 'google_business', 'tiktok'];
+// All platforms use real OAuth (Instagram via Facebook)
+const oauthPlatforms = ['facebook', 'instagram', 'google_business', 'tiktok', 'linkedin', 'twitter'];
 
 // Map platform names to their API auth endpoint paths
 const platformAuthPaths: Record<string, string> = {
@@ -88,6 +88,8 @@ const platformAuthPaths: Record<string, string> = {
   instagram: 'facebook',        // Instagram connects through Facebook OAuth
   google_business: 'google',    // API route is /api/auth/google/
   tiktok: 'tiktok',
+  linkedin: 'linkedin',
+  twitter: 'twitter',
 };
 
 // Platforms available for connection
@@ -96,6 +98,8 @@ const availablePlatforms: SocialPlatform[] = [
   'instagram', // Auto-detects through Facebook OAuth
   'google_business',
   'tiktok',
+  'linkedin',
+  'twitter',
 ];
 
 export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> = ({
@@ -106,6 +110,7 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
   const [connections, setConnections] = useState<SocialConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [connectingPlatform, setConnectingPlatform] = useState<SocialPlatform | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform>('google_business');
@@ -117,19 +122,38 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
     loadConnections();
   }, [userId, businessId]);
 
-  // Reload connections when OAuth callback returns with success
+  // Reload connections and show success message when OAuth callback returns with ?connected={platform}
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const success = params.get('success');
-      if (success && (success.includes('connected') || success === 'true')) {
-        console.log('[SocialConnectionsManager] OAuth success detected, reloading connections');
-        loadConnections();
+    if (typeof window === 'undefined') return;
 
-        // Optional: Clean up URL after loading
-        const cleanUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, cleanUrl);
-      }
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+
+    if (connected) {
+      console.log('[SocialConnectionsManager] OAuth success detected for platform:', connected);
+
+      // Re-fetch connections from the database immediately
+      loadConnections();
+
+      // Show a success notification based on the platform
+      const successMessages: Record<string, string> = {
+        facebook: 'Facebook account connected successfully! Instagram will also be connected if linked to your Facebook page.',
+        instagram: 'Instagram account connected successfully!',
+        google_business: 'Google Business Profile connected successfully!',
+        tiktok: 'TikTok account connected successfully!',
+        linkedin: 'LinkedIn account connected successfully!',
+        twitter: 'X (Twitter) account connected successfully!',
+      };
+      setSuccessMessage(successMessages[connected] || `${connected} connected successfully!`);
+
+      // Auto-clear success message after 8 seconds
+      setTimeout(() => setSuccessMessage(''), 8000);
+
+      // Remove the ?connected= param from URL so refreshes don't re-trigger this
+      params.delete('connected');
+      const newSearch = params.toString();
+      const cleanUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+      window.history.replaceState({}, document.title, cleanUrl);
     }
   }, []);
 
@@ -329,20 +353,11 @@ export const SocialConnectionsManager: React.FC<SocialConnectionsManagerProps> =
       )}
 
       {/* Success message from OAuth callback */}
-      {typeof window !== 'undefined' && (() => {
-        const success = new URLSearchParams(window.location.search).get('success');
-        const successMessages: Record<string, string> = {
-          facebook_connected: 'Facebook account connected successfully! Instagram will also be connected if linked to your Facebook page.',
-          google_business_connected: 'Google Business Profile connected successfully!',
-          tiktok_connected: 'TikTok account connected successfully!',
-        };
-        const message = success ? successMessages[success] : null;
-        return message ? (
-          <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
-            {message}
-          </div>
-        ) : null;
-      })()}
+      {successMessage && (
+        <div className="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm font-semibold">
+          {successMessage}
+        </div>
+      )}
 
       {/* Connected Accounts */}
       {connections.length > 0 && (

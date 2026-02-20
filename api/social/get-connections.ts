@@ -70,8 +70,8 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing or invalid businessId parameter' });
     }
 
-    // Get social connections for user and business (include ALL connections, even inactive for reconnect)
-    const { data, error } = await supabase
+    // Get social connections for user and business (only active connections)
+    const { data: rawData, error } = await supabase
       .from('social_connections')
       .select('*')
       .eq('user_id', userId)
@@ -87,7 +87,9 @@ export default async function handler(
     const now = new Date();
     const autoRefresh = req.query.autoRefresh === 'true'; // Optional parameter to enable auto-refresh
 
-    if (autoRefresh && data && data.length > 0) {
+    let data = rawData || [];
+
+    if (autoRefresh && data.length > 0) {
       const refreshPromises = data.map(async (conn: any) => {
         if (!conn.token_expires_at || !conn.refresh_token) {
           return conn; // Skip if no expiry or no refresh token
@@ -136,12 +138,11 @@ export default async function handler(
       });
 
       // Wait for all refresh attempts
-      const refreshedData = await Promise.all(refreshPromises);
-      data = refreshedData;
+      data = await Promise.all(refreshPromises);
     }
 
     // Enrich connections with health status
-    const connections = (data || []).map((conn: any) => {
+    const connections = data.map((conn: any) => {
       let connection_status: 'active' | 'expiring_soon' | 'expired' = 'active';
 
       if (conn.token_expires_at) {

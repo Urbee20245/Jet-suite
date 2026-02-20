@@ -63,6 +63,33 @@ export const WebsiteConnectionsManager: React.FC<WebsiteConnectionsManagerProps>
     loadConnections();
   }, [userId, businessId]);
 
+  // Reload connections and show success message when OAuth callback returns with ?connected={platform}
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get('connected');
+    const websitePlatforms = ['wix', 'squarespace'];
+
+    if (connected && websitePlatforms.includes(connected)) {
+      console.log('[WebsiteConnectionsManager] OAuth success detected for platform:', connected);
+
+      // Re-fetch connections from the database immediately
+      loadConnections();
+
+      // Show success message
+      const platformLabel = connected.charAt(0).toUpperCase() + connected.slice(1);
+      setSuccess(`${platformLabel} website connected successfully!`);
+      setTimeout(() => setSuccess(''), 8000);
+
+      // Remove the ?connected= param from URL so refreshes don't re-trigger this
+      params.delete('connected');
+      const newSearch = params.toString();
+      const cleanUrl = window.location.pathname + (newSearch ? `?${newSearch}` : '');
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
+  }, []);
+
   const loadConnections = async () => {
     try {
       setLoading(true);

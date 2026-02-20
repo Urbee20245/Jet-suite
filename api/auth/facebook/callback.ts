@@ -159,6 +159,9 @@ export default async function handler(
     console.log('Code:', codeStr?.substring(0, 20) + '...');
     console.log('State:', stateStr);
 
+    // Clean up expired oauth_states rows to avoid accumulation
+    await supabase.from('oauth_states').delete().lt('expires_at', new Date().toISOString());
+
     // Verify state token (CSRF protection)
     const { data: stateData, error: stateError } = await supabase
       .from('oauth_states')
@@ -340,7 +343,7 @@ export default async function handler(
     // Redirect back to the original page with success
     const separator = redirectPath.includes('?') ? '&' : '?';
     res.redirect(
-      `${APP_URL}${redirectPath}${separator}success=facebook_connected`
+      `${APP_URL}${redirectPath}${separator}connected=facebook`
     );
   } catch (error) {
     console.error('Facebook callback error:', error);
