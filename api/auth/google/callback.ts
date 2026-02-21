@@ -151,6 +151,9 @@ export default async function handler(
     console.log('Code:', codeStr?.substring(0, 20) + '...');
     console.log('State:', stateStr);
 
+    // Clean up expired oauth_states rows to avoid accumulation
+    await supabase.from('oauth_states').delete().lt('expires_at', new Date().toISOString());
+
     // Verify state token (CSRF protection)
     const { data: stateData, error: stateError } = await supabase
       .from('oauth_states')
@@ -208,6 +211,7 @@ export default async function handler(
 
     let primaryLocation = null;
     let accountName = null;
+    let locationCount = 0;
 
     if (accounts.length > 0) {
       // Get locations for first account
@@ -215,7 +219,8 @@ export default async function handler(
       console.log('Getting locations for account:', accountName);
       const locations = await getBusinessLocations(tokens.access_token, accountName);
       console.log('Got locations:', locations.length);
-      
+      locationCount = locations.length;
+
       if (locations.length > 0) {
         primaryLocation = locations[0];
         console.log('Primary location:', primaryLocation.name);
@@ -245,7 +250,7 @@ export default async function handler(
       metadata: {
         account_name: accountName,
         location_name: primaryLocation?.name,
-        location_count: accounts.length > 0 ? (await getBusinessLocations(tokens.access_token, accountName)).length : 0,
+        location_count: locationCount,
       },
       is_active: true,
     };
@@ -285,7 +290,7 @@ export default async function handler(
     // Redirect back to the original page with success
     const separator = redirectPath.includes('?') ? '&' : '?';
     res.redirect(
-      `${APP_URL}${redirectPath}${separator}success=google_business_connected`
+      `${APP_URL}${redirectPath}${separator}connected=google_business`
     );
   } catch (error) {
     console.error('Google callback error:', error);

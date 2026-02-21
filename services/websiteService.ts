@@ -64,6 +64,7 @@ export async function getWebsiteConnections(
       .select('*')
       .eq('user_id', userId)
       .eq('business_id', businessId)
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -129,9 +130,11 @@ export async function disconnectWebsite(connectionId: string): Promise<void> {
       throw new Error('Supabase client not available');
     }
 
+    // Soft-delete: set is_active = false instead of deleting the row
+    // This preserves the connection history and allows reconnection
     const { error } = await supabase
       .from('website_connections')
-      .delete()
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', connectionId);
 
     if (error) {
@@ -139,7 +142,7 @@ export async function disconnectWebsite(connectionId: string): Promise<void> {
       throw new Error(error.message || 'Failed to disconnect website');
     }
 
-    console.log('[disconnectWebsite] Disconnected successfully');
+    console.log('[disconnectWebsite] Disconnected successfully (soft-delete)');
   } catch (error: any) {
     console.error('Disconnect website error:', error);
     throw error;

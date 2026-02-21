@@ -203,6 +203,9 @@ serve(async (req: Request) => {
     console.log('Code received:', code.substring(0, 20) + '...');
     console.log('State:', state);
 
+    // Clean up expired oauth_states rows to avoid accumulation
+    await supabase.from('oauth_states').delete().lt('expires_at', new Date().toISOString());
+
     // Verify state token (CSRF protection)
     const { data: stateData, error: stateError } = await supabase
       .from('oauth_states')
@@ -291,14 +294,19 @@ serve(async (req: Request) => {
       last_verified_at: new Date().toISOString(),
     };
 
-    // Check for existing connection
-    const { data: existingConnection } = await supabase
+    // Check for existing connection (filter by business_id when available)
+    const existingQuery = supabase
       .from('website_connections')
       .select('id')
       .eq('user_id', userId)
       .eq('platform', 'squarespace')
-      .eq('website_url', websiteInfo.siteUrl)
-      .maybeSingle();
+      .eq('website_url', websiteInfo.siteUrl);
+
+    if (businessId) {
+      existingQuery.eq('business_id', businessId);
+    }
+
+    const { data: existingConnection } = await existingQuery.maybeSingle();
 
     if (existingConnection) {
       console.log('Updating existing Squarespace connection');
@@ -320,7 +328,7 @@ serve(async (req: Request) => {
     // Redirect back to the app with success
     const separator = redirectPath.includes('?') ? '&' : '?';
     return redirectResponse(
-      `${APP_URL}${redirectPath}${separator}success=squarespace_connected`,
+      `${APP_URL}${redirectPath}${separator}connected=squarespace`,
       origin
     );
   } catch (error) {

@@ -198,6 +198,9 @@ serve(async (req: Request) => {
     console.log('Code received:', code.substring(0, 20) + '...');
     console.log('State:', state);
 
+    // Clean up expired oauth_states rows to avoid accumulation
+    await supabase.from('oauth_states').delete().lt('expires_at', new Date().toISOString());
+
     // Check if state is in special Wix dashboard format: wix_instance_{instanceId}_{random}
     let stateData: any = null;
     let userId: string | null = null;
@@ -332,15 +335,20 @@ serve(async (req: Request) => {
       );
     }
 
-    // If no instanceId match, try matching by user_id and website_url (standard flow)
+    // If no instanceId match, try matching by user_id, business_id, and website_url (standard flow)
     if (!existingConnection && userId && userId !== SYSTEM_USER_ID) {
-      const { data } = await supabase
+      const standardQuery = supabase
         .from('website_connections')
         .select('id')
         .eq('user_id', userId)
         .eq('platform', 'wix')
-        .eq('website_url', siteInfo.site.url)
-        .maybeSingle();
+        .eq('website_url', siteInfo.site.url);
+
+      if (businessId) {
+        standardQuery.eq('business_id', businessId);
+      }
+
+      const { data } = await standardQuery.maybeSingle();
       existingConnection = data;
     }
 
@@ -372,7 +380,7 @@ serve(async (req: Request) => {
       // Standard flow: redirect to app
       const separator = redirectPath.includes('?') ? '&' : '?';
       return redirectResponse(
-        `${APP_URL}${redirectPath}${separator}success=wix_connected`,
+        `${APP_URL}${redirectPath}${separator}connected=wix`,
         origin
       );
     }
