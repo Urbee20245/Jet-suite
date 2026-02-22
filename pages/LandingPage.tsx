@@ -258,6 +258,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-stretch sm:items-center">
                   <button
+                    onClick={() => navigate('/growth-assessment')}
+                    className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
+                  >
+                    🚀 Take the 2-Minute Test: What's Holding Your Business Back?
+                  </button>
+                  <button
                     onClick={() => navigate('/get-started')}
                     className="group relative w-full sm:w-auto bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white font-bold py-5 px-10 rounded-2xl transition-all duration-500 text-lg shadow-2xl shadow-blue-600/30 hover:shadow-blue-500/50 hover:scale-[1.02] overflow-hidden"
                     aria-label="Get Started"
@@ -1363,7 +1369,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
             Join 360+ local businesses growing with JetSuite. Start your subscription now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={() => navigate('/get-started')} 
+            <button onClick={() => navigate('/get-started')}
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
               aria-label="Get Started">
               Get Started
@@ -1373,6 +1379,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-transparent border-2 border-slate-600 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl transition-colors duration-300 text-lg"
               aria-label="Schedule a personalized demo with our team">
               Schedule a Personalized Demo
+            </button>
+          </div>
+          <div className="mt-5 flex justify-center">
+            <button
+              onClick={() => navigate('/growth-assessment')}
+              className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
+            >
+              🚀 Take the 2-Minute Test: What's Holding Your Business Back?
             </button>
           </div>
           <p className="text-sm text-gray-500 mt-4">
