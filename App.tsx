@@ -324,7 +324,8 @@ const CoreApp: React.FC = () => {
       '/terms-of-service',
       '/schedule-demo',
       '/affiliate-program',
-      '/affiliate/thank-you'
+      '/affiliate/thank-you',
+      '/growth-assessment'
     ];
 
     if (validMarketingRoutes.includes(normalizedPath) || normalizedPath.startsWith('/billing/')) {
