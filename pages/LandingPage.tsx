@@ -459,15 +459,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 <p className="text-center text-gray-400 text-sm font-medium tracking-wide">See how JetSuite works for businesses like yours</p>
             </div>
           </div>
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={() => navigate('/growth-assessment')}
-              className="group flex items-center justify-center gap-2 px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all duration-200 text-lg shadow-2xl shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
-              aria-label="Take the 2-Minute Test"
-            >
-              &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
-            </button>
-          </div>
         </div>
       </section>
 
@@ -511,6 +502,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                         Hiring agencies costs $5,000+/month with no guaranteed results. You pay whether you grow or not.
                     </p>
                 </div>
+            </div>
+            <div className="flex justify-center mt-12">
+              <button
+                onClick={() => navigate('/growth-assessment')}
+                className="group flex items-center justify-center gap-2 px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all duration-200 text-lg shadow-2xl shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
+                aria-label="Take the 2-Minute Test"
+              >
+                &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
+              </button>
             </div>
         </div>
       </section>
