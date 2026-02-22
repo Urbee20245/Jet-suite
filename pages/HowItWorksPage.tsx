@@ -104,13 +104,6 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({ navigate }) => {
                 <button onClick={() => navigate('/get-started')} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-lg shadow-blue-600/25">
                     Get Started
                 </button>
-                <button
-                  onClick={() => navigate('/growth-assessment')}
-                  className="group flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
-                  aria-label="Take the 2-Minute Test"
-                >
-                  &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
-                </button>
                 <button onClick={() => navigate('/pricing')} className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
                     See Pricing & Plans
                 </button>

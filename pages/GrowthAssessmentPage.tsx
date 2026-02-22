@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '../integrations/supabase/client';
 import {
   JetBizIcon,
@@ -42,8 +42,7 @@ type ToolKey =
 interface PainPoint {
   id: string;
   label: string;
-  description: string;
-  icon: string;
+  emoji: string;
   tools: ToolKey[];
 }
 
@@ -55,90 +54,37 @@ interface ToolInfo {
 }
 
 const PAIN_POINTS: PainPoint[] = [
-  {
-    id: 'google',
-    label: "My business doesn't show up on Google",
-    description: 'You\'re invisible when customers search for what you offer.',
-    icon: '\u{1F50D}',
-    tools: ['jetbiz'],
-  },
-  {
-    id: 'website',
-    label: "My website isn't bringing in customers",
-    description: 'Traffic is low or visitors leave without converting.',
-    icon: '\u{1F310}',
-    tools: ['jetviz'],
-  },
-  {
-    id: 'competitors',
-    label: "I don't know what my competitors are doing",
-    description: 'You\'re competing blind while rivals pull ahead.',
-    icon: '\u{1F3C6}',
-    tools: ['jetcompete'],
-  },
-  {
-    id: 'keywords',
-    label: "I'm not ranking for the right search terms",
-    description: 'Customers can\'t find you because you target the wrong keywords.',
-    icon: '\u{1F3AF}',
-    tools: ['jetkeywords'],
-  },
-  {
-    id: 'social',
-    label: "I struggle to create social media content consistently",
-    description: 'Your social presence goes dark for weeks at a time.',
-    icon: '\u{1F4F1}',
-    tools: ['jetsocial', 'jetcreate'],
-  },
-  {
-    id: 'reviews',
-    label: "I don't have enough customer reviews or they're bad",
-    description: 'Poor or missing reviews are costing you trust and customers.',
-    icon: '\u{2B50}',
-    tools: ['jetreply', 'jettrust'],
-  },
-  {
-    id: 'leads',
-    label: "I can't find new leads or prospects",
-    description: 'Your pipeline is dry and customer acquisition is unpredictable.',
-    icon: '\u{1F91D}',
-    tools: ['jetleads'],
-  },
-  {
-    id: 'blog',
-    label: "I don't have time to write blog posts or articles",
-    description: 'Content marketing goes undone because it takes too long.',
-    icon: '\u{270D}\uFE0F',
-    tools: ['jetcontent'],
-  },
-  {
-    id: 'ads',
-    label: "My ads aren't working or I don't know what to say",
-    description: 'Ad spend is wasted on messaging that doesn\'t convert.',
-    icon: '\u{1F4E3}',
-    tools: ['jetads'],
-  },
-  {
-    id: 'events',
-    label: "I can't visualize local events or promotions to run",
-    description: 'You miss opportunities to connect with the local community.',
-    icon: '\u{1F4C5}',
-    tools: ['jetevents'],
-  },
-  {
-    id: 'images',
-    label: "I need better product or marketing images",
-    description: 'Low-quality visuals make your business look unprofessional.',
-    icon: '\u{1F5BC}\uFE0F',
-    tools: ['jetimage', 'jetproduct'],
-  },
-  {
-    id: 'plan',
-    label: "I have no clear weekly plan to grow my business",
-    description: 'You work hard but without direction — progress feels random.',
-    icon: '\u{1F5D3}\uFE0F',
-    tools: ['growthplan'],
-  },
+  { id: 'google',      label: 'Not showing up on Google',             emoji: '\uD83D\uDD0D', tools: ['jetbiz'] },
+  { id: 'website',     label: 'Website not converting visitors',      emoji: '\uD83C\uDF10', tools: ['jetviz'] },
+  { id: 'competitors', label: "Don't know what competitors are doing", emoji: '\uD83C\uDFC6', tools: ['jetcompete'] },
+  { id: 'keywords',    label: 'Targeting the wrong keywords',         emoji: '\uD83C\uDFAF', tools: ['jetkeywords'] },
+  { id: 'social',      label: 'Inconsistent social media',            emoji: '\uD83D\uDCF1', tools: ['jetsocial', 'jetcreate'] },
+  { id: 'reviews',     label: 'Not enough good reviews',              emoji: '\u2B50',        tools: ['jetreply', 'jettrust'] },
+  { id: 'leads',       label: "Can't find new leads",                 emoji: '\uD83E\uDD1D', tools: ['jetleads'] },
+  { id: 'blog',        label: 'No time to write content',             emoji: '\u270D\uFE0F', tools: ['jetcontent'] },
+  { id: 'ads',         label: 'Ads not working',                      emoji: '\uD83D\uDCE3', tools: ['jetads'] },
+  { id: 'events',      label: 'No local events or promotions',        emoji: '\uD83D\uDCC5', tools: ['jetevents'] },
+  { id: 'images',      label: 'Need better marketing images',         emoji: '\uD83D\uDDBC\uFE0F', tools: ['jetimage', 'jetproduct'] },
+  { id: 'plan',        label: 'No clear weekly growth plan',          emoji: '\uD83D\uDDD3\uFE0F', tools: ['growthplan'] },
+];
+
+const LOCATION_OPTIONS = [
+  { id: 'home',     label: 'Home-Based / Online',              emoji: '\uD83C\uDFE0' },
+  { id: 'single',   label: 'Single Location',                  emoji: '\uD83D\uDCCD' },
+  { id: 'multiple', label: 'Multiple Locations',               emoji: '\uD83D\uDDFA\uFE0F' },
+  { id: 'service',  label: 'Service Area (I go to customers)', emoji: '\uD83D\uDE97' },
+];
+
+const BUSINESS_TYPE_OPTIONS = [
+  { id: 'restaurant',   label: 'Restaurant / Food',       emoji: '\uD83C\uDF7D\uFE0F' },
+  { id: 'healthcare',   label: 'Healthcare / Medical',    emoji: '\uD83C\uDFE5' },
+  { id: 'legal',        label: 'Legal Services',          emoji: '\u2696\uFE0F' },
+  { id: 'home',         label: 'Home Services',           emoji: '\uD83D\uDD27' },
+  { id: 'retail',       label: 'Retail / Boutique',       emoji: '\uD83D\uDECD\uFE0F' },
+  { id: 'realestate',   label: 'Real Estate',             emoji: '\uD83C\uDFD8\uFE0F' },
+  { id: 'fitness',      label: 'Fitness / Wellness',      emoji: '\uD83D\uDCAA' },
+  { id: 'professional', label: 'Professional Services',   emoji: '\uD83D\uDCBC' },
+  { id: 'other',        label: 'Other',                   emoji: '\u2728' },
 ];
 
 const TOOL_INFO: Record<ToolKey, ToolInfo> = {
@@ -249,75 +195,57 @@ const TOOL_INFO: Record<ToolKey, ToolInfo> = {
   },
 };
 
-const BUSINESS_TYPES = [
-  'Restaurant/Food & Beverage',
-  'Healthcare/Medical',
-  'Legal Services',
-  'Home Services/Contractor',
-  'Retail/Boutique',
-  'Real Estate',
-  'Fitness/Wellness',
-  'Professional Services',
-  'Other',
-];
-
-// ── Progress Bar ──────────────────────────────────────────────────────────────
-
-const ProgressBar: React.FC<{ step: number }> = ({ step }) => (
-  <div className="w-full max-w-md mx-auto mb-10">
-    <div className="flex items-center justify-between mb-3">
-      {[1, 2, 3].map((s) => (
-        <div key={s} className="flex items-center flex-1">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-              step >= s
-                ? 'bg-accent-purple text-white shadow-lg shadow-purple-900/40'
-                : 'bg-slate-800 text-gray-500'
-            }`}
-          >
-            {step > s ? '✓' : s}
-          </div>
-          {s < 3 && (
-            <div className="flex-1 h-0.5 mx-1">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  step > s ? 'bg-accent-purple' : 'bg-slate-800'
-                }`}
-              />
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-    <p className="text-center text-sm text-gray-500">
-      Step {step} of 3 —{' '}
-      {step === 1
-        ? 'Your Information'
-        : step === 2
-        ? 'Select Your Challenges'
-        : 'Your Growth Plan'}
-    </p>
-  </div>
+// ── Answered bubble ────────────────────────────────────────────────────────────
+const AnsweredBubble: React.FC<{ text: string }> = ({ text }) => (
+  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-900/30 border border-purple-700/40 text-purple-300 text-sm font-medium">
+    <svg className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+    </svg>
+    {text}
+  </span>
 );
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Arrow send button ──────────────────────────────────────────────────────────
+const SendButton: React.FC<{ onClick: () => void; disabled: boolean }> = ({ onClick, disabled }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+    aria-label="Continue"
+  >
+    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+    </svg>
+  </button>
+);
 
+// ── Main Component ─────────────────────────────────────────────────────────────
 export const GrowthAssessmentPage: React.FC<GrowthAssessmentPageProps> = ({ navigate }) => {
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
-  const [city, setCity] = useState('');
+  const [location, setLocation] = useState('');
   const [businessType, setBusinessType] = useState('');
   const [selectedPainPoints, setSelectedPainPoints] = useState<string[]>([]);
   const [resultsVisible, setResultsVisible] = useState(false);
   const [assessmentId, setAssessmentId] = useState<string | null>(null);
 
-  // ── Validation helpers ───────────────────────────────────────────────────
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const bizInputRef = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  const step1Valid = fullName.trim() && businessName.trim() && city.trim() && businessType;
-  const step2Valid = selectedPainPoints.length > 0;
+  // Auto-focus text inputs
+  useEffect(() => {
+    if (step === 1) nameInputRef.current?.focus();
+    else if (step === 2) bizInputRef.current?.focus();
+  }, [step]);
 
-  // ── Derived — matched tools ──────────────────────────────────────────────
+  // Scroll to bottom when step advances
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [step]);
+
+  const firstName = fullName.trim().split(' ')[0] || fullName.trim();
 
   const matchedToolKeys: ToolKey[] = Array.from(
     new Set(
@@ -327,16 +255,29 @@ export const GrowthAssessmentPage: React.FC<GrowthAssessmentPageProps> = ({ navi
     )
   );
 
-  // ── Handlers ────────────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleNameSubmit = useCallback(() => {
+    if (fullName.trim()) setStep(2);
+  }, [fullName]);
+
+  const handleBizSubmit = useCallback(() => {
+    if (businessName.trim()) setStep(3);
+  }, [businessName]);
+
+  const handleLocationSelect = (label: string) => {
+    setLocation(label);
+    setStep(4);
+  };
+
+  const handleBusinessTypeSelect = (label: string) => {
+    setBusinessType(label);
+    setStep(5);
+  };
 
   const togglePainPoint = (id: string) => {
     setSelectedPainPoints((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
-  };
-
-  const handleStep1Next = () => {
-    if (step1Valid) setStep(2);
   };
 
   const saveAssessment = async () => {
@@ -348,7 +289,7 @@ export const GrowthAssessmentPage: React.FC<GrowthAssessmentPageProps> = ({ navi
         .insert({
           full_name: fullName,
           business_name: businessName,
-          city: city,
+          city: location,
           business_type: businessType,
           selected_pain_points: selectedPainPoints,
           matched_tools: matchedToolKeys,
@@ -356,369 +297,356 @@ export const GrowthAssessmentPage: React.FC<GrowthAssessmentPageProps> = ({ navi
         })
         .select('id')
         .single();
-      if (data?.id) setAssessmentId(data.id);
+      if (!error && data?.id) setAssessmentId(data.id);
     } catch (err) {
-      // Fail silently — never block the user from seeing their results
       console.error('Assessment save error:', err);
     }
   };
 
-  const handleStep2Next = () => {
-    if (step2Valid) {
-      saveAssessment();
-      setStep(3);
-      // Trigger entrance animation shortly after mount
-      setTimeout(() => setResultsVisible(true), 80);
-    }
+  const handleShowResults = () => {
+    if (selectedPainPoints.length === 0) return;
+    saveAssessment();
+    setStep(6);
+    setTimeout(() => setResultsVisible(true), 80);
   };
 
-  const handleBack = () => {
-    if (step === 2) setStep(1);
-    else if (step === 3) {
-      setResultsVisible(false);
-      setStep(2);
-    }
+  // Progress: steps 1–6, bar fills as steps complete
+  const progressPct = Math.round(((step - 1) / 5) * 100);
+
+  // Shared fade-in style (applied once per step block on first render)
+  const fadeIn: React.CSSProperties = {
+    animation: 'convFadeIn 400ms ease forwards',
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-brand-darker text-gray-300">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-0">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-purple-600/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[400px] bg-indigo-600/6 rounded-full blur-[120px]" />
-      </div>
+    <>
+      <style>{`
+        @keyframes convFadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-16 sm:py-24">
-        {/* Header badge */}
-        <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-2 bg-purple-900/40 border border-purple-700/50 text-purple-300 text-sm font-semibold px-4 py-2 rounded-full">
-            🚀 Free 2-Minute Business Assessment
-          </span>
+      <div className="min-h-screen bg-brand-darker text-gray-300">
+        {/* Background blobs */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none -z-0">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] bg-purple-600/8 rounded-full blur-[140px]" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[400px] bg-indigo-600/6 rounded-full blur-[120px]" />
         </div>
 
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white text-center leading-tight mb-4">
-          What's Holding Your Business Back?
-        </h1>
-        <p className="text-center text-gray-400 text-lg mb-12 max-w-xl mx-auto">
-          Answer 3 quick questions and we'll show you exactly which JetSuite tools will move the
-          needle for your growth.
-        </p>
+        {/* Thin progress bar pinned at top */}
+        <div className="fixed top-0 left-0 right-0 h-1 bg-slate-800 z-50">
+          <div
+            className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 transition-all duration-500 ease-out"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
 
-        <ProgressBar step={step} />
+        <div className="relative z-10 max-w-2xl mx-auto px-4 pt-16 pb-32">
 
-        {/* ── STEP 1 ── */}
-        {step === 1 && (
-          <div className="bg-brand-dark/70 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl backdrop-blur-sm">
-            <h2 className="text-2xl font-bold text-white mb-2">Tell us about yourself</h2>
-            <p className="text-gray-400 mb-8">
-              We'll personalize your growth recommendations based on your business.
-            </p>
-
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Full Name <span className="text-purple-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Jane Smith"
-                  className="w-full bg-slate-800/60 border border-slate-700 text-white placeholder-gray-500 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Business Name <span className="text-purple-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Smith Plumbing Co."
-                  className="w-full bg-slate-800/60 border border-slate-700 text-white placeholder-gray-500 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  City / Location <span className="text-purple-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Austin, TX"
-                  className="w-full bg-slate-800/60 border border-slate-700 text-white placeholder-gray-500 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-2">
-                  Business Type <span className="text-purple-400">*</span>
-                </label>
-                <select
-                  value={businessType}
-                  onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full bg-slate-800/60 border border-slate-700 text-white rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent-purple focus:border-transparent transition-all appearance-none cursor-pointer"
-                >
-                  <option value="" disabled className="text-gray-500">
-                    Select your business type...
-                  </option>
-                  {BUSINESS_TYPES.map((bt) => (
-                    <option key={bt} value={bt} className="bg-slate-800">
-                      {bt}
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* ── STEP 1 — Name ─────────────────────────────────────────── */}
+          {step >= 1 && (
+            <div style={fadeIn} className="mb-12">
+              {step > 1 ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-gray-500 text-sm">Hi there! What&#x27;s your name?</p>
+                  <AnsweredBubble text={fullName} />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Hi there! <span aria-hidden="true">&#x2728;</span> What&#x27;s your name?
+                  </p>
+                  <p className="text-gray-500 text-sm mb-6">
+                    I&#x27;ll personalize your growth plan just for you.
+                  </p>
+                  <div className="flex items-end gap-3">
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleNameSubmit(); }}
+                      placeholder="Your name..."
+                      className="bg-transparent border-b-2 border-slate-600 focus:border-purple-500 text-white text-xl w-full outline-none py-3 transition-all placeholder-gray-600"
+                    />
+                    <SendButton onClick={handleNameSubmit} disabled={!fullName.trim()} />
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            <button
-              onClick={handleStep1Next}
-              disabled={!step1Valid}
-              className="mt-8 w-full py-4 px-8 bg-gradient-to-r from-accent-purple to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-[1.02] disabled:scale-100 disabled:shadow-none"
-            >
-              Continue → Select Your Challenges
-            </button>
-          </div>
-        )}
-
-        {/* ── STEP 2 ── */}
-        {step === 2 && (
-          <div>
-            <div className="mb-6">
-              <button
-                onClick={handleBack}
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
-              >
-                ← Back
-              </button>
+          {/* ── STEP 2 — Business Name ────────────────────────────────── */}
+          {step >= 2 && (
+            <div style={fadeIn} className="mb-12">
+              {step > 2 ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-gray-500 text-sm">What&#x27;s your business called?</p>
+                  <AnsweredBubble text={businessName} />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Nice to meet you, {firstName}! <span aria-hidden="true">&#x1F44B;</span> What&#x27;s your business called?
+                  </p>
+                  <p className="text-gray-500 text-sm mb-6">
+                    Tell me the name your customers know you by.
+                  </p>
+                  <div className="flex items-end gap-3">
+                    <input
+                      ref={bizInputRef}
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleBizSubmit(); }}
+                      placeholder="Your business name..."
+                      className="bg-transparent border-b-2 border-slate-600 focus:border-purple-500 text-white text-xl w-full outline-none py-3 transition-all placeholder-gray-600"
+                    />
+                    <SendButton onClick={handleBizSubmit} disabled={!businessName.trim()} />
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            <div className="bg-brand-dark/70 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl backdrop-blur-sm">
-              <h2 className="text-2xl font-bold text-white mb-2">
-                What's challenging for {businessName || 'your business'}?
-              </h2>
-              <p className="text-gray-400 mb-8">
-                Pick every challenge that applies. We'll map each one to the exact JetSuite tool
-                that solves it.
+          {/* ── STEP 3 — Location ────────────────────────────────────── */}
+          {step >= 3 && (
+            <div style={fadeIn} className="mb-12">
+              {step > 3 ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-gray-500 text-sm">Where is {businessName} based?</p>
+                  <AnsweredBubble text={location} />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Great! Where is {businessName} based?
+                  </p>
+                  <p className="text-gray-500 text-sm mb-6">
+                    This helps us tailor local growth strategies.
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-2">
+                    {LOCATION_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleLocationSelect(opt.label)}
+                        className="flex items-center gap-2 px-5 py-3 rounded-full bg-slate-800 border border-slate-700 hover:border-purple-500 hover:bg-purple-900/20 text-gray-200 transition-all cursor-pointer"
+                      >
+                        <span aria-hidden="true">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── STEP 4 — Business Type ───────────────────────────────── */}
+          {step >= 4 && (
+            <div style={fadeIn} className="mb-12">
+              {step > 4 ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <p className="text-gray-500 text-sm">What type of business is {businessName}?</p>
+                  <AnsweredBubble text={businessType} />
+                </div>
+              ) : (
+                <div>
+                  <p className="text-2xl sm:text-3xl font-bold text-white mb-6">
+                    What type of business is {businessName}?
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {BUSINESS_TYPE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleBusinessTypeSelect(opt.label)}
+                        className="flex items-center gap-2 px-4 py-3 rounded-full bg-slate-800 border border-slate-700 hover:border-purple-500 hover:bg-purple-900/20 text-gray-200 transition-all cursor-pointer text-left text-sm"
+                      >
+                        <span aria-hidden="true">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── STEP 5 — Pain Points ─────────────────────────────────── */}
+          {step >= 5 && step < 6 && (
+            <div style={fadeIn} className="mb-12">
+              <p className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                What&#x27;s {businessName} struggling with most? Pick everything that applies.
+              </p>
+              <p className="text-gray-500 text-sm mb-6">
+                Select as many as you like — I&#x27;ll map each one to a specific solution.
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                 {PAIN_POINTS.map((pp) => {
                   const selected = selectedPainPoints.includes(pp.id);
                   return (
                     <button
                       key={pp.id}
                       onClick={() => togglePainPoint(pp.id)}
-                      className={`text-left p-4 rounded-xl border-2 transition-all duration-200 group ${
+                      className={`flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200 text-left ${
                         selected
-                          ? 'border-accent-purple bg-purple-900/30 shadow-md shadow-purple-900/20'
-                          : 'border-slate-700 bg-slate-800/40 hover:border-slate-600 hover:bg-slate-800/70'
+                          ? 'border-purple-500 bg-purple-900/30 text-white'
+                          : 'border-slate-700 bg-slate-800/40 text-gray-200 hover:border-slate-600 hover:bg-slate-800/70'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl flex-shrink-0 mt-0.5">{pp.icon}</span>
-                        <div>
-                          <p
-                            className={`font-semibold text-sm leading-snug ${
-                              selected ? 'text-white' : 'text-gray-200'
-                            }`}
-                          >
-                            {pp.label}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">{pp.description}</p>
-                        </div>
-                        <div
-                          className={`ml-auto flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                            selected
-                              ? 'border-accent-purple bg-accent-purple'
-                              : 'border-slate-600'
-                          }`}
-                        >
-                          {selected && (
-                            <svg
-                              className="w-3 h-3 text-white"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
+                      <span className="text-xl flex-shrink-0" aria-hidden="true">{pp.emoji}</span>
+                      <span className="text-sm font-medium leading-snug flex-1">{pp.label}</span>
+                      {selected && (
+                        <svg className="w-4 h-4 text-purple-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
                     </button>
                   );
                 })}
               </div>
 
               {selectedPainPoints.length > 0 && (
-                <p className="text-center text-sm text-purple-400 mt-4">
-                  {selectedPainPoints.length} challenge{selectedPainPoints.length > 1 ? 's' : ''}{' '}
-                  selected
+                <p className="text-sm text-purple-400 mb-4">
+                  {selectedPainPoints.length} challenge{selectedPainPoints.length > 1 ? 's' : ''} selected
                 </p>
               )}
 
-              <button
-                onClick={handleStep2Next}
-                disabled={!step2Valid}
-                className="mt-8 w-full py-4 px-8 bg-gradient-to-r from-accent-purple to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-[1.02] disabled:scale-100 disabled:shadow-none"
-              >
-                See My Growth Plan →
-              </button>
+              {selectedPainPoints.length > 0 && (
+                <button
+                  onClick={handleShowResults}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-[1.02] text-lg"
+                >
+                  Show Me My Plan &#x2192;
+                </button>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── STEP 3 — Results ── */}
-        {step === 3 && (
-          <div
-            className={`transition-all duration-700 ${
-              resultsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}
-          >
-            <div className="mb-6">
-              <button
-                onClick={handleBack}
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1"
-              >
-                ← Back
-              </button>
-            </div>
-
-            {/* Results headline */}
-            <div className="text-center mb-10">
-              <div className="inline-flex items-center gap-2 bg-green-900/30 border border-green-700/40 text-green-300 text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
-                ✅ Your Personalized Growth Plan is Ready
+          {/* ── STEP 6 — Results ─────────────────────────────────────── */}
+          {step === 6 && (
+            <div
+              className={`transition-all duration-700 ${
+                resultsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+              }`}
+            >
+              {/* Results headline */}
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center gap-2 bg-green-900/30 border border-green-700/40 text-green-300 text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
+                  <span aria-hidden="true">&#x2705;</span> Your Personalized Growth Plan is Ready
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight">
+                  Here&#x27;s what&#x27;s holding{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
+                    {businessName || 'Your Business'}
+                  </span>{' '}
+                  back — and exactly how to fix it, {firstName}.
+                </h2>
+                <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                  Based on your answers, these JetSuite tools will have the biggest impact on your growth.
+                </p>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-3 leading-tight">
-                Here's What's Holding{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">
-                  {businessName || 'Your Business'}
-                </span>{' '}
-                Back — And How to Fix It
-              </h2>
-              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-                Based on your answers, these JetSuite tools will have the biggest impact on your
-                growth in {city || 'your area'}.
-              </p>
-            </div>
 
-            {/* Tool cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-              {matchedToolKeys.map((toolKey, idx) => {
-                const tool = TOOL_INFO[toolKey];
-                const Icon = tool.icon;
-                return (
-                  <div
-                    key={toolKey}
-                    className="bg-brand-dark/80 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/10 group"
-                    style={{ animationDelay: `${idx * 80}ms` }}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center flex-shrink-0 shadow-lg`}
-                      >
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-bold text-white text-base">{tool.name}</h3>
-                          <span className="text-xs bg-purple-900/50 border border-purple-700/40 text-purple-300 px-2 py-0.5 rounded-full font-semibold">
-                            Learn More
-                          </span>
+              {/* Tool cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                {matchedToolKeys.map((toolKey, idx) => {
+                  const tool = TOOL_INFO[toolKey];
+                  const Icon = tool.icon;
+                  return (
+                    <div
+                      key={toolKey}
+                      className="bg-brand-dark/80 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 transition-all duration-200 hover:shadow-lg hover:shadow-purple-900/10"
+                      style={{ animationDelay: `${idx * 80}ms` }}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center flex-shrink-0 shadow-lg`}
+                        >
+                          <Icon className="w-6 h-6 text-white" />
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed">
-                          {tool.tagline(businessName || 'your business')}
-                        </p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className="font-bold text-white text-base">{tool.name}</h3>
+                            <span className="text-xs bg-purple-900/50 border border-purple-700/40 text-purple-300 px-2 py-0.5 rounded-full font-semibold">
+                              Learn More
+                            </span>
+                          </div>
+                          <p className="text-gray-400 text-sm leading-relaxed">
+                            {tool.tagline(businessName || 'your business')}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
 
-            {/* Summary score bar */}
-            <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-800/40 rounded-2xl p-5 mb-8 text-center">
-              <p className="text-gray-300 text-sm mb-1">
-                We identified{' '}
-                <span className="font-bold text-white">{matchedToolKeys.length} key growth tools</span>{' '}
-                for {businessName || 'your business'} in {city || 'your market'}.
-              </p>
-              <p className="text-gray-500 text-xs">
-                JetSuite brings all of them together in one platform — no juggling multiple tools or
-                agencies.
-              </p>
-            </div>
+              {/* Summary bar */}
+              <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-800/40 rounded-2xl p-5 mb-8 text-center">
+                <p className="text-gray-300 text-sm mb-1">
+                  We identified{' '}
+                  <span className="font-bold text-white">{matchedToolKeys.length} key growth tools</span>{' '}
+                  for {businessName || 'your business'}.
+                </p>
+                <p className="text-gray-500 text-xs">
+                  JetSuite brings all of them together in one platform — no juggling multiple tools or agencies.
+                </p>
+              </div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  if (assessmentId) {
-                    const supabase = getSupabaseClient();
-                    if (supabase) {
-                      supabase.from('growth_assessments')
-                        .update({ clicked_get_started: true })
-                        .eq('id', assessmentId)
-                        .then(() => {});
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => {
+                    if (assessmentId) {
+                      const supabase = getSupabaseClient();
+                      if (supabase) {
+                        supabase
+                          .from('growth_assessments')
+                          .update({ clicked_get_started: true })
+                          .eq('id', assessmentId)
+                          .then(() => {});
+                      }
                     }
-                  }
-                  navigate('/get-started');
-                }}
-                className="group flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105 text-lg"
-              >
-                Start Growing {businessName || 'Your Business'} Today
-                <svg
-                  className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                    navigate('/get-started');
+                  }}
+                  className="group flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105 text-lg"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
+                  Start Growing {businessName || 'Your Business'} Today &#x2192;
+                </button>
 
-              <button
-                onClick={() => {
-                  if (assessmentId) {
-                    const supabase = getSupabaseClient();
-                    if (supabase) {
-                      supabase.from('growth_assessments')
-                        .update({ clicked_schedule_demo: true })
-                        .eq('id', assessmentId)
-                        .then(() => {});
+                <button
+                  onClick={() => {
+                    if (assessmentId) {
+                      const supabase = getSupabaseClient();
+                      if (supabase) {
+                        supabase
+                          .from('growth_assessments')
+                          .update({ clicked_schedule_demo: true })
+                          .eq('id', assessmentId)
+                          .then(() => {});
+                      }
                     }
-                  }
-                  navigate('/schedule-demo');
-                }}
-                className="flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-slate-700 hover:border-slate-500 hover:bg-slate-800/50 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-200 text-lg"
-              >
-                Schedule a Demo
-              </button>
-            </div>
+                    navigate('/schedule-demo');
+                  }}
+                  className="flex items-center justify-center gap-2 px-8 py-4 bg-transparent border-2 border-slate-700 hover:border-slate-500 hover:bg-slate-800/50 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-200 text-lg"
+                >
+                  Schedule a Demo
+                </button>
+              </div>
 
-            <p className="text-center text-gray-600 text-xs mt-5">
-              No commitment required · Cancel anytime · Setup in minutes
-            </p>
-          </div>
-        )}
+              <p className="text-center text-gray-600 text-xs mt-5">
+                No commitment required &middot; Cancel anytime &middot; Setup in minutes
+              </p>
+            </div>
+          )}
+
+          {/* Scroll anchor */}
+          <div ref={bottomRef} />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
