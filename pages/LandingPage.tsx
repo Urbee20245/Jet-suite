@@ -271,13 +271,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                       </span>
                   </button>
                   <button
-                    onClick={() => navigate('/growth-assessment')}
-                    className="group w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-5 px-10 rounded-2xl transition-all duration-200 text-lg shadow-2xl shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-[1.02]"
-                    aria-label="Take the 2-Minute Test"
-                  >
-                    &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
-                  </button>
-                  <button
                     onClick={handleVideoClick}
                     className="group w-full sm:w-auto flex items-center justify-center gap-3 bg-slate-800/80 hover:bg-slate-700/90 text-white font-bold py-5 px-10 rounded-2xl transition-all duration-500 text-lg border-2 border-slate-700/80 hover:border-slate-600 shadow-xl shadow-slate-900/30 hover:shadow-slate-800/50 backdrop-blur-sm hover:scale-[1.02]"
                     aria-label="See how it works"
@@ -465,6 +458,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
                 </div>
                 <p className="text-center text-gray-400 text-sm font-medium tracking-wide">See how JetSuite works for businesses like yours</p>
             </div>
+          </div>
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => navigate('/growth-assessment')}
+              className="group flex items-center justify-center gap-2 px-10 py-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-2xl transition-all duration-200 text-lg shadow-2xl shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
+              aria-label="Take the 2-Minute Test"
+            >
+              &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
+            </button>
           </div>
         </div>
       </section>
@@ -1374,13 +1376,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ navigate }) => {
               className="glow-card glow-card-rounded-xl w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-4 px-10 rounded-xl transition-all duration-300 text-lg shadow-xl shadow-blue-600/30 relative"
               aria-label="Get Started">
               Get Started
-            </button>
-            <button
-              onClick={() => navigate('/growth-assessment')}
-              className="group flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl transition-all duration-200 shadow-lg shadow-purple-900/30 hover:shadow-purple-900/50 hover:scale-105"
-              aria-label="Take the 2-Minute Test"
-            >
-              &#x1F680; Take the 2-Minute Test: What&#39;s Holding Your Business Back?
             </button>
             <button
               onClick={() => navigate('/schedule-demo')}
