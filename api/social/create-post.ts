@@ -17,6 +17,7 @@ export default async function handler(
   try {
     const { 
       userId, 
+      business_id,
       post_text, 
       hashtags, 
       visual_suggestion,
@@ -28,12 +29,13 @@ export default async function handler(
       status 
     } = req.body;
 
-    if (!userId || !post_text || !scheduled_date || !platforms) {
+    if (!userId || !business_id || !post_text || !scheduled_date || !platforms) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const newPost = {
       user_id: userId,
+      business_id,
       post_text,
       hashtags: hashtags || null,
       visual_suggestion: visual_suggestion || null,
