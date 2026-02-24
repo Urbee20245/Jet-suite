@@ -50,9 +50,10 @@ const ScheduleModal: React.FC<{
     asset: SocialPostAsset | AdCopyAsset;
     connections: SocialConnection[];
     userId: string;
+    businessId: string;
     onClose: () => void;
     onSuccess: (message: string) => void;
-}> = ({ asset, connections, userId, onClose, onSuccess }) => {
+}> = ({ asset, connections, userId, businessId, onClose, onSuccess }) => {
     const [selectedConnectionIds, setSelectedConnectionIds] = useState<string[]>([]);
     const [date, setDate] = useState(getTomorrowDate());
     const [time, setTime] = useState('09:00');
@@ -70,6 +71,7 @@ const ScheduleModal: React.FC<{
         try {
             const postData = {
                 post_text: 'copy' in asset ? asset.copy : `${asset.headline}\n\n${asset.description}`,
+                business_id: businessId,
                 hashtags: '', // Hashtags are part of the copy in JetCreate
                 visual_suggestion: 'visual_suggestion' in asset ? asset.visual_suggestion : '',
                 image_url: asset.imageUrl || null,
@@ -664,6 +666,7 @@ DESIGN RULES: Incorporate the provided business logo into the composition. Ensur
                     asset={schedulingAsset}
                     connections={connections}
                     userId={profileData.user.id}
+                    businessId={profileData.business.id}
                     onClose={() => setSchedulingAsset(null)}
                     onSuccess={(message) => {
                         setScheduleSuccess(message);
