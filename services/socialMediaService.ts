@@ -345,7 +345,7 @@ export async function createScheduledPost(
     if (!response.ok) {
       const error = await response.json();
       console.error('[createScheduledPost] Failed:', error);
-      throw new Error(error.message || 'Failed to create post');
+      throw new Error(error.message || error.error || 'Failed to create post');
     }
 
     const data = await response.json();
