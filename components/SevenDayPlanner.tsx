@@ -12,6 +12,7 @@ import { SharePostModal } from './SharePostModal';
 
 interface SevenDayPlannerProps {
   userId: string;
+  businessId: string;
   connections: SocialConnection[];
   connectionsLoading?: boolean;
   onNeedConnections: () => void;
@@ -33,6 +34,7 @@ const isPendingStatus = (status: PostStatus): boolean => {
 
 export const SevenDayPlanner: React.FC<SevenDayPlannerProps> = ({
   userId,
+  businessId,
   connections,
   connectionsLoading = false,
   onNeedConnections,
@@ -338,6 +340,7 @@ export const SevenDayPlanner: React.FC<SevenDayPlannerProps> = ({
           day={selectedDay}
           connections={connections}
           userId={userId}
+          businessId={businessId}
           onClose={() => {
             setShowScheduleModal(false);
             setSelectedDay(null);
@@ -357,6 +360,7 @@ interface DayDetailModalProps {
   day: CalendarDay;
   connections: SocialConnection[];
   userId: string;
+  businessId: string;
   onClose: () => void;
   onPostScheduled: () => void;
   onPostDeleted: (postId: string) => void;
@@ -366,6 +370,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
   day,
   connections,
   userId,
+  businessId,
   onClose,
   onPostScheduled,
   onPostDeleted,
@@ -412,6 +417,7 @@ const DayDetailModal: React.FC<DayDetailModalProps> = ({
       });
 
       await createScheduledPost(userId, {
+        business_id: businessId,
         post_text: postText,
         hashtags,
         scheduled_date: day.dateString,
