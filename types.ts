@@ -459,6 +459,7 @@ export interface PostResult {
 export interface ScheduledPost {
   id: string;
   user_id: string;
+  business_id: string;
   post_text: string;
   hashtags?: string;
   visual_suggestion?: string;
