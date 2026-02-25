@@ -691,6 +691,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
       }));
 
       await createScheduledPost(userId, {
+        business_id: businessId,
         post_text: finalPost.post_text,
         hashtags: finalPost.hashtags,
         visual_suggestion: finalPost.visual_suggestion,
@@ -1763,6 +1764,7 @@ export const JetServices: React.FC<JetServicesProps> = ({ tool, profileData, set
               <h3 className="text-lg font-bold text-brand-text mb-4">Social Post Schedule</h3>
               <SevenDayPlanner
                 userId={userId}
+                businessId={businessId}
                 connections={connections}
                 connectionsLoading={connectionsLoading}
                 onNeedConnections={() => setViewMode('connections')}
